@@ -1,3 +1,6 @@
+using Identity.Infrastructure.Database.Extensions;
+using Identity.Infrastructure.Options.Extensions;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -5,6 +8,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+builder.Services.ConfigureOptions(builder.Configuration);
+builder.Services.ConfigureDbContext();
 
 var app = builder.Build();
 
