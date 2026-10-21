@@ -1,9 +1,10 @@
 using MediatR;
+using Pandora.App.Common;
 using Pandora.Core.Interfaces;
 
 namespace Pandora.App.Features.Credentials;
 
-public sealed class GetCredentialsHandler : IRequestHandler<GetCredentialsMessage, string>
+public sealed class GetCredentialsHandler : IRequestHandler<GetCredentialsMessage, BotResponse>
 {
     private const string NoAccessText = "У вас нет доступа к этому сервису.";
     private const string NotFoundText = "Учётные данные для этого сервиса не найдены. Обратитесь к администратору.";
@@ -19,22 +20,24 @@ public sealed class GetCredentialsHandler : IRequestHandler<GetCredentialsMessag
         _secretStore = secretStore;
     }
 
-    public async Task<string> Handle(GetCredentialsMessage request, CancellationToken cancellationToken)
+    public async Task<BotResponse> Handle(GetCredentialsMessage request, CancellationToken cancellationToken)
     {
         var services = await _accessService.GetServicesAsync(request.ChatId, cancellationToken);
 
         if (services is null || !services.Contains(request.ServiceName))
         {
-            return NoAccessText;
+            return new BotResponse(NoAccessText, []);
         }
 
         var secret = await _secretStore.GetSecretAsync(request.ServiceName, cancellationToken);
 
         if (secret is null)
         {
-            return NotFoundText;
+            return new BotResponse(NotFoundText, []);
         }
 
-        return $"{request.ServiceName}\n{LoginLabel}: {secret.Login}\n{PasswordLabel}: {secret.Password}";
+        var text = $"{request.ServiceName}\n{LoginLabel}: {secret.Login}\n{PasswordLabel}: {secret.Password}";
+
+        return new BotResponse(text, []);
     }
 }

@@ -27,8 +27,8 @@ public sealed class ServiceCallbackHandler : IBotHandler
         if (update.CallbackQuery is { Data: string data, Message.Chat.Id: long chatId })
         {
             var serviceName = data[BotConstants.ServiceCallbackPrefix.Length..];
-            var text = await _mediator.Send(new GetCredentialsMessage(chatId, serviceName), cancellationToken);
-            await _telegram.SendMessageAsync(chatId, text, null, cancellationToken);
+            var response = await _mediator.Send(new GetCredentialsMessage(chatId, serviceName), cancellationToken);
+            await _telegram.SendMessageAsync(chatId, response.Text, null, cancellationToken);
         }
     }
 }
