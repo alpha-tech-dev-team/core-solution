@@ -5,15 +5,9 @@ public static class DatabaseConstants
     public const string TimestampWithTimeZone = "timestamp with time zone";
     public const string CurrentTimestampSql = "now()";
 
-    public static class Tables
+    public static class Users
     {
-        public const string Users = "users";
-        public const string Roles = "roles";
-        public const string UserRoles = "user_roles";
-    }
-
-    public static class Columns
-    {
+        public const string Table = "users";
         public const string Id = "id";
         public const string Name = "name";
         public const string Surname = "surname";
@@ -27,6 +21,28 @@ public static class DatabaseConstants
         public const string CreatedAt = "created_at";
         public const string UpdatedAt = "updated_at";
         public const string UpdatedById = "updated_by_id";
+
+        public const int NameMaxLength = 50;
+        public const int SurnameMaxLength = 50;
+        public const int PatronymicMaxLength = 50;
+        public const int PositionMaxLength = 50;
+        public const int PhoneMaxLength = 20;
+        public const int StatusMaxLength = 20;
+        public const int AdminLoginMaxLength = 50;
+    }
+
+    public static class Roles
+    {
+        public const string Table = "roles";
+        public const string Id = "id";
+        public const string Name = "name";
+
+        public const int NameMaxLength = 50;
+    }
+
+    public static class UserRoles
+    {
+        public const string Table = "user_roles";
         public const string UserId = "user_id";
         public const string RoleId = "role_id";
     }

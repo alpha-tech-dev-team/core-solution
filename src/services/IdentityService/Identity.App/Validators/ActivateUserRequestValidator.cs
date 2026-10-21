@@ -9,7 +9,7 @@ public class ActivateUserRequestValidator : AbstractValidator<ActivateUserReques
     public ActivateUserRequestValidator()
     {
         RuleFor(x => x.TelegramUserId)
-            .GreaterThanOrEqualTo(ValidationConstants.MinTelegramUserId);
+            .GreaterThan(ValidationConstants.TelegramUserIdMinExclusive);
 
         RuleFor(x => x.Phone)
             .NotEmpty()

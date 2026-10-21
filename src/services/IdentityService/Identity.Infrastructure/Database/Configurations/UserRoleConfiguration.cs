@@ -8,16 +8,16 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<UserRole>
 {
     public void Configure(EntityTypeBuilder<UserRole> builder)
     {
-        builder.ToTable(DatabaseConstants.Tables.UserRoles);
+        builder.ToTable(DatabaseConstants.UserRoles.Table);
 
         builder.HasKey(x => new { x.UserId, x.RoleId });
 
         builder.Property(x => x.UserId)
-            .HasColumnName(DatabaseConstants.Columns.UserId)
+            .HasColumnName(DatabaseConstants.UserRoles.UserId)
             .IsRequired();
 
         builder.Property(x => x.RoleId)
-            .HasColumnName(DatabaseConstants.Columns.RoleId)
+            .HasColumnName(DatabaseConstants.UserRoles.RoleId)
             .IsRequired();
 
         builder.HasOne(x => x.User)
