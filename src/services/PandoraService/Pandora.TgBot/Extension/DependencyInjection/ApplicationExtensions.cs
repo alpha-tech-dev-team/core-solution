@@ -1,7 +1,6 @@
-using Microsoft.Extensions.DependencyInjection;
 using Pandora.App.Features.Start;
 
-namespace Pandora.TgBot.Extension.DI;
+namespace Pandora.TgBot.Extension.DependencyInjection;
 
 public static class ApplicationExtensions
 {

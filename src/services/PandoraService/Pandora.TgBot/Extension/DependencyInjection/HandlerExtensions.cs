@@ -1,8 +1,7 @@
 using Building.Telegram.Abstractions;
-using Microsoft.Extensions.DependencyInjection;
 using Pandora.TgBot.Handlers;
 
-namespace Pandora.TgBot.Extension.DI;
+namespace Pandora.TgBot.Extension.DependencyInjection;
 
 public static class HandlerExtensions
 {
