@@ -88,6 +88,14 @@ namespace Identity.Infrastructure.Migrations
                         .HasColumnType("character varying(50)")
                         .HasColumnName("position");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("Pending")
+                        .HasColumnName("status");
+
                     b.Property<string>("Surname")
                         .IsRequired()
                         .HasMaxLength(50)
