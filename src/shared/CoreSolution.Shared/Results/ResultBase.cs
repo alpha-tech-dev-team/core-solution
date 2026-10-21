@@ -1,4 +1,4 @@
-namespace Building.Telegram.Results;
+namespace CoreSolution.Shared.Results;
 
 public class Result
 {

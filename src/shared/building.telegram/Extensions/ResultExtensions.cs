@@ -1,5 +1,5 @@
-using Building.Telegram.Models;
-using Building.Telegram.Results;
+using CoreSolution.Shared.Models;
+using CoreSolution.Shared.Results;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Building.Telegram.Extensions;
