@@ -9,65 +9,65 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 {
     public void Configure(EntityTypeBuilder<User> builder)
     {
-        builder.ToTable("users");
+        builder.ToTable(DatabaseConstants.Tables.Users);
 
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id)
-            .HasColumnName("id");
+            .HasColumnName(DatabaseConstants.Columns.Id);
 
         builder.Property(x => x.Name)
-            .HasColumnName("name")
+            .HasColumnName(DatabaseConstants.Columns.Name)
             .HasMaxLength(50)
             .IsRequired();
 
         builder.Property(x => x.Surname)
-            .HasColumnName("surname")
+            .HasColumnName(DatabaseConstants.Columns.Surname)
             .HasMaxLength(50)
             .IsRequired();
 
         builder.Property(x => x.Patronymic)
-            .HasColumnName("patronymic")
+            .HasColumnName(DatabaseConstants.Columns.Patronymic)
             .HasMaxLength(50);
 
         builder.Property(x => x.Position)
-            .HasColumnName("position")
+            .HasColumnName(DatabaseConstants.Columns.Position)
             .HasMaxLength(50)
             .IsRequired();
 
         builder.Property(x => x.Phone)
-            .HasColumnName("phone_number")
+            .HasColumnName(DatabaseConstants.Columns.PhoneNumber)
             .HasMaxLength(20)
             .IsRequired();
 
         builder.Property(x => x.TelegramUserId)
-            .HasColumnName("telegram_user_id");
+            .HasColumnName(DatabaseConstants.Columns.TelegramUserId);
 
         builder.Property(x => x.Status)
-            .HasColumnName("status")
+            .HasColumnName(DatabaseConstants.Columns.Status)
             .HasConversion<string>()
             .HasMaxLength(20)
             .HasDefaultValue(UserStatus.Pending)
             .IsRequired();
 
         builder.Property(x => x.AdminUsername)
-            .HasColumnName("admin_login")
+            .HasColumnName(DatabaseConstants.Columns.AdminLogin)
             .HasMaxLength(50);
 
         builder.Property(x => x.AdminPasswordHash)
-            .HasColumnName("admin_password_hash");
+            .HasColumnName(DatabaseConstants.Columns.AdminPasswordHash);
 
         builder.Property(x => x.CreatedAt)
-            .HasColumnName("created_at")
-            .HasColumnType("timestamp with time zone")
-            .HasDefaultValueSql("now()");
+            .HasColumnName(DatabaseConstants.Columns.CreatedAt)
+            .HasColumnType(DatabaseConstants.TimestampWithTimeZone)
+            .HasDefaultValueSql(DatabaseConstants.CurrentTimestampSql);
 
         builder.Property(x => x.UpdatedAt)
-            .HasColumnName("updated_at")
-            .HasColumnType("timestamp with time zone")
-            .HasDefaultValueSql("now()");
+            .HasColumnName(DatabaseConstants.Columns.UpdatedAt)
+            .HasColumnType(DatabaseConstants.TimestampWithTimeZone)
+            .HasDefaultValueSql(DatabaseConstants.CurrentTimestampSql);
 
         builder.Property(x => x.UpdatedById)
-            .HasColumnName("updated_by_id")
+            .HasColumnName(DatabaseConstants.Columns.UpdatedById)
             .IsRequired();
 
         builder.HasIndex(x => x.Phone)

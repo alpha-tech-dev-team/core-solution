@@ -8,14 +8,14 @@ public class RolesConfiguration : IEntityTypeConfiguration<Roles>
 {
     public void Configure(EntityTypeBuilder<Roles> builder)
     {
-        builder.ToTable("roles");
+        builder.ToTable(DatabaseConstants.Tables.Roles);
 
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id)
-            .HasColumnName("id");
+            .HasColumnName(DatabaseConstants.Columns.Id);
 
         builder.Property(x => x.Name)
-            .HasColumnName("name")
+            .HasColumnName(DatabaseConstants.Columns.Name)
             .HasMaxLength(50)
             .IsRequired();
 
