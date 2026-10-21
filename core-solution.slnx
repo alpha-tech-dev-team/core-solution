@@ -28,4 +28,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/IdentityService/Identity.App.Tests/Identity.App.Tests.csproj" />
   </Folder>
+  <Folder Name="/src/shared/">
+    <Project Path="src/shared/building.telegram/building.telegram.csproj" />
+  </Folder>
 </Solution>
