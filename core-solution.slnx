@@ -4,17 +4,27 @@
   <Folder Name="/src/services/" />
   <Folder Name="/src/services/AtlasService/">
     <Project Path="src/services/AtlasService/Atlas.Api/Atlas.Api.csproj" />
+    <Project Path="src/services/AtlasService/Atlas.App/Atlas.App.csproj" Id="05047598-464c-4a39-8282-ab6ac1d96a47" />
     <Project Path="src/services/AtlasService/Atlas.Core/Atlas.Core.csproj" />
     <Project Path="src/services/AtlasService/Atlas.Infrastructure/Atlas.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/src/services/IdentityService/">
     <Project Path="src/services/IdentityService/Identity.Api/Identity.Api.csproj" />
+    <Project Path="src/services/IdentityService/Identity.App/Identity.App.csproj" Id="39f4ac24-120f-4f65-b504-d3b7338ca3d2" />
     <Project Path="src/services/IdentityService/Identity.Core/Identity.Core.csproj" />
     <Project Path="src/services/IdentityService/Identity.Infrastructure/Identity.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/src/services/PandoraService/">
     <Project Path="src/services/PandoraService/Pandora.Api/Pandora.Api.csproj" />
+    <Project Path="src/services/PandoraService/Pandora.App/Pandora.App.csproj" Id="11d9e8da-6738-487f-9dc6-f061bade9f67" />
     <Project Path="src/services/PandoraService/Pandora.Core/Pandora.Core.csproj" />
     <Project Path="src/services/PandoraService/Pandora.Infrastructure/Pandora.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/shared/">
+    <Project Path="src/shared/building.telegram/building.telegram.csproj" />
+    <Project Path="src/shared/CoreSolution.Shared/CoreSolution.Shared.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/IdentityService/Identity.App.Tests/Identity.App.Tests.csproj" />
   </Folder>
 </Solution>
