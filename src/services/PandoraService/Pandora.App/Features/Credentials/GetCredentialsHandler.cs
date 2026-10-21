@@ -1,7 +1,7 @@
 using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
 using MediatR;
-using Pandora.App.Common;
+using Pandora.Core.Enums;
 using Pandora.Core.Interfaces;
 
 namespace Pandora.App.Features.Credentials;
@@ -23,14 +23,14 @@ public sealed class GetCredentialsHandler : IRequestHandler<GetCredentialsMessag
 
         if (!services.Contains(request.ServiceName))
         {
-            return Result.Failure<TelegramMessageContent>(ErrorCodes.AccessDenied, [GetCredentialsConstants.NoAccessText]);
+            return Result.Failure<TelegramMessageContent>(ErrorCode.AccessDenied.ToString(), [GetCredentialsConstants.NoAccessText]);
         }
 
         var secret = await _secretStore.GetSecret(request.ServiceName, cancellationToken);
 
         if (secret is null)
         {
-            return Result.Failure<TelegramMessageContent>(ErrorCodes.SecretNotFound, [GetCredentialsConstants.NotFoundText]);
+            return Result.Failure<TelegramMessageContent>(ErrorCode.SecretNotFound.ToString(), [GetCredentialsConstants.NotFoundText]);
         }
 
         var text = string.Format(
