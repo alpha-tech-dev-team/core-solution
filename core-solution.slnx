@@ -4,7 +4,7 @@
   <Folder Name="/src/services/" />
   <Folder Name="/src/services/AtlasService/">
     <Project Path="src/services/AtlasService/Atlas.Api/Atlas.Api.csproj" />
-    <Project Path="src/services/AtlasService/Atlas.App/Atlas.App.csproj" Id="05047598-464c-4a39-8282-ab6ac1d96a47" />
+    <Project Path="src/services/AtlasService/Atlas.App/Atlas.App.csproj" />
     <Project Path="src/services/AtlasService/Atlas.Core/Atlas.Core.csproj" />
     <Project Path="src/services/AtlasService/Atlas.Infrastructure/Atlas.Infrastructure.csproj" />
   </Folder>

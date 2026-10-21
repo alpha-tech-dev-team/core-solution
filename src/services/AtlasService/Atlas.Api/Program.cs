@@ -1,6 +1,6 @@
 using Telegram.Bot;
 using Atlas.App.Services;
-using Atlas.Core.Commands;
+using Atlas.App.Features.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
