@@ -1,5 +1,4 @@
 using Building.Telegram.Abstractions;
-using Pandora.TgBot.BotHandlers;
 
 namespace Pandora.TgBot.Extension.DependencyInjection;
 
@@ -7,7 +6,7 @@ public static class HandlerExtensions
 {
     public static IServiceCollection AddBotHandlers(this IServiceCollection services)
     {
-        var handlerTypes = typeof(HandlerExtensions).Assembly
+        var handlerTypes = typeof(AssemblyMarker).Assembly
             .GetTypes()
             .Where(type => type is { IsClass: true, IsAbstract: false } && typeof(IBotHandler).IsAssignableFrom(type));
 
