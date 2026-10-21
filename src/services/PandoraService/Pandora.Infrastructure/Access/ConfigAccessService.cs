@@ -12,8 +12,11 @@ public sealed class ConfigAccessService : IAccessService
         _options = options;
     }
 
-    public Task<bool> HasAccessAsync(long chatId, CancellationToken cancellationToken)
+    public Task<IReadOnlyList<string>?> GetServicesAsync(long chatId, CancellationToken cancellationToken)
     {
-        return Task.FromResult(_options.CurrentValue.AllowedChatIds.Contains(chatId));
+        var user = _options.CurrentValue.Users.FirstOrDefault(candidate => candidate.ChatId == chatId);
+        IReadOnlyList<string>? services = user?.Services;
+
+        return Task.FromResult(services);
     }
 }

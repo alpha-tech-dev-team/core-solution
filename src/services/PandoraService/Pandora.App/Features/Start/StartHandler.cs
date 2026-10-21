@@ -3,9 +3,10 @@ using Pandora.Core.Interfaces;
 
 namespace Pandora.App.Features.Start;
 
-public sealed class StartHandler : IRequestHandler<StartMessage, string>
+public sealed class StartHandler : IRequestHandler<StartMessage, StartResponse>
 {
-    private const string WelcomeText = "Pandora на связи. Бот работает.";
+    private const string ServicesText = "Выберите сервис:";
+    private const string NoServicesText = "Вам пока ничего не назначено. Обратитесь к администратору.";
     private const string NoAccessText = "Для вас пока не открыт доступ ни к одному сервису. Обратитесь к администратору.";
 
     private readonly IAccessService _accessService;
@@ -15,10 +16,20 @@ public sealed class StartHandler : IRequestHandler<StartMessage, string>
         _accessService = accessService;
     }
 
-    public async Task<string> Handle(StartMessage request, CancellationToken cancellationToken)
+    public async Task<StartResponse> Handle(StartMessage request, CancellationToken cancellationToken)
     {
-        var hasAccess = await _accessService.HasAccessAsync(request.ChatId, cancellationToken);
+        var services = await _accessService.GetServicesAsync(request.ChatId, cancellationToken);
 
-        return hasAccess ? WelcomeText : NoAccessText;
+        if (services is null)
+        {
+            return new StartResponse(NoAccessText, []);
+        }
+
+        if (services.Count == 0)
+        {
+            return new StartResponse(NoServicesText, []);
+        }
+
+        return new StartResponse(ServicesText, services);
     }
 }

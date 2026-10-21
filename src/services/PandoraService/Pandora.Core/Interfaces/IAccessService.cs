@@ -2,5 +2,5 @@ namespace Pandora.Core.Interfaces;
 
 public interface IAccessService
 {
-    Task<bool> HasAccessAsync(long chatId, CancellationToken cancellationToken);
+    Task<IReadOnlyList<string>?> GetServicesAsync(long chatId, CancellationToken cancellationToken);
 }
