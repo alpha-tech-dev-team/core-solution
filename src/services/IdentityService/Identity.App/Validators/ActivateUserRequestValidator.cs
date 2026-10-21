@@ -1,4 +1,5 @@
 using FluentValidation;
+using Identity.App.Constants;
 using Identity.App.Contracts;
 
 namespace Identity.App.Validators;
@@ -8,10 +9,10 @@ public class ActivateUserRequestValidator : AbstractValidator<ActivateUserReques
     public ActivateUserRequestValidator()
     {
         RuleFor(x => x.TelegramUserId)
-            .GreaterThan(0);
+            .GreaterThanOrEqualTo(ValidationConstants.MinTelegramUserId);
 
         RuleFor(x => x.Phone)
             .NotEmpty()
-            .MaximumLength(20);
+            .MaximumLength(ValidationConstants.PhoneMaxLength);
     }
 }
