@@ -10,10 +10,10 @@ public static class InfrastructureServiceCollectionExtensions
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        services.Configure<AccessOptions>(configuration.GetSection("Pandora:" + AccessOptions.SectionName));
+        services.Configure<AccessOptions>(configuration.GetSection(AccessOptions.SectionName));
         services.AddScoped<IAccessService, ConfigAccessService>();
 
-        services.Configure<SecretsOptions>(configuration.GetSection("Pandora:" + SecretsOptions.SectionName));
+        services.Configure<SecretsOptions>(configuration.GetSection(SecretsOptions.SectionName));
         services.AddScoped<ISecretStore, ConfigSecretStore>();
 
         return services;

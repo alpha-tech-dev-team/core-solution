@@ -7,6 +7,8 @@ public sealed class GetCredentialsHandler : IRequestHandler<GetCredentialsMessag
 {
     private const string NoAccessText = "У вас нет доступа к этому сервису.";
     private const string NotFoundText = "Учётные данные для этого сервиса не найдены. Обратитесь к администратору.";
+    private const string LoginLabel = "Логин";
+    private const string PasswordLabel = "Пароль";
 
     private readonly IAccessService _accessService;
     private readonly ISecretStore _secretStore;
@@ -33,6 +35,6 @@ public sealed class GetCredentialsHandler : IRequestHandler<GetCredentialsMessag
             return NotFoundText;
         }
 
-        return $"{request.ServiceName}\nЛогин: {secret.Login}\nПароль: {secret.Password}";
+        return $"{request.ServiceName}\n{LoginLabel}: {secret.Login}\n{PasswordLabel}: {secret.Password}";
     }
 }

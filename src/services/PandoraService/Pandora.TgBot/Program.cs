@@ -1,11 +1,12 @@
 using Building.Telegram.DependencyInjection;
 using Pandora.Infrastructure.DependencyInjection;
+using Pandora.TgBot.Constants;
 using Pandora.TgBot.Extension.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
-builder.Services.AddTelegramBot(builder.Configuration["Telegram:BotToken"] ?? string.Empty);
+builder.Services.AddTelegramBot(builder.Configuration[ConfigurationKeys.TelegramBotToken] ?? string.Empty);
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
 builder.Services.AddBotHandlers();
