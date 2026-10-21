@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>057571ad-78e7-4dd2-8eba-b5e15870a52b</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\shared\building.telegram\building.telegram.csproj" />
+    <ProjectReference Include="..\Atlas.App\Atlas.App.csproj" />
+  </ItemGroup>
+
+</Project>

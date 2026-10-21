@@ -7,6 +7,7 @@
     <Project Path="src/services/AtlasService/Atlas.App/Atlas.App.csproj" />
     <Project Path="src/services/AtlasService/Atlas.Core/Atlas.Core.csproj" />
     <Project Path="src/services/AtlasService/Atlas.Infrastructure/Atlas.Infrastructure.csproj" />
+    <Project Path="src/services/AtlasService/Atlas.TgBot/Atlas.TgBot.csproj" />
   </Folder>
   <Folder Name="/src/services/IdentityService/">
     <Project Path="src/services/IdentityService/Identity.Api/Identity.Api.csproj" />
