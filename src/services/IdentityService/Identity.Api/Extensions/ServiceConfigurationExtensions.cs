@@ -1,6 +1,7 @@
 using CoreSolution.Shared.Extensions;
 using FluentValidation;
-using Identity.App.Contracts;
+using FluentValidation.AspNetCore;
+using Identity.App;
 using Identity.App.Services;
 using Identity.App.Validators;
 using Identity.Core.Interfaces.Repositories;
@@ -27,8 +28,9 @@ public static class ServiceConfigurationExtensions
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IIdentityService, IdentityService>();
-        services.AddScoped<IValidator<ActivateUserRequest>, ActivateUserRequestValidator>();
-        services.AddScoped<IValidator<CheckUserRequest>, CheckUserRequestValidator>();
+
+        services.AddFluentValidationAutoValidation();
+        services.AddValidatorsFromAssemblyContaining<AssemblyMarker>();
 
         services.AddJwtAuthentication(configuration);
         services.AddAuthorization();
