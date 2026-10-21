@@ -10,7 +10,6 @@ public static class InfrastructureServiceCollectionExtensions
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddPandoraOptions(configuration);
         services.AddScoped<IAccessService, ConfigAccessService>();
         services.AddScoped<ISecretStore, ConfigSecretStore>();
 
