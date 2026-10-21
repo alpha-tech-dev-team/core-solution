@@ -6,12 +6,12 @@ using Telegram.Bot.Types;
 
 namespace Pandora.TgBot.Handlers;
 
-public sealed class ServiceCallbackHandler : IBotHandler
+public sealed class ServiceCallbackBotHandler : IBotHandler
 {
     private readonly ITelegramNotificationService _telegram;
     private readonly IMediator _mediator;
 
-    public ServiceCallbackHandler(ITelegramNotificationService telegram, IMediator mediator)
+    public ServiceCallbackBotHandler(ITelegramNotificationService telegram, IMediator mediator)
     {
         _telegram = telegram;
         _mediator = mediator;

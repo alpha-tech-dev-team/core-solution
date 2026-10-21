@@ -8,12 +8,12 @@ using Telegram.Bot.Types;
 
 namespace Pandora.TgBot.Handlers;
 
-public sealed class StartCommandHandler : IBotHandler
+public sealed class StartBotHandler : IBotHandler
 {
     private readonly ITelegramNotificationService _telegram;
     private readonly IMediator _mediator;
 
-    public StartCommandHandler(ITelegramNotificationService telegram, IMediator mediator)
+    public StartBotHandler(ITelegramNotificationService telegram, IMediator mediator)
     {
         _telegram = telegram;
         _mediator = mediator;
