@@ -30,7 +30,7 @@ public sealed class StartCommandHandler : IBotHandler
         {
             var response = await _mediator.Send(new StartMessage(chatId), cancellationToken);
             var replyMarkup = response.Services
-                .Select(service => new TelegramButtonRow(new TelegramButton(service, service)))
+                .Select(service => new TelegramButtonRow(new TelegramButton(service, BotConstants.ServiceCallbackPrefix + service)))
                 .ToInlineKeyboardMarkup();
 
             await _telegram.SendMessageAsync(chatId, response.Text, replyMarkup, cancellationToken);

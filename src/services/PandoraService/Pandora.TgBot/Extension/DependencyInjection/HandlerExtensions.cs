@@ -8,6 +8,7 @@ public static class HandlerExtensions
     public static IServiceCollection AddBotHandlers(this IServiceCollection services)
     {
         services.AddScoped<IBotHandler, StartCommandHandler>();
+        services.AddScoped<IBotHandler, ServiceCallbackHandler>();
 
         return services;
     }
