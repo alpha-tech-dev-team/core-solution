@@ -1,4 +1,4 @@
-namespace Building.Telegram.Models;
+namespace CoreSolution.Shared.Models;
 
 public sealed class TelegramButtonRow
 {

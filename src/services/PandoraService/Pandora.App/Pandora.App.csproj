@@ -6,4 +6,13 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="MediatR" Version="14.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Pandora.Core\Pandora.Core.csproj" />
+    <ProjectReference Include="..\..\..\shared\CoreSolution.Shared\CoreSolution.Shared.csproj" />
+  </ItemGroup>
+
 </Project>

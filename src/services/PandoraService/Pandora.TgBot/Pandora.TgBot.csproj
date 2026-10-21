@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>4edec45a-dfa6-49ae-a84c-320d3fa4487e</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\shared\building.telegram\building.telegram.csproj" />
+    <ProjectReference Include="..\Pandora.App\Pandora.App.csproj" />
+    <ProjectReference Include="..\Pandora.Infrastructure\Pandora.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>
