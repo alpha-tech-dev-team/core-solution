@@ -1,4 +1,5 @@
 using Identity.Core.Entities;
+using Identity.Core.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -40,6 +41,13 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(x => x.TelegramUserId)
             .HasColumnName("telegram_user_id");
+
+        builder.Property(x => x.Status)
+            .HasColumnName("status")
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .HasDefaultValue(UserStatus.Pending)
+            .IsRequired();
 
         builder.Property(x => x.AdminUsername)
             .HasColumnName("admin_login")
