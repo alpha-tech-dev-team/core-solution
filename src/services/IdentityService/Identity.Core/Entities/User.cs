@@ -1,3 +1,4 @@
+using Identity.Core.Enums;
 using Identity.Core.Interfaces.Entities;
 
 namespace Identity.Core.Entities;
@@ -11,6 +12,7 @@ public class User : IEntity
     public string Position { get; set; } = string.Empty;
     public string Phone { get; set; } = string.Empty;
     public long? TelegramUserId { get; set; }
+    public UserStatus Status { get; set; } = UserStatus.Pending;
     public string? AdminUsername { get; set; }
     public string? AdminPasswordHash { get; set; }
     public DateTime CreatedAt { get; set; }

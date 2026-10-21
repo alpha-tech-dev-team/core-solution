@@ -22,5 +22,9 @@
   </Folder>
   <Folder Name="/src/shared/">
     <Project Path="src/shared/building.telegram/building.telegram.csproj" />
+    <Project Path="src/shared/CoreSolution.Shared/CoreSolution.Shared.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/IdentityService/Identity.App.Tests/Identity.App.Tests.csproj" />
   </Folder>
 </Solution>
