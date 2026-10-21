@@ -19,6 +19,7 @@
     <Project Path="src/services/PandoraService/Pandora.App/Pandora.App.csproj" Id="11d9e8da-6738-487f-9dc6-f061bade9f67" />
     <Project Path="src/services/PandoraService/Pandora.Core/Pandora.Core.csproj" />
     <Project Path="src/services/PandoraService/Pandora.Infrastructure/Pandora.Infrastructure.csproj" />
+    <Project Path="src/services/PandoraService/Pandora.TgBot/Pandora.TgBot.csproj" />
   </Folder>
   <Folder Name="/src/shared/">
     <Project Path="src/shared/building.telegram/building.telegram.csproj" />
