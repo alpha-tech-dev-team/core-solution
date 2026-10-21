@@ -1,5 +1,5 @@
-using Building.Telegram.Models;
-using Building.Telegram.Results;
+using CoreSolution.Shared.Models;
+using CoreSolution.Shared.Results;
 using MediatR;
 using Pandora.Core.Interfaces;
 
