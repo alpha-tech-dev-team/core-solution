@@ -5,7 +5,7 @@ using Pandora.App.Common;
 using Pandora.App.Features.Credentials;
 using Telegram.Bot.Types;
 
-namespace Pandora.TgBot.Handlers;
+namespace Pandora.TgBot.BotHandlers;
 
 public sealed class ServiceCallbackBotHandler : IBotHandler
 {

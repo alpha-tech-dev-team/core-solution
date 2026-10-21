@@ -1,5 +1,5 @@
 using Building.Telegram.Abstractions;
-using Pandora.TgBot.Handlers;
+using Pandora.TgBot.BotHandlers;
 
 namespace Pandora.TgBot.Extension.DependencyInjection;
 

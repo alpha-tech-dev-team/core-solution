@@ -5,7 +5,7 @@ using Pandora.App.Features.Start;
 using Pandora.TgBot.Constants;
 using Telegram.Bot.Types;
 
-namespace Pandora.TgBot.Handlers;
+namespace Pandora.TgBot.BotHandlers;
 
 public sealed class StartBotHandler : IBotHandler
 {
