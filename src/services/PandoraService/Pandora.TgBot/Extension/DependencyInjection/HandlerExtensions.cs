@@ -7,8 +7,14 @@ public static class HandlerExtensions
 {
     public static IServiceCollection AddBotHandlers(this IServiceCollection services)
     {
-        services.AddScoped<IBotHandler, StartBotHandler>();
-        services.AddScoped<IBotHandler, ServiceCallbackBotHandler>();
+        var handlerTypes = typeof(HandlerExtensions).Assembly
+            .GetTypes()
+            .Where(type => type is { IsClass: true, IsAbstract: false } && typeof(IBotHandler).IsAssignableFrom(type));
+
+        foreach (var handlerType in handlerTypes)
+        {
+            services.AddScoped(typeof(IBotHandler), handlerType);
+        }
 
         return services;
     }
