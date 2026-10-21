@@ -4,5 +4,5 @@ namespace Pandora.Core.Interfaces;
 
 public interface ISecretStore
 {
-    Task<Secret?> GetSecretAsync(string secretName, CancellationToken cancellationToken);
+    Task<Secret?> GetSecret(string secretName, CancellationToken cancellationToken);
 }

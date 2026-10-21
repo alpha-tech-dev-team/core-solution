@@ -13,7 +13,7 @@ public sealed class ConfigSecretStore : ISecretStore
         _options = options;
     }
 
-    public Task<Secret?> GetSecretAsync(string secretName, CancellationToken cancellationToken)
+    public Task<Secret?> GetSecret(string secretName, CancellationToken cancellationToken)
     {
         var item = _options.CurrentValue.Items.FirstOrDefault(candidate => candidate.Name == secretName);
         Secret? secret = item is null ? null : new Secret(item.Login, item.Password);

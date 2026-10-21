@@ -12,10 +12,10 @@ public sealed class ConfigAccessService : IAccessService
         _options = options;
     }
 
-    public Task<IReadOnlyList<string>?> GetServicesAsync(long chatId, CancellationToken cancellationToken)
+    public Task<IReadOnlyList<string>> GetServices(long chatId, CancellationToken cancellationToken)
     {
         var user = _options.CurrentValue.Users.FirstOrDefault(candidate => candidate.ChatId == chatId);
-        IReadOnlyList<string>? services = user?.Services;
+        IReadOnlyList<string> services = user?.Services ?? [];
 
         return Task.FromResult(services);
     }

@@ -10,7 +10,6 @@ public sealed class GetCredentialsHandler : IRequestHandler<GetCredentialsMessag
     private const string NotFoundText = "Учётные данные для этого сервиса не найдены. Обратитесь к администратору.";
     private const string LoginLabel = "Логин";
     private const string PasswordLabel = "Пароль";
-
     private readonly IAccessService _accessService;
     private readonly ISecretStore _secretStore;
 
@@ -22,14 +21,14 @@ public sealed class GetCredentialsHandler : IRequestHandler<GetCredentialsMessag
 
     public async Task<BotResponse> Handle(GetCredentialsMessage request, CancellationToken cancellationToken)
     {
-        var services = await _accessService.GetServicesAsync(request.ChatId, cancellationToken);
+        var services = await _accessService.GetServices(request.ChatId, cancellationToken);
 
-        if (services is null || !services.Contains(request.ServiceName))
+        if (!services.Contains(request.ServiceName))
         {
             return new BotResponse(NoAccessText, []);
         }
 
-        var secret = await _secretStore.GetSecretAsync(request.ServiceName, cancellationToken);
+        var secret = await _secretStore.GetSecret(request.ServiceName, cancellationToken);
 
         if (secret is null)
         {
