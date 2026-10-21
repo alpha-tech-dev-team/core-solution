@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using MediatR;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using Atlas.Core.Commands;
+using Atlas.App.Features.Text;
 using Telegram.Bot.Types.Enums;
 
 
