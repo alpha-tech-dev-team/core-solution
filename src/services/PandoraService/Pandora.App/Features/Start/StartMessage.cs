@@ -1,6 +1,7 @@
+using Building.Telegram.Models;
+using Building.Telegram.Results;
 using MediatR;
-using Pandora.App.Common;
 
 namespace Pandora.App.Features.Start;
 
-public record StartMessage(long ChatId) : IRequest<BotResponse>;
+public record StartMessage(long ChatId) : IRequest<Result<TelegramMessageContent>>;

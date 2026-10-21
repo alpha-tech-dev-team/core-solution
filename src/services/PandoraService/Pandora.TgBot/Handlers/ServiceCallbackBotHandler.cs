@@ -1,7 +1,8 @@
 using Building.Telegram.Abstractions;
+using Building.Telegram.Extensions;
 using MediatR;
+using Pandora.App.Common;
 using Pandora.App.Features.Credentials;
-using Pandora.TgBot.Constants;
 using Telegram.Bot.Types;
 
 namespace Pandora.TgBot.Handlers;
@@ -19,16 +20,17 @@ public sealed class ServiceCallbackBotHandler : IBotHandler
 
     public bool CanHandle(Update update)
     {
-        return update.CallbackQuery?.Data?.StartsWith(BotConstants.ServiceCallbackPrefix, StringComparison.Ordinal) is true;
+        return update.CallbackQuery?.Data?.StartsWith(CallbackConstants.ServicePrefix, StringComparison.Ordinal) is true;
     }
 
     public async Task HandleAsync(Update update, CancellationToken cancellationToken)
     {
         if (update.CallbackQuery is { Data: string data, Message.Chat.Id: long chatId })
         {
-            var serviceName = data[BotConstants.ServiceCallbackPrefix.Length..];
-            var response = await _mediator.Send(new GetCredentialsMessage(chatId, serviceName), cancellationToken);
-            await _telegram.SendMessageAsync(chatId, response.Text, null, cancellationToken);
+            var serviceName = data[CallbackConstants.ServicePrefix.Length..];
+            var result = await _mediator.Send(new GetCredentialsMessage(chatId, serviceName), cancellationToken);
+
+            await _telegram.SendMessageAsync(chatId, result.GetTextOrErrors(), result.ToTelegramMarkup(), cancellationToken);
         }
     }
 }

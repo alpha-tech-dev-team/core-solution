@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Pandora.Core\Pandora.Core.csproj" />
+    <ProjectReference Include="..\..\..\shared\building.telegram\building.telegram.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,13 +1,13 @@
+using Building.Telegram.Models;
+using Building.Telegram.Results;
 using MediatR;
 using Pandora.App.Common;
 using Pandora.Core.Interfaces;
 
 namespace Pandora.App.Features.Start;
 
-public sealed class StartHandler : IRequestHandler<StartMessage, BotResponse>
+public sealed class StartHandler : IRequestHandler<StartMessage, Result<TelegramMessageContent>>
 {
-    private const string ServicesText = "Выберите сервис:";
-    private const string NoServicesText = "Вам пока ничего не назначено. Обратитесь к администратору.";
     private readonly IAccessService _accessService;
 
     public StartHandler(IAccessService accessService)
@@ -15,15 +15,23 @@ public sealed class StartHandler : IRequestHandler<StartMessage, BotResponse>
         _accessService = accessService;
     }
 
-    public async Task<BotResponse> Handle(StartMessage request, CancellationToken cancellationToken)
+    public async Task<Result<TelegramMessageContent>> Handle(StartMessage request, CancellationToken cancellationToken)
     {
         var services = await _accessService.GetServices(request.ChatId, cancellationToken);
 
         if (services.Count == 0)
         {
-            return new BotResponse(NoServicesText, []);
+            return Result<TelegramMessageContent>.Success(new TelegramMessageContent { Text = StartConstants.NoServicesText });
         }
 
-        return new BotResponse(ServicesText, services);
+        var buttonRows = services
+            .Select(service => new TelegramButtonRow(new TelegramButton(service, CallbackConstants.ServicePrefix + service)))
+            .ToList();
+
+        return Result<TelegramMessageContent>.Success(new TelegramMessageContent
+        {
+            Text = StartConstants.ServicesText,
+            ButtonRows = buttonRows
+        });
     }
 }

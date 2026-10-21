@@ -1,15 +1,12 @@
+using Building.Telegram.Models;
+using Building.Telegram.Results;
 using MediatR;
-using Pandora.App.Common;
 using Pandora.Core.Interfaces;
 
 namespace Pandora.App.Features.Credentials;
 
-public sealed class GetCredentialsHandler : IRequestHandler<GetCredentialsMessage, BotResponse>
+public sealed class GetCredentialsHandler : IRequestHandler<GetCredentialsMessage, Result<TelegramMessageContent>>
 {
-    private const string NoAccessText = "У вас нет доступа к этому сервису.";
-    private const string NotFoundText = "Учётные данные для этого сервиса не найдены. Обратитесь к администратору.";
-    private const string LoginLabel = "Логин";
-    private const string PasswordLabel = "Пароль";
     private readonly IAccessService _accessService;
     private readonly ISecretStore _secretStore;
 
@@ -19,24 +16,30 @@ public sealed class GetCredentialsHandler : IRequestHandler<GetCredentialsMessag
         _secretStore = secretStore;
     }
 
-    public async Task<BotResponse> Handle(GetCredentialsMessage request, CancellationToken cancellationToken)
+    public async Task<Result<TelegramMessageContent>> Handle(GetCredentialsMessage request, CancellationToken cancellationToken)
     {
         var services = await _accessService.GetServices(request.ChatId, cancellationToken);
 
         if (!services.Contains(request.ServiceName))
         {
-            return new BotResponse(NoAccessText, []);
+            return Result.Failure<TelegramMessageContent>("access_denied", [GetCredentialsConstants.NoAccessText]);
         }
 
         var secret = await _secretStore.GetSecret(request.ServiceName, cancellationToken);
 
         if (secret is null)
         {
-            return new BotResponse(NotFoundText, []);
+            return Result.Failure<TelegramMessageContent>("secret_not_found", [GetCredentialsConstants.NotFoundText]);
         }
 
-        var text = $"{request.ServiceName}\n{LoginLabel}: {secret.Login}\n{PasswordLabel}: {secret.Password}";
+        var text = string.Format(
+            GetCredentialsConstants.CredentialsTemplate,
+            request.ServiceName,
+            GetCredentialsConstants.LoginLabel,
+            secret.Login,
+            GetCredentialsConstants.PasswordLabel,
+            secret.Password);
 
-        return new BotResponse(text, []);
+        return Result<TelegramMessageContent>.Success(new TelegramMessageContent { Text = text });
     }
 }
