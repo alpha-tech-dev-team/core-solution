@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Pandora.Core.Interfaces;
-using Pandora.Infrastructure.Access;
 using Pandora.Infrastructure.Identity;
 using Pandora.Infrastructure.Secrets;
 
@@ -17,7 +16,6 @@ public static class InfrastructureServiceCollectionExtensions
         ArgumentException.ThrowIfNullOrWhiteSpace(identityOptions.BaseUrl);
 
         services.AddHttpClient<IIdentityClient, IdentityClient>(client => client.BaseAddress = new Uri(identityOptions.BaseUrl));
-        services.AddScoped<IAccessService, IdentityAccessService>();
         services.AddScoped<ISecretStore, ConfigSecretStore>();
 
         return services;

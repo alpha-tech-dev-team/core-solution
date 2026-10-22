@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Options;
 using Pandora.Core.Entities;
-using Pandora.Core.Enums;
 using Pandora.Core.Interfaces;
 using Pandora.Core.Options;
 
@@ -15,18 +14,6 @@ public sealed class SessionService : ISessionService
     {
         _repository = repository;
         _options = options.Value;
-    }
-
-    public async Task<UserSession> UpsertSession(long chatId, WorkflowStep initialState, CancellationToken cancellationToken)
-    {
-        var session = await _repository.GetSession(chatId, cancellationToken) ?? new UserSession { TgUserId = chatId };
-
-        session.State = initialState;
-        session.LastUpdate = DateTime.UtcNow;
-
-        await SaveSession(session, cancellationToken);
-
-        return session;
     }
 
     public async Task SaveSession(UserSession session, CancellationToken cancellationToken)

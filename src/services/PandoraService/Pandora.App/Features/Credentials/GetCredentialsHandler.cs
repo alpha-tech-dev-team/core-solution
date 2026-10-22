@@ -8,20 +8,18 @@ namespace Pandora.App.Features.Credentials;
 
 public sealed class GetCredentialsHandler : IRequestHandler<GetCredentialsMessage, Result<TelegramMessageContent>>
 {
-    private readonly IAccessService _accessService;
+    private readonly IRequestContext _requestContext;
     private readonly ISecretStore _secretStore;
 
-    public GetCredentialsHandler(IAccessService accessService, ISecretStore secretStore)
+    public GetCredentialsHandler(IRequestContext requestContext, ISecretStore secretStore)
     {
-        _accessService = accessService;
+        _requestContext = requestContext;
         _secretStore = secretStore;
     }
 
     public async Task<Result<TelegramMessageContent>> Handle(GetCredentialsMessage request, CancellationToken cancellationToken)
     {
-        var services = await _accessService.GetServices(request.TelegramUserId, cancellationToken);
-
-        if (!services.Contains(request.ServiceName))
+        if (!_requestContext.Session.Roles.Contains(request.ServiceName))
         {
             return Result<TelegramMessageContent>.Failure(ErrorCode.AccessDenied.ToString());
         }

@@ -2,6 +2,7 @@ using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
 using MediatR;
 using Pandora.App.Common;
+using Pandora.Core.Constants;
 using Pandora.Core.Enums;
 using Pandora.Core.Interfaces;
 
@@ -9,37 +10,36 @@ namespace Pandora.App.Features.Start;
 
 public sealed class StartHandler : IRequestHandler<StartMessage, Result<TelegramMessageContent>>
 {
-    private readonly IAccessService _accessService;
-    private readonly IRequestContext _requestContext;
+    private readonly ISessionRepository _sessionRepository;
     private readonly ISessionService _sessionService;
 
-    public StartHandler(IAccessService accessService, IRequestContext requestContext, ISessionService sessionService)
+    public StartHandler(ISessionRepository sessionRepository, ISessionService sessionService)
     {
-        _accessService = accessService;
-        _requestContext = requestContext;
+        _sessionRepository = sessionRepository;
         _sessionService = sessionService;
     }
 
     public async Task<Result<TelegramMessageContent>> Handle(StartMessage request, CancellationToken cancellationToken)
     {
-        var services = await _accessService.GetServices(request.TelegramUserId, cancellationToken);
+        var session = await _sessionRepository.GetSession(request.TelegramUserId, cancellationToken);
 
-        if (services.Count == 0)
+        if (session is null)
         {
-            return Result<TelegramMessageContent>.Success(new TelegramMessageContent { Text = StartConstants.NoServicesText });
+            return Result<TelegramMessageContent>.Success(new TelegramMessageContent
+            {
+                Text = StartConstants.PhoneRequestText,
+                RequestContact = true
+            });
         }
 
-        var buttonRows = services
-            .Select(service => new TelegramButtonRow(new TelegramButton(service, CallbackConstants.ServicePrefix + service)))
-            .ToList();
-
-        _requestContext.Session.State = WorkflowStep.ServiceSelection;
-        await _sessionService.SaveSession(_requestContext.Session, cancellationToken);
-
-        return Result<TelegramMessageContent>.Success(new TelegramMessageContent
+        if (session.Roles.Count == 0)
         {
-            Text = StartConstants.ServicesText,
-            ButtonRows = buttonRows
-        });
+            return Result<TelegramMessageContent>.Success(new TelegramMessageContent { Text = SessionConstants.NoServicesText });
+        }
+
+        session.State = WorkflowStep.ServiceSelection;
+        await _sessionService.SaveSession(session, cancellationToken);
+
+        return Result<TelegramMessageContent>.Success(ServiceMenu.Create(session.Roles));
     }
 }
