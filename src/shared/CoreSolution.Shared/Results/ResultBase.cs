@@ -2,21 +2,21 @@ namespace CoreSolution.Shared.Results;
 
 public class Result
 {
-    public bool IsSuccess { get; init; }
+    public bool IsSuccess { get; }
+    public string? ErrorCode { get; }
 
-    public string? ErrorCode { get; init; }
+    protected Result(bool isSuccess, string? errorCode)
+    {
+        IsSuccess = isSuccess;
+        ErrorCode = errorCode;
+    }
 
-    public string[] ErrorsList { get; init; } = [];
+    public static Result Success() => new(true, null);
 
-    public static Result<T> Failure<T>(string errorCode, IEnumerable<string>? errors = null)
+    public static Result Failure(string errorCode)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(errorCode);
 
-        return new Result<T>
-        {
-            IsSuccess = false,
-            ErrorCode = errorCode,
-            ErrorsList = errors?.ToArray() ?? [errorCode]
-        };
+        return new Result(false, errorCode);
     }
 }

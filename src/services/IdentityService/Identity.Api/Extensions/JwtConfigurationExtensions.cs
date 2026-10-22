@@ -1,11 +1,9 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using CoreSolution.Shared.Options;
 
-namespace CoreSolution.Shared.Extensions;
+namespace Identity.Api.Extensions;
 
 public static class JwtConfigurationExtensions
 {

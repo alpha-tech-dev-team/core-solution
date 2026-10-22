@@ -23,14 +23,14 @@ public sealed class GetCredentialsHandler : IRequestHandler<GetCredentialsMessag
 
         if (!services.Contains(request.ServiceName))
         {
-            return Result.Failure<TelegramMessageContent>(ErrorCode.AccessDenied.ToString(), [GetCredentialsConstants.NoAccessText]);
+            return Result<TelegramMessageContent>.Failure(ErrorCode.AccessDenied.ToString());
         }
 
         var secret = await _secretStore.GetSecret(request.ServiceName, cancellationToken);
 
         if (secret is null)
         {
-            return Result.Failure<TelegramMessageContent>(ErrorCode.SecretNotFound.ToString(), [GetCredentialsConstants.NotFoundText]);
+            return Result<TelegramMessageContent>.Failure(ErrorCode.SecretNotFound.ToString());
         }
 
         var text = string.Format(
