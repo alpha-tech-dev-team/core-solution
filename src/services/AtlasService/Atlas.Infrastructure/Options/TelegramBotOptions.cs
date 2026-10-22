@@ -1,4 +1,4 @@
-namespace Atlas.Core.Options;
+namespace Atlas.Infrastructure.Options;
 
 public sealed class TelegramBotOptions
 {

@@ -1,12 +1,9 @@
-using Atlas.Core.Options;
+using Atlas.Infrastructure.Options;
 using Atlas.TgBot.Extension.DependencyInjection;
 using Atlas.TgBot.Workers;
 using Building.Telegram.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
-
-builder.Services.Configure<TelegramBotOptions>(
-    builder.Configuration.GetSection(TelegramBotOptions.SectionName));
 
 var telegramOptions = builder.Configuration
     .GetSection(TelegramBotOptions.SectionName)
