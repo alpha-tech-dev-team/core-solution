@@ -8,5 +8,7 @@ public class UserSession
 
     public WorkflowStep State { get; set; }
 
+    public List<string> Roles { get; set; } = [];
+
     public DateTime LastUpdate { get; set; }
 }

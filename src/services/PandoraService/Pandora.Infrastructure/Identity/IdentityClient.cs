@@ -10,7 +10,8 @@ namespace Pandora.Infrastructure.Identity;
 public sealed class IdentityClient : IIdentityClient
 {
     private const string AccessCacheKeyPrefix = "identity:access:";
-    private const string ApiRoute = "api/client/check";
+    private const string ActivateRoute = "api/client/activate";
+    private const string CheckRoute = "api/client/check";
 
     private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
 
@@ -25,6 +26,23 @@ public sealed class IdentityClient : IIdentityClient
         _database = redis.GetDatabase();
         _options = options.Value;
         _logger = logger;
+    }
+
+    public async Task<bool> ActivateUser(long telegramUserId, string phone, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync(ActivateRoute, new { telegramUserId, phone }, SerializerOptions, cancellationToken);
+            response.EnsureSuccessStatusCode();
+
+            return await response.Content.ReadFromJsonAsync<bool>(SerializerOptions, cancellationToken);
+        }
+        catch (HttpRequestException exception)
+        {
+            _logger.LogWarning(exception, "Identity activate request failed");
+
+            return false;
+        }
     }
 
     public async Task<bool> CheckUser(long telegramUserId, string access, CancellationToken cancellationToken)
@@ -48,14 +66,14 @@ public sealed class IdentityClient : IIdentityClient
     {
         try
         {
-            var response = await _httpClient.PostAsJsonAsync(ApiRoute, new { telegramUserId, access }, SerializerOptions, cancellationToken);
+            var response = await _httpClient.PostAsJsonAsync(CheckRoute, new { telegramUserId, access }, SerializerOptions, cancellationToken);
             response.EnsureSuccessStatusCode();
 
             return await response.Content.ReadFromJsonAsync<bool>(SerializerOptions, cancellationToken);
         }
         catch (HttpRequestException exception)
         {
-            _logger.LogWarning(exception, "Identity check failed for user {TelegramUserId} and access {Access}", telegramUserId, access);
+            _logger.LogWarning(exception, "Identity check failed for access {Access}", access);
 
             return false;
         }
