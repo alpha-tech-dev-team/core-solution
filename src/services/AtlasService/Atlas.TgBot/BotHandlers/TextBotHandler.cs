@@ -10,6 +10,7 @@ public sealed class TextBotHandler : IBotHandler
     private readonly IMediator _mediator;
     private readonly ITelegramNotificationService _telegram;
 
+
     public TextBotHandler(IMediator mediator, ITelegramNotificationService telegram)
     {
         _mediator = mediator;
@@ -18,6 +19,7 @@ public sealed class TextBotHandler : IBotHandler
 
     public bool CanHandle(Update update)
     {
+
         return update.Message?.Text is not null;
     }
 

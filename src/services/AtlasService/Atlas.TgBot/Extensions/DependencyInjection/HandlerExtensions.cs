@@ -1,6 +1,6 @@
 using Building.Telegram.Abstractions;
 
-namespace Atlas.TgBot.Extension.DependencyInjection;
+namespace Atlas.TgBot.Extensions.DependencyInjection;
 
 public static class HandlerExtensions
 {
@@ -8,7 +8,8 @@ public static class HandlerExtensions
     {
         var handlerTypes = typeof(AssemblyMarker).Assembly
             .GetTypes()
-            .Where(type => type is { IsClass: true, IsAbstract: false } && typeof(IBotHandler).IsAssignableFrom(type));
+            .Where(type => type is { IsClass: true, IsAbstract: false }
+                && typeof(IBotHandler).IsAssignableFrom(type));
 
         foreach (var handlerType in handlerTypes)
         {
