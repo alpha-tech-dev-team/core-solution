@@ -19,7 +19,7 @@ public sealed class SessionService : ISessionService
 
     public async Task<UserSession> UpsertSession(long chatId, WorkflowStep initialState, CancellationToken cancellationToken)
     {
-        var session = await _repository.GetSession(chatId, cancellationToken) ?? new UserSession { Id = chatId };
+        var session = await _repository.GetSession(chatId, cancellationToken) ?? new UserSession { TgUserId = chatId };
 
         session.State = initialState;
         session.LastUpdate = DateTime.UtcNow;
@@ -34,12 +34,12 @@ public sealed class SessionService : ISessionService
         var expiry = TimeSpan.FromMinutes(_options.ExpiryMinutes);
 
         await _repository.SaveSession(session, expiry, cancellationToken);
-        await _repository.AddToIndex(session.Id, DateTimeOffset.UtcNow, cancellationToken);
+        await _repository.AddToIndex(session.TgUserId, DateTimeOffset.UtcNow, cancellationToken);
     }
 
-    public async Task DeleteSession(long chatId, CancellationToken cancellationToken)
+    public async Task DeleteSession(long telegramUserId, CancellationToken cancellationToken)
     {
-        await _repository.DeleteSession(chatId, cancellationToken);
-        await _repository.RemoveFromIndex(chatId, cancellationToken);
+        await _repository.DeleteSession(telegramUserId, cancellationToken);
+        await _repository.RemoveFromIndex(telegramUserId, cancellationToken);
     }
 }

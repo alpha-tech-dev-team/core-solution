@@ -19,15 +19,15 @@ public sealed class RedisSessionRepository : ISessionRepository
 
     public async Task SaveSession(UserSession session, TimeSpan expiry, CancellationToken cancellationToken)
     {
-        var key = GetKey(session.Id);
+        var key = GetKey(session.TgUserId);
         var data = JsonSerializer.Serialize(session);
 
         await _database.StringSetAsync(key, data, expiry);
     }
 
-    public async Task<UserSession?> GetSession(long chatId, CancellationToken cancellationToken)
+    public async Task<UserSession?> GetSession(long telegramUserId, CancellationToken cancellationToken)
     {
-        var key = GetKey(chatId);
+        var key = GetKey(telegramUserId);
         var data = await _database.StringGetAsync(key);
 
         if (data.IsNullOrEmpty)
@@ -38,25 +38,25 @@ public sealed class RedisSessionRepository : ISessionRepository
         return JsonSerializer.Deserialize<UserSession>(data.ToString());
     }
 
-    public async Task DeleteSession(long chatId, CancellationToken cancellationToken)
+    public async Task DeleteSession(long telegramUserId, CancellationToken cancellationToken)
     {
-        var key = GetKey(chatId);
+        var key = GetKey(telegramUserId);
 
         await _database.KeyDeleteAsync(key);
     }
 
-    public async Task AddToIndex(long chatId, DateTimeOffset activeAt, CancellationToken cancellationToken)
+    public async Task AddToIndex(long telegramUserId, DateTimeOffset activeAt, CancellationToken cancellationToken)
     {
-        await _database.SortedSetAddAsync(AllSessionsIndexKey, chatId, activeAt.ToUnixTimeSeconds());
+        await _database.SortedSetAddAsync(AllSessionsIndexKey, telegramUserId, activeAt.ToUnixTimeSeconds());
     }
 
-    public async Task RemoveFromIndex(long chatId, CancellationToken cancellationToken)
+    public async Task RemoveFromIndex(long telegramUserId, CancellationToken cancellationToken)
     {
-        await _database.SortedSetRemoveAsync(AllSessionsIndexKey, chatId);
+        await _database.SortedSetRemoveAsync(AllSessionsIndexKey, telegramUserId);
     }
 
-    private string GetKey(long chatId)
+    private string GetKey(long telegramUserId)
     {
-        return $"{SessionKeyPrefix}{chatId}";
+        return $"{SessionKeyPrefix}{telegramUserId}";
     }
 }

@@ -26,13 +26,13 @@ public sealed class SessionBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
     {
         if (request is IAuthorizedBotRequest botRequest && _requestContext.Session is null)
         {
-            var session = await _sessionRepository.GetSession(botRequest.ChatId, cancellationToken);
+            var session = await _sessionRepository.GetSession(botRequest.TelegramUserId, cancellationToken);
 
             if (session is null)
             {
                 session = new UserSession
                 {
-                    Id = botRequest.ChatId,
+                    TgUserId = botRequest.TelegramUserId,
                     State = WorkflowStep.Idle,
                     LastUpdate = DateTime.UtcNow
                 };

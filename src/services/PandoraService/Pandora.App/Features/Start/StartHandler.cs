@@ -22,7 +22,7 @@ public sealed class StartHandler : IRequestHandler<StartMessage, Result<Telegram
 
     public async Task<Result<TelegramMessageContent>> Handle(StartMessage request, CancellationToken cancellationToken)
     {
-        var services = await _accessService.GetServices(request.ChatId, cancellationToken);
+        var services = await _accessService.GetServices(request.TelegramUserId, cancellationToken);
 
         if (services.Count == 0)
         {
