@@ -1,11 +1,18 @@
+using CoreSolution.Shared.Models;
+using CoreSolution.Shared.Results;
 using MediatR;
 
 namespace Atlas.App.Features.Text;
 
-public sealed class TextCommandHandler : IRequestHandler<TextCommand, string>
+public sealed class TextCommandHandler : IRequestHandler<TextCommand, Result<TelegramMessageContent>>
 {
-    public Task<string> Handle(TextCommand request, CancellationToken cancellationToken)
+    public Task<Result<TelegramMessageContent>> Handle(TextCommand request, CancellationToken cancellationToken)
     {
-        return Task.FromResult($"сообщение {request.Text} от пользователя {request.Name}");
+        var content = new TelegramMessageContent
+        {
+          Text=$"сообщение {request.Text} от пользователя {request.Name}"
+        };
+        
+        return Task.FromResult(Result<TelegramMessageContent>.Success(content));
     }
 }
