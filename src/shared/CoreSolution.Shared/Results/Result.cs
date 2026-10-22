@@ -1,15 +1,21 @@
 namespace CoreSolution.Shared.Results;
 
-public class Result<T> : Result
+public sealed class Result<T> : Result
 {
-    public T? Value { get; init; }
+    public T? Value { get; }
 
-    public static Result<T> Success(T value)
+    private Result(bool isSuccess, T? value, string? errorCode)
+        : base(isSuccess, errorCode)
     {
-        return new Result<T>
-        {
-            Value = value,
-            IsSuccess = true
-        };
+        Value = value;
+    }
+
+    public static Result<T> Success(T value) => new(true, value, null);
+
+    public static new Result<T> Failure(string errorCode)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(errorCode);
+
+        return new Result<T>(false, default, errorCode);
     }
 }
