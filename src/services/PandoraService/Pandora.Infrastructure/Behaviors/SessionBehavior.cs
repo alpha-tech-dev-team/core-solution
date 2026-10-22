@@ -1,7 +1,6 @@
 using CoreSolution.Shared.Results;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using Pandora.Core.Constants;
 using Pandora.Core.Entities;
 using Pandora.Core.Enums;
 using Pandora.Core.Interfaces;
@@ -40,7 +39,7 @@ public sealed class SessionBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
             {
                 _logger.LogWarning("Access denied for message {MessageId}", activating.MessageId);
 
-                return ResultFactory.Failure<TResponse>(ErrorCode.AccessDenied.ToString(), [SessionConstants.AccessDeniedText]);
+                return ResultFactory.Failure<TResponse>(ErrorCode.AccessNotConfirmed.ToString());
             }
 
             var session = new UserSession
@@ -62,7 +61,7 @@ public sealed class SessionBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
             {
                 _logger.LogWarning("Session not found for message {MessageId}", botRequest.MessageId);
 
-                return ResultFactory.Failure<TResponse>(ErrorCode.AccessDenied.ToString(), [SessionConstants.RestartText]);
+                return ResultFactory.Failure<TResponse>(ErrorCode.SessionNotFound.ToString());
             }
 
             _requestContext.Session = session;

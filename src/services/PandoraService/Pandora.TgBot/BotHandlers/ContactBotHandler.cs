@@ -28,7 +28,7 @@ public sealed class ContactBotHandler : IBotHandler
         {
             var result = await _mediator.Send(new SubmitPhoneMessage(telegramUserId, messageId, NormalizePhone(phone)), cancellationToken);
 
-            await _telegram.SendMessageAsync(telegramUserId, result.GetTextOrErrors(), result.ToTelegramMarkup(), cancellationToken);
+            await _telegram.SendMessageAsync(telegramUserId, result.GetDisplayText(), result.ToTelegramMarkup(), cancellationToken);
         }
     }
 
