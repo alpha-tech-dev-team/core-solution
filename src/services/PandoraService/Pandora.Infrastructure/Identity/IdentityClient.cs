@@ -33,9 +33,8 @@ public sealed class IdentityClient : IIdentityClient
         try
         {
             var response = await _httpClient.PostAsJsonAsync(ActivateRoute, new { telegramUserId, phone }, SerializerOptions, cancellationToken);
-            response.EnsureSuccessStatusCode();
 
-            return await response.Content.ReadFromJsonAsync<bool>(SerializerOptions, cancellationToken);
+            return response.IsSuccessStatusCode;
         }
         catch (HttpRequestException exception)
         {
@@ -67,9 +66,8 @@ public sealed class IdentityClient : IIdentityClient
         try
         {
             var response = await _httpClient.PostAsJsonAsync(CheckRoute, new { telegramUserId, access }, SerializerOptions, cancellationToken);
-            response.EnsureSuccessStatusCode();
 
-            return await response.Content.ReadFromJsonAsync<bool>(SerializerOptions, cancellationToken);
+            return response.IsSuccessStatusCode;
         }
         catch (HttpRequestException exception)
         {
