@@ -19,7 +19,7 @@ public sealed class GetCredentialsHandler : IRequestHandler<GetCredentialsMessag
 
     public async Task<Result<TelegramMessageContent>> Handle(GetCredentialsMessage request, CancellationToken cancellationToken)
     {
-        var services = await _accessService.GetServices(request.ChatId, cancellationToken);
+        var services = await _accessService.GetServices(request.TelegramUserId, cancellationToken);
 
         if (!services.Contains(request.ServiceName))
         {

@@ -25,11 +25,11 @@ public sealed class StartBotHandler : IBotHandler
 
     public async Task HandleAsync(Update update, CancellationToken cancellationToken)
     {
-        if (update.Message is { Chat.Id: long chatId })
+        if (update.Message is { Chat.Id: long telegramUserId })
         {
-            var result = await _mediator.Send(new StartMessage(chatId), cancellationToken);
+            var result = await _mediator.Send(new StartMessage(telegramUserId), cancellationToken);
 
-            await _telegram.SendMessageAsync(chatId, result.GetDisplayText(), result.ToTelegramMarkup(), cancellationToken);
+            await _telegram.SendMessageAsync(telegramUserId, result.GetDisplayText(), result.ToTelegramMarkup(), cancellationToken);
         }
     }
 }

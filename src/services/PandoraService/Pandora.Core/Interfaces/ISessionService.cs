@@ -9,5 +9,5 @@ public interface ISessionService
 
     Task SaveSession(UserSession session, CancellationToken cancellationToken);
 
-    Task DeleteSession(long chatId, CancellationToken cancellationToken);
+    Task DeleteSession(long telegramUserId, CancellationToken cancellationToken);
 }

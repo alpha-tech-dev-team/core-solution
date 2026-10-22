@@ -5,4 +5,4 @@ using Pandora.Core.Interfaces;
 
 namespace Pandora.App.Features.Start;
 
-public record StartMessage(long ChatId) : IRequest<Result<TelegramMessageContent>>, IAuthorizedBotRequest;
+public record StartMessage(long TelegramUserId) : IRequest<Result<TelegramMessageContent>>, IAuthorizedBotRequest;
