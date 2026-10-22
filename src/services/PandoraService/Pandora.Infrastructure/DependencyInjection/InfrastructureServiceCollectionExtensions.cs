@@ -14,10 +14,7 @@ public static class InfrastructureServiceCollectionExtensions
         var identityOptions = configuration.GetSection(IdentityOptions.SectionName).Get<IdentityOptions>()
             ?? throw new InvalidOperationException($"Missing configuration section {IdentityOptions.SectionName}.");
 
-        if (string.IsNullOrWhiteSpace(identityOptions.BaseUrl))
-        {
-            throw new InvalidOperationException($"Missing identity base url in section {IdentityOptions.SectionName}.");
-        }
+        ArgumentException.ThrowIfNullOrWhiteSpace(identityOptions.BaseUrl);
 
         services.AddHttpClient<IIdentityClient, IdentityClient>(client => client.BaseAddress = new Uri(identityOptions.BaseUrl));
         services.AddScoped<IAccessService, IdentityAccessService>();
