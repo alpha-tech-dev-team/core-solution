@@ -4,7 +4,7 @@ namespace CoreSolution.Shared.Results;
 
 public static class ResultFactory
 {
-    public static TResponse Failure<TResponse>(string errorCode, IEnumerable<string>? errors = null)
+    public static TResponse Failure<TResponse>(string errorCode)
         where TResponse : Result
     {
         var responseType = typeof(TResponse);
@@ -14,10 +14,9 @@ public static class ResultFactory
             throw new InvalidOperationException($"Type {responseType.Name} must be a generic Result<T> type.");
         }
 
-        var failure = typeof(Result)
-            .GetMethod(nameof(Result.Failure), BindingFlags.Public | BindingFlags.Static, [typeof(string), typeof(IEnumerable<string>)])!
-            .MakeGenericMethod(responseType.GetGenericArguments())
-            .Invoke(null, [errorCode, errors]);
+        var failure = responseType
+            .GetMethod(nameof(Result<object>.Failure), BindingFlags.Public | BindingFlags.Static, [typeof(string)])!
+            .Invoke(null, [errorCode]);
 
         return (TResponse)failure!;
     }

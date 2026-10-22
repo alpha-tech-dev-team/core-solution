@@ -10,6 +10,8 @@ internal static class TelegramErrorMessages
         new Dictionary<ErrorCode, string>
         {
             [ErrorCode.AccessDenied] = "У вас нет доступа к этому сервису.",
+            [ErrorCode.AccessNotConfirmed] = "Доступ не подтверждён. Обратитесь к администратору.",
+            [ErrorCode.SessionNotFound] = "Доступ не подтверждён. Отправьте /start.",
             [ErrorCode.SecretNotFound] = "Учётные данные для этого сервиса не найдены. Обратитесь к администратору."
         };
 
