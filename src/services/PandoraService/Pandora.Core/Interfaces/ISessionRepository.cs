@@ -11,6 +11,5 @@ public interface ISessionRepository
     Task DeleteSession(long chatId, CancellationToken cancellationToken);
 
     Task AddToIndex(long chatId, DateTimeOffset activeAt, CancellationToken cancellationToken);
-
     Task RemoveFromIndex(long chatId, CancellationToken cancellationToken);
 }
