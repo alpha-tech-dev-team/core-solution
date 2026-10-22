@@ -1,6 +1,5 @@
 using Atlas.Infrastructure.Options;
-using Atlas.TgBot.Extension.DependencyInjection;
-using Atlas.TgBot.Workers;
+using Atlas.TgBot.Extensions.DependencyInjection;
 using Building.Telegram.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,7 +18,6 @@ if (string.IsNullOrWhiteSpace(telegramOptions.BotToken))
 builder.Services.AddTelegramBot(telegramOptions.BotToken);
 builder.Services.AddApplication();
 builder.Services.AddBotHandlers();
-builder.Services.AddHostedService<HeartbeatWorker>();
 
 var app = builder.Build();
 
