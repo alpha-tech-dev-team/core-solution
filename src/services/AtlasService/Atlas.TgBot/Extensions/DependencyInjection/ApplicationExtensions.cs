@@ -1,7 +1,6 @@
 using Atlas.App.Features.Text;
-using MediatR;
 
-namespace Atlas.TgBot.Extension.DependencyInjection;
+namespace Atlas.TgBot.Extensions.DependencyInjection;
 
 public static class ApplicationExtensions
 {
