@@ -1,7 +1,8 @@
 using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
 using MediatR;
+using Pandora.Core.Interfaces;
 
 namespace Pandora.App.Features.Start;
 
-public record StartMessage(long ChatId) : IRequest<Result<TelegramMessageContent>>;
+public record StartMessage(long ChatId) : IRequest<Result<TelegramMessageContent>>, IAuthorizedBotRequest;
