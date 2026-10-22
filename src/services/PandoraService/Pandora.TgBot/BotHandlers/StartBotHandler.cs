@@ -29,7 +29,7 @@ public sealed class StartBotHandler : IBotHandler
         {
             var result = await _mediator.Send(new StartMessage(chatId), cancellationToken);
 
-            await _telegram.SendMessageAsync(chatId, result.GetTextOrErrors(), result.ToTelegramMarkup(), cancellationToken);
+            await _telegram.SendMessageAsync(chatId, result.GetDisplayText(), result.ToTelegramMarkup(), cancellationToken);
         }
     }
 }

@@ -1,3 +1,5 @@
+using CoreSolution.Shared.Results;
+using Identity.App.Errors;
 using Identity.Core.Enums;
 using Identity.Core.Interfaces.Repositories;
 using Identity.Core.Interfaces.Services;
@@ -16,26 +18,28 @@ public class IdentityService : IIdentityService
         _logger = logger;
     }
 
-    public async Task<bool> ActivateUser(long telegramUserId, string phone, CancellationToken cancellationToken = default)
+    public async Task<Result> ActivateUser(long telegramUserId, string phone, CancellationToken cancellationToken = default)
     {
         var user = await _users.GetByPhone(phone, cancellationToken);
         if (user is null)
         {
             _logger.LogWarning("Активация пропущена: пользователь не найден но номеру");
-            return false;
+            return Result.Failure(nameof(IdentityErrorCode.UserNotFound));
         }
 
         if (user.TelegramUserId is not null && user.TelegramUserId != telegramUserId)
         {
             _logger.LogWarning("Активания отклонена: пользователь уже активирован для другого номера");
-            return false;
+            return Result.Failure(nameof(IdentityErrorCode.UserAlreadyActivated));
         }
 
         if (user.Status == UserStatus.Active)
         {
             _logger.LogInformation("Активация пропущена: пользователь уже активирован");
-            return user.TelegramUserId == telegramUserId;
-        }   
+            return user.TelegramUserId == telegramUserId
+                ? Result.Success()
+                : Result.Failure(nameof(IdentityErrorCode.UserAlreadyActivated));
+        }
 
         user.TelegramUserId = telegramUserId;
         user.Status = UserStatus.Active;
@@ -45,10 +49,10 @@ public class IdentityService : IIdentityService
 
         _logger.LogInformation("Пользователь активировал аккаунт");
 
-        return true;
+        return Result.Success();
     }
 
-    public async Task<bool> CheckUser(long telegramUserId, string access, CancellationToken cancellationToken = default)
+    public async Task<Result> CheckUser(long telegramUserId, string access, CancellationToken cancellationToken = default)
     {
         var user = await _users.GetByTelegramUserId(telegramUserId, cancellationToken);
 
@@ -59,8 +63,9 @@ public class IdentityService : IIdentityService
         if (!hasAccess)
         {
             _logger.LogInformation("Доступ запрещен пользователю");
+            return Result.Failure(nameof(IdentityErrorCode.AccessDenied));
         }
 
-        return hasAccess;
+        return Result.Success();
     }
 }
