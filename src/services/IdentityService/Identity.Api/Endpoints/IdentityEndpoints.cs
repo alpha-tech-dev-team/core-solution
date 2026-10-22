@@ -1,4 +1,5 @@
 using Identity.Api.Constants;
+using Identity.Api.Extensions;
 using Identity.Api.Filters;
 using Identity.App.Contracts;
 using Identity.Core.Interfaces.Services;
@@ -28,7 +29,7 @@ public static class IdentityEndpoints
     {
         var result = await identityService.ActivateUser(request.TelegramUserId, request.Phone, cancellationToken);
 
-        return Results.Ok(result);
+        return result.ToHttpResult();
     }
 
     private static async Task<IResult> CheckUser(
@@ -38,6 +39,6 @@ public static class IdentityEndpoints
     {
         var result = await identityService.CheckUser(request.TelegramUserId, request.Access, cancellationToken);
 
-        return Results.Ok(result);
+        return result.ToHttpResult();
     }
 }
