@@ -1,5 +1,5 @@
 namespace Atlas.TgBot;
 
-public sealed class AssemblyMarker
+public static class AssemblyMarker
 {
 }
