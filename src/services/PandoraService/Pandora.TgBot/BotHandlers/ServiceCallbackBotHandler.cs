@@ -30,7 +30,7 @@ public sealed class ServiceCallbackBotHandler : IBotHandler
             var serviceName = data[CallbackConstants.ServicePrefix.Length..];
             var result = await _mediator.Send(new GetCredentialsMessage(chatId, serviceName), cancellationToken);
 
-            await _telegram.SendMessageAsync(chatId, result.GetTextOrErrors(), result.ToTelegramMarkup(), cancellationToken);
+            await _telegram.SendMessageAsync(chatId, result.GetDisplayText(), result.ToTelegramMarkup(), cancellationToken);
         }
     }
 }
