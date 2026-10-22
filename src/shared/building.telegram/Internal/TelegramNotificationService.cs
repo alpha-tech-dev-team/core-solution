@@ -21,7 +21,7 @@ internal sealed class TelegramNotificationService : ITelegramNotificationService
     public Task<Message> SendMessageAsync(
         long chatId,
         string text,
-        InlineKeyboardMarkup? replyMarkup = null,
+        ReplyMarkup? replyMarkup = null,
         CancellationToken cancellationToken = default)
     {
         return SendAsync(chatId, text, true, replyMarkup, cancellationToken);
@@ -30,7 +30,7 @@ internal sealed class TelegramNotificationService : ITelegramNotificationService
     public Task<Message> SendAlertAsync(
         long chatId,
         string text,
-        InlineKeyboardMarkup? replyMarkup = null,
+        ReplyMarkup? replyMarkup = null,
         CancellationToken cancellationToken = default)
     {
         return SendAsync(chatId, text, false, replyMarkup, cancellationToken);
@@ -84,7 +84,7 @@ internal sealed class TelegramNotificationService : ITelegramNotificationService
         long chatId,
         string text,
         bool silent,
-        InlineKeyboardMarkup? replyMarkup,
+        ReplyMarkup? replyMarkup,
         CancellationToken cancellationToken)
     {
         var chunks = TelegramTextSplitter.Split(text);
