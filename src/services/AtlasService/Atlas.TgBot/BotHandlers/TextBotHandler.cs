@@ -1,5 +1,6 @@
 using Atlas.App.Features.Text;
 using Building.Telegram.Abstractions;
+using Building.Telegram.Extensions;
 using MediatR;
 using Telegram.Bot.Types;
 
@@ -9,6 +10,7 @@ public sealed class TextBotHandler : IBotHandler
 {
     private readonly IMediator _mediator;
     private readonly ITelegramNotificationService _telegram;
+    private readonly string _unnamedUser = "Пользователь";
 
 
     public TextBotHandler(IMediator mediator, ITelegramNotificationService telegram)
@@ -29,10 +31,10 @@ public sealed class TextBotHandler : IBotHandler
         var command = new TextCommand(
             message.Chat.Id,
             message.Text!,
-            message.From?.FirstName ?? "пользователь");
+            message.From?.FirstName ?? _unnamedUser);
 
         var answer = await _mediator.Send(command, cancellationToken);
 
-        await _telegram.SendMessageAsync(message.Chat.Id, answer, cancellationToken: cancellationToken);
+        await _telegram.SendMessageAsync(message.Chat.Id, answer.GetTextOrErrors(), cancellationToken: cancellationToken);
     }
 }
