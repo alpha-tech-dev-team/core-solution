@@ -1,9 +1,7 @@
-using CoreSolution.Shared.Extensions;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Identity.App;
 using Identity.App.Services;
-using Identity.App.Validators;
 using Identity.Core.Interfaces.Repositories;
 using Identity.Core.Interfaces.Services;
 using Identity.Infrastructure.Database.Extensions;
