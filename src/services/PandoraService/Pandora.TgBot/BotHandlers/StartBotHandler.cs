@@ -10,13 +10,13 @@ namespace Pandora.TgBot.BotHandlers;
 
 public sealed class StartBotHandler : IBotHandler
 {
-    private readonly ITelegramNotificationService _telegram;
+    private readonly ITelegramNotificationService _telegramNotificationService;
     private readonly IMediator _mediator;
     private readonly ILocalizer _localizer;
 
-    public StartBotHandler(ITelegramNotificationService telegram, IMediator mediator, ILocalizer localizer)
+    public StartBotHandler(ITelegramNotificationService telegramNotificationService, IMediator mediator, ILocalizer localizer)
     {
-        _telegram = telegram;
+        _telegramNotificationService = telegramNotificationService;
         _mediator = mediator;
         _localizer = localizer;
     }
@@ -32,7 +32,7 @@ public sealed class StartBotHandler : IBotHandler
         {
             var result = await _mediator.Send(new StartMessage(telegramUserId, messageId), cancellationToken);
 
-            await _telegram.SendMessageAsync(telegramUserId, result.GetDisplayText(_localizer), result.GetReplyMarkup(), cancellationToken);
+            await _telegramNotificationService.SendMessageAsync(telegramUserId, result.GetDisplayText(_localizer), result.GetReplyMarkup(), cancellationToken);
         }
     }
 }

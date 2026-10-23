@@ -10,13 +10,13 @@ namespace Pandora.TgBot.BotHandlers;
 
 public sealed class ServiceCallbackBotHandler : IBotHandler
 {
-    private readonly ITelegramNotificationService _telegram;
+    private readonly ITelegramNotificationService _telegramNotificationService;
     private readonly IMediator _mediator;
     private readonly ILocalizer _localizer;
 
-    public ServiceCallbackBotHandler(ITelegramNotificationService telegram, IMediator mediator, ILocalizer localizer)
+    public ServiceCallbackBotHandler(ITelegramNotificationService telegramNotificationService, IMediator mediator, ILocalizer localizer)
     {
-        _telegram = telegram;
+        _telegramNotificationService = telegramNotificationService;
         _mediator = mediator;
         _localizer = localizer;
     }
@@ -33,7 +33,7 @@ public sealed class ServiceCallbackBotHandler : IBotHandler
             var serviceName = data[CallbackConstants.ServicePrefix.Length..];
             var result = await _mediator.Send(new GetCredentialsMessage(telegramUserId, messageId, serviceName), cancellationToken);
 
-            await _telegram.SendMessageAsync(telegramUserId, result.GetDisplayText(_localizer), result.ToTelegramMarkup(), cancellationToken);
+            await _telegramNotificationService.SendMessageAsync(telegramUserId, result.GetDisplayText(_localizer), result.ToTelegramMarkup(), cancellationToken);
         }
     }
 }
