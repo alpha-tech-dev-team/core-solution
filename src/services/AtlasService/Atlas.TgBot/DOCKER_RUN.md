@@ -4,7 +4,7 @@
 - Docker Desktop (запущен)
 - Git
 - Свой бот у @BotFather → токен
-- Свой chat_id у @userinfobot
+- Свой chat_id (== user_id в личке) у @userinfobot
 
 ## Запуск
 
@@ -16,7 +16,7 @@ cp src/services/AtlasService/Atlas.TgBot/.env.example src/services/AtlasService/
 
 # Отредактируй .env (важно: формат с индексом __0 !):
 # Telegram__BotToken=токен_от_BotFather
-# Access__AllowedChatIds__0=твой_chat_id
+# Access__AllowedTgUserIds__0=твой_user_id
 
 docker run -d --name atlas-tgbot --env-file src/services/AtlasService/Atlas.TgBot/.env atlas-tgbot
 ```
@@ -24,14 +24,14 @@ docker run -d --name atlas-tgbot --env-file src/services/AtlasService/Atlas.TgBo
 ## Проверка
 ```bash
 docker logs -f atlas-tgbot
-# Жди "Application started" и "AccessService initialized. Allowed chat IDs: ..."
+# Жди "Application started" и "AccessService initialized. Allowed TgUserIds: ..."
 ```
 
 ## Ошибки
 | Ошибка | Решение |
 |---|---|
 | `Telegram:BotToken не задан` | Заполни `.env` правильно (Telegram__BotToken) |
-| `нет доступа` / `Access check: DENIED` | Неверный формат chat_id. Используй `Access__AllowedChatIds__0=твой_chat_id` |
+| `нет доступа` / `Access check: DENIED` | Неверный формат user_id. Используй `Access__AllowedTgUserIds__0=твой_user_id` |
 | `409 Conflict` | У каждого свой токен (свой бот у @BotFather) |
 | Docker не запускается | Запусти Docker Desktop |
 
