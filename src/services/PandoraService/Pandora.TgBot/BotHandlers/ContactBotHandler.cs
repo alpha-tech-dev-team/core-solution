@@ -9,13 +9,13 @@ namespace Pandora.TgBot.BotHandlers;
 
 public sealed class ContactBotHandler : IBotHandler
 {
-    private readonly ITelegramNotificationService _telegram;
+    private readonly ITelegramNotificationService _telegramNotificationService;
     private readonly IMediator _mediator;
     private readonly ILocalizer _localizer;
 
-    public ContactBotHandler(ITelegramNotificationService telegram, IMediator mediator, ILocalizer localizer)
+    public ContactBotHandler(ITelegramNotificationService telegramNotificationService, IMediator mediator, ILocalizer localizer)
     {
-        _telegram = telegram;
+        _telegramNotificationService = telegramNotificationService;
         _mediator = mediator;
         _localizer = localizer;
     }
@@ -31,7 +31,7 @@ public sealed class ContactBotHandler : IBotHandler
         {
             var result = await _mediator.Send(new SubmitPhoneMessage(telegramUserId, messageId, phone), cancellationToken);
 
-            await _telegram.SendMessageAsync(telegramUserId, result.GetDisplayText(_localizer), result.ToTelegramMarkup(), cancellationToken);
+            await _telegramNotificationService.SendMessageAsync(telegramUserId, result.GetDisplayText(_localizer), result.ToTelegramMarkup(), cancellationToken);
         }
     }
 }
