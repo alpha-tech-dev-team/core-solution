@@ -1,5 +1,4 @@
 using Atlas.App.Features.Start;
-using Atlas.TgBot.Constants;
 using Building.Telegram.Abstractions;
 using Building.Telegram.Extensions;
 using MediatR;
@@ -23,17 +22,17 @@ public sealed class StartBotHandler : IBotHandler
 
     public bool CanHandle(Update update)
     {
-        return update.Message?.Text is StartConstants.Command;
+        return update.Message?.Text == StartConstants.Command;
     }
 
     public async Task HandleAsync(Update update, CancellationToken cancellationToken)
     {
         var message = update.Message!;
-        var incomingChatId = message.Chat.Id;
-        
-        _logger.LogInformation("Incoming /start from chat_id: {ChatId}", incomingChatId);
-        
-        var request = new StartRequest(incomingChatId);
+        var tgUserId = message.From!.Id;
+
+        _logger.LogInformation("Incoming /start from TgUserId: {TgUserId}", tgUserId);
+
+        var request = new StartRequest(tgUserId);
 
         var answer = await _mediator.Send(request, cancellationToken);
 
