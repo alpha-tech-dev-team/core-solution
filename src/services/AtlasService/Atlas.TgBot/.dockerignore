@@ -1,0 +1,17 @@
+bin/
+obj/
+.vs/
+.vscode/
+*.user
+*.suo
+*.userprefs
+*.sln.docstates
+.git/
+.gitignore
+README.md
+*.md
+docker-compose*.yml
+Dockerfile
+.dockerignore
+*.log
+*.tmp
