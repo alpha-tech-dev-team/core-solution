@@ -22,12 +22,13 @@ public sealed class TextBotHandler : IBotHandler
     public bool CanHandle(Update update)
     {
 
-        return update.Message?.Text is not null;
+        return update.Message?.Text is not null && update.Message.Text is not "/start";
     }
 
     public async Task HandleAsync(Update update, CancellationToken cancellationToken)
     {
         var message = update.Message!;
+        
         var request = new TextRequest(
             message.Chat.Id,
             message.Text!,
