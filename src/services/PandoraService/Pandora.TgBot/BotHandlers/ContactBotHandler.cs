@@ -29,16 +29,9 @@ public sealed class ContactBotHandler : IBotHandler
     {
         if (update.Message is { Chat.Id: long telegramUserId, MessageId: int messageId, Contact.PhoneNumber: string phone })
         {
-            var result = await _mediator.Send(new SubmitPhoneMessage(telegramUserId, messageId, NormalizePhone(phone)), cancellationToken);
+            var result = await _mediator.Send(new SubmitPhoneMessage(telegramUserId, messageId, phone), cancellationToken);
 
             await _telegram.SendMessageAsync(telegramUserId, result.GetDisplayText(_localizer), result.ToTelegramMarkup(), cancellationToken);
         }
-    }
-
-    private static string NormalizePhone(string phone)
-    {
-        var digits = new string(phone.Where(char.IsDigit).ToArray());
-
-        return $"+{digits}";
     }
 }

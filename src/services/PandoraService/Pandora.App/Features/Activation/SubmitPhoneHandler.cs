@@ -1,8 +1,10 @@
 using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
 using MediatR;
-using Pandora.App.Common;
+using Pandora.App.Features.Start;
+using Pandora.Core.Constants;
 using Pandora.Core.Constants.Localization;
+using Pandora.Core.Entities;
 using Pandora.Core.Enums;
 using Pandora.Core.Interfaces;
 
@@ -10,32 +12,42 @@ namespace Pandora.App.Features.Activation;
 
 public sealed class SubmitPhoneHandler : IRequestHandler<SubmitPhoneMessage, Result<TelegramMessageContent>>
 {
-    private readonly IRequestContext _requestContext;
+    private readonly IIdentityClient _identityClient;
     private readonly ISessionService _sessionService;
-    private readonly ILocalizer _localizer;
+    private readonly IMediator _mediator;
 
-    public SubmitPhoneHandler(IRequestContext requestContext, ISessionService sessionService, ILocalizer localizer)
+    public SubmitPhoneHandler(IIdentityClient identityClient, ISessionService sessionService, IMediator mediator)
     {
-        _requestContext = requestContext;
+        _identityClient = identityClient;
         _sessionService = sessionService;
-        _localizer = localizer;
+        _mediator = mediator;
     }
 
     public async Task<Result<TelegramMessageContent>> Handle(SubmitPhoneMessage request, CancellationToken cancellationToken)
     {
-        var session = _requestContext.Session;
+        var approved = await _identityClient.ActivateUser(request.TelegramUserId, NormalizePhone(request.Phone), cancellationToken);
 
-        if (session.Roles.Count == 0)
+        if (!approved)
         {
-            return Result<TelegramMessageContent>.Success(new TelegramMessageContent
-            {
-                Text = _localizer.GetPhrase(WorkflowStep.Idle, LocalizationKeysConstants.Idle.NoServices)
-            });
+            return Result<TelegramMessageContent>.Failure(ErrorCode.AccessNotConfirmed.ToString());
         }
 
-        session.State = WorkflowStep.ServiceSelection;
+        var session = new UserSession(
+            request.TelegramUserId,
+            WorkflowStep.Idle,
+            LocalizationConstants.DefaultLanguage,
+            [],
+            DateTime.UtcNow);
+
         await _sessionService.SaveSession(session, cancellationToken);
 
-        return Result<TelegramMessageContent>.Success(ServiceMenu.Create(session.Roles, _localizer));
+        return await _mediator.Send(new StartMessage(request.TelegramUserId, request.MessageId), cancellationToken);
+    }
+
+    private static string NormalizePhone(string phone)
+    {
+        var digits = new string(phone.Where(char.IsDigit).ToArray());
+
+        return $"{PhoneConstants.InternationalPrefix}{digits}";
     }
 }
