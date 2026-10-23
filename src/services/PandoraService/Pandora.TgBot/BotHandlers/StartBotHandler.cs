@@ -1,5 +1,4 @@
 using Building.Telegram.Abstractions;
-using Building.Telegram.Extensions;
 using MediatR;
 using Pandora.App.Features.Start;
 using Pandora.Core.Interfaces;
