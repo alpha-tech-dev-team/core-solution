@@ -10,20 +10,20 @@ namespace Pandora.App.Features.Start;
 
 public sealed class StartHandler : IRequestHandler<StartMessage, Result<TelegramMessageContent>>
 {
-    private readonly ISessionRepository _sessionRepository;
     private readonly ISessionService _sessionService;
+    private readonly ISecretStore _secretStore;
     private readonly ILocalizer _localizer;
 
-    public StartHandler(ISessionRepository sessionRepository, ISessionService sessionService, ILocalizer localizer)
+    public StartHandler(ISessionService sessionService, ISecretStore secretStore, ILocalizer localizer)
     {
-        _sessionRepository = sessionRepository;
         _sessionService = sessionService;
+        _secretStore = secretStore;
         _localizer = localizer;
     }
 
     public async Task<Result<TelegramMessageContent>> Handle(StartMessage request, CancellationToken cancellationToken)
     {
-        var session = await _sessionRepository.GetSession(request.TelegramUserId, cancellationToken);
+        var session = await _sessionService.GetSession(request.TelegramUserId, cancellationToken);
 
         if (session is null)
         {
@@ -34,8 +34,13 @@ public sealed class StartHandler : IRequestHandler<StartMessage, Result<Telegram
             });
         }
 
-        if (session.Roles.Count == 0)
+        var services = _secretStore.GetServiceNames();
+
+        if (services.Count == 0)
         {
+            session.State = WorkflowStep.Idle;
+            await _sessionService.SaveSession(session, cancellationToken);
+
             return Result<TelegramMessageContent>.Success(new TelegramMessageContent
             {
                 Text = _localizer.GetPhrase(WorkflowStep.Idle, LocalizationKeysConstants.Idle.NoServices)
@@ -45,6 +50,6 @@ public sealed class StartHandler : IRequestHandler<StartMessage, Result<Telegram
         session.State = WorkflowStep.ServiceSelection;
         await _sessionService.SaveSession(session, cancellationToken);
 
-        return Result<TelegramMessageContent>.Success(ServiceMenu.Create(session.Roles, _localizer));
+        return Result<TelegramMessageContent>.Success(ServiceMenu.Create(services, _localizer));
     }
 }
