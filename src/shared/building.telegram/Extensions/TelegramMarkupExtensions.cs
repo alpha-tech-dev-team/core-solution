@@ -1,4 +1,4 @@
-using Building.Telegram.Models;
+using CoreSolution.Shared.Models;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Building.Telegram.Extensions;
