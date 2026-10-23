@@ -19,4 +19,10 @@
     <ProjectReference Include="..\Pandora.Core\Pandora.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Localization\Resources\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
