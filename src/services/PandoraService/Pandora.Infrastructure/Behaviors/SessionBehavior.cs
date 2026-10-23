@@ -1,10 +1,10 @@
 using CoreSolution.Shared.Results;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Pandora.Core.Constants.Localization;
 using Pandora.Core.Entities;
 using Pandora.Core.Enums;
 using Pandora.Core.Interfaces;
-using Pandora.Infrastructure.Utils;
 
 namespace Pandora.Infrastructure.Behaviors;
 
@@ -42,13 +42,12 @@ public sealed class SessionBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
                 return ResultFactory.Failure<TResponse>(ErrorCode.AccessNotConfirmed.ToString());
             }
 
-            var session = new UserSession
-            {
-                TgUserId = activating.TelegramUserId,
-                State = WorkflowStep.Idle,
-                Roles = [.. await ResolveRoles(activating.TelegramUserId, cancellationToken)],
-                LastUpdate = DateTime.UtcNow
-            };
+            var session = new UserSession(
+                activating.TelegramUserId,
+                WorkflowStep.Idle,
+                LocalizationConstants.DefaultLanguage,
+                [.. await ResolveRoles(activating.TelegramUserId, cancellationToken)],
+                DateTime.UtcNow);
 
             await _sessionService.SaveSession(session, cancellationToken);
             _requestContext.Session = session;
