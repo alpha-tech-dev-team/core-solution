@@ -16,6 +16,11 @@ public sealed class SessionService : ISessionService
         _options = options.Value;
     }
 
+    public async Task<UserSession?> GetSession(long telegramUserId, CancellationToken cancellationToken)
+    {
+        return await _repository.GetSession(telegramUserId, cancellationToken);
+    }
+
     public async Task SaveSession(UserSession session, CancellationToken cancellationToken)
     {
         var expiry = TimeSpan.FromMinutes(_options.ExpiryMinutes);

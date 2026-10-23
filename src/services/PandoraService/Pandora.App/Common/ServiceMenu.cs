@@ -7,10 +7,10 @@ namespace Pandora.App.Common;
 
 internal static class ServiceMenu
 {
-    public static TelegramMessageContent Create(IReadOnlyList<string> roles, ILocalizer localizer)
+    public static TelegramMessageContent Create(IReadOnlyList<string> services, ILocalizer localizer)
     {
-        var buttonRows = roles
-            .Select(role => new TelegramButtonRow(new TelegramButton(role, CallbackConstants.ServicePrefix + role)))
+        var buttonRows = services
+            .Select(service => new TelegramButtonRow(new TelegramButton(service, CallbackConstants.ServicePrefix + service)))
             .ToList();
 
         return new TelegramMessageContent
