@@ -2,7 +2,6 @@ using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
 using MediatR;
 using Pandora.App.Features.Start;
-using Pandora.Core.Constants;
 using Pandora.Core.Constants.Localization;
 using Pandora.Core.Entities;
 using Pandora.Core.Enums;
@@ -12,6 +11,8 @@ namespace Pandora.App.Features.Activation;
 
 public sealed class SubmitPhoneHandler : IRequestHandler<SubmitPhoneMessage, Result<TelegramMessageContent>>
 {
+    private const string InternationalPrefix = "+";
+
     private readonly IIdentityClient _identityClient;
     private readonly ISessionService _sessionService;
     private readonly IMediator _mediator;
@@ -48,6 +49,6 @@ public sealed class SubmitPhoneHandler : IRequestHandler<SubmitPhoneMessage, Res
     {
         var digits = new string(phone.Where(char.IsDigit).ToArray());
 
-        return $"{PhoneConstants.InternationalPrefix}{digits}";
+        return $"{InternationalPrefix}{digits}";
     }
 }
