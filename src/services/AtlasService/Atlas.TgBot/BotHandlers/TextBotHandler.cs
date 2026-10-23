@@ -28,12 +28,12 @@ public sealed class TextBotHandler : IBotHandler
     public async Task HandleAsync(Update update, CancellationToken cancellationToken)
     {
         var message = update.Message!;
-        var command = new TextCommand(
+        var request = new TextRequest(
             message.Chat.Id,
             message.Text!,
             message.From?.FirstName ?? _unnamedUser);
 
-        var answer = await _mediator.Send(command, cancellationToken);
+        var answer = await _mediator.Send(request, cancellationToken);
 
         await _telegram.SendMessageAsync(message.Chat.Id, answer.GetTextOrErrors(), cancellationToken: cancellationToken);
     }

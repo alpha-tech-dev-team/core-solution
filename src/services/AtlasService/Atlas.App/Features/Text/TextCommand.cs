@@ -4,4 +4,4 @@ using CoreSolution.Shared.Results;
 
 namespace Atlas.App.Features.Text;
 
-public record TextCommand(long ChatId, string Text, string Name) : IRequest<Result<TelegramMessageContent>>;
+public record TextRequest(long ChatId, string Text, string Name) : IRequest<Result<TelegramMessageContent>>;
