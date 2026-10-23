@@ -1,18 +1,18 @@
 using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
-using Pandora.TgBot.Constants;
+using Pandora.Core.Interfaces;
 
 namespace Pandora.TgBot.BotHandlers;
 
 internal static class TelegramResultExtensions
 {
-    public static string GetDisplayText(this Result<TelegramMessageContent> result)
+    public static string GetDisplayText(this Result<TelegramMessageContent> result, ILocalizer localizer)
     {
         if (result.IsSuccess && result.Value is not null)
         {
             return result.Value.Text;
         }
 
-        return TelegramErrorMessages.Get(result.ErrorCode);
+        return TelegramErrorTexts.Get(localizer, result.ErrorCode);
     }
 }
