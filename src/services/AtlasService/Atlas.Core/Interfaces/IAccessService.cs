@@ -2,5 +2,5 @@ namespace Atlas.Core.Interfaces;
 
 public interface IAccessService
 {
-    Task<bool> IsAllowedAsync(long chatId, CancellationToken ctn);
+    Task<bool> IsAllowedAsync(long tgUserId, CancellationToken ct);
 }
