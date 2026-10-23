@@ -17,7 +17,7 @@ public class LocalizationProvider
         foreach (var language in Enum.GetValues<Language>())
         {
             var languageCode = language.ToString().ToLowerInvariant();
-            var filePath = Path.Combine(AppContext.BaseDirectory, LocalizationConstants.LocalizationPath, LocalizationConstants.ResourcesPath, $"{languageCode}.json");
+            var filePath = Path.Combine(AppContext.BaseDirectory, LocalizationConstants.LocalizationPath, LocalizationConstants.ResourcesPath, $"{languageCode}{LocalizationConstants.ResourceFileExtension}");
 
             if (File.Exists(filePath))
             {
