@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  atlas-tgbot:
+    build:
+      context: ../../..
+      dockerfile: src/services/AtlasService/Atlas.TgBot/Dockerfile
+    container_name: atlas-tgbot
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - Telegram__BotToken=${TELEGRAM_BOT_TOKEN}
+      - Access__AllowedChatIds=${ALLOWED_CHAT_IDS}
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
