@@ -1,6 +1,8 @@
 using Building.Telegram.Extensions;
 using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
+using Pandora.Core.Constants.Localization;
+using Pandora.Core.Enums;
 using Pandora.Core.Interfaces;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -18,7 +20,7 @@ internal static class TelegramResultExtensions
         return TelegramErrorTexts.Get(localizer, result.ErrorCode);
     }
 
-    public static ReplyMarkup? GetReplyMarkup(this Result<TelegramMessageContent> result)
+    public static ReplyMarkup? GetReplyMarkup(this Result<TelegramMessageContent> result, ILocalizer localizer)
     {
         if (!result.IsSuccess || result.Value is null)
         {
@@ -26,7 +28,7 @@ internal static class TelegramResultExtensions
         }
 
         return result.Value.RequestContact
-            ? result.Value.ToReplyMarkup()
+            ? result.Value.ToReplyMarkup(localizer.GetPhrase(WorkflowStep.Idle, LocalizationKeysConstants.Idle.BtnShareContact))
             : result.ToTelegramMarkup();
     }
 }

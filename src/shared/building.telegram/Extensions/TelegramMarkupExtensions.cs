@@ -1,4 +1,3 @@
-using Building.Telegram.Internal;
 using CoreSolution.Shared.Models;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -38,7 +37,7 @@ public static class TelegramMarkupExtensions
         return new InlineKeyboardMarkup(keyboard);
     }
 
-    public static ReplyMarkup? ToReplyMarkup(this TelegramMessageContent? content)
+    public static ReplyMarkup? ToReplyMarkup(this TelegramMessageContent? content, string contactButtonText)
     {
         if (content is null)
         {
@@ -47,7 +46,7 @@ public static class TelegramMarkupExtensions
 
         if (content.RequestContact)
         {
-            return new ReplyKeyboardMarkup(new KeyboardButton(TelegramConstants.ShareContactButtonText) { RequestContact = true })
+            return new ReplyKeyboardMarkup(new KeyboardButton(contactButtonText) { RequestContact = true })
             {
                 ResizeKeyboard = true,
                 OneTimeKeyboard = true
