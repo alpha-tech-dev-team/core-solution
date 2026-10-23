@@ -4,9 +4,9 @@ using MediatR;
 
 namespace Atlas.App.Features.Text;
 
-public sealed class TextCommandHandler : IRequestHandler<TextCommand, Result<TelegramMessageContent>>
+public sealed class TextCommandHandler : IRequestHandler<TextRequest, Result<TelegramMessageContent>>
 {
-    public Task<Result<TelegramMessageContent>> Handle(TextCommand request, CancellationToken cancellationToken)
+    public Task<Result<TelegramMessageContent>> Handle(TextRequest request, CancellationToken cancellationToken)
     {
         var content = new TelegramMessageContent
         {
