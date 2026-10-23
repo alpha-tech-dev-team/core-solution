@@ -20,4 +20,9 @@ public sealed class ConfigSecretStore : ISecretStore
 
         return Task.FromResult(secret);
     }
+
+    public IReadOnlyList<string> GetServiceNames()
+    {
+        return _options.CurrentValue.Items.Select(item => item.Name).ToList();
+    }
 }

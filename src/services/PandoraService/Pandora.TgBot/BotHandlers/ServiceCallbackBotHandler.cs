@@ -3,19 +3,22 @@ using Building.Telegram.Extensions;
 using MediatR;
 using Pandora.App.Common;
 using Pandora.App.Features.Credentials;
+using Pandora.Core.Interfaces;
 using Telegram.Bot.Types;
 
 namespace Pandora.TgBot.BotHandlers;
 
 public sealed class ServiceCallbackBotHandler : IBotHandler
 {
-    private readonly ITelegramNotificationService _telegram;
+    private readonly ITelegramNotificationService _telegramNotificationService;
     private readonly IMediator _mediator;
+    private readonly ILocalizer _localizer;
 
-    public ServiceCallbackBotHandler(ITelegramNotificationService telegram, IMediator mediator)
+    public ServiceCallbackBotHandler(ITelegramNotificationService telegramNotificationService, IMediator mediator, ILocalizer localizer)
     {
-        _telegram = telegram;
+        _telegramNotificationService = telegramNotificationService;
         _mediator = mediator;
+        _localizer = localizer;
     }
 
     public bool CanHandle(Update update)
@@ -25,12 +28,12 @@ public sealed class ServiceCallbackBotHandler : IBotHandler
 
     public async Task HandleAsync(Update update, CancellationToken cancellationToken)
     {
-        if (update.CallbackQuery is { Data: string data, Message.Chat.Id: long chatId })
+        if (update.CallbackQuery is { Data: string data, Message: { Chat.Id: long tgUserId, MessageId: int messageId } })
         {
             var serviceName = data[CallbackConstants.ServicePrefix.Length..];
-            var result = await _mediator.Send(new GetCredentialsMessage(chatId, serviceName), cancellationToken);
+            var result = await _mediator.Send(new GetCredentialsMessage(tgUserId, messageId, serviceName), cancellationToken);
 
-            await _telegram.SendMessageAsync(chatId, result.GetDisplayText(), result.ToTelegramMarkup(), cancellationToken);
+            await _telegramNotificationService.SendMessageAsync(tgUserId, result.GetDisplayText(_localizer), result.ToTelegramMarkup(), cancellationToken);
         }
     }
 }

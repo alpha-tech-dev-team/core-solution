@@ -37,9 +37,21 @@ public static class TelegramMarkupExtensions
         return new InlineKeyboardMarkup(keyboard);
     }
 
-    public static InlineKeyboardMarkup? ToInlineKeyboardMarkup(this TelegramMessageContent content)
+    public static ReplyMarkup? ToReplyMarkup(this TelegramMessageContent? content, string contactButtonText)
     {
-        ArgumentNullException.ThrowIfNull(content);
+        if (content is null)
+        {
+            return null;
+        }
+
+        if (content.RequestContact)
+        {
+            return new ReplyKeyboardMarkup(new KeyboardButton(contactButtonText) { RequestContact = true })
+            {
+                ResizeKeyboard = true,
+                OneTimeKeyboard = true
+            };
+        }
 
         return content.ButtonRows.ToInlineKeyboardMarkup();
     }
