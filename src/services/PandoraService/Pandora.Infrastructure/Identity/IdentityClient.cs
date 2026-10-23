@@ -38,7 +38,7 @@ public sealed class IdentityClient : IIdentityClient
         }
         catch (HttpRequestException exception)
         {
-            _logger.LogWarning(exception, "Identity activate request failed");
+            _logger.LogWarning(exception, "Запрос активации пользователя в Identity завершился ошибкой");
 
             return false;
         }
@@ -71,7 +71,7 @@ public sealed class IdentityClient : IIdentityClient
         }
         catch (HttpRequestException exception)
         {
-            _logger.LogWarning(exception, "Identity check failed for access {Access}", access);
+            _logger.LogWarning(exception, "Запрос проверки доступа {Access} в Identity завершился ошибкой", access);
 
             return false;
         }
