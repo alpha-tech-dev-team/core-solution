@@ -1,4 +1,5 @@
 using Atlas.App.Features.Start;
+using Atlas.TgBot.Constants;
 using Building.Telegram.Abstractions;
 using Building.Telegram.Extensions;
 using MediatR;
@@ -10,7 +11,6 @@ public sealed class StartBotHandler : IBotHandler
 {
     private readonly IMediator _mediator;
     private readonly ITelegramNotificationService _telegram;
-    private readonly string _unnamedUser = "Пользователь";
 
     public StartBotHandler(IMediator mediator, ITelegramNotificationService telegram)
     {
@@ -20,8 +20,7 @@ public sealed class StartBotHandler : IBotHandler
 
     public bool CanHandle(Update update)
     {
-
-        return update.Message?.Text is not null && update.Message.Text is "/start";
+        return update.Message?.Text is StartConstants.Command;
     }
 
     public async Task HandleAsync(Update update, CancellationToken cancellationToken)
@@ -32,6 +31,6 @@ public sealed class StartBotHandler : IBotHandler
 
         var answer = await _mediator.Send(request, cancellationToken);
 
-        await _telegram.SendMessageAsync(message.Chat.Id, answer.GetTextOrErrors(),answer.ToTelegramMarkup(), cancellationToken: cancellationToken);
+        await _telegram.SendMessageAsync(message.Chat.Id, answer.GetTextOrErrors(), answer.ToTelegramMarkup(), cancellationToken: cancellationToken);
     }
 }
