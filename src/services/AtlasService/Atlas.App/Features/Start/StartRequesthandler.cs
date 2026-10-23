@@ -27,7 +27,7 @@ public sealed class StartRequestHandler : IRequestHandler<StartRequest, Result<T
         if (!allowed)
         {
             _logger.LogWarning("Access denied for chat_id {ChatId}", request.ChatId);
-            return Result.Failure<TelegramMessageContent>("AccessDenied", ["У вас нет доступа. Обратитесь к администратору."]);
+            return Result<TelegramMessageContent>.Failure("AccessDenied");
         }
 
         _logger.LogInformation("Access granted for chat_id {ChatId}, returning menu", request.ChatId);
