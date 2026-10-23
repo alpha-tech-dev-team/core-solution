@@ -8,13 +8,13 @@ public interface ITelegramNotificationService
     Task<Message> SendMessageAsync(
         long chatId,
         string text,
-        InlineKeyboardMarkup? replyMarkup = null,
+        ReplyMarkup? replyMarkup = null,
         CancellationToken cancellationToken = default);
 
     Task<Message> SendAlertAsync(
         long chatId,
         string text,
-        InlineKeyboardMarkup? replyMarkup = null,
+        ReplyMarkup? replyMarkup = null,
         CancellationToken cancellationToken = default);
 
     Task<Message> EditMessageAsync(

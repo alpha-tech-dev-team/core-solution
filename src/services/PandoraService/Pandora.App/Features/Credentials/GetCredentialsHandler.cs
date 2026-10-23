@@ -1,6 +1,7 @@
 using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
 using MediatR;
+using Pandora.Core.Constants.Localization;
 using Pandora.Core.Enums;
 using Pandora.Core.Interfaces;
 
@@ -8,22 +9,39 @@ namespace Pandora.App.Features.Credentials;
 
 public sealed class GetCredentialsHandler : IRequestHandler<GetCredentialsMessage, Result<TelegramMessageContent>>
 {
-    private readonly IAccessService _accessService;
+    private readonly IRequestContext _requestContext;
+    private readonly IIdentityClient _identityClient;
     private readonly ISecretStore _secretStore;
+    private readonly ISessionService _sessionService;
+    private readonly ILocalizer _localizer;
 
-    public GetCredentialsHandler(IAccessService accessService, ISecretStore secretStore)
+    public GetCredentialsHandler(
+        IRequestContext requestContext,
+        IIdentityClient identityClient,
+        ISecretStore secretStore,
+        ISessionService sessionService,
+        ILocalizer localizer)
     {
-        _accessService = accessService;
+        _requestContext = requestContext;
+        _identityClient = identityClient;
         _secretStore = secretStore;
+        _sessionService = sessionService;
+        _localizer = localizer;
     }
 
     public async Task<Result<TelegramMessageContent>> Handle(GetCredentialsMessage request, CancellationToken cancellationToken)
     {
-        var services = await _accessService.GetServices(request.ChatId, cancellationToken);
+        var session = _requestContext.Session;
 
-        if (!services.Contains(request.ServiceName))
+        if (!session.Roles.Contains(request.ServiceName))
         {
-            return Result<TelegramMessageContent>.Failure(ErrorCode.AccessDenied.ToString());
+            if (!await _identityClient.CheckUser(request.TelegramUserId, request.ServiceName, cancellationToken))
+            {
+                return Result<TelegramMessageContent>.Failure(ErrorCode.AccessDenied.ToString());
+            }
+
+            session.Roles.Add(request.ServiceName);
+            await _sessionService.SaveSession(session, cancellationToken);
         }
 
         var secret = await _secretStore.GetSecret(request.ServiceName, cancellationToken);
@@ -34,11 +52,11 @@ public sealed class GetCredentialsHandler : IRequestHandler<GetCredentialsMessag
         }
 
         var text = string.Format(
-            GetCredentialsConstants.CredentialsTemplate,
+            _localizer.GetPhrase(WorkflowStep.ServiceSelection, LocalizationKeysConstants.ServiceSelection.CredentialsTemplate),
             request.ServiceName,
-            GetCredentialsConstants.LoginLabel,
+            _localizer.GetPhrase(WorkflowStep.ServiceSelection, LocalizationKeysConstants.ServiceSelection.LoginLabel),
             secret.Login,
-            GetCredentialsConstants.PasswordLabel,
+            _localizer.GetPhrase(WorkflowStep.ServiceSelection, LocalizationKeysConstants.ServiceSelection.PasswordLabel),
             secret.Password);
 
         return Result<TelegramMessageContent>.Success(new TelegramMessageContent { Text = text });

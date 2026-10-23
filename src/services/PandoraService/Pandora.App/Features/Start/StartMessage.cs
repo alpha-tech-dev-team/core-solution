@@ -4,4 +4,4 @@ using MediatR;
 
 namespace Pandora.App.Features.Start;
 
-public record StartMessage(long ChatId) : IRequest<Result<TelegramMessageContent>>;
+public record StartMessage(long TelegramUserId, int MessageId) : IRequest<Result<TelegramMessageContent>>;
