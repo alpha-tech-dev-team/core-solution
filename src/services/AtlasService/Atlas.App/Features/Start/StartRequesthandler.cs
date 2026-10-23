@@ -1,3 +1,4 @@
+using Atlas.Core.Enums;
 using Atlas.Core.Interfaces;
 using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
@@ -19,24 +20,24 @@ public sealed class StartRequestHandler : IRequestHandler<StartRequest, Result<T
 
     public async Task<Result<TelegramMessageContent>> Handle(StartRequest request, CancellationToken ct)
     {
-        _logger.LogInformation("StartRequest received for chat_id: {ChatId}", request.ChatId);
-        
-        var allowed = await _access.IsAllowedAsync(request.ChatId, ct);
-        _logger.LogInformation("Access check result for chat_id {ChatId}: {Allowed}", request.ChatId, allowed);
+        _logger.LogInformation("StartRequest received");
+
+        var allowed = await _access.IsAllowedAsync(request.TgUserId, ct);
+        _logger.LogInformation("Access check result: {Allowed}", allowed);
 
         if (!allowed)
         {
-            _logger.LogWarning("Access denied for chat_id {ChatId}", request.ChatId);
-            return Result<TelegramMessageContent>.Failure("AccessDenied");
+            _logger.LogWarning("Access denied");
+            return Result<TelegramMessageContent>.Failure(ErrorCode.AccessDenied.ToString());
         }
 
-        _logger.LogInformation("Access granted for chat_id {ChatId}, returning menu", request.ChatId);
+        _logger.LogInformation("Access granted, returning menu");
         return Result<TelegramMessageContent>.Success(new TelegramMessageContent
         {
-            Text = "Главное меню:",
+            Text = StartConstants.MenuText,
             ButtonRows = [new TelegramButtonRow(
-                new TelegramButton("Задачи", "menu:tasks"),
-                new TelegramButton("Профиль", "menu:profile"))]
+                new TelegramButton("Tasks", "menu:tasks"),
+                new TelegramButton("Profile", "menu:profile"))]
         });
     }
 }
