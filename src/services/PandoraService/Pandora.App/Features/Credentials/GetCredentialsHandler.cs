@@ -1,6 +1,7 @@
 using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
 using MediatR;
+using Pandora.Core.Constants.Localization;
 using Pandora.Core.Enums;
 using Pandora.Core.Interfaces;
 
@@ -10,11 +11,13 @@ public sealed class GetCredentialsHandler : IRequestHandler<GetCredentialsMessag
 {
     private readonly IRequestContext _requestContext;
     private readonly ISecretStore _secretStore;
+    private readonly ILocalizer _localizer;
 
-    public GetCredentialsHandler(IRequestContext requestContext, ISecretStore secretStore)
+    public GetCredentialsHandler(IRequestContext requestContext, ISecretStore secretStore, ILocalizer localizer)
     {
         _requestContext = requestContext;
         _secretStore = secretStore;
+        _localizer = localizer;
     }
 
     public async Task<Result<TelegramMessageContent>> Handle(GetCredentialsMessage request, CancellationToken cancellationToken)
@@ -32,11 +35,11 @@ public sealed class GetCredentialsHandler : IRequestHandler<GetCredentialsMessag
         }
 
         var text = string.Format(
-            GetCredentialsConstants.CredentialsTemplate,
+            _localizer.GetPhrase(WorkflowStep.ServiceSelection, LocalizationKeysConstants.ServiceSelection.CredentialsTemplate),
             request.ServiceName,
-            GetCredentialsConstants.LoginLabel,
+            _localizer.GetPhrase(WorkflowStep.ServiceSelection, LocalizationKeysConstants.ServiceSelection.LoginLabel),
             secret.Login,
-            GetCredentialsConstants.PasswordLabel,
+            _localizer.GetPhrase(WorkflowStep.ServiceSelection, LocalizationKeysConstants.ServiceSelection.PasswordLabel),
             secret.Password);
 
         return Result<TelegramMessageContent>.Success(new TelegramMessageContent { Text = text });

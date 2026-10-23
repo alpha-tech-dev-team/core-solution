@@ -1,11 +1,13 @@
 using CoreSolution.Shared.Models;
-using Pandora.App.Features.Start;
+using Pandora.Core.Constants.Localization;
+using Pandora.Core.Enums;
+using Pandora.Core.Interfaces;
 
 namespace Pandora.App.Common;
 
 internal static class ServiceMenu
 {
-    public static TelegramMessageContent Create(IReadOnlyList<string> roles)
+    public static TelegramMessageContent Create(IReadOnlyList<string> roles, ILocalizer localizer)
     {
         var buttonRows = roles
             .Select(role => new TelegramButtonRow(new TelegramButton(role, CallbackConstants.ServicePrefix + role)))
@@ -13,7 +15,7 @@ internal static class ServiceMenu
 
         return new TelegramMessageContent
         {
-            Text = StartConstants.ServicesText,
+            Text = localizer.GetPhrase(WorkflowStep.ServiceSelection, LocalizationKeysConstants.ServiceSelection.Text),
             ButtonRows = buttonRows
         };
     }
