@@ -7,9 +7,7 @@ public static class TelegramOptionsExtensions
 {
     public static IServiceCollection AddTelegramOptions(this IServiceCollection services, IConfiguration configuration)
     {
-        var telegramOptions = configuration
-            .GetSection(TelegramBotOptions.SectionName)
-            .Get<TelegramBotOptions>()
+        var telegramOptions = configuration.GetSection(TelegramBotOptions.SectionName).Get<TelegramBotOptions>()
             ?? throw new InvalidOperationException($"Section {TelegramBotOptions.SectionName} is not configured");
 
         ArgumentException.ThrowIfNullOrWhiteSpace(telegramOptions.BotToken);
