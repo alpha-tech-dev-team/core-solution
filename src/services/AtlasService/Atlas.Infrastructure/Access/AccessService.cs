@@ -18,7 +18,7 @@ public sealed class AccessService : IAccessService
         _logger.LogInformation("AccessService initialized. Allowed TgUserIds: {Count}", _allowed.Count);
     }
 
-    public Task<bool> IsAllowedAsync(long tgUserId, CancellationToken ct)
+    public Task<bool> IsAllowedAsync(long tgUserId, CancellationToken cancellationToken)
     {
         var allowed = _allowed.Contains(tgUserId);
         _logger.LogInformation("Access check for TgUserId {TgUserId}: {Result}", tgUserId, allowed ? "ALLOWED" : "DENIED");

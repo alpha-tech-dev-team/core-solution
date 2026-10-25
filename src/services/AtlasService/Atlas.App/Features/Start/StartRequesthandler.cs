@@ -18,11 +18,11 @@ public sealed class StartRequestHandler : IRequestHandler<StartRequest, Result<T
         _logger = logger;
     }
 
-    public async Task<Result<TelegramMessageContent>> Handle(StartRequest request, CancellationToken ct)
+    public async Task<Result<TelegramMessageContent>> Handle(StartRequest request, CancellationToken cancellationToken)
     {
         _logger.LogInformation("StartRequest received");
 
-        var allowed = await _access.IsAllowedAsync(request.TgUserId, ct);
+        var allowed = await _access.IsAllowedAsync(request.TgUserId, cancellationToken);
         _logger.LogInformation("Access check result: {Allowed}", allowed);
 
         if (!allowed)
