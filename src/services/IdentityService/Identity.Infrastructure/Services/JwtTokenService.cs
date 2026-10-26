@@ -10,7 +10,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Identity.Infrastructure.Security;
+namespace Identity.Infrastructure.Services;
 
 public sealed class JwtTokenService : IJwtTokenService
 {

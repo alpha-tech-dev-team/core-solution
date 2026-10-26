@@ -8,7 +8,7 @@ using Identity.Core.Interfaces.Services;
 using Identity.Infrastructure.Database.Extensions;
 using Identity.Infrastructure.Options.Extensions;
 using Identity.Infrastructure.Repositories;
-using Identity.Infrastructure.Security;
+using Identity.Infrastructure.Services;
 using Serilog;
 
 namespace Identity.Api.Extensions;

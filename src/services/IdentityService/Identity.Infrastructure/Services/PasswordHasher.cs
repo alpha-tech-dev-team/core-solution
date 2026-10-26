@@ -7,7 +7,9 @@ using Konscious.Security.Cryptography;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Identity.Infrastructure.Security;
+namespace Identity.Infrastructure.Services;
+using Identity.Infrastructure.Constants;
+using Identity.Infrastructure.Models;
 
 public sealed class PasswordHasher : IPasswordHasher
 {
@@ -144,8 +146,4 @@ public sealed class PasswordHasher : IPasswordHasher
 
         return false;
     }
-
-    private readonly record struct Argon2Parameters(int MemorySize, int Iterations, int Parallelism);
-
-    private readonly record struct StoredHash(Argon2Parameters Parameters, byte[] Salt, byte[] Hash);
 }

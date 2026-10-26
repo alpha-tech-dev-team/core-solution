@@ -1,4 +1,4 @@
-namespace Identity.Infrastructure.Security;
+namespace Identity.Infrastructure.Constants;
 
 public static class PasswordHasherConstants
 {

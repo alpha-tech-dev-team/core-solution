@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 using Identity.Core.Options;
-using Identity.Infrastructure.Security;
+using Identity.Infrastructure.Constants;
 
 namespace Identity.Infrastructure.Options.Extensions;
 
