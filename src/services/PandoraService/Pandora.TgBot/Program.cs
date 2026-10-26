@@ -1,4 +1,6 @@
 using Building.Telegram.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
+using Pandora.Infrastructure.Database;
 using Pandora.Infrastructure.DependencyInjection;
 using Pandora.TgBot.Constants;
 using Pandora.TgBot.Extension.DependencyInjection;
@@ -14,5 +16,10 @@ builder.Services.AddApplication();
 builder.Services.AddBotHandlers();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    await scope.ServiceProvider.GetRequiredService<PandoraDbContext>().Database.MigrateAsync();
+}
 
 app.Run();
