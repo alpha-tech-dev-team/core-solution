@@ -1,4 +1,5 @@
 using Building.Telegram.Abstractions;
+using Building.Telegram.Extensions;
 using MediatR;
 using Pandora.App.Features.Start;
 using Pandora.Core.Interfaces;
@@ -31,7 +32,7 @@ public sealed class StartBotHandler : IBotHandler
         {
             var result = await _mediator.Send(new StartMessage(tgUserId, messageId), cancellationToken);
 
-            await _telegramNotificationService.SendMessageAsync(tgUserId, result.GetDisplayText(_localizer), result.GetReplyMarkup(_localizer), cancellationToken);
+            await _telegramNotificationService.SendMessageAsync(tgUserId, result.GetDisplayText(), result.ToTelegramMarkup(), cancellationToken);
         }
     }
 }
