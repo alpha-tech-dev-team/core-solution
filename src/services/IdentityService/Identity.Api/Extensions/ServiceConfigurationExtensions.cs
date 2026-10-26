@@ -3,10 +3,12 @@ using FluentValidation.AspNetCore;
 using Identity.App;
 using Identity.App.Services;
 using Identity.Core.Interfaces.Repositories;
+using Identity.Core.Interfaces.Security;
 using Identity.Core.Interfaces.Services;
 using Identity.Infrastructure.Database.Extensions;
 using Identity.Infrastructure.Options.Extensions;
 using Identity.Infrastructure.Repositories;
+using Identity.Infrastructure.Security;
 using Serilog;
 
 namespace Identity.Api.Extensions;
@@ -26,12 +28,16 @@ public static class ServiceConfigurationExtensions
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IIdentityService, IdentityService>();
+        services.AddScoped<IAdminAuthService, AdminAuthService>();
+
+        services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<IPasswordHasher, PasswordHasher>();
+        services.AddSingleton<IJwtTokenService, JwtTokenService>();
 
         services.AddFluentValidationAutoValidation();
         services.AddValidatorsFromAssemblyContaining<AssemblyMarker>();
 
         services.AddJwtAuthentication(configuration);
-        services.AddAuthorization();
 
         return services;
     }
