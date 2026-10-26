@@ -34,7 +34,7 @@ public sealed class IdentityClient : IIdentityClient
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogWarning(ex, "identity ActivateUser request failed", telegramUserId);
+            _logger.LogWarning($"identity ActivateUser request failed: {ex}");
             return false;
         }
     }
@@ -50,7 +50,7 @@ public sealed class IdentityClient : IIdentityClient
         }
         catch(HttpRequestException ex)
         {
-            _logger.LogWarning(ex, "identity CheckUser request failed", telegramUserId);
+            _logger.LogWarning($"identity CheckUser request failed: {ex}");
             return false;
         }
     }
