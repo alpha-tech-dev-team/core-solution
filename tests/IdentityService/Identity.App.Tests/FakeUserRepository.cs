@@ -32,8 +32,8 @@ internal sealed class FakeUserRepository : IUserRepository
         return Task.FromResult(_user?.AdminUsername == username ? _user : null);
     }
 
-    public Task SaveChanges(CancellationToken cancellationToken = default)
+    public Task<int> SaveChanges(CancellationToken cancellationToken = default)
     {
-        return Task.CompletedTask;
+        return Task.FromResult(1);
     }
 }

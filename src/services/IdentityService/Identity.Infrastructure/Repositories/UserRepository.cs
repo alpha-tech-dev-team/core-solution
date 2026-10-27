@@ -44,7 +44,7 @@ public class UserRepository : IUserRepository
             .FirstOrDefaultAsync(x => x.TelegramUserId == telegramUserId, cancellationToken);
     }
 
-    public Task SaveChanges(CancellationToken cancellationToken = default)
+    public Task<int> SaveChanges(CancellationToken cancellationToken = default)
     {
         return _context.SaveChangesAsync(cancellationToken);
     }
