@@ -12,6 +12,7 @@ public static class RouteConfigurationExtensions
         }
 
         app.MapIdentityEndpoints();
+        app.MapAdminEndpoints();
 
         return app;
     }

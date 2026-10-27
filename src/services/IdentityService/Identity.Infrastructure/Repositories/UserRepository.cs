@@ -20,6 +20,22 @@ public class UserRepository : IUserRepository
             .FirstOrDefaultAsync(x => x.Phone == phone, cancellationToken);
     }
 
+    public Task<User?> GetById(Guid id, CancellationToken cancellationToken = default)
+    {
+        return _context.Users
+            .Include(x => x.UserRoles)
+            .ThenInclude(x => x.Role)
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+    }
+
+    public Task<User?> GetByAdminUsername(string username, CancellationToken cancellationToken = default)
+    {
+        return _context.Users
+            .Include(x => x.UserRoles)
+            .ThenInclude(x => x.Role)
+            .FirstOrDefaultAsync(x => x.AdminUsername == username, cancellationToken);
+    }
+
     public Task<User?> GetByTelegramUserId(long telegramUserId, CancellationToken cancellationToken = default)
     {
         return _context.Users
@@ -28,7 +44,7 @@ public class UserRepository : IUserRepository
             .FirstOrDefaultAsync(x => x.TelegramUserId == telegramUserId, cancellationToken);
     }
 
-    public Task SaveChanges(CancellationToken cancellationToken = default)
+    public Task<int> SaveChanges(CancellationToken cancellationToken = default)
     {
         return _context.SaveChangesAsync(cancellationToken);
     }

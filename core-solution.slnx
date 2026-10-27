@@ -27,5 +27,6 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/IdentityService/Identity.App.Tests/Identity.App.Tests.csproj" />
+    <Project Path="tests/IdentityService/Identity.Infrastructure.Tests/Identity.Infrastructure.Tests.csproj" />
   </Folder>
 </Solution>

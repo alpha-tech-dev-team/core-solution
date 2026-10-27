@@ -2,7 +2,6 @@ using Identity.App.Errors;
 using Identity.App.Services;
 using Identity.Core.Entities;
 using Identity.Core.Enums;
-using Identity.Core.Interfaces.Repositories;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Identity.App.Tests;
@@ -111,30 +110,5 @@ public class IdentityServiceTests
     private static IdentityService CreateService(User? user)
     {
         return new IdentityService(new FakeUserRepository(user), NullLogger<IdentityService>.Instance);
-    }
-
-    private class FakeUserRepository : IUserRepository
-    {
-        private readonly User? _user;
-
-        public FakeUserRepository(User? user)
-        {
-            _user = user;
-        }
-
-        public Task<User?> GetByPhone(string phone, CancellationToken cancellationToken = default)
-        {
-            return Task.FromResult(_user?.Phone == phone ? _user : null);
-        }
-
-        public Task<User?> GetByTelegramUserId(long telegramUserId, CancellationToken cancellationToken = default)
-        {
-            return Task.FromResult(_user?.TelegramUserId == telegramUserId ? _user : null);
-        }
-
-        public Task SaveChanges(CancellationToken cancellationToken = default)
-        {
-            return Task.CompletedTask;
-        }
     }
 }

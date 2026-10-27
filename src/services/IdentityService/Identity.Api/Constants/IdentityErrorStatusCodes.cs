@@ -10,6 +10,8 @@ internal static class IdentityErrorStatusCodes
             [IdentityErrorCode.UserNotFound] = StatusCodes.Status404NotFound,
             [IdentityErrorCode.UserAlreadyActivated] = StatusCodes.Status409Conflict,
             [IdentityErrorCode.AccessDenied] = StatusCodes.Status403Forbidden,
+            [IdentityErrorCode.InvalidCredentials] = StatusCodes.Status401Unauthorized,
+            [IdentityErrorCode.InvalidRefreshToken] = StatusCodes.Status401Unauthorized,
             [IdentityErrorCode.InternalError] = StatusCodes.Status500InternalServerError
         };
 
