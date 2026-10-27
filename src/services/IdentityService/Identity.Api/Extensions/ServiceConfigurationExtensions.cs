@@ -38,6 +38,7 @@ public static class ServiceConfigurationExtensions
         services.AddValidatorsFromAssemblyContaining<AssemblyMarker>();
 
         services.AddJwtAuthentication(configuration);
+        services.AddRateLimitingConfiguration(configuration);
 
         return services;
     }

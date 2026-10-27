@@ -13,6 +13,8 @@ public static class MiddlewareConfigurationExtensions
         app.UseAuthentication();
         app.UseAuthorization();
 
+        app.UseRateLimiter();
+
         return app;
     }
 }
