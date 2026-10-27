@@ -1,4 +1,5 @@
-using Atlas.Core.Enums;
+using CoreSolution.Shared.Models;
+using CoreSolution.Shared.Results;
 using MediatR;
 
 namespace Atlas.App.Features.Start;
