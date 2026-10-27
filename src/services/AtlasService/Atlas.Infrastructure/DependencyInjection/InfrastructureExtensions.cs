@@ -1,6 +1,8 @@
 using Atlas.Core.Interfaces;
 using Atlas.Infrastructure.Access;
 using Atlas.Infrastructure.Options;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 namespace Atlas.Infrastructure.DependencyInjection;
