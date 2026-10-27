@@ -12,7 +12,7 @@ public sealed class PermissionConfiguration : IEntityTypeConfiguration<Permissio
         builder.HasKey(e => new { e.UserId, e.VaultItemId });
         builder.Property(e => e.UserId).HasColumnName(DatabaseConstants.Permissions.UserId);
         builder.Property(e => e.VaultItemId).HasColumnName(DatabaseConstants.Permissions.VaultItemId).HasMaxLength(DatabaseConstants.Permissions.VaultItemIdMaxLength);
-        builder.Property(e => e.IsActive).HasColumnName(DatabaseConstants.Permissions.IsActive);
+        builder.Property(e => e.IsActive).HasColumnName(DatabaseConstants.Permissions.IsActive).HasDefaultValue(DatabaseConstants.Permissions.IsActiveDefault);
         builder.HasOne<SecretMetadata>().WithMany().HasForeignKey(e => e.VaultItemId).OnDelete(DeleteBehavior.Cascade);
     }
 }

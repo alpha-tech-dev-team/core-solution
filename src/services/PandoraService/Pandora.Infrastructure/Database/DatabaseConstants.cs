@@ -20,6 +20,7 @@ public static class DatabaseConstants
         public const string VaultItemId = "vault_item_id";
         public const string IsActive = "is_active";
         public const int VaultItemIdMaxLength = 36;
+        public const bool IsActiveDefault = true;
     }
 
     public static class Audit
