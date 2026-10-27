@@ -8,6 +8,9 @@ public static class DatabaseConstants
         public const string VaultItemId = "vault_item_id";
         public const string ResourceName = "resource_name";
         public const string Username = "username";
+        public const int VaultItemIdMaxLength = 36;
+        public const int ResourceNameMaxLength = 100;
+        public const int UsernameMaxLength = 100;
     }
 
     public static class Permissions
@@ -16,6 +19,7 @@ public static class DatabaseConstants
         public const string UserId = "user_id";
         public const string VaultItemId = "vault_item_id";
         public const string IsActive = "is_active";
+        public const int VaultItemIdMaxLength = 36;
     }
 
     public static class Audit
@@ -27,5 +31,8 @@ public static class DatabaseConstants
         public const string Action = "action";
         public const string TargetItemId = "target_item_id";
         public const string RequestSource = "request_source";
+        public const int ActionMaxLength = 50;
+        public const int TargetItemIdMaxLength = 36;
+        public const int RequestSourceMaxLength = 20;
     }
 }
