@@ -1,5 +1,5 @@
 namespace Atlas.App;
 
-internal static class AssemblyMarker
+public class AssemblyMarker
 {
 }
