@@ -6,7 +6,7 @@ public static class HandlerExtensions
 {
     public static IServiceCollection AddBotHandlers(this IServiceCollection services)
     {
-        var handlerTypes = typeof(AssemblyMarker).Assembly
+        var handlerTypes = typeof(HandlerExtensions).Assembly
             .GetTypes()
             .Where(type => type is { IsClass: true, IsAbstract: false }
                 && typeof(IBotHandler).IsAssignableFrom(type));
