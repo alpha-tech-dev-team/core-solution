@@ -30,18 +30,18 @@ public static class JwtConfigurationExtensions
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(jwt =>
             {
-                jwt.MapInboundClaims = false;
+                jwt.MapInboundClaims = JwtConstants.MapInboundClaims;
                 jwt.TokenValidationParameters = new TokenValidationParameters
                 {
-                    ValidateIssuer = true,
+                    ValidateIssuer = JwtConstants.ValidateIssuer,
                     ValidIssuer = options.Issuer,
-                    ValidateAudience = true,
+                    ValidateAudience = JwtConstants.ValidateAudience,
                     ValidAudience = options.Audience,
-                    ValidateIssuerSigningKey = true,
+                    ValidateIssuerSigningKey = JwtConstants.ValidateIssuerSigningKey,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret)),
-                    ValidateLifetime = true,
-                    ClockSkew = TimeSpan.Zero,
-                    ValidAlgorithms = [SecurityAlgorithms.HmacSha256],
+                    ValidateLifetime = JwtConstants.ValidateLifetime,
+                    ClockSkew = JwtConstants.ClockSkew,
+                    ValidAlgorithms = JwtConstants.ValidAlgorithms,
                     NameClaimType = IdentityClaims.UniqueName,
                     RoleClaimType = IdentityClaims.Role
                 };

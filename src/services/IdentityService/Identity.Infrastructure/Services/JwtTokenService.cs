@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Text;
 using CoreSolution.Shared.Options;
 using Identity.Core.Constants;
+using JwtConstants = Identity.Core.Constants.JwtConstants;
 using Identity.Core.Entities;
 using Identity.Core.Interfaces.Security;
 using Identity.Core.Models;
@@ -14,9 +15,7 @@ namespace Identity.Infrastructure.Services;
 
 public sealed class JwtTokenService : IJwtTokenService
 {
-    private const string RefreshAudienceSuffix = ":refresh";
-
-    private static readonly JsonWebTokenHandler TokenHandler = new() { MapInboundClaims = false };
+    private static readonly JsonWebTokenHandler TokenHandler = new() { MapInboundClaims = JwtConstants.MapInboundClaims };
 
     private readonly JwtOptions _options;
     private readonly TimeProvider _timeProvider;
@@ -84,7 +83,7 @@ public sealed class JwtTokenService : IJwtTokenService
             IssuedAt = issuedAt.UtcDateTime,
             NotBefore = issuedAt.UtcDateTime,
             Expires = expiresAt.UtcDateTime,
-            SigningCredentials = new SigningCredentials(_signingKey, SecurityAlgorithms.HmacSha256)
+            SigningCredentials = new SigningCredentials(_signingKey, JwtConstants.SigningAlgorithm)
         };
 
         return TokenHandler.CreateToken(descriptor);
@@ -111,20 +110,20 @@ public sealed class JwtTokenService : IJwtTokenService
     {
         return new TokenValidationParameters
         {
-            ValidateIssuer = true,
+            ValidateIssuer = JwtConstants.ValidateIssuer,
             ValidIssuer = _options.Issuer,
-            ValidateAudience = true,
+            ValidateAudience = JwtConstants.ValidateAudience,
             ValidAudience = GetRefreshAudience(),
-            ValidateIssuerSigningKey = true,
+            ValidateIssuerSigningKey = JwtConstants.ValidateIssuerSigningKey,
             IssuerSigningKey = _signingKey,
-            ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero,
-            ValidAlgorithms = [SecurityAlgorithms.HmacSha256]
+            ValidateLifetime = JwtConstants.ValidateLifetime,
+            ClockSkew = JwtConstants.ClockSkew,
+            ValidAlgorithms = JwtConstants.ValidAlgorithms
         };
     }
 
     private string GetRefreshAudience()
     {
-        return $"{_options.Audience}{RefreshAudienceSuffix}";
+        return $"{_options.Audience}{JwtConstants.RefreshAudienceSuffix}";
     }
 }
