@@ -2,17 +2,15 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Atlas.Core.Interfaces;
-using Atlas.Infrastructure.Options;
-using System.Net;
 
 namespace Atlas.Infrastructure.Identity;
 
 public sealed class IdentityClient : IIdentityClient
 {
     private const string ActivateRoute = "api/client/activate";
-    private const string Checkroute = "api/client/check";
-    
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults .Web);
+    private const string CheckRoute = "api/client/check";
+
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     private readonly HttpClient _httpClient;
     private readonly ILogger<IdentityClient> _logger;
@@ -28,13 +26,13 @@ public sealed class IdentityClient : IIdentityClient
         try
         {
             var response = await _httpClient.PostAsJsonAsync(
-                ActivateRoute, new{telegramUserId, phone}, JsonOptions, cancellationToken
-            );
+                ActivateRoute, new { telegramUserId, phone }, JsonOptions, cancellationToken);
+
             return response.IsSuccessStatusCode;
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogWarning($"identity ActivateUser request failed: {ex}");
+            _logger.LogWarning(ex, "Запрос на активацию пользователя не удался");
             return false;
         }
     }
@@ -43,14 +41,14 @@ public sealed class IdentityClient : IIdentityClient
     {
         try
         {
-            var response = await  _httpClient.PostAsJsonAsync(
-                Checkroute, new {telegramUserId, access}, JsonOptions, cancellationToken
-            );
+            var response = await _httpClient.PostAsJsonAsync(
+                CheckRoute, new { telegramUserId, access }, JsonOptions, cancellationToken);
+
             return response.IsSuccessStatusCode;
         }
-        catch(HttpRequestException ex)
+        catch (HttpRequestException ex)
         {
-            _logger.LogWarning($"identity CheckUser request failed: {ex}");
+            _logger.LogWarning(ex, "Запрос на проверку пользователя не удался");
             return false;
         }
     }

@@ -1,4 +1,3 @@
-using Atlas.Core.Enums;
 using Atlas.Core.Interfaces;
 using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
@@ -9,35 +8,43 @@ namespace Atlas.App.Features.Start;
 
 public sealed class StartRequestHandler : IRequestHandler<StartRequest, Result<TelegramMessageContent>>
 {
-    private readonly IAccessService _access;
+    private readonly ISessionService _sessionService;
     private readonly ILogger<StartRequestHandler> _logger;
 
-    public StartRequestHandler(IAccessService access, ILogger<StartRequestHandler> logger)
+    public StartRequestHandler(ISessionService sessionService, ILogger<StartRequestHandler> logger)
     {
-        _access = access;
+        _sessionService = sessionService;
         _logger = logger;
     }
 
     public async Task<Result<TelegramMessageContent>> Handle(StartRequest request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("StartRequest received");
+        _logger.LogInformation("/start запрос получен", request.TgUserId);
 
-        var allowed = await _access.IsAllowedAsync(request.TgUserId, cancellationToken);
-        _logger.LogInformation("Access check result: {Allowed}", allowed);
+        var session = await _sessionService.GetSession(request.TgUserId, cancellationToken);
 
-        if (!allowed)
+        if (session is null)
         {
-            _logger.LogWarning("Access denied");
-            return Result<TelegramMessageContent>.Failure(ErrorCode.AccessDenied.ToString());
+            _logger.LogInformation("Сесссия не найдена, тоебуется телефон", request.TgUserId);
+
+            return Result<TelegramMessageContent>.Success(new TelegramMessageContent
+            {
+                Text = StartConstants.PhoneRequestText,
+                RequestContact = true
+            });
         }
 
-        _logger.LogInformation("Access granted, returning menu");
+        _logger.LogInformation("С", request.TgUserId);
+
         return Result<TelegramMessageContent>.Success(new TelegramMessageContent
         {
             Text = StartConstants.MenuText,
-            ButtonRows = [new TelegramButtonRow(
-                new TelegramButton("Tasks", "menu:tasks"),
-                new TelegramButton("Profile", "menu:profile"))]
+            ButtonRows =
+            [
+                new TelegramButtonRow(
+                    new TelegramButton(StartConstants.Problems, "menu:problems"),
+                    new TelegramButton(StartConstants.Profile, "menu:profile"))
+            ]
         });
     }
 }
