@@ -1,4 +1,3 @@
-
 using Atlas.Core.Entities;
 
 namespace Atlas.Core.Interfaces;
