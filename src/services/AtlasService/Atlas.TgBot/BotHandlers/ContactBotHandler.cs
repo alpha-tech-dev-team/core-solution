@@ -1,0 +1,38 @@
+using Atlas.App.Features.Activation;
+using Building.Telegram.Abstractions;
+using Building.Telegram.Extensions;
+using MediatR;
+using Telegram.Bot.Types;
+
+namespace Atlas.TgBot.BotHandlers;
+
+public sealed class ContactBotHandler : IBotHandler
+{
+    private readonly ITelegramNotificationService _telegramNotificationService;
+    private readonly IMediator _mediator;
+
+    public ContactBotHandler(ITelegramNotificationService telegramNotificationService, IMediator mediator)
+    {
+        _telegramNotificationService = telegramNotificationService;
+        _mediator = mediator;
+    }
+
+    public bool CanHandle(Update update)
+    {
+        return update.Message?.Contact is not null;
+    }
+
+    public async Task HandleAsync(Update update, CancellationToken cancellationToken)
+    {
+        if (update.Message is { Chat.Id: long tgUserId, MessageId: int messageId, Contact.PhoneNumber: string phone })
+        {
+            var result = await _mediator.Send(new SubmitPhoneMessage(tgUserId, messageId, phone), cancellationToken);
+
+            await _telegramNotificationService.SendMessageAsync(
+                tgUserId,
+                result.GetDisplayText(),
+                result.ToTelegramMarkup(),
+                cancellationToken);
+        }
+    }
+}
