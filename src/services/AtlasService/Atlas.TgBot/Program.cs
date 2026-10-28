@@ -1,28 +1,26 @@
+using Atlas.Infrastructure.DependencyInjection;
 using Atlas.Infrastructure.Options;
 using Atlas.TgBot.Extensions.DependencyInjection;
-using Building.Telegram.Internal;
 using Building.Telegram.DependencyInjection;
+using Building.Telegram.Internal;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.Configure<TelegramBotOptions>(
-    builder.Configuration.GetSection(TelegramBotOptions.SectionName));
+builder.Services.AddAtlasOptions(builder.Configuration);
 
 var telegramOptions = builder.Configuration
     .GetSection(TelegramBotOptions.SectionName)
     .Get<TelegramBotOptions>()
-    ?? throw new InvalidOperationException($"Секция {TelegramBotOptions.SectionName} не задана");
+    ?? throw new InvalidOperationException($"Section {TelegramBotOptions.SectionName} is missing.");
 
 if (string.IsNullOrWhiteSpace(telegramOptions.BotToken))
 {
-    throw new InvalidOperationException(
-        $"{TelegramBotOptions.SectionName}:{nameof(TelegramBotOptions.BotToken)} не задан");
+    throw new InvalidOperationException($"{TelegramBotOptions.SectionName}:{nameof(TelegramBotOptions.BotToken)} is missing.");
 }
-builder.Services.Configure<Atlas.Infrastructure.Options.AccessOptions>(
-    builder.Configuration.GetSection("AccessOptions"));
 
-builder.Services.AddScoped<Atlas.Core.Interfaces.IAccessService, Atlas.Infrastructure.Access.AccessService>();
 builder.Services.AddTelegramBot(telegramOptions.BotToken);
+builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddPersistence(builder.Configuration);
 builder.Services.AddApplication();
 builder.Services.AddBotHandlers();
 builder.Services.AddHostedService<BotWorker>();
