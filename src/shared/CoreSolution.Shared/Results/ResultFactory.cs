@@ -20,4 +20,21 @@ public static class ResultFactory
 
         return (TResponse)failure!;
     }
+
+    public static TResponse Success<TResponse, TValue>(TValue value)
+        where TResponse : Result
+    {
+        var responseType = typeof(TResponse);
+
+        if (!responseType.IsGenericType || responseType.GetGenericTypeDefinition() != typeof(Result<>))
+        {
+            throw new InvalidOperationException($"Type {responseType.Name} must be a generic Result<T> type.");
+        }
+
+        var success = responseType
+            .GetMethod(nameof(Result<object>.Success), BindingFlags.Public | BindingFlags.Static, [typeof(TValue)])!
+            .Invoke(null, [value]);
+
+        return (TResponse)success!;
+    }
 }

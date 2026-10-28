@@ -4,4 +4,4 @@ using MediatR;
 
 namespace Pandora.App.Features.Activation;
 
-public record SubmitPhoneMessage(long TelegramUserId, int MessageId, string Phone) : IRequest<Result<TelegramMessageContent>>;
+public record SubmitPhoneMessage(long TelegramUserId, int MessageId, string? Phone) : IRequest<Result<TelegramMessageContent>>;

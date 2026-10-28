@@ -8,6 +8,8 @@ namespace Pandora.TgBot.BotHandlers;
 
 public sealed class ContactBotHandler : IBotHandler
 {
+    private const string StartCommand = "/start";
+
     private readonly ITelegramNotificationService _telegramNotificationService;
     private readonly IMediator _mediator;
 
@@ -19,7 +21,7 @@ public sealed class ContactBotHandler : IBotHandler
 
     public bool CanHandle(Update update)
     {
-        return update.Message?.Contact is not null;
+        return update.Message?.Contact is not null || update.Message?.Text is StartCommand;
     }
 
     public async Task HandleAsync(Update update, CancellationToken cancellationToken)
@@ -29,6 +31,15 @@ public sealed class ContactBotHandler : IBotHandler
             var result = await _mediator.Send(new SubmitPhoneMessage(tgUserId, messageId, phone), cancellationToken);
 
             await _telegramNotificationService.SendMessageAsync(tgUserId, result.GetDisplayText(), result.ToTelegramMarkup(), cancellationToken);
+
+            return;
+        }
+
+        if (update.Message is { Chat.Id: long startTgUserId, MessageId: int startMessageId })
+        {
+            var result = await _mediator.Send(new SubmitPhoneMessage(startTgUserId, startMessageId, null), cancellationToken);
+
+            await _telegramNotificationService.SendMessageAsync(startTgUserId, result.GetDisplayText(), result.ToTelegramMarkup(), cancellationToken);
         }
     }
 }

@@ -1,8 +1,7 @@
 using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
 using MediatR;
-using Pandora.App.Features.Start;
-using Pandora.Core.Constants;
+using Pandora.App.Common;
 using Pandora.Core.Constants.Localization;
 using Pandora.Core.Entities;
 using Pandora.Core.Enums;
@@ -16,38 +15,48 @@ public sealed class SubmitPhoneHandler : IRequestHandler<SubmitPhoneMessage, Res
 
     private readonly IIdentityClient _identityClient;
     private readonly ISessionService _sessionService;
-    private readonly IMediator _mediator;
+    private readonly ISecretStore _secretStore;
+    private readonly ILocalizer _localizer;
 
-    public SubmitPhoneHandler(IIdentityClient identityClient, ISessionService sessionService, IMediator mediator)
+    public SubmitPhoneHandler(IIdentityClient identityClient, ISessionService sessionService, ISecretStore secretStore, ILocalizer localizer)
     {
         _identityClient = identityClient;
         _sessionService = sessionService;
-        _mediator = mediator;
+        _secretStore = secretStore;
+        _localizer = localizer;
     }
 
     public async Task<Result<TelegramMessageContent>> Handle(SubmitPhoneMessage request, CancellationToken cancellationToken)
     {
-        var approved = await _identityClient.ActivateUser(request.TelegramUserId, NormalizePhone(request.Phone), cancellationToken);
-
-        if (!approved)
+        if (request.Phone is not null)
         {
-            return Result<TelegramMessageContent>.Failure(ErrorCode.AccessNotConfirmed.ToString());
-        }
+            var approved = await _identityClient.ActivateUser(request.TelegramUserId, NormalizePhone(request.Phone), cancellationToken);
 
-        if (!await _identityClient.CheckUser(request.TelegramUserId, PandoraConstants.ServiceName, cancellationToken))
-        {
-            return Result<TelegramMessageContent>.Failure(ErrorCode.AccessDenied.ToString());
+            if (!approved)
+            {
+                return Result<TelegramMessageContent>.Failure(ErrorCode.AccessNotConfirmed.ToString());
+            }
         }
 
         var session = new UserSession(
             request.TelegramUserId,
-            WorkflowStep.Idle,
+            WorkflowStep.ServiceSelection,
             LocalizationConstants.DefaultLanguage,
             DateTime.UtcNow);
 
         await _sessionService.SaveSession(session, cancellationToken);
 
-        return await _mediator.Send(new StartMessage(request.TelegramUserId, request.MessageId), cancellationToken);
+        var services = _secretStore.GetServiceNames();
+
+        if (services.Count == 0)
+        {
+            return Result<TelegramMessageContent>.Success(new TelegramMessageContent
+            {
+                Text = _localizer.GetPhrase(WorkflowStep.Idle, LocalizationKeysConstants.Idle.NoServices)
+            });
+        }
+
+        return Result<TelegramMessageContent>.Success(ServiceMenu.Create(services, _localizer));
     }
 
     private static string NormalizePhone(string phone)

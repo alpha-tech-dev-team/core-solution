@@ -8,7 +8,6 @@ public static class LocalizationKeysConstants
         public const string BtnShareContact = "BtnShareContact";
         public const string NoServices = "NoServices";
         public const string AccessNotConfirmed = "AccessNotConfirmed";
-        public const string SessionNotFound = "SessionNotFound";
         public const string UnexpectedError = "UnexpectedError";
     }
 
