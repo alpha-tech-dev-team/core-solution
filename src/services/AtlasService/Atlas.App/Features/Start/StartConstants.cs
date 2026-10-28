@@ -1,3 +1,5 @@
+using System.ComponentModel;
+
 namespace Atlas.App.Features.Start;
 
 public static class StartConstants
@@ -9,4 +11,5 @@ public static class StartConstants
     public const string MenuProblems = "menu:problems";
     public const string MenuProfile = "menu:profile";
     public const string PhoneRequestText = "Отправьте номер телефона, чтобы получить доступ.";
+    public const bool DefaultRequestContact =  true; 
 }

@@ -30,7 +30,7 @@ public sealed class StartRequestHandler : IRequestHandler<StartRequest, Result<T
             return Result<TelegramMessageContent>.Success(new TelegramMessageContent
             {
                 Text = StartConstants.PhoneRequestText,
-                RequestContact = true
+                RequestContact = StartConstants.DefaultRequestContact
             });
         }
 
