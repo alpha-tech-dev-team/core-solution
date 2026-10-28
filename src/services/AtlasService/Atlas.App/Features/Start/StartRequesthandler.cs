@@ -19,13 +19,13 @@ public sealed class StartRequestHandler : IRequestHandler<StartRequest, Result<T
 
     public async Task<Result<TelegramMessageContent>> Handle(StartRequest request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("/start запрос получен", request.TgUserId);
+        _logger.LogInformation($"/start запрос получен от {request.TgUserId}", request.TgUserId);
 
         var session = await _sessionService.GetSession(request.TgUserId, cancellationToken);
 
         if (session is null)
         {
-            _logger.LogInformation("Сессия не найдена, требуется телефон", request.TgUserId);
+            _logger.LogInformation($"Сессия не найдена, требуется телефон пользователя {request.TgUserId}", request.TgUserId);
 
             return Result<TelegramMessageContent>.Success(new TelegramMessageContent
             {
@@ -34,7 +34,7 @@ public sealed class StartRequestHandler : IRequestHandler<StartRequest, Result<T
             });
         }
 
-        _logger.LogInformation("Сессия найдена", request.TgUserId);
+        _logger.LogInformation($"Сессия пользователя {request.TgUserId} найдена", request.TgUserId);
 
         return Result<TelegramMessageContent>.Success(new TelegramMessageContent
         {
