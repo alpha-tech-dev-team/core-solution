@@ -6,7 +6,6 @@ using Building.Telegram.Internal;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddAtlasOptions(builder.Configuration);
 
 var telegramOptions = builder.Configuration
     .GetSection(TelegramBotOptions.SectionName)
