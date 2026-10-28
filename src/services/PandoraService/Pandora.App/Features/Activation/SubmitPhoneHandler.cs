@@ -2,6 +2,7 @@ using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
 using MediatR;
 using Pandora.App.Features.Start;
+using Pandora.Core.Constants;
 using Pandora.Core.Constants.Localization;
 using Pandora.Core.Entities;
 using Pandora.Core.Enums;
@@ -33,11 +34,15 @@ public sealed class SubmitPhoneHandler : IRequestHandler<SubmitPhoneMessage, Res
             return Result<TelegramMessageContent>.Failure(ErrorCode.AccessNotConfirmed.ToString());
         }
 
+        if (!await _identityClient.CheckUser(request.TelegramUserId, PandoraConstants.ServiceName, cancellationToken))
+        {
+            return Result<TelegramMessageContent>.Failure(ErrorCode.AccessDenied.ToString());
+        }
+
         var session = new UserSession(
             request.TelegramUserId,
             WorkflowStep.Idle,
             LocalizationConstants.DefaultLanguage,
-            [],
             DateTime.UtcNow);
 
         await _sessionService.SaveSession(session, cancellationToken);
