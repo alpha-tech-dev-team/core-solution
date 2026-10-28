@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Atlas.Core.Interfaces;
+using Atlas.Core.Options;
 using Atlas.Infrastructure.Access;
 using Atlas.Infrastructure.Identity;
 using Atlas.Infrastructure.Options;
@@ -12,6 +13,7 @@ public static class InfrastructureServiceCollectionExtensions
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<AccessOptions>(configuration.GetSection(AccessOptions.SectionName));
+        services.Configure<SessionOptions>(configuration.GetSection(SessionOptions.SectionName));
         services.AddSingleton<IAccessService, AccessService>();
 
         var identityOptions = configuration.GetSection(IdentityOptions.SectionName).Get<IdentityOptions>()
