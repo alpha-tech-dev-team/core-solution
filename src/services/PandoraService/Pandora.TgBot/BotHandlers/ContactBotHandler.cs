@@ -2,7 +2,6 @@ using Building.Telegram.Abstractions;
 using Building.Telegram.Extensions;
 using MediatR;
 using Pandora.App.Features.Activation;
-using Pandora.Core.Interfaces;
 using Telegram.Bot.Types;
 
 namespace Pandora.TgBot.BotHandlers;
@@ -11,13 +10,11 @@ public sealed class ContactBotHandler : IBotHandler
 {
     private readonly ITelegramNotificationService _telegramNotificationService;
     private readonly IMediator _mediator;
-    private readonly ILocalizer _localizer;
 
-    public ContactBotHandler(ITelegramNotificationService telegramNotificationService, IMediator mediator, ILocalizer localizer)
+    public ContactBotHandler(ITelegramNotificationService telegramNotificationService, IMediator mediator)
     {
         _telegramNotificationService = telegramNotificationService;
         _mediator = mediator;
-        _localizer = localizer;
     }
 
     public bool CanHandle(Update update)

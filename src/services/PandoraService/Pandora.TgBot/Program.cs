@@ -1,9 +1,10 @@
 using Building.Telegram.DependencyInjection;
 using Pandora.Infrastructure.DependencyInjection;
 using Pandora.TgBot.Constants;
+using Pandora.TgBot.Extension;
 using Pandora.TgBot.Extension.DependencyInjection;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.AddTelegramBot(builder.Configuration[ConfigurationKeys.TelegramBotToken] ?? string.Empty);
 builder.Services.AddPandoraOptions(builder.Configuration);
@@ -14,5 +15,7 @@ builder.Services.AddApplication();
 builder.Services.AddBotHandlers();
 
 var app = builder.Build();
+
+await app.ApplyMigrations();
 
 app.Run();
