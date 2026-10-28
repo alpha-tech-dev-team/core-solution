@@ -14,10 +14,12 @@ public static class AdminEndpoints
         var group = endpoints.MapGroup(ApiRoutes.AdminGroup);
 
         group.MapPost(ApiRoutes.Login, Login)
-            .AddEndpointFilter<ValidationFilter<AdminLoginRequest>>();
+            .AddEndpointFilter<ValidationFilter<AdminLoginRequest>>()
+            .RequireRateLimiting(RateLimitingPolicies.Auth);
 
         group.MapPost(ApiRoutes.RefreshToken, RefreshToken)
-            .AddEndpointFilter<ValidationFilter<RefreshTokenRequest>>();
+            .AddEndpointFilter<ValidationFilter<RefreshTokenRequest>>()
+            .RequireRateLimiting(RateLimitingPolicies.Auth);
 
         return endpoints;
     }
