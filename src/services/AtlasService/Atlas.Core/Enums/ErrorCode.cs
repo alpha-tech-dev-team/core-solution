@@ -2,5 +2,7 @@ namespace Atlas.Core.Enums;
 
 public enum ErrorCode
 {
-    AccessDenied
+    AccessDenied,
+    AccessNotConfirmed,
+    SessionNotFound
 }
