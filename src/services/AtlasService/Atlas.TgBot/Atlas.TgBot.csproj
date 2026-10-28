@@ -16,4 +16,9 @@
 
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="MediatR" Version="14.2.0" />
+    <PackageReference Include="StackExchange.Redis" Version="3.4.20" />
+  </ItemGroup>
+
 </Project>
