@@ -15,6 +15,7 @@ public static class RateLimitingConfigurationExtensions
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(options.TokenLimit, 0);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(options.TokensPerPeriod, 0);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(options.ReplenishmentPeriodSeconds, 0);
+        ArgumentOutOfRangeException.ThrowIfLessThan(options.QueueLimit, 0);
 
         services.Configure<RateLimitingOptions>(section);
 
