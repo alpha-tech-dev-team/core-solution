@@ -42,8 +42,8 @@ public sealed class StartRequestHandler : IRequestHandler<StartRequest, Result<T
             ButtonRows =
             [
                 new TelegramButtonRow(
-                    new TelegramButton(StartConstants.Problems, "menu:problems"),
-                    new TelegramButton(StartConstants.Profile, "menu:profile"))
+                    new TelegramButton(StartConstants.Problems, StartConstants.MenuProblems),
+                    new TelegramButton(StartConstants.Profile, StartConstants.MenuProfile))
             ]
         });
     }
