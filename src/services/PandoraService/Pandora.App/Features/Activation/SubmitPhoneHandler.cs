@@ -1,7 +1,7 @@
 using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
 using MediatR;
-using Pandora.App.Features.Start;
+using Pandora.App.Features.Services;
 using Pandora.Core.Constants.Localization;
 using Pandora.Core.Entities;
 using Pandora.Core.Enums;
@@ -26,23 +26,25 @@ public sealed class SubmitPhoneHandler : IRequestHandler<SubmitPhoneMessage, Res
 
     public async Task<Result<TelegramMessageContent>> Handle(SubmitPhoneMessage request, CancellationToken cancellationToken)
     {
-        var approved = await _identityClient.ActivateUser(request.TelegramUserId, NormalizePhone(request.Phone), cancellationToken);
-
-        if (!approved)
+        if (request.Phone is not null)
         {
-            return Result<TelegramMessageContent>.Failure(ErrorCode.AccessNotConfirmed.ToString());
+            var approved = await _identityClient.ActivateUser(request.TelegramUserId, NormalizePhone(request.Phone), cancellationToken);
+
+            if (!approved)
+            {
+                return Result<TelegramMessageContent>.Failure(ErrorCode.AccessNotConfirmed.ToString());
+            }
         }
 
         var session = new UserSession(
             request.TelegramUserId,
-            WorkflowStep.Idle,
+            WorkflowStep.ServiceSelection,
             LocalizationConstants.DefaultLanguage,
-            [],
             DateTime.UtcNow);
 
         await _sessionService.SaveSession(session, cancellationToken);
 
-        return await _mediator.Send(new StartMessage(request.TelegramUserId, request.MessageId), cancellationToken);
+        return await _mediator.Send(new ShowServicesMessage(request.TelegramUserId, request.MessageId), cancellationToken);
     }
 
     private static string NormalizePhone(string phone)
