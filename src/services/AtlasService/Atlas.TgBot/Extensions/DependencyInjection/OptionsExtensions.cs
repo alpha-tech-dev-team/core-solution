@@ -18,9 +18,9 @@ public static class OptionsExtensions
         services.Configure<IdentityOptions>(
             configuration.GetSection(IdentityOptions.SectionName));
 
-        services.Configure<Atlas.Core.Options.SessionOptions>(
+        services.Configure<Core.Options.SessionOptions>(
             configuration.GetSection(
-                Atlas.Core.Options.SessionOptions.SectionName));
+                Core.Options.SessionOptions.SectionName));
 
         services.Configure<DatabaseOptions>(
             configuration.GetSection(DatabaseOptions.SectionName));
