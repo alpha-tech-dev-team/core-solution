@@ -20,7 +20,12 @@ public sealed class SessionBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
     private readonly ILocalizer _localizer;
     private readonly ILogger<SessionBehavior<TRequest, TResponse>> _logger;
 
-    public SessionBehavior(IRequestContext requestContext, ISessionService sessionService, IIdentityClient identityClient, ILocalizer localizer, ILogger<SessionBehavior<TRequest, TResponse>> logger)
+    public SessionBehavior(
+        IRequestContext requestContext,
+        ISessionService sessionService,
+        IIdentityClient identityClient,
+        ILocalizer localizer,
+        ILogger<SessionBehavior<TRequest, TResponse>> logger)
     {
         _requestContext = requestContext;
         _sessionService = sessionService;

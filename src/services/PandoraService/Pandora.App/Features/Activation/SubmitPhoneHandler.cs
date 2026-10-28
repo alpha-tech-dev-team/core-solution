@@ -1,7 +1,7 @@
 using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
 using MediatR;
-using Pandora.App.Common;
+using Pandora.App.Features.Services;
 using Pandora.Core.Constants.Localization;
 using Pandora.Core.Entities;
 using Pandora.Core.Enums;
@@ -15,15 +15,13 @@ public sealed class SubmitPhoneHandler : IRequestHandler<SubmitPhoneMessage, Res
 
     private readonly IIdentityClient _identityClient;
     private readonly ISessionService _sessionService;
-    private readonly ISecretStore _secretStore;
-    private readonly ILocalizer _localizer;
+    private readonly IMediator _mediator;
 
-    public SubmitPhoneHandler(IIdentityClient identityClient, ISessionService sessionService, ISecretStore secretStore, ILocalizer localizer)
+    public SubmitPhoneHandler(IIdentityClient identityClient, ISessionService sessionService, IMediator mediator)
     {
         _identityClient = identityClient;
         _sessionService = sessionService;
-        _secretStore = secretStore;
-        _localizer = localizer;
+        _mediator = mediator;
     }
 
     public async Task<Result<TelegramMessageContent>> Handle(SubmitPhoneMessage request, CancellationToken cancellationToken)
@@ -46,17 +44,7 @@ public sealed class SubmitPhoneHandler : IRequestHandler<SubmitPhoneMessage, Res
 
         await _sessionService.SaveSession(session, cancellationToken);
 
-        var services = _secretStore.GetServiceNames();
-
-        if (services.Count == 0)
-        {
-            return Result<TelegramMessageContent>.Success(new TelegramMessageContent
-            {
-                Text = _localizer.GetPhrase(WorkflowStep.Idle, LocalizationKeysConstants.Idle.NoServices)
-            });
-        }
-
-        return Result<TelegramMessageContent>.Success(ServiceMenu.Create(services, _localizer));
+        return await _mediator.Send(new ShowServicesMessage(request.TelegramUserId, request.MessageId), cancellationToken);
     }
 
     private static string NormalizePhone(string phone)
