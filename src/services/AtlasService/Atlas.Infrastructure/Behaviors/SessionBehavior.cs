@@ -29,7 +29,7 @@ public sealed class SessionBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
 
             if (session is null)
             {
-                _logger.LogWarning("Session not found for message {MessageId}", botRequest.MessageId);
+                _logger.LogWarning("Сессия не найдена", botRequest.MessageId);
 
                 return ResultFactory.Failure<TResponse>(ErrorCode.SessionNotFound.ToString());
             }
