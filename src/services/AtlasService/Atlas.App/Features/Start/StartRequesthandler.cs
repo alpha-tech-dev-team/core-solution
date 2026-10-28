@@ -25,7 +25,7 @@ public sealed class StartRequestHandler : IRequestHandler<StartRequest, Result<T
 
         if (session is null)
         {
-            _logger.LogInformation("Сесссия не найдена, тоебуется телефон", request.TgUserId);
+            _logger.LogInformation("Сессия не найдена, требуется телефон", request.TgUserId);
 
             return Result<TelegramMessageContent>.Success(new TelegramMessageContent
             {
@@ -34,7 +34,7 @@ public sealed class StartRequestHandler : IRequestHandler<StartRequest, Result<T
             });
         }
 
-        _logger.LogInformation("С", request.TgUserId);
+        _logger.LogInformation("Сессия найдена", request.TgUserId);
 
         return Result<TelegramMessageContent>.Success(new TelegramMessageContent
         {
