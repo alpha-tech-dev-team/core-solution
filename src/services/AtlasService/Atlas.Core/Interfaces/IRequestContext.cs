@@ -1,6 +1,8 @@
+using Atlas.Core.Entities;
+
 namespace Atlas.Core.Interfaces;
 
 public interface IRequestContext
 {
-    Entities.UserSession? Session { get; set; }
+    UserSession Session { get; set; }
 }
