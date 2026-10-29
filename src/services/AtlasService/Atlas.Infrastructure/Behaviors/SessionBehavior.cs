@@ -1,4 +1,5 @@
 using Atlas.Core.Constants;
+using Atlas.Core.Constants.Localization;
 using Atlas.Core.Entities;
 using Atlas.Core.Enums;
 using Atlas.Core.Interfaces;
@@ -37,7 +38,6 @@ public sealed class SessionBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
 
             if (session is null)
             {
-                // Проверка доступа и создание сессии перенесены в behavior (как в Pandora)
                 if (!await _identityClient.CheckUser(botRequest.TelegramUserId, AtlasConstants.ServiceName, cancellationToken))
                 {
                     _logger.LogWarning("Доступ запрещён для пользователя {TelegramUserId}", botRequest.TelegramUserId);
@@ -47,8 +47,7 @@ public sealed class SessionBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
                 session = new UserSession(
                     botRequest.TelegramUserId,
                     WorkflowStep.ProblemCategorySelection,
-                    Language.Ru,
-                    [],
+                    LocalizationConstants.DefaultLanguage,
                     DateTime.UtcNow);
 
                 await _sessionService.SaveSession(session, cancellationToken);
