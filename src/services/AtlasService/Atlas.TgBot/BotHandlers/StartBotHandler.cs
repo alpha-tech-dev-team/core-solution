@@ -5,9 +5,8 @@ using Atlas.TgBot.Constants;
 using Building.Telegram.Abstractions;
 using Building.Telegram.Extensions;
 using CoreSolution.Shared.Models;
-using CoreSolution.Shared.Results;
-using Microsoft.Extensions.Logging;
 using Telegram.Bot.Types;
+using CoreSolution.Shared.Results;
 
 namespace Atlas.TgBot.BotHandlers;
 
@@ -69,15 +68,14 @@ public sealed class StartBotHandler : IBotHandler
             message.Chat.Id,
             result.GetDisplayText(),
             result.ToTelegramMarkup(),
-            cancellationToken: cancellationToken);
-    }
+            cancellationToken: cancellationToken);   
+        }
 
     private TelegramMessageContent CreateMenuContent()
     {
         return new TelegramMessageContent
         {
-            Text = _localizer.GetPhrase(WorkflowStep.ServiceSelection, LocalizationKeysConstants.ServiceSelection.Text),
-            ButtonRows =
+            Text = _localizer.GetPhrase(WorkflowStep.ServiceSelection, LocalizationKeysConstants.ServiceSelection.Text),                ButtonRows =
             [
                 new TelegramButtonRow(
                     new TelegramButton(
