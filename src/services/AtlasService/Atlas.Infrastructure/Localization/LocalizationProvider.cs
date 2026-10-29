@@ -11,48 +11,50 @@ public class LocalizationProvider
 
     public LocalizationProvider()
     {
+        var assembly = typeof(LocalizationProvider).Assembly;
         var mainBuilder = new Dictionary<Language, FrozenDictionary<WorkflowStep, FrozenDictionary<string, string>>>();
         var unknownSections = new List<string>();
 
         foreach (var language in Enum.GetValues<Language>())
         {
             var languageCode = language.ToString().ToLowerInvariant();
-            var filePath = Path.Combine(
-                AppContext.BaseDirectory,
-                LocalizationConstants.LocalizationPath,
-                LocalizationConstants.ResourcesPath,
-                $"{languageCode}.json");
+            var resourceName = $"{typeof(LocalizationProvider).Namespace}.Resources.{languageCode}.json";
 
-            if (File.Exists(filePath))
+            using var stream = assembly.GetManifestResourceStream(resourceName);
+            if (stream is null)
             {
-                var jsonContent = File.ReadAllText(filePath);
-                var dict = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(jsonContent);
-
-                if (dict is not null)
-                {
-                    var stateBuilder = new Dictionary<WorkflowStep, FrozenDictionary<string, string>>();
-
-                    foreach (var stateEntry in dict)
-                    {
-                        if (!Enum.TryParse<WorkflowStep>(stateEntry.Key, true, out var state))
-                        {
-                            unknownSections.Add($"{languageCode}/{stateEntry.Key}");
-                            continue;
-                        }
-
-                        var phrasesBuilder = new Dictionary<string, string>();
-
-                        foreach (var phrase in stateEntry.Value)
-                        {
-                            phrasesBuilder.TryAdd(phrase.Key, phrase.Value);
-                        }
-
-                        stateBuilder.TryAdd(state, phrasesBuilder.ToFrozenDictionary());
-                    }
-
-                    mainBuilder.TryAdd(language, stateBuilder.ToFrozenDictionary());
-                }
+                throw new FileNotFoundException(
+                    $"Localization resource '{resourceName}' was not embedded in {assembly.GetName().Name}.",
+                    resourceName);
             }
+
+            using var reader = new StreamReader(stream);
+            var jsonContent = reader.ReadToEnd();
+            var dict = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(jsonContent);
+            if (dict is null)
+            {
+                throw new InvalidDataException($"Localization resource '{resourceName}' is empty or invalid.");
+            }
+
+            var stateBuilder = new Dictionary<WorkflowStep, FrozenDictionary<string, string>>();
+            foreach (var stateEntry in dict)
+            {
+                if (!Enum.TryParse<WorkflowStep>(stateEntry.Key, true, out var state))
+                {
+                    unknownSections.Add($"{languageCode}/{stateEntry.Key}");
+                    continue;
+                }
+
+                var phrasesBuilder = new Dictionary<string, string>();
+                foreach (var phrase in stateEntry.Value)
+                {
+                    phrasesBuilder.TryAdd(phrase.Key, phrase.Value);
+                }
+
+                stateBuilder.TryAdd(state, phrasesBuilder.ToFrozenDictionary());
+            }
+
+            mainBuilder.TryAdd(language, stateBuilder.ToFrozenDictionary());
         }
 
         Dictionary = mainBuilder.ToFrozenDictionary();
