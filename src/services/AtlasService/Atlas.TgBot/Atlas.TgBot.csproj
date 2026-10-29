@@ -10,10 +10,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-  
     <ProjectReference Include="..\..\..\shared\building.telegram\building.telegram.csproj" />
     <ProjectReference Include="..\Atlas.App\Atlas.App.csproj" />
     <ProjectReference Include="..\Atlas.Infrastructure\Atlas.Infrastructure.csproj" />
-
   </ItemGroup>
+
 </Project>
