@@ -1,5 +1,3 @@
-using Atlas.Infrastructure.DependencyInjection;
-using Atlas.Infrastructure.Options;
 using Atlas.TgBot.Extensions.DependencyInjection;
 using Building.Telegram.DependencyInjection;
 using Building.Telegram.Internal;
