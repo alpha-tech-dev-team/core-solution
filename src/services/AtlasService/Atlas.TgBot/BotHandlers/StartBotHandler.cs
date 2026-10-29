@@ -5,8 +5,8 @@ using Atlas.TgBot.Constants;
 using Building.Telegram.Abstractions;
 using Building.Telegram.Extensions;
 using CoreSolution.Shared.Models;
-using Telegram.Bot.Types;
 using CoreSolution.Shared.Results;
+using Telegram.Bot.Types;
 
 namespace Atlas.TgBot.BotHandlers;
 
@@ -17,11 +17,7 @@ public sealed class StartBotHandler : IBotHandler
     private readonly ILocalizer _localizer;
     private readonly ILogger<StartBotHandler> _logger;
 
-    public StartBotHandler(
-        ISessionService sessionService,
-        ITelegramNotificationService telegram,
-        ILocalizer localizer,
-        ILogger<StartBotHandler> logger)
+    public StartBotHandler(ISessionService sessionService, ITelegramNotificationService telegram, ILocalizer localizer, ILogger<StartBotHandler> logger)
     {
         _sessionService = sessionService;
         _telegram = telegram;
@@ -29,61 +25,63 @@ public sealed class StartBotHandler : IBotHandler
         _logger = logger;
     }
 
-    public bool CanHandle(Update update)
-    {
-        return update.Message?.Text == StartConstants.Command;
-    }
+    public bool CanHandle(Update update) => update.Message?.Text == StartConstants.Command;
 
     public async Task HandleAsync(Update update, CancellationToken cancellationToken)
     {
         var message = update.Message!;
-        var tgUserId = message.From!.Id;
+        var telegramUserId = message.From!.Id;
+        _logger.LogInformation("Вызван /start от {TgUserId}", telegramUserId);
+        await HandleStartAsync(message.Chat.Id, telegramUserId, cancellationToken);
+    }
 
-        _logger.LogInformation("Вызван /start от {TgUserId}", tgUserId);
+    public async Task HandleStartAsync(long chatId, long telegramUserId, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Запрос номера телефона для пользователя {TgUserId}", telegramUserId);
 
-        var session = await _sessionService.GetSession(tgUserId, cancellationToken);
-
-        TelegramMessageContent content;
-
-        if (session is null)
+        var content = new TelegramMessageContent
         {
-            _logger.LogInformation("Сессия не найдена, требуется телефон пользователя {TgUserId}", tgUserId);
-
-            content = new TelegramMessageContent
-            {
-                Text = _localizer.GetPhrase(WorkflowStep.Idle, LocalizationKeysConstants.Idle.PhoneRequest),
-                RequestContact = StartConstants.DefaultRequestContact
-            };
-        }
-        else
-        {
-            _logger.LogInformation("Сессия пользователя {TgUserId} найдена", tgUserId);
-
-            content = CreateMenuContent();
-        }
+            Text = _localizer.GetPhrase(
+                WorkflowStep.Idle,
+                LocalizationKeysConstants.Idle.PhoneRequest,
+                LocalizationConstants.DefaultLanguage),
+            RequestContact = StartConstants.DefaultRequestContact
+        };
 
         var result = Result<TelegramMessageContent>.Success(content);
-
         await _telegram.SendMessageAsync(
-            message.Chat.Id,
+            chatId,
             result.GetDisplayText(),
             result.ToTelegramMarkup(),
-            cancellationToken: cancellationToken);   
-        }
+            cancellationToken: cancellationToken);
+    }
 
-    private TelegramMessageContent CreateMenuContent()
+    public async Task SendWorkflowMenuAsync(
+        long chatId,
+        long telegramUserId,
+        CancellationToken cancellationToken)
+    {
+        var session = await _sessionService.GetSession(telegramUserId, cancellationToken);
+        var language = session?.Language ?? LocalizationConstants.DefaultLanguage;
+        var result = Result<TelegramMessageContent>.Success(CreateMenuContent(language));
+
+        await _telegram.SendMessageAsync(
+            chatId,
+            result.GetDisplayText(),
+            result.ToTelegramMarkup(),
+            cancellationToken: cancellationToken);
+    }
+
+    private TelegramMessageContent CreateMenuContent(Language language)
     {
         return new TelegramMessageContent
         {
-            Text = _localizer.GetPhrase(WorkflowStep.ProblemCategorySelection, LocalizationKeysConstants.ProblemCategorySelection.Text),                ButtonRows =
+            Text = _localizer.GetPhrase(WorkflowStep.ProblemCategorySelection, LocalizationKeysConstants.ProblemCategorySelection.Text, language),
+            ButtonRows =
             [
                 new TelegramButtonRow(
-                    new TelegramButton(
-                        _localizer.GetPhrase(WorkflowStep.ProblemCategorySelection, LocalizationKeysConstants.ProblemCategorySelection.Problems),
-                        StartConstants.MenuProblems),
-                    new TelegramButton(
-                        _localizer.GetPhrase(WorkflowStep.ProblemCategorySelection, LocalizationKeysConstants.ProblemCategorySelection.Profile),
-                        StartConstants.MenuProfile))
+                    new TelegramButton(_localizer.GetPhrase(WorkflowStep.ProblemCategorySelection, LocalizationKeysConstants.ProblemCategorySelection.Problems, language), StartConstants.MenuProblems),
+                    new TelegramButton(_localizer.GetPhrase(WorkflowStep.ProblemCategorySelection, LocalizationKeysConstants.ProblemCategorySelection.Profile, language), StartConstants.MenuProfile))
             ]
         };
     }
