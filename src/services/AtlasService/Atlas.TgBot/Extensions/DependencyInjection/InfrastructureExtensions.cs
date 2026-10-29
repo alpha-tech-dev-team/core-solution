@@ -1,19 +1,19 @@
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Atlas.Core.Interfaces;
-using Atlas.Core.Options;
 using Atlas.Infrastructure.Access;
 using Atlas.Infrastructure.Identity;
 using Atlas.Infrastructure.Options;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace Atlas.Infrastructure.DependencyInjection;
+namespace Atlas.TgBot.Extensions.DependencyInjection;
 
-public static class InfrastructureServiceCollectionExtensions
+public static class InfrastructureExtensions
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<AccessOptions>(configuration.GetSection(AccessOptions.SectionName));
-        services.Configure<SessionOptions>(configuration.GetSection(SessionOptions.SectionName));
+        services.Configure<Atlas.Core.Options.SessionOptions>(
+            configuration.GetSection(Atlas.Core.Options.SessionOptions.SectionName));
         services.AddSingleton<IAccessService, AccessService>();
 
         var identityOptions = configuration.GetSection(IdentityOptions.SectionName).Get<IdentityOptions>()
@@ -24,7 +24,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddHttpClient<IIdentityClient, IdentityClient>(client =>
         {
             client.BaseAddress = new Uri(identityOptions.BaseUrl);
-            client.Timeout = TimeSpan.FromSeconds(10);
+            client.Timeout = TimeSpan.Zero;
         });
 
         return services;
