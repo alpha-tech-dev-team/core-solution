@@ -3,13 +3,11 @@ using Building.Telegram.Abstractions;
 using Building.Telegram.Extensions;
 using MediatR;
 using Telegram.Bot.Types;
-using Telegram.Bot;
 
 namespace Atlas.TgBot.BotHandlers;
 
 public sealed class StartBotHandler : IBotHandler
 {
-    private readonly ITelegramBotClient _bot;
     private readonly IMediator _mediator;
     private readonly ITelegramNotificationService _telegram;
     private readonly ILogger<StartBotHandler> _logger;
