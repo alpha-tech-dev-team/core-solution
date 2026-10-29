@@ -7,16 +7,7 @@ using Building.Telegram.Internal;
 var builder = WebApplication.CreateBuilder(args);
 
 
-var telegramOptions = builder.Configuration
-    .GetSection(TelegramBotOptions.SectionName)
-    .Get<TelegramBotOptions>()
-    ?? throw new InvalidOperationException($"Section {TelegramBotOptions.SectionName} is missing.");
-
-if (string.IsNullOrWhiteSpace(telegramOptions.BotToken))
-{
-    throw new InvalidOperationException($"{TelegramBotOptions.SectionName}:{nameof(TelegramBotOptions.BotToken)} is missing.");
-}
-
+var telegramOptions = builder.Services.AddAndValidateTelegramOptions(builder.Configuration);
 builder.Services.AddTelegramBot(telegramOptions.BotToken);
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddPersistence(builder.Configuration);
