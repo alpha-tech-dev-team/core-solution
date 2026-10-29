@@ -1,5 +1,4 @@
 using Atlas.Core.Interfaces;
-using Atlas.Infrastructure.Access;
 using Atlas.Infrastructure.Identity;
 using Atlas.Infrastructure.Options;
 using Microsoft.Extensions.Configuration;
@@ -11,10 +10,8 @@ public static class InfrastructureExtensions
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        services.Configure<AccessOptions>(configuration.GetSection(AccessOptions.SectionName));
         services.Configure<Atlas.Core.Options.SessionOptions>(
             configuration.GetSection(Atlas.Core.Options.SessionOptions.SectionName));
-        services.AddSingleton<IAccessService, AccessService>();
 
         var identityOptions = configuration.GetSection(IdentityOptions.SectionName).Get<IdentityOptions>()
             ?? throw new InvalidOperationException($"Missing configuration section {IdentityOptions.SectionName}.");
