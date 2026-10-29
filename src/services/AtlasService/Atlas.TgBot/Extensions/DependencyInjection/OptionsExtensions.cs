@@ -12,9 +12,6 @@ public static class OptionsExtensions
         services.Configure<TelegramBotOptions>(
             configuration.GetSection(TelegramBotOptions.SectionName));
 
-        services.Configure<AccessOptions>(
-            configuration.GetSection(AccessOptions.SectionName));
-
         services.Configure<IdentityOptions>(
             configuration.GetSection(IdentityOptions.SectionName));
 
