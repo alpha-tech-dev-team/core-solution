@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <res name="error_401" xml:space="preserve">
+    <value>Неверный логин или пароль</value>
+  </res>
+  <res name="error_403" xml:space="preserve">
+    <value>Доступ запрещён</value>
+  </res>
+  <res name="error_404" xml:space="preserve">
+    <value>Пользователь не найден</value>
+  </res>
+  <res name="error_409" xml:space="preserve">
+    <value>Пользователь уже активирован</value>
+  </res>
+  <res name="error_500" xml:space="preserve">
+    <value>Внутренняя ошибка сервера</value>
+  </res>
+  <res name="error_502" xml:space="preserve">
+    <value>Сервис временно недоступен</value>
+  </res>
+  <res name="error_503" xml:space="preserve">
+    <value>Сервис временно недоступен</value>
+  </res>
+  <res name="error_429" xml:space="preserve">
+    <value>Слишком много попыток входа. Попробуйте через минуту.</value>
+  </res>
+  <res name="error_network" xml:space="preserve">
+    <value>Ошибка сети. Проверьте подключение.</value>
+  </res>
+  <res name="error_unknown" xml:space="preserve">
+    <value>Произошла неизвестная ошибка</value>
+  </res>
+  <res name="validation_required" xml:space="preserve">
+    <value>Заполните все поля</value>
+  </res>
+  <res name="validation_usernameTooShort" xml:space="preserve">
+    <value>Логин должен быть не менее {0} символов</value>
+  </res>
+  <res name="validation_usernameTooLong" xml:space="preserve">
+    <value>Логин должен быть не более {0} символов</value>
+  </res>
+  <res name="validation_passwordTooShort" xml:space="preserve">
+    <value>Пароль должен быть не менее {0} символов</value>
+  </res>
+  <res name="validation_passwordTooLong" xml:space="preserve">
+    <value>Пароль должен быть не более {0} символов</value>
+  </res>
+  <res name="login_field_username" xml:space="preserve">
+    <value>Логин</value>
+  </res>
+  <res name="login_field_password" xml:space="preserve">
+    <value>Пароль</value>
+  </res>
+  <res name="auth_login" xml:space="preserve">
+    <value>Войти</value>
+  </res>
+  <res name="auth_logout" xml:space="preserve">
+    <value>Выйти</value>
+  </res>
+  <res name="app_title" xml:space="preserve">
+    <value>Pandora</value>
+  </res>
+  <res name="app_placeholder" xml:space="preserve">
+    <value>Интерфейс в разработке</value>
+  </res>
+</root>
