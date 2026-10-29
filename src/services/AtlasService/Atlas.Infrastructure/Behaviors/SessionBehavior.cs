@@ -44,10 +44,9 @@ public sealed class SessionBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
                     return ResultFactory.Failure<TResponse>(ErrorCode.AccessDenied.ToString());
                 }
 
-                // WorkflowStep.ServiceSelection — второй шаг (сразу на выбор сервиса)
                 session = new UserSession(
                     botRequest.TelegramUserId,
-                    WorkflowStep.ServiceSelection,
+                    WorkflowStep.ProblemCategorySelection,
                     Language.Ru,
                     [],
                     DateTime.UtcNow);
