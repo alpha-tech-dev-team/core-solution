@@ -75,14 +75,14 @@ public sealed class StartBotHandler : IBotHandler
     {
         return new TelegramMessageContent
         {
-            Text = _localizer.GetPhrase(WorkflowStep.ServiceSelection, LocalizationKeysConstants.ServiceSelection.Text),                ButtonRows =
+            Text = _localizer.GetPhrase(WorkflowStep.ProblemCategorySelection, LocalizationKeysConstants.ProblemCategorySelection.Text),                ButtonRows =
             [
                 new TelegramButtonRow(
                     new TelegramButton(
-                        _localizer.GetPhrase(WorkflowStep.ServiceSelection, LocalizationKeysConstants.ServiceSelection.Problems),
+                        _localizer.GetPhrase(WorkflowStep.ProblemCategorySelection, LocalizationKeysConstants.ProblemCategorySelection.Problems),
                         StartConstants.MenuProblems),
                     new TelegramButton(
-                        _localizer.GetPhrase(WorkflowStep.ServiceSelection, LocalizationKeysConstants.ServiceSelection.Profile),
+                        _localizer.GetPhrase(WorkflowStep.ProblemCategorySelection, LocalizationKeysConstants.ProblemCategorySelection.Profile),
                         StartConstants.MenuProfile))
             ]
         };

@@ -10,7 +10,7 @@ public static class LocalizationKeysConstants
         public const string UnexpectedError = "UnexpectedError";
     }
 
-    public static class ServiceSelection
+    public static class ProblemCategorySelection
     {
         public const string Text = "Text";
         public const string Problems = "Problems";

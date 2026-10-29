@@ -32,17 +32,15 @@ public sealed class SubmitPhoneHandler : IRequestHandler<SubmitPhoneMessage, Res
             return Result<TelegramMessageContent>.Failure(ErrorCode.AccessNotConfirmed.ToString());
         }
 
-        // WorkflowStep.ServiceSelection — второй шаг (сразу на выбор сервиса / меню)
         var session = new UserSession(
             request.TelegramUserId,
-            WorkflowStep.ServiceSelection,
+            WorkflowStep.ProblemCategorySelection,
             Language.Ru,
             [],
             DateTime.UtcNow);
 
         await _sessionService.SaveSession(session, cancellationToken);
 
-        // Успех — меню показывается в presentation-слое (ContactBotHandler) через локализатор
         return Result<TelegramMessageContent>.Success(new TelegramMessageContent
         {
             Text = string.Empty
