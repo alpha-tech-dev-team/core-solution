@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <res name="error_401" xml:space="preserve">
+    <value>Invalid login or password</value>
+  </res>
+  <res name="error_403" xml:space="preserve">
+    <value>Access denied</value>
+  </res>
+  <res name="error_404" xml:space="preserve">
+    <value>User not found</value>
+  </res>
+  <res name="error_409" xml:space="preserve">
+    <value>User already activated</value>
+  </res>
+  <res name="error_500" xml:space="preserve">
+    <value>Internal server error</value>
+  </res>
+  <res name="error_502" xml:space="preserve">
+    <value>Service temporarily unavailable</value>
+  </res>
+  <res name="error_503" xml:space="preserve">
+    <value>Service temporarily unavailable</value>
+  </res>
+  <res name="error_429" xml:space="preserve">
+    <value>Too many login attempts. Try again in a minute.</value>
+  </res>
+  <res name="error_network" xml:space="preserve">
+    <value>Network error. Check your connection.</value>
+  </res>
+  <res name="error_unknown" xml:space="preserve">
+    <value>An unknown error occurred</value>
+  </res>
+  <res name="validation_required" xml:space="preserve">
+    <value>Fill in all fields</value>
+  </res>
+  <res name="validation_usernameTooShort" xml:space="preserve">
+    <value>Username must be at least {0} characters</value>
+  </res>
+  <res name="validation_usernameTooLong" xml:space="preserve">
+    <value>Username must be at most {0} characters</value>
+  </res>
+  <res name="validation_passwordTooShort" xml:space="preserve">
+    <value>Password must be at least {0} characters</value>
+  </res>
+  <res name="validation_passwordTooLong" xml:space="preserve">
+    <value>Password must be at most {0} characters</value>
+  </res>
+  <res name="login_field_username" xml:space="preserve">
+    <value>Username</value>
+  </res>
+  <res name="login_field_password" xml:space="preserve">
+    <value>Password</value>
+  </res>
+  <res name="auth_login" xml:space="preserve">
+    <value>Log in</value>
+  </res>
+  <res name="auth_logout" xml:space="preserve">
+    <value>Log out</value>
+  </res>
+  <res name="app_title" xml:space="preserve">
+    <value>Pandora</value>
+  </res>
+  <res name="app_placeholder" xml:space="preserve">
+    <value>Interface under construction</value>
+  </res>
+</root>

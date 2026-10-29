@@ -1,0 +1,33 @@
+:root {
+  --color-primary: #4a90d9;
+  --color-primary-disabled: #b0c4de;
+  --color-on-primary: #ffffff;
+  --color-error: #e53935;
+  --color-bg: #f5f5f5;
+  --color-surface: #ffffff;
+  --color-border: #dddddd;
+  --color-text: #1a1a1a;
+  --color-text-secondary: #666666;
+  --color-text-muted: #888888;
+
+  --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  --border-width: 1px;
+  --radius: 12px;
+  --radius-sm: 8px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 28px;
+  --space-7: 32px;
+
+  --font-size-small: 13px;
+  --font-size-base: 15px;
+  --font-size-large: 18px;
+  --font-size-heading: 20px;
+  --font-size-title: 24px;
+
+  --login-card-width: 360px;
+}
