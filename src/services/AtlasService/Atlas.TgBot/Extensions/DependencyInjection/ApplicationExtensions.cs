@@ -9,7 +9,7 @@ public static class ApplicationExtensions
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Atlas.App.AssemblyMarker>());
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<App.AssemblyMarker>());
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(SessionBehavior<,>));
         services.AddScoped<ISessionService, SessionService>();
 

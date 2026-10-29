@@ -1,21 +1,32 @@
-using Atlas.App.Features.Start;
+using Atlas.Core.Constants.Localization;
+using Atlas.Core.Enums;
+using Atlas.Core.Interfaces;
+using Atlas.TgBot.Constants;
 using Building.Telegram.Abstractions;
 using Building.Telegram.Extensions;
-using MediatR;
+using CoreSolution.Shared.Models;
+using CoreSolution.Shared.Results;
+using Microsoft.Extensions.Logging;
 using Telegram.Bot.Types;
 
 namespace Atlas.TgBot.BotHandlers;
 
 public sealed class StartBotHandler : IBotHandler
 {
-    private readonly IMediator _mediator;
+    private readonly ISessionService _sessionService;
     private readonly ITelegramNotificationService _telegram;
+    private readonly ILocalizer _localizer;
     private readonly ILogger<StartBotHandler> _logger;
 
-    public StartBotHandler(IMediator mediator, ITelegramNotificationService telegram, ILogger<StartBotHandler> logger)
+    public StartBotHandler(
+        ISessionService sessionService,
+        ITelegramNotificationService telegram,
+        ILocalizer localizer,
+        ILogger<StartBotHandler> logger)
     {
-        _mediator = mediator;
+        _sessionService = sessionService;
         _telegram = telegram;
+        _localizer = localizer;
         _logger = logger;
     }
 
@@ -29,13 +40,53 @@ public sealed class StartBotHandler : IBotHandler
         var message = update.Message!;
         var tgUserId = message.From!.Id;
 
-        _logger.LogInformation($"Вызван /start от {tgUserId}");
+        _logger.LogInformation("Вызван /start от {TgUserId}", tgUserId);
 
-        var result = await _mediator.Send(new StartRequest(tgUserId), cancellationToken);
-        await _telegram.SendMessageAsync(
-            message.Chat.Id, 
-            result.GetDisplayText(), 
-            result.ToTelegramMarkup(), 
-            cancellationToken: cancellationToken);    
+        var session = await _sessionService.GetSession(tgUserId, cancellationToken);
+
+        TelegramMessageContent content;
+
+        if (session is null)
+        {
+            _logger.LogInformation("Сессия не найдена, требуется телефон пользователя {TgUserId}", tgUserId);
+
+            content = new TelegramMessageContent
+            {
+                Text = _localizer.GetPhrase(WorkflowStep.Idle, LocalizationKeysConstants.Idle.PhoneRequest),
+                RequestContact = StartConstants.DefaultRequestContact
+            };
         }
+        else
+        {
+            _logger.LogInformation("Сессия пользователя {TgUserId} найдена", tgUserId);
+
+            content = CreateMenuContent();
+        }
+
+        var result = Result<TelegramMessageContent>.Success(content);
+
+        await _telegram.SendMessageAsync(
+            message.Chat.Id,
+            result.GetDisplayText(),
+            result.ToTelegramMarkup(),
+            cancellationToken: cancellationToken);
+    }
+
+    private TelegramMessageContent CreateMenuContent()
+    {
+        return new TelegramMessageContent
+        {
+            Text = _localizer.GetPhrase(WorkflowStep.ServiceSelection, LocalizationKeysConstants.ServiceSelection.Text),
+            ButtonRows =
+            [
+                new TelegramButtonRow(
+                    new TelegramButton(
+                        _localizer.GetPhrase(WorkflowStep.ServiceSelection, LocalizationKeysConstants.ServiceSelection.Problems),
+                        StartConstants.MenuProblems),
+                    new TelegramButton(
+                        _localizer.GetPhrase(WorkflowStep.ServiceSelection, LocalizationKeysConstants.ServiceSelection.Profile),
+                        StartConstants.MenuProfile))
+            ]
+        };
+    }
 }
