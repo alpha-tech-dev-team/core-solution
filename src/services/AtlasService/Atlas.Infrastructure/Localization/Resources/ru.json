@@ -1,0 +1,14 @@
+{
+  "Idle": {
+    "PhoneRequest": "Отправьте номер телефона",
+    "AccessNotConfirmed": "Доступ не подтверждён. Обратитесь к администратору.",
+    "SessionNotFound": "Доступ не подтверждён. Отправьте /start.",
+    "UnexpectedError": "Произошла ошибка. Попробуйте позже."
+  },
+  "ProblemCategorySelection": {
+    "Text": "Меню:",
+    "Problems": "Проблемы",
+    "Profile": "Профиль",
+    "AccessDenied": "У вас нет доступа к этой опции'."
+  }
+}
