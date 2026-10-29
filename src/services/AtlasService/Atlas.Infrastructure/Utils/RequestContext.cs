@@ -5,5 +5,5 @@ namespace Atlas.Infrastructure.Utils;
 
 public class RequestContext : IRequestContext
 {
-    public required UserSession Session { get; set; }
+    public UserSession? Session { get; set; }
 }

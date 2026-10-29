@@ -1,4 +1,3 @@
-using Atlas.App.Features.Start;
 using Atlas.Core.Entities;
 using Atlas.Core.Enums;
 using Atlas.Core.Interfaces;
@@ -14,13 +13,11 @@ public sealed class SubmitPhoneHandler : IRequestHandler<SubmitPhoneMessage, Res
 
     private readonly IIdentityClient _identityClient;
     private readonly ISessionService _sessionService;
-    private readonly IMediator _mediator;
 
-    public SubmitPhoneHandler(IIdentityClient identityClient, ISessionService sessionService, IMediator mediator)
+    public SubmitPhoneHandler(IIdentityClient identityClient, ISessionService sessionService)
     {
         _identityClient = identityClient;
         _sessionService = sessionService;
-        _mediator = mediator;
     }
 
     public async Task<Result<TelegramMessageContent>> Handle(SubmitPhoneMessage request, CancellationToken cancellationToken)
@@ -35,16 +32,21 @@ public sealed class SubmitPhoneHandler : IRequestHandler<SubmitPhoneMessage, Res
             return Result<TelegramMessageContent>.Failure(ErrorCode.AccessNotConfirmed.ToString());
         }
 
+        // WorkflowStep.ServiceSelection — второй шаг (сразу на выбор сервиса / меню)
         var session = new UserSession(
             request.TelegramUserId,
-            WorkflowStep.Idle,
+            WorkflowStep.ServiceSelection,
             Language.Ru,
             [],
             DateTime.UtcNow);
 
         await _sessionService.SaveSession(session, cancellationToken);
 
-        return await _mediator.Send(new StartRequest(request.TelegramUserId), cancellationToken);
+        // Успех — меню показывается в presentation-слое (ContactBotHandler) через локализатор
+        return Result<TelegramMessageContent>.Success(new TelegramMessageContent
+        {
+            Text = string.Empty
+        });
     }
 
     private static string NormalizePhone(string phone)

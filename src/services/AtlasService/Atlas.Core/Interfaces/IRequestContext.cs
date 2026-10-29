@@ -4,5 +4,5 @@ namespace Atlas.Core.Interfaces;
 
 public interface IRequestContext
 {
-    UserSession Session { get; set; }
+    UserSession? Session { get; set; }
 }
