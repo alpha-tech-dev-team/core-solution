@@ -1,5 +1,4 @@
 using MediatR;
-using Atlas.App;
 using Atlas.App.Services;
 using Atlas.Core.Interfaces;
 using Atlas.Infrastructure.Behaviors;
@@ -10,7 +9,7 @@ public static class ApplicationExtensions
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<AssemblyMarker>());
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Atlas.App.AssemblyMarker>());
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(SessionBehavior<,>));
         services.AddScoped<ISessionService, SessionService>();
 
