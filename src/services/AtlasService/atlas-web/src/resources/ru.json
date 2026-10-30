@@ -7,7 +7,9 @@
     "submitLoading": "Вход…",
     "errorDefault": "Произошла ошибка при входе. Попробуйте ещё раз.",
     "errorNetwork": "Сервер не отвечает. Проверьте подключение и повторите попытку.",
-    "errorServer": "Ошибка авторизации на сервере."
+    "errorServer": "Ошибка авторизации на сервере.",
+    "errorInvalidCredentials": "Неверный логин или пароль.",
+    "errorSessionExpired": "Сессия истекла. Войдите заново."
   },
   "admin": {
     "appName": "Atlas",

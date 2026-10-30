@@ -11,6 +11,10 @@ export const HttpHeader = {
   Authorization: 'Authorization',
 } as const
 
+export const HttpStatus = {
+  Unauthorized: 401,
+} as const
+
 export const MimeType = {
   Json: 'application/json',
 } as const
