@@ -1,11 +1,5 @@
-using Atlas.Core.Interfaces;
-using Atlas.Core.Options;
-using Atlas.Infrastructure.Identity;
-using Atlas.Infrastructure.Options;
-using Atlas.Infrastructure.Repositories;
-using Atlas.Infrastructure.Utils;
-using StackExchange.Redis;
 using SessionOptions = Atlas.Core.Options.SessionOptions;
+
 namespace Atlas.TgBot;
 
 public static class OptionsExtensions

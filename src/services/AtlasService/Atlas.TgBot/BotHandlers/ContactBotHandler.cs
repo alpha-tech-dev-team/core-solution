@@ -32,7 +32,7 @@ public sealed class ContactBotHandler : IBotHandler
     }
 
     public bool CanHandle(Update update) =>
-        update.Message?.Contact is not null;
+        update.Message?.Contact is not { };
 
     public async Task HandleAsync(
         Update update,
