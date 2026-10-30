@@ -1,0 +1,28 @@
+{
+  "auth": {
+    "loginTitle": "Вход в админ-панель",
+    "loginLabel": "Логин",
+    "passwordLabel": "Пароль",
+    "submit": "Войти",
+    "submitLoading": "Вход…",
+    "errorDefault": "Произошла ошибка при входе. Попробуйте ещё раз.",
+    "errorNetwork": "Сервер не отвечает. Проверьте подключение и повторите попытку.",
+    "errorServer": "Ошибка авторизации на сервере.",
+    "errorInvalidCredentials": "Неверный логин или пароль.",
+    "errorSessionExpired": "Сессия истекла. Войдите заново."
+  },
+  "admin": {
+    "appName": "Atlas",
+    "sectionTitle": "Админ-панель",
+    "logout": "Выйти",
+    "pageTitle": "Обзор",
+    "pageSubtitle": "Сводка по сервису Identity.",
+    "statsLabel": "Показатели",
+    "usersLabel": "Пользователи",
+    "sessionsLabel": "Активные сессии",
+    "requestsLabel": "Запросы за сутки",
+    "emptyValue": "—",
+    "recentTitle": "Последние входы",
+    "emptyState": "Данные появятся, когда Identity API начнёт отдавать список входов."
+  }
+}
