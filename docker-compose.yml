@@ -1,0 +1,2 @@
+include:
+  - src/services/IdentityService/docker-compose.yml
