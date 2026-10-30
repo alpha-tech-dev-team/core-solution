@@ -10,6 +10,17 @@
     "errorServer": "Ошибка авторизации на сервере."
   },
   "admin": {
-    "appName": "Atlas"
+    "appName": "Atlas",
+    "sectionTitle": "Админ-панель",
+    "logout": "Выйти",
+    "pageTitle": "Обзор",
+    "pageSubtitle": "Сводка по сервису Identity.",
+    "statsLabel": "Показатели",
+    "usersLabel": "Пользователи",
+    "sessionsLabel": "Активные сессии",
+    "requestsLabel": "Запросы за сутки",
+    "emptyValue": "—",
+    "recentTitle": "Последние входы",
+    "emptyState": "Данные появятся, когда Identity API начнёт отдавать список входов."
   }
 }
