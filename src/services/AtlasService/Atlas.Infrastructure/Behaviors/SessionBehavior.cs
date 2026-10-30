@@ -1,13 +1,14 @@
+using CoreSolution.Shared.Models;
+using CoreSolution.Shared.Results;
+using MediatR;
+using Microsoft.Extensions.Logging;
 using Atlas.Core.Constants;
 using Atlas.Core.Constants.Localization;
 using Atlas.Core.Entities;
 using Atlas.Core.Enums;
 using Atlas.Core.Interfaces;
-using CoreSolution.Shared.Results;
-using MediatR;
-using Microsoft.Extensions.Logging;
 
-namespace Atlas.Infrastructure.Behaviors;
+namespace Pandora.Infrastructure.Behaviors;
 
 public sealed class SessionBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : notnull
@@ -16,17 +17,20 @@ public sealed class SessionBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
     private readonly IRequestContext _requestContext;
     private readonly ISessionService _sessionService;
     private readonly IIdentityClient _identityClient;
+    private readonly ILocalizer _localizer;
     private readonly ILogger<SessionBehavior<TRequest, TResponse>> _logger;
 
     public SessionBehavior(
         IRequestContext requestContext,
         ISessionService sessionService,
         IIdentityClient identityClient,
+        ILocalizer localizer,
         ILogger<SessionBehavior<TRequest, TResponse>> logger)
     {
         _requestContext = requestContext;
         _sessionService = sessionService;
         _identityClient = identityClient;
+        _localizer = localizer;
         _logger = logger;
     }
 
@@ -40,21 +44,19 @@ public sealed class SessionBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
             {
                 if (!await _identityClient.CheckUser(botRequest.TelegramUserId, AtlasConstants.ServiceName, cancellationToken))
                 {
-                    _logger.LogWarning("Доступ запрещён для пользователя {TelegramUserId}", botRequest.TelegramUserId);
-                    return ResultFactory.Failure<TResponse>(ErrorCode.AccessDenied.ToString());
+                    _logger.LogWarning("Identity не подтвердил доступ, запрошен номер телефона, сообщение {MessageId}", botRequest.MessageId);
+
+                    return ResultFactory.Success<TResponse, TelegramMessageContent>(new TelegramMessageContent
+                    {
+                        Text = _localizer.GetPhrase(WorkflowStep.Idle, LocalizationKeysConstants.Idle.PhoneRequest),
+                        RequestContact = true
+                    });
                 }
 
-                session = new UserSession(
-                    botRequest.TelegramUserId,
-                    WorkflowStep.ProblemCategorySelection,
-                    LocalizationConstants.DefaultLanguage,
-                    DateTime.UtcNow);
-
+                session = new UserSession(botRequest.TelegramUserId, WorkflowStep.ProblemCategorySelection, LocalizationConstants.DefaultLanguage, DateTime.UtcNow);
                 await _sessionService.SaveSession(session, cancellationToken);
-                _logger.LogInformation(
-                    "Создана сессия для пользователя {TelegramUserId} со шагом {Step}",
-                    botRequest.TelegramUserId,
-                    session.State);
+
+                _logger.LogInformation("Сессия восстановлена по identity, сообщение {MessageId}", botRequest.MessageId);
             }
 
             _requestContext.Session = session;
