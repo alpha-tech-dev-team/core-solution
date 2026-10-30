@@ -1,0 +1,25 @@
+services:
+  identity-api:
+    build:
+      context: .
+      dockerfile: src/services/IdentityService/Dockerfile
+    ports:
+      - "5001:8080"
+    env_file: src/services/IdentityService/.env
+    depends_on:
+      identity-db:
+        condition: service_healthy
+
+  identity-db:
+    image: postgres:18-alpine
+    env_file: src/services/IdentityService/.env
+    volumes:
+      - identity-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  identity-db-data:
