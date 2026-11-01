@@ -1,12 +1,9 @@
-
 using Atlas.App.Features.Activation;
 using Atlas.Core.Constants.Localization;
 using Atlas.Core.Enums;
 using Atlas.Core.Interfaces;
 using Building.Telegram.Abstractions;
 using Building.Telegram.Extensions;
-using CoreSolution.Shared.Models;
-using CoreSolution.Shared.Results;
 using MediatR;
 using Telegram.Bot.Types;
 
@@ -14,68 +11,50 @@ namespace Atlas.TgBot.BotHandlers;
 
 public sealed class ContactBotHandler : IBotHandler
 {
-    private readonly ITelegramNotificationService _telegramNotificationService;
+    private readonly ITelegramNotificationService _telegram;
     private readonly IMediator _mediator;
-    private readonly StartBotHandler _startBotHandler;
     private readonly ILocalizer _localizer;
 
+    public const string Command = "/start";
+
     public ContactBotHandler(
-        ITelegramNotificationService telegramNotificationService,
+        ITelegramNotificationService telegram,
         IMediator mediator,
-        StartBotHandler startBotHandler,
         ILocalizer localizer)
     {
-        _telegramNotificationService = telegramNotificationService;
+        _telegram = telegram;
         _mediator = mediator;
-        _startBotHandler = startBotHandler;
         _localizer = localizer;
     }
 
-    public bool CanHandle(Update update) =>
-        update.Message?.Contact is not { };
-
-    public async Task HandleAsync(
-        Update update,
-        CancellationToken cancellationToken)
+    public bool CanHandle(Update update)
     {
-        if (update.Message is not
-            {
-                Chat.Id: long tgUserId,
-                MessageId: int messageId,
-                Contact.PhoneNumber: string phone
-            })
+        return update.Message?.Contact is not null || update.Message?.Text is Command;
+    }
+
+    public async Task HandleAsync(Update update, CancellationToken cancellationToken)
+    {
+        if (update.Message is not { } message)
         {
             return;
         }
+
+        var chatId = message.Chat.Id;
 
         var result = await _mediator.Send(
-            new SubmitPhoneMessage(tgUserId, messageId, phone),
+            new SubmitPhoneMessage(chatId, message.MessageId, message.Contact?.PhoneNumber),
             cancellationToken);
 
-        if (result.IsSuccess)
-        {
-            await _startBotHandler.SendWorkflowMenuAsync(
-                tgUserId,
-                tgUserId,
-                cancellationToken);
+        var content = result.Value;
+        var markup = content is { RequestContact: true }
+            ? content.ToReplyMarkup(
+                _localizer.GetPhrase(WorkflowStep.Idle, LocalizationKeysConstants.Idle.PhoneRequest))
+            : result.ToTelegramMarkup();
 
-            return;
-        }
-
-        var content = new TelegramMessageContent
-        {
-            Text = _localizer.GetPhrase(
-                WorkflowStep.Idle,
-                LocalizationKeysConstants.Idle.AccessNotConfirmed,
-                LocalizationConstants.DefaultLanguage)
-        };
-
-        var messageResult = Result<TelegramMessageContent>.Success(content);
-
-        await _telegramNotificationService.SendMessageAsync(
-            tgUserId,
-            messageResult.GetDisplayText(),
-            messageResult.ToTelegramMarkup(),
+        await _telegram.SendMessageAsync(
+            chatId,
+            result.GetDisplayText(),
+            markup,
             cancellationToken);
     }
 }
