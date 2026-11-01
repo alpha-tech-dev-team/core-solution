@@ -1,10 +1,13 @@
+using Atlas.Core.Interfaces;
+using Atlas.Infrastructure.Identity;
+using Atlas.Infrastructure.Options;
 using SessionOptions = Atlas.Core.Options.SessionOptions;
 
 namespace Atlas.TgBot;
 
 public static class OptionsExtensions
 {
-    public static IServiceCollection AddAtlasOptions(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddIdentityOptions(this IServiceCollection services, IConfiguration configuration)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(configuration[ConfigurationKeys.TelegramBotToken]);
 
@@ -21,14 +24,6 @@ public static class OptionsExtensions
             client.BaseAddress = new Uri(identityOptions.BaseUrl);
         });
 
-        var databaseSection = configuration.GetSection(DatabaseOptions.SectionName);
-        services.Configure<DatabaseOptions>(databaseSection);
-        var databaseOptions = databaseSection.Get<DatabaseOptions>()
-            ?? throw new InvalidOperationException($"Missing configuration section {DatabaseOptions.SectionName}.");
-
-        services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(databaseOptions.RedisConnection));
-        services.AddScoped<ISessionRepository, RedisSessionRepository>();
-        services.AddScoped<IRequestContext, RequestContext>();
         return services;
     }
 }
