@@ -8,11 +8,12 @@
 
   <ItemGroup>
     <PackageReference Include="MediatR" Version="14.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.14" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Atlas.Core\Atlas.Core.csproj" />
-    <ProjectReference Include="..\..\..\shared\CoreSolution.Shared\CoreSolution.Shared.csproj"/>
+    <ProjectReference Include="..\..\..\shared\CoreSolution.Shared\CoreSolution.Shared.csproj" />
   </ItemGroup>
 
 </Project>
