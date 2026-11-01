@@ -1,7 +1,7 @@
-using Microsoft.Extensions.Options;
 using Atlas.Core.Entities;
 using Atlas.Core.Interfaces;
 using Atlas.Core.Options;
+using Microsoft.Extensions.Options;
 
 namespace Atlas.App.Services;
 

@@ -1,3 +1,4 @@
+using Atlas.Core.Constants.Localization;
 using Atlas.Core.Enums;
 using Atlas.Core.Interfaces;
 
@@ -10,6 +11,11 @@ public class Localizer : ILocalizer
     public Localizer(LocalizationProvider provider)
     {
         _provider = provider;
+    }
+
+    public string GetPhrase(WorkflowStep state, string key)
+    {
+        return GetPhrase(state, key, LocalizationConstants.DefaultLanguage);
     }
 
     public string GetPhrase(WorkflowStep state, string key, Language language)

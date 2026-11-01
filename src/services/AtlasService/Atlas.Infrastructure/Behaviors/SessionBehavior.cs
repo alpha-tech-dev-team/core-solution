@@ -8,7 +8,7 @@ using Atlas.Core.Entities;
 using Atlas.Core.Enums;
 using Atlas.Core.Interfaces;
 
-namespace Pandora.Infrastructure.Behaviors;
+namespace Atlas.Infrastructure.Behaviors;
 
 public sealed class SessionBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : notnull
