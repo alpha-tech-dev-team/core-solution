@@ -33,27 +33,15 @@ public sealed class ContactBotHandler : IBotHandler
 
     public async Task HandleAsync(Update update, CancellationToken cancellationToken)
     {
-        if (update.Message is not { } message)
+        if (update.Message is not { Chat.Id: long tgUserId, MessageId: int messageId })
         {
             return;
         }
 
-        var chatId = message.Chat.Id;
+        var phone = update.Message.Contact?.PhoneNumber;
 
-        var result = await _mediator.Send(
-            new SubmitPhoneMessage(chatId, message.MessageId, message.Contact?.PhoneNumber),
-            cancellationToken);
+        var result = await _mediator.Send(new SubmitPhoneMessage(tgUserId, messageId, phone), cancellationToken);
 
-        var content = result.Value;
-        var markup = content is { RequestContact: true }
-            ? content.ToReplyMarkup(
-                _localizer.GetPhrase(WorkflowStep.Idle, LocalizationKeysConstants.Idle.PhoneRequest))
-            : result.ToTelegramMarkup();
-
-        await _telegramNotificationService.SendMessageAsync(
-            chatId,
-            result.GetDisplayText(),
-            markup,
-            cancellationToken);
-    }
+        await _telegramNotificationService.SendMessageAsync(tgUserId, result.GetDisplayText(), result.ToTelegramMarkup(), cancellationToken);
+        }
 }
