@@ -8,6 +8,10 @@
     <Project Path="src/services/AtlasService/Atlas.Core/Atlas.Core.csproj" />
     <Project Path="src/services/AtlasService/Atlas.Infrastructure/Atlas.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/src/services/AtlasService/Atlas.TgBot/" />
+  <Folder Name="/src/services/AtlasService/Atlas.TgBot/Properties/">
+    <Project Path="src/services/AtlasService/Atlas.TgBot/Atlas.TgBot.csproj" />
+  </Folder>
   <Folder Name="/src/services/IdentityService/">
     <Project Path="src/services/IdentityService/Identity.Api/Identity.Api.csproj" />
     <Project Path="src/services/IdentityService/Identity.App/Identity.App.csproj" Id="39f4ac24-120f-4f65-b504-d3b7338ca3d2" />
