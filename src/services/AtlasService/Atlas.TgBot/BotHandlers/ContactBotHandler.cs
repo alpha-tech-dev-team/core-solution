@@ -11,18 +11,17 @@ namespace Atlas.TgBot.BotHandlers;
 
 public sealed class ContactBotHandler : IBotHandler
 {
-    private readonly ITelegramNotificationService _telegram;
+    public const string Command = "/start";
+    private readonly ITelegramNotificationService _telegramNotificationService;
     private readonly IMediator _mediator;
     private readonly ILocalizer _localizer;
 
-    public const string Command = "/start";
-
     public ContactBotHandler(
-        ITelegramNotificationService telegram,
+        ITelegramNotificationService telegramNotificationService,
         IMediator mediator,
         ILocalizer localizer)
     {
-        _telegram = telegram;
+        _telegramNotificationService = telegramNotificationService;
         _mediator = mediator;
         _localizer = localizer;
     }
@@ -51,7 +50,7 @@ public sealed class ContactBotHandler : IBotHandler
                 _localizer.GetPhrase(WorkflowStep.Idle, LocalizationKeysConstants.Idle.PhoneRequest))
             : result.ToTelegramMarkup();
 
-        await _telegram.SendMessageAsync(
+        await _telegramNotificationService.SendMessageAsync(
             chatId,
             result.GetDisplayText(),
             markup,

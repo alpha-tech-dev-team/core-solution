@@ -11,8 +11,7 @@ public static class HandlerExtensions
 
         foreach (var handlerType in handlerTypes)
         {
-            services.AddScoped(handlerType);
-            services.AddScoped(typeof(IBotHandler), provider => provider.GetRequiredService(handlerType));
+            services.AddScoped(typeof(IBotHandler), handlerType);
         }
 
         return services;

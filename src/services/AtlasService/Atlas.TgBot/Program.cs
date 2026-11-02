@@ -4,7 +4,7 @@ using Building.Telegram.DependencyInjection;
 using Building.Telegram.Internal;
 using Atlas.Infrastructure.Options;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.AddIdentityOptions(builder.Configuration);
 builder.Services.AddTelegramBot(builder.Configuration[ConfigurationKeys.TelegramBotToken]
