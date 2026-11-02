@@ -1,6 +1,7 @@
 using CoreSolution.Shared.Abstractions;
-using CoreSolution.Shared.Application.Messages;
 using CoreSolution.Shared.Enums;
+using CoreSolution.Shared.Application.Messages;
+
 using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
 using Identity.Core.Enums;
@@ -40,7 +41,7 @@ public sealed class SubmitPhoneFlowTests(IntegrationFixture fixture)
         var session = await sessionService.GetSession(telegramUserId, CancellationToken.None);
 
         Assert.NotNull(session);
-        Assert.Equal(WorkflowStep.ProblemCategorySelection, session.State);
+        Assert.Equal(nameof(Atlas.Core.Enums.WorkflowStep.ProblemCategorySelection), session.State);
         Assert.Equal(Language.Ru, session.Language);
 
         var timeToLive = await scope.ServiceProvider.GetRequiredService<IConnectionMultiplexer>()

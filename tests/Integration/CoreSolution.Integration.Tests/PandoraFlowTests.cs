@@ -1,6 +1,5 @@
 using CoreSolution.Shared.Abstractions;
 using CoreSolution.Shared.Application.Messages;
-using CoreSolution.Shared.Enums;
 using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
 using MediatR;
@@ -35,7 +34,7 @@ public sealed class PandoraFlowTests(IntegrationFixture fixture)
 
         var session = await GetSessionAsync(provider, telegramUserId);
         Assert.NotNull(session);
-        Assert.Equal(WorkflowStep.ServiceSelection, session!.State);
+        Assert.Equal(nameof(Pandora.Core.Enums.WorkflowStep.ServiceSelection), session!.State);
     }
 
     [Fact]
@@ -62,7 +61,7 @@ public sealed class PandoraFlowTests(IntegrationFixture fixture)
 
         var session = await GetSessionAsync(provider, telegramUserId);
         Assert.NotNull(session);
-        Assert.Equal(WorkflowStep.ServiceSelection, session!.State);
+        Assert.Equal(nameof(Pandora.Core.Enums.WorkflowStep.ServiceSelection), session!.State);
     }
 
     [Fact]

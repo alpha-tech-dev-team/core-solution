@@ -27,14 +27,16 @@ public sealed class IntegrationFixture : IAsyncLifetime
 {
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:18-alpine").Build();
 
-    private readonly RedisContainer _redis = new RedisBuilder("redis:7-alpine").Build();
+    private readonly RedisContainer _atlasRedis = new RedisBuilder("redis:7-alpine").Build();
+
+    private readonly RedisContainer _pandoraRedis = new RedisBuilder("redis:7-alpine").Build();
 
     private WebApplicationFactory<AssemblyMarker> _identity = default!;
     private bool _pandoraMigrated;
 
     public async Task InitializeAsync()
     {
-        await Task.WhenAll(_postgres.StartAsync(), _redis.StartAsync());
+        await Task.WhenAll(_postgres.StartAsync(), _atlasRedis.StartAsync(), _pandoraRedis.StartAsync());
 
         await using (var connection = new NpgsqlConnection(_postgres.GetConnectionString()))
         {
@@ -64,7 +66,8 @@ public sealed class IntegrationFixture : IAsyncLifetime
     public async Task DisposeAsync()
     {
         await _identity.DisposeAsync();
-        await _redis.DisposeAsync();
+        await _atlasRedis.DisposeAsync();
+        await _pandoraRedis.DisposeAsync();
         await _postgres.DisposeAsync();
     }
 
@@ -114,7 +117,7 @@ public sealed class IntegrationFixture : IAsyncLifetime
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["Database:RedisConnection"] = _redis.GetConnectionString(),
+                ["Database:RedisConnection"] = _atlasRedis.GetConnectionString(),
                 ["SessionSettings:ExpiryMinutes"] = "30",
                 ["Identity:BaseUrl"] = "http://localhost"
             })
@@ -138,7 +141,7 @@ public sealed class IntegrationFixture : IAsyncLifetime
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Database:ConnectionString"] = _postgres.GetConnectionString().Replace("Database=postgres", "Database=pandora_integration"),
-                ["Database:RedisConnection"] = _redis.GetConnectionString(),
+                ["Database:RedisConnection"] = _pandoraRedis.GetConnectionString(),
                 ["SessionSettings:ExpiryMinutes"] = "30",
                 ["Identity:BaseUrl"] = "http://localhost",
                 ["Pandora:Secrets:Items:0:Name"] = "TestService",
