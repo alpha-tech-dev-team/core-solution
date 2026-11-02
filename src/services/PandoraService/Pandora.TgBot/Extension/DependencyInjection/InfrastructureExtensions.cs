@@ -1,28 +1,28 @@
+using CoreSolution.Shared.TgBot.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Pandora.Core.Interfaces;
 using Pandora.Core.Options;
 using Pandora.Infrastructure.Database;
-using Pandora.Infrastructure.Repositories;
-using Pandora.Infrastructure.Utils;
-using StackExchange.Redis;
+using Pandora.Infrastructure.Secrets;
 
 namespace Pandora.TgBot.Extension.DependencyInjection;
 
-public static class PersistenceExtensions
+public static class InfrastructureExtensions
 {
-    public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddBotInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         var databaseOptions = configuration.GetSection(DatabaseOptions.SectionName).Get<DatabaseOptions>()
             ?? throw new InvalidOperationException($"Missing configuration section {DatabaseOptions.SectionName}.");
 
         ArgumentException.ThrowIfNullOrWhiteSpace(databaseOptions.ConnectionString);
 
+        services.AddIdentityClient(configuration);
+        services.AddScoped<ISecretStore, ConfigSecretStore>();
+        services.AddLocalization(typeof(ConfigSecretStore).Assembly);
         services.AddDbContext<PandoraDbContext>(options => options.UseNpgsql(databaseOptions.ConnectionString));
-        services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(databaseOptions.RedisConnection));
-        services.AddScoped<ISessionRepository, RedisSessionRepository>();
-        services.AddScoped<IRequestContext, RequestContext>();
+        services.AddSessionInfrastructure(configuration, databaseOptions.RedisConnection);
 
         return services;
     }
