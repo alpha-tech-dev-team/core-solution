@@ -1,18 +1,15 @@
-using Building.Telegram.DependencyInjection;
-using Pandora.Infrastructure.DependencyInjection;
-using Pandora.TgBot.Constants;
+using CoreSolution.Shared.TgBot.DependencyInjection;
+using Pandora.TgBot;
 using Pandora.TgBot.Extension;
 using Pandora.TgBot.Extension.DependencyInjection;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-builder.Services.AddTelegramBot(builder.Configuration[ConfigurationKeys.TelegramBotToken] ?? string.Empty);
+builder.Services.AddTelegramBot(builder.Configuration);
 builder.Services.AddPandoraOptions(builder.Configuration);
-builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddLocalizationResources();
-builder.Services.AddPersistence(builder.Configuration);
+builder.Services.AddBotInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
-builder.Services.AddBotHandlers();
+builder.Services.AddBotHandlers<AssemblyMarker>();
 
 var app = builder.Build();
 
