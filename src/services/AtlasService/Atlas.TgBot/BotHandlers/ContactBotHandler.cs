@@ -11,7 +11,7 @@ namespace Atlas.TgBot.BotHandlers;
 
 public sealed class ContactBotHandler : IBotHandler
 {
-    public const string Command = "/start";
+    private const string Command = "/start";
     private readonly ITelegramNotificationService _telegramNotificationService;
     private readonly IMediator _mediator;
     private readonly ILocalizer _localizer;
@@ -42,6 +42,10 @@ public sealed class ContactBotHandler : IBotHandler
 
         var result = await _mediator.Send(new SubmitPhoneMessage(tgUserId, messageId, phone), cancellationToken);
 
-        await _telegramNotificationService.SendMessageAsync(tgUserId, result.GetDisplayText(), result.ToTelegramMarkup(), cancellationToken);
+        await _telegramNotificationService.SendMessageAsync(
+            tgUserId, 
+            result.GetDisplayText(), 
+            result.ToTelegramMarkup(), 
+            cancellationToken);
         }
 }
