@@ -10,13 +10,12 @@ namespace Atlas.TgBot.Extensions.DependencyInjection;
 
 public static class SessionExtensions
 {
-    private const string HttpClient = "IdentityClient";
     public static IServiceCollection AddSessionExtensions(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddSingleton<IConnectionMultiplexer>(_ => 
             ConnectionMultiplexer.Connect(configuration.Get<DatabaseOptions>()!.RedisConnection));
 
-        services.AddHttpClient<IIdentityClient, IdentityClient>(HttpClient, client =>
+        services.AddHttpClient<IIdentityClient, IdentityClient>(client =>
         {
             client.BaseAddress = new Uri(configuration.Get<IdentityOptions>()!.BaseUrl);
         });
