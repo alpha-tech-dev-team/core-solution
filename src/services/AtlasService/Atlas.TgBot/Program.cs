@@ -6,11 +6,11 @@ using Atlas.Infrastructure.Options;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-builder.Services.AddIdentityOptions(builder.Configuration);
+builder.Services.AddOptions(builder.Configuration);
 builder.Services.AddTelegramBot(builder.Configuration[ConfigurationKeys.TelegramBotToken]
     ?? string.Empty);
-builder.Services.AddSessionOptions(builder.Configuration);
-builder.Services.AddLocalizationOptions();
+builder.Services.AddSessionExtensions(builder.Configuration);
+builder.Services.AddLocalizationExtensions();
 builder.Services.AddApplication();
 builder.Services.AddBotHandlers();
 builder.Services.AddHostedService<BotWorker>();
