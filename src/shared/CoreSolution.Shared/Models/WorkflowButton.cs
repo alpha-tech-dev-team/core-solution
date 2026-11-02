@@ -1,14 +1,13 @@
 namespace CoreSolution.Shared.Models;
 
-public sealed class TelegramButton
+public sealed class WorkflowButton
 {
-    public TelegramButton(string text, string callbackData)
+    public WorkflowButton(string text, string callbackData)
     {
         Text = text;
         CallbackData = callbackData;
     }
 
     public string Text { get; }
-
     public string CallbackData { get; }
 }
