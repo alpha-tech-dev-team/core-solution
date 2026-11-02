@@ -1,3 +1,3 @@
-namespace Identity.App.Contracts;
+namespace Identity.Application.Contracts;
 
 public record AdminLoginRequest(string Username, string Password);

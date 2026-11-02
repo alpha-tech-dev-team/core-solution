@@ -1,8 +1,8 @@
 using FluentValidation;
-using Identity.App.Constants;
-using Identity.App.Contracts;
+using Identity.Application.Constants;
+using Identity.Application.Contracts;
 
-namespace Identity.App.Validators;
+namespace Identity.Application.Validators;
 
 public class AdminLoginRequestValidator : AbstractValidator<AdminLoginRequest>
 {

@@ -1,4 +1,4 @@
-using Identity.App.Errors;
+using Identity.Application.Errors;
 
 namespace Identity.Api.Constants;
 

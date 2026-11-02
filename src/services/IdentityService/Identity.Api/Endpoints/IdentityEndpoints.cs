@@ -1,7 +1,7 @@
 using Identity.Api.Constants;
 using Identity.Api.Extensions;
 using Identity.Api.Filters;
-using Identity.App.Contracts;
+using Identity.Application.Contracts;
 using Identity.Core.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
 

@@ -1,4 +1,4 @@
-namespace Identity.App.Constants;
+namespace Identity.Application.Constants;
 
 public static class ValidationConstants
 {

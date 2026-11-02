@@ -1,3 +1,3 @@
-namespace Identity.App;
+namespace Identity.Application;
 
 public class AssemblyMarker { }

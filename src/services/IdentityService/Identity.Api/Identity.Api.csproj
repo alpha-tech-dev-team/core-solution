@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Identity.App/Identity.App.csproj" />
+    <ProjectReference Include="../Identity.Application/Identity.Application.csproj" />
     <ProjectReference Include="../Identity.Infrastructure/Identity.Infrastructure.csproj" />
     <ProjectReference Include="../../../shared/CoreSolution.Shared/CoreSolution.Shared.csproj" />
   </ItemGroup>

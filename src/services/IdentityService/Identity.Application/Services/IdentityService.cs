@@ -1,11 +1,11 @@
 using CoreSolution.Shared.Results;
-using Identity.App.Errors;
+using Identity.Application.Errors;
 using Identity.Core.Enums;
 using Identity.Core.Interfaces.Repositories;
 using Identity.Core.Interfaces.Services;
 using Microsoft.Extensions.Logging;
 
-namespace Identity.App.Services;
+namespace Identity.Application.Services;
 
 public class IdentityService : IIdentityService
 {

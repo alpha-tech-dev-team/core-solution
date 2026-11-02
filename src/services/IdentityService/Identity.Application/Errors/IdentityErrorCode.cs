@@ -1,4 +1,4 @@
-namespace Identity.App.Errors;
+namespace Identity.Application.Errors;
 
 public enum IdentityErrorCode
 {

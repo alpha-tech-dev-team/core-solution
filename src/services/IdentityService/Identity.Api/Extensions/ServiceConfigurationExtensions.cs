@@ -1,7 +1,7 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
-using Identity.App;
-using Identity.App.Services;
+using Identity.Application;
+using Identity.Application.Services;
 using Identity.Core.Interfaces.Repositories;
 using Identity.Core.Interfaces.Security;
 using Identity.Core.Interfaces.Services;

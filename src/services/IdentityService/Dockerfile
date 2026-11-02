@@ -3,7 +3,7 @@ WORKDIR /src
 
 COPY src/shared/CoreSolution.Shared/CoreSolution.Shared.csproj src/shared/CoreSolution.Shared/
 COPY src/services/IdentityService/Identity.Core/Identity.Core.csproj src/services/IdentityService/Identity.Core/
-COPY src/services/IdentityService/Identity.App/Identity.App.csproj src/services/IdentityService/Identity.App/
+COPY src/services/IdentityService/Identity.Application/Identity.Application.csproj src/services/IdentityService/Identity.Application/
 COPY src/services/IdentityService/Identity.Infrastructure/Identity.Infrastructure.csproj src/services/IdentityService/Identity.Infrastructure/
 COPY src/services/IdentityService/Identity.Api/Identity.Api.csproj src/services/IdentityService/Identity.Api/
 
