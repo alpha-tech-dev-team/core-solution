@@ -4,4 +4,4 @@ using MediatR;
 
 namespace CoreSolution.Shared.Application.Messages;
 
-public record SubmitPhoneMessage(long TelegramUserId, int MessageId, string? Phone) : IRequest<Result<WorkflowResponse>>;
+public record SubmitPhoneMessage(long TelegramUserId, int MessageId, string? Phone = null) : IRequest<Result<WorkflowResponse>>;

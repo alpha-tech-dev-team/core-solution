@@ -9,8 +9,6 @@ namespace CoreSolution.Shared.Application.Features.Activation;
 
 public abstract class SubmitPhoneHandlerBase : IRequestHandler<SubmitPhoneMessage, Result<WorkflowResponse>>
 {
-    private const string AccessNotConfirmedErrorCode = "AccessNotConfirmed";
-
     private readonly IPhoneConfirmationService _phoneConfirmationService;
     private readonly IMediator _mediator;
     private readonly ILocalizer _localizer;
@@ -37,7 +35,8 @@ public abstract class SubmitPhoneHandlerBase : IRequestHandler<SubmitPhoneMessag
             return Result<WorkflowResponse>.Success(new WorkflowResponse
             {
                 Text = _localizer.GetPhrase(LocalizationConstants.IdleStateName, LocalizationConstants.Idle.PhoneRequest),
-                RequestContact = true
+                RequestContact = true,
+                ContactButtonText = _localizer.GetPhrase(LocalizationConstants.IdleStateName, LocalizationConstants.Idle.BtnShareContact)
             });
         }
 
@@ -49,7 +48,7 @@ public abstract class SubmitPhoneHandlerBase : IRequestHandler<SubmitPhoneMessag
 
         if (!confirmed)
         {
-            return Result<WorkflowResponse>.Failure(AccessNotConfirmedErrorCode);
+            return Result<WorkflowResponse>.Failure(ErrorCodes.AccessNotConfirmed);
         }
 
         return await _mediator.Send(CreateNextMessage(request), cancellationToken);

@@ -1,6 +1,4 @@
-using CoreSolution.Shared.Abstractions;
 using CoreSolution.Shared.Application.Messages;
-using CoreSolution.Shared.Constants;
 using CoreSolution.Shared.TgBot.Abstractions;
 using CoreSolution.Shared.TgBot.Extensions;
 using MediatR;
@@ -15,16 +13,16 @@ public sealed class ContactBotHandler : IBotHandler
 
     private readonly ITelegramNotificationService _telegramNotificationService;
     private readonly IMediator _mediator;
-    private readonly ILocalizer _localizer;
+    private readonly IUserErrorMapper _userErrorMapper;
 
     public ContactBotHandler(
         ITelegramNotificationService telegramNotificationService,
         IMediator mediator,
-        ILocalizer localizer)
+        IUserErrorMapper userErrorMapper)
     {
         _telegramNotificationService = telegramNotificationService;
         _mediator = mediator;
-        _localizer = localizer;
+        _userErrorMapper = userErrorMapper;
     }
 
     public bool CanHandle(Update update)
@@ -45,12 +43,10 @@ public sealed class ContactBotHandler : IBotHandler
 
         var result = await _mediator.Send(new SubmitPhoneMessage(tgUserId, messageId, phone), cancellationToken);
 
-        var contactButtonText = _localizer.GetPhrase(LocalizationConstants.IdleStateName, LocalizationConstants.Idle.BtnShareContact);
-
         await _telegramNotificationService.SendMessageAsync(
             tgUserId,
-            result.GetDisplayText(),
-            result.ToTelegramMarkup(contactButtonText),
+            result.GetUserText(_userErrorMapper),
+            result.ToTelegramMarkup(),
             cancellationToken);
     }
 

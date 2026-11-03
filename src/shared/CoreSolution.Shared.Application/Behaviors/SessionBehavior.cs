@@ -1,5 +1,5 @@
 using CoreSolution.Shared.Abstractions;
-using CoreSolution.Shared.Constants;
+using CoreSolution.Shared.Application.Messages;
 using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
 using MediatR;
@@ -14,7 +14,7 @@ public sealed class SessionBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
     private readonly IRequestContext _requestContext;
     private readonly ISessionService _sessionService;
     private readonly IIdentityClient _identityClient;
-    private readonly ILocalizer _localizer;
+    private readonly IMediator _mediator;
     private readonly SessionBehaviorOptions _options;
     private readonly ILogger<SessionBehavior<TRequest, TResponse>> _logger;
 
@@ -22,14 +22,14 @@ public sealed class SessionBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
         IRequestContext requestContext,
         ISessionService sessionService,
         IIdentityClient identityClient,
-        ILocalizer localizer,
+        IMediator mediator,
         SessionBehaviorOptions options,
         ILogger<SessionBehavior<TRequest, TResponse>> logger)
     {
         _requestContext = requestContext;
         _sessionService = sessionService;
         _identityClient = identityClient;
-        _localizer = localizer;
+        _mediator = mediator;
         _options = options;
         _logger = logger;
     }
@@ -49,11 +49,11 @@ public sealed class SessionBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
                         botRequest.TelegramUserId,
                         botRequest.MessageId);
 
-                    return ResultFactory.Success<TResponse, WorkflowResponse>(new WorkflowResponse
-                    {
-                        Text = _localizer.GetPhrase(LocalizationConstants.IdleStateName, LocalizationConstants.Idle.PhoneRequest),
-                        RequestContact = true
-                    });
+                    var activation = await _mediator.Send(
+                        new SubmitPhoneMessage(botRequest.TelegramUserId, botRequest.MessageId),
+                        cancellationToken);
+
+                    return ResultFactory.Success<TResponse, WorkflowResponse>(activation.Value!);
                 }
 
                 session = UserSession.Create(botRequest.TelegramUserId, _options.InitialStep);
