@@ -21,7 +21,7 @@ public sealed class GetCredentialsHandler : IRequestHandler<GetCredentialsMessag
 
     public async Task<Result<WorkflowResponse>> Handle(GetCredentialsMessage request, CancellationToken cancellationToken)
     {
-        var secret = await _secretStore.GetSecret(request.ServiceName, cancellationToken);
+        var secret = await _secretStore.GetSecret(request.ItemId, cancellationToken);
 
         if (secret is null)
         {
@@ -30,7 +30,7 @@ public sealed class GetCredentialsHandler : IRequestHandler<GetCredentialsMessag
 
         var text = string.Format(
             _localizer.GetPhrase(nameof(WorkflowStep.ServiceSelection), LocalizationKeysConstants.ServiceSelection.CredentialsTemplate),
-            request.ServiceName,
+            secret.ItemName,
             _localizer.GetPhrase(nameof(WorkflowStep.ServiceSelection), LocalizationKeysConstants.ServiceSelection.LoginLabel),
             secret.Login,
             _localizer.GetPhrase(nameof(WorkflowStep.ServiceSelection), LocalizationKeysConstants.ServiceSelection.PasswordLabel),

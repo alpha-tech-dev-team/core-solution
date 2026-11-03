@@ -2,8 +2,7 @@ using Pandora.Domain.Models;
 
 namespace Pandora.Domain.Interfaces;
 
-public interface ISecretStore
+public interface ISecretStore : ISecretCatalog
 {
-    Task<Secret?> GetSecret(string secretName, CancellationToken cancellationToken);
-    IReadOnlyList<string> GetServiceNames();
+    Task<Secret?> GetSecret(string itemId, CancellationToken cancellationToken);
 }

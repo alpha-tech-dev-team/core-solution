@@ -2,7 +2,6 @@ using CoreSolution.Shared.TgBot.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Pandora.Domain.Interfaces;
 using Pandora.Domain.Options;
 using Pandora.Infrastructure.Database;
 using Pandora.Infrastructure.Secrets;
@@ -19,7 +18,6 @@ public static class InfrastructureExtensions
         ArgumentException.ThrowIfNullOrWhiteSpace(databaseOptions.ConnectionString);
 
         services.AddIdentityClient(configuration);
-        services.AddScoped<ISecretStore, ConfigSecretStore>();
         services.AddLocalization(typeof(ConfigSecretStore).Assembly);
         services.AddDbContext<PandoraDbContext>(options => options.UseNpgsql(databaseOptions.ConnectionString));
         services.AddSessionInfrastructure(configuration, databaseOptions.RedisConnection);

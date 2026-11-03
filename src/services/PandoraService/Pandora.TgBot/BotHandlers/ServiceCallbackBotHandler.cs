@@ -29,8 +29,8 @@ public sealed class ServiceCallbackBotHandler : IBotHandler
     {
         if (update.CallbackQuery is { Data: string data, Message: { Chat.Id: long tgUserId, MessageId: int messageId } })
         {
-            var serviceName = data[CallbackConstants.ServicePrefix.Length..];
-            var result = await _mediator.Send(new GetCredentialsMessage(tgUserId, messageId, serviceName), cancellationToken);
+            var itemId = data[CallbackConstants.ServicePrefix.Length..];
+            var result = await _mediator.Send(new GetCredentialsMessage(tgUserId, messageId, itemId), cancellationToken);
 
             await _telegramNotificationService.SendMessageAsync(tgUserId, result.GetUserText(_userErrorMapper), result.ToTelegramMarkup(), cancellationToken);
         }
