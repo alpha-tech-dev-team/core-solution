@@ -363,3 +363,13 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Frontend (Vite / Node)
+dist/
+dist-ssr/
+coverage/
+.vite/
+*.tsbuildinfo
+.eslintcache
+*.local
+.vscode/
