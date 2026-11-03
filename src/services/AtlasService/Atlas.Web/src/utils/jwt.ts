@@ -1,11 +1,7 @@
 import { Base64Url, Jwt, JwtClaim, TokenTime } from '@/constants/jwt.Constants'
+import type { JwtPayload } from '@/models/JwtPayload'
 
 const textDecoder = new TextDecoder()
-
-export interface JwtPayload {
-  exp?: number
-  [claim: string]: unknown
-}
 
 function decodeBase64Url(value: string): string {
   const standard = value
@@ -37,7 +33,11 @@ export function getTokenExpiryMs(token: string): number | null {
   return typeof expiry === 'number' ? expiry * TokenTime.MsPerSecond : null
 }
 
-export function isExpired(expiresAtMs: number | null, skewMs = TokenTime.ClockSkewMs): boolean {
-  if (expiresAtMs === null) return false
-  return Date.now() >= expiresAtMs - skewMs
+export function isExpired(
+  expiresAtMs: number | null,
+  nowMs: number,
+  skewMs = TokenTime.ClockSkewMs,
+): boolean {
+  if (expiresAtMs === null) return true
+  return nowMs >= expiresAtMs - skewMs
 }

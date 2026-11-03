@@ -1,12 +1,17 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { StorageKey, StoreId, TokenRefresh } from '@/constants/auth.Constants'
+import { HttpStatus } from '@/constants/http.Constants'
 import { identityClient } from '@/api/identityClient'
-import type { AuthTokensResponse } from '@/api/contracts'
+import { ApiError } from '@/api/ApiError'
+import type { AuthTokensResponse } from '@/api/contracts/AuthTokensResponse'
 import { getTokenExpiryMs, isExpired } from '@/utils/jwt'
 
 function parseExpiry(value: string | null | undefined): number | null {
   if (!value) return null
+
+  const numeric = Number(value)
+  if (!Number.isNaN(numeric)) return numeric
 
   const parsed = Date.parse(value)
   return Number.isNaN(parsed) ? null : parsed
@@ -18,10 +23,12 @@ export const useAuthStore = defineStore(StoreId.Auth, () => {
   const accessTokenExpiresAt = ref<number | null>(
     parseExpiry(localStorage.getItem(StorageKey.AccessExpiresAt)),
   )
+  const nowMs = ref(Date.now())
 
   const isAuthenticated = computed(() => !!token.value && !isAccessTokenExpired())
 
   let refreshTimer: number | undefined
+  let clockTimer: number | undefined
   let refreshPromise: Promise<boolean> | null = null
 
   function resolveExpiresAt(): number | null {
@@ -29,7 +36,26 @@ export const useAuthStore = defineStore(StoreId.Auth, () => {
   }
 
   function isAccessTokenExpired(): boolean {
-    return !token.value || isExpired(resolveExpiresAt())
+    return !token.value || isExpired(resolveExpiresAt(), nowMs.value)
+  }
+
+  function isUnauthorized(error: unknown): boolean {
+    return error instanceof ApiError && error.status === HttpStatus.Unauthorized
+  }
+
+  function startClock() {
+    if (clockTimer !== undefined) return
+
+    clockTimer = window.setInterval(() => {
+      nowMs.value = Date.now()
+    }, TokenRefresh.ClockTickMs)
+  }
+
+  function stopClock() {
+    if (clockTimer === undefined) return
+
+    window.clearInterval(clockTimer)
+    clockTimer = undefined
   }
 
   function clearRefreshTimer() {
@@ -62,10 +88,17 @@ export const useAuthStore = defineStore(StoreId.Auth, () => {
 
     try {
       const session = await identityClient.refresh(currentRefreshToken)
+
+      if (refreshToken.value !== currentRefreshToken) {
+        return false
+      }
+
       setSession(session)
       return true
-    } catch {
-      logout()
+    } catch (error) {
+      if (refreshToken.value === currentRefreshToken && isUnauthorized(error)) {
+        logout()
+      }
       return false
     }
   }
@@ -95,11 +128,13 @@ export const useAuthStore = defineStore(StoreId.Auth, () => {
       localStorage.setItem(StorageKey.AccessExpiresAt, String(accessTokenExpiresAt.value))
     }
 
+    startClock()
     scheduleTokenRefresh()
   }
 
   function logout() {
     clearRefreshTimer()
+    stopClock()
     token.value = null
     refreshToken.value = null
     accessTokenExpiresAt.value = null
@@ -109,7 +144,12 @@ export const useAuthStore = defineStore(StoreId.Auth, () => {
   }
 
   async function restoreSession() {
-    if (!token.value || !refreshToken.value) return
+    if (!token.value || !refreshToken.value) {
+      logout()
+      return
+    }
+
+    startClock()
 
     if (isAccessTokenExpired()) {
       await refreshSession()

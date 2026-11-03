@@ -11,4 +11,5 @@ export const StoreId = {
 export const TokenRefresh = {
   MarginMs: 60_000,
   MinDelayMs: 5_000,
+  ClockTickMs: 30_000,
 } as const
