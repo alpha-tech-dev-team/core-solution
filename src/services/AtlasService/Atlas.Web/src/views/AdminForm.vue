@@ -1,16 +1,16 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 import { RouteName } from '@/constants/router.Constants'
-import { messages } from '@/resources'
+import { Atlas } from '@/resources'
 
 const authStore = useAuthStore()
 const router = useRouter()
 
 const stats = [
-  { label: messages.admin.usersLabel, value: messages.admin.emptyValue },
-  { label: messages.admin.sessionsLabel, value: messages.admin.emptyValue },
-  { label: messages.admin.requestsLabel, value: messages.admin.emptyValue },
+  { label: Atlas.ru.admin.usersLabel, value: Atlas.ru.admin.emptyValue },
+  { label: Atlas.ru.admin.sessionsLabel, value: Atlas.ru.admin.emptyValue },
+  { label: Atlas.ru.admin.requestsLabel, value: Atlas.ru.admin.emptyValue },
 ]
 
 async function handleLogout() {
@@ -23,23 +23,23 @@ async function handleLogout() {
   <div class="admin">
     <header class="admin__topbar">
       <div class="admin__brand">
-        <span class="admin__brand-name">{{ messages.admin.appName }}</span>
+        <span class="admin__brand-name">{{ Atlas.ru.admin.appName }}</span>
         <span class="admin__brand-separator"></span>
-        <span class="admin__brand-section">{{ messages.admin.sectionTitle }}</span>
+        <span class="admin__brand-section">{{ Atlas.ru.admin.sectionTitle }}</span>
       </div>
 
       <button class="btn btn--ghost btn--sm" type="button" @click="handleLogout">
-        {{ messages.admin.logout }}
+        {{ Atlas.ru.admin.logout }}
       </button>
     </header>
 
     <main class="admin__content">
       <div class="admin__heading">
-        <h1>{{ messages.admin.pageTitle }}</h1>
-        <p class="text-muted text-sm">{{ messages.admin.pageSubtitle }}</p>
+        <h1>{{ Atlas.ru.admin.pageTitle }}</h1>
+        <p class="text-muted text-sm">{{ Atlas.ru.admin.pageSubtitle }}</p>
       </div>
 
-      <section class="stat-grid" :aria-label="messages.admin.statsLabel">
+      <section class="stat-grid" :aria-label="Atlas.ru.admin.statsLabel">
         <article v-for="stat in stats" :key="stat.label" class="card stat">
           <p class="stat__label">{{ stat.label }}</p>
           <p class="stat__value numeric">{{ stat.value }}</p>
@@ -48,10 +48,10 @@ async function handleLogout() {
 
       <section class="card panel">
         <header class="panel__header">
-          <h2>{{ messages.admin.recentTitle }}</h2>
+          <h2>{{ Atlas.ru.admin.recentTitle }}</h2>
         </header>
 
-        <p class="panel__empty">{{ messages.admin.emptyState }}</p>
+        <p class="panel__empty">{{ Atlas.ru.admin.emptyState }}</p>
       </section>
     </main>
   </div>

@@ -1,6 +1,6 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { useAuth } from '@/composables/userAuth'
-import { messages } from '@/resources'
+import { Atlas } from '@/resources'
 
 const { login, password, loading, errorMessage, handleLogin } = useAuth()
 </script>
@@ -9,13 +9,13 @@ const { login, password, loading, errorMessage, handleLogin } = useAuth()
   <main class="login-page">
     <section class="card login-card">
       <header class="login-card__header">
-        <p class="login-card__brand">{{ messages.admin.appName }}</p>
-        <h1 class="login-card__title">{{ messages.auth.loginTitle }}</h1>
+        <p class="login-card__brand">{{ Atlas.ru.admin.appName }}</p>
+        <h1 class="login-card__title">{{ Atlas.ru.auth.loginTitle }}</h1>
       </header>
 
       <form class="login-form" novalidate @submit.prevent="handleLogin">
         <div class="field">
-          <label class="field__label" for="login">{{ messages.auth.loginLabel }}</label>
+          <label class="field__label" for="login">{{ Atlas.ru.auth.loginLabel }}</label>
           <input
             id="login"
             v-model="login"
@@ -29,7 +29,7 @@ const { login, password, loading, errorMessage, handleLogin } = useAuth()
         </div>
 
         <div class="field">
-          <label class="field__label" for="password">{{ messages.auth.passwordLabel }}</label>
+          <label class="field__label" for="password">{{ Atlas.ru.auth.passwordLabel }}</label>
           <input
             id="password"
             v-model="password"
@@ -47,7 +47,7 @@ const { login, password, loading, errorMessage, handleLogin } = useAuth()
         </p>
 
         <button class="btn btn--primary btn--block" type="submit" :disabled="loading">
-          {{ loading ? messages.auth.submitLoading : messages.auth.submit }}
+          {{ loading ? Atlas.ru.auth.submitLoading : Atlas.ru.auth.submit }}
         </button>
       </form>
     </section>
