@@ -52,7 +52,8 @@ public sealed class SessionBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
                     return ResultFactory.Success<TResponse, WorkflowResponse>(new WorkflowResponse
                     {
                         Text = _localizer.GetPhrase(LocalizationConstants.IdleStateName, LocalizationConstants.Idle.PhoneRequest),
-                        RequestContact = true
+                        RequestContact = true,
+                        ContactButtonText = _localizer.GetPhrase(LocalizationConstants.IdleStateName, LocalizationConstants.Idle.BtnShareContact)
                     });
                 }
 

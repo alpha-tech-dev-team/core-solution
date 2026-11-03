@@ -35,7 +35,8 @@ public abstract class SubmitPhoneHandlerBase : IRequestHandler<SubmitPhoneMessag
             return Result<WorkflowResponse>.Success(new WorkflowResponse
             {
                 Text = _localizer.GetPhrase(LocalizationConstants.IdleStateName, LocalizationConstants.Idle.PhoneRequest),
-                RequestContact = true
+                RequestContact = true,
+                ContactButtonText = _localizer.GetPhrase(LocalizationConstants.IdleStateName, LocalizationConstants.Idle.BtnShareContact)
             });
         }
 

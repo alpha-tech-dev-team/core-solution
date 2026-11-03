@@ -7,31 +7,17 @@ namespace CoreSolution.Shared.TgBot.Extensions;
 
 public static class ResultExtensions
 {
-    private const string UnknownErrorCode = "UnknownError";
-
-    public static string GetDisplayText(this Result<WorkflowResponse> result)
+    public static string GetUserText(this Result<WorkflowResponse> result, IUserErrorMapper errorMapper)
     {
         if (result.IsSuccess)
         {
             return result.Value?.Text ?? string.Empty;
         }
 
-        return result.ErrorCode ?? UnknownErrorCode;
-    }
-
-    public static string GetUserText(this Result<WorkflowResponse> result, IUserErrorMapper errorMapper)
-    {
-        return result.IsSuccess
-            ? result.GetDisplayText()
-            : errorMapper.Map(result.ErrorCode ?? string.Empty);
+        return errorMapper.Map(result.ErrorCode ?? string.Empty);
     }
 
     public static ReplyMarkup? ToTelegramMarkup(this Result<WorkflowResponse> result)
-    {
-        return result.Value?.ButtonRows.ToInlineKeyboardMarkup();
-    }
-
-    public static ReplyMarkup? ToTelegramMarkup(this Result<WorkflowResponse> result, string contactButtonText)
     {
         if (!result.IsSuccess || result.Value is not { } content)
         {
@@ -40,13 +26,13 @@ public static class ResultExtensions
 
         if (content.RequestContact)
         {
-            return new ReplyKeyboardMarkup(new KeyboardButton(contactButtonText) { RequestContact = true })
+            return new ReplyKeyboardMarkup(new KeyboardButton(content.ContactButtonText!) { RequestContact = true })
             {
                 ResizeKeyboard = true,
                 OneTimeKeyboard = true
             };
         }
 
-        return result.ToTelegramMarkup();
+        return content.ButtonRows.ToInlineKeyboardMarkup();
     }
 }
