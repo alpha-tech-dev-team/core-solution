@@ -1,5 +1,11 @@
+export const DEFAULT_LOCALE = 'ru'
+export const SUPPORTED_LOCALES = ['ru', 'en'] as const
+
+export type Locale = (typeof SUPPORTED_LOCALES)[number]
+
 export const ERROR_KEY_PREFIX = 'error'
 export const VALIDATION_KEY_PREFIX = 'validation'
+export const PLACEHOLDER_PATTERN = /\{(\d+)\}/g
 
 export const RESOURCE_KEYS = {
   APP_TITLE: 'app_title',

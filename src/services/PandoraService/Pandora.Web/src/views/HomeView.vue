@@ -2,8 +2,8 @@
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { tr } from '@/i18n'
-import { RESOURCE_KEYS } from '@/i18n/keys'
-import { ROUTES } from '@/router/constants'
+import { RESOURCE_KEYS } from '@/constants/i18n'
+import { ROUTES } from '@/constants/routes'
 
 const router = useRouter()
 const authStore = useAuthStore()

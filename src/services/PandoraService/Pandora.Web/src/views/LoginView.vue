@@ -3,10 +3,10 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { tr, trRequestError } from '@/i18n'
-import { RESOURCE_KEYS } from '@/i18n/keys'
-import { ROUTES } from '@/router/constants'
+import { RESOURCE_KEYS } from '@/constants/i18n'
+import { ROUTES } from '@/constants/routes'
 import { validateCredentials } from './login/validate-credentials'
-import { LOADING_PLACEHOLDER } from './login/loading'
+import { LOADING_PLACEHOLDER } from '@/constants/ui'
 
 const router = useRouter()
 const authStore = useAuthStore()

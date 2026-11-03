@@ -1,18 +1,17 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import api from '@/api/client'
-import { AUTH_ENDPOINTS } from '@/api/constants'
+import { AUTH_ENDPOINTS } from '@/constants/api'
+import { AUTH_STORE_ID } from '@/constants/stores'
+import { toRequestError, type RequestError } from '@/api/request-error'
 import { clearSession, loadSession, saveSession } from './auth.session'
-import { toLoginError, type LoginError } from './auth.errors'
-import type { AuthTokens } from './auth.types'
-
-const STORE_ID = 'auth'
+import type { AuthTokens } from './models/auth-tokens'
 
 function isExpired(expiresAt: string): boolean {
   return new Date(expiresAt) <= new Date()
 }
 
-export const useAuthStore = defineStore(STORE_ID, () => {
+export const useAuthStore = defineStore(AUTH_STORE_ID, () => {
   const accessToken = ref<string | null>(null)
   const refreshToken = ref<string | null>(null)
   const accessTokenExpiresAt = ref<string | null>(null)
@@ -29,13 +28,13 @@ export const useAuthStore = defineStore(STORE_ID, () => {
     saveSession(tokens)
   }
 
-  async function login(username: string, password: string): Promise<LoginError | null> {
+  async function login(username: string, password: string): Promise<RequestError | null> {
     try {
       const { data } = await api.post<AuthTokens>(AUTH_ENDPOINTS.LOGIN, { username, password })
       applyTokens(data)
       return null
     } catch (error) {
-      return toLoginError(error)
+      return toRequestError(error)
     }
   }
 

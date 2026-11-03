@@ -8,8 +8,8 @@ import {
   HEADER_CONTENT_TYPE,
   REQUEST_TIMEOUT_MS,
   RETRY_FLAG
-} from '@/api/constants'
-import { HTTP_STATUS } from '@/api/http-status'
+} from '@/constants/api'
+import { HTTP_STATUS } from '@/constants/http-status'
 
 type RetriableRequestConfig = AxiosRequestConfig & { [RETRY_FLAG]?: boolean }
 

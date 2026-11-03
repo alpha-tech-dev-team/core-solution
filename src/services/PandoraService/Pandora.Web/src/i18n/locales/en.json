@@ -1,0 +1,23 @@
+{
+  "error_401": "Invalid login or password",
+  "error_403": "Access denied",
+  "error_404": "User not found",
+  "error_409": "User already activated",
+  "error_429": "Too many login attempts. Try again in a minute.",
+  "error_500": "Internal server error",
+  "error_502": "Service temporarily unavailable",
+  "error_503": "Service temporarily unavailable",
+  "error_network": "Network error. Check your connection.",
+  "error_unknown": "An unknown error occurred",
+  "validation_required": "Fill in all fields",
+  "validation_usernameTooShort": "Username must be at least {0} characters",
+  "validation_usernameTooLong": "Username must be at most {0} characters",
+  "validation_passwordTooShort": "Password must be at least {0} characters",
+  "validation_passwordTooLong": "Password must be at most {0} characters",
+  "login_field_username": "Username",
+  "login_field_password": "Password",
+  "auth_login": "Log in",
+  "auth_logout": "Log out",
+  "app_title": "Pandora",
+  "app_placeholder": "Interface under construction"
+}
