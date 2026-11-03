@@ -11,5 +11,7 @@ public static class LocalizationConstants
     {
         public const string PhoneRequest = "PhoneRequest";
         public const string BtnShareContact = "BtnShareContact";
+        public const string AccessNotConfirmed = "AccessNotConfirmed";
+        public const string UnexpectedError = "UnexpectedError";
     }
 }
