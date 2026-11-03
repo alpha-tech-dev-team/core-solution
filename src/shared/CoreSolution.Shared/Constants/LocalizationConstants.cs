@@ -11,5 +11,6 @@ public static class LocalizationConstants
     public static class Idle
     {
         public const string PhoneRequest = "PhoneRequest";
+        public const string BtnShareContact = "BtnShareContact";
     }
 }

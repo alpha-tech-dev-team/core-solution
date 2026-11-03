@@ -18,13 +18,27 @@ public static class ResultExtensions
         return result.ErrorCode ?? UnknownErrorCode;
     }
 
-    public static InlineKeyboardMarkup? ToTelegramMarkup(this Result<WorkflowResponse> result)
+    public static ReplyMarkup? ToTelegramMarkup(this Result<WorkflowResponse> result)
     {
-        if (!result.IsSuccess)
+        return result.Value?.ButtonRows.ToInlineKeyboardMarkup();
+    }
+
+    public static ReplyMarkup? ToTelegramMarkup(this Result<WorkflowResponse> result, string contactButtonText)
+    {
+        if (!result.IsSuccess || result.Value is not { } content)
         {
             return null;
         }
 
-        return result.Value?.ButtonRows.ToInlineKeyboardMarkup();
+        if (content.RequestContact)
+        {
+            return new ReplyKeyboardMarkup(new KeyboardButton(contactButtonText) { RequestContact = true })
+            {
+                ResizeKeyboard = true,
+                OneTimeKeyboard = true
+            };
+        }
+
+        return result.ToTelegramMarkup();
     }
 }

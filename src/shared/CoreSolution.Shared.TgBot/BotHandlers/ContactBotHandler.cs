@@ -1,6 +1,8 @@
+using CoreSolution.Shared.Abstractions;
+using CoreSolution.Shared.Application.Messages;
+using CoreSolution.Shared.Constants;
 using CoreSolution.Shared.TgBot.Abstractions;
 using CoreSolution.Shared.TgBot.Extensions;
-using CoreSolution.Shared.Application.Messages;
 using MediatR;
 using Telegram.Bot.Types;
 
@@ -9,32 +11,51 @@ namespace CoreSolution.Shared.TgBot.BotHandlers;
 public sealed class ContactBotHandler : IBotHandler
 {
     private const string StartCommand = "/start";
+    private const int MinPhoneDigits = 7;
 
     private readonly ITelegramNotificationService _telegramNotificationService;
     private readonly IMediator _mediator;
+    private readonly ILocalizer _localizer;
 
-    public ContactBotHandler(ITelegramNotificationService telegramNotificationService, IMediator mediator)
+    public ContactBotHandler(
+        ITelegramNotificationService telegramNotificationService,
+        IMediator mediator,
+        ILocalizer localizer)
     {
         _telegramNotificationService = telegramNotificationService;
         _mediator = mediator;
+        _localizer = localizer;
     }
 
     public bool CanHandle(Update update)
     {
-        return update.Message?.Contact is not null || update.Message?.Text is StartCommand;
+        var message = update.Message;
+
+        return message?.Contact is not null || message?.Text is StartCommand || IsPhoneText(message?.Text);
     }
 
     public async Task HandleAsync(Update update, CancellationToken cancellationToken)
     {
-        if (update.Message is not { Chat.Id: long tgUserId, MessageId: int messageId })
+        if (update.Message is not { Chat.Id: long tgUserId, MessageId: int messageId } message)
         {
             return;
         }
 
-        var phone = update.Message.Contact?.PhoneNumber;
+        var phone = message.Contact?.PhoneNumber ?? (IsPhoneText(message.Text) ? message.Text : null);
 
         var result = await _mediator.Send(new SubmitPhoneMessage(tgUserId, messageId, phone), cancellationToken);
 
-        await _telegramNotificationService.SendMessageAsync(tgUserId, result.GetDisplayText(), result.ToTelegramMarkup(), cancellationToken);
+        var contactButtonText = _localizer.GetPhrase(LocalizationConstants.IdleStateName, LocalizationConstants.Idle.BtnShareContact);
+
+        await _telegramNotificationService.SendMessageAsync(
+            tgUserId,
+            result.GetDisplayText(),
+            result.ToTelegramMarkup(contactButtonText),
+            cancellationToken);
+    }
+
+    private static bool IsPhoneText(string? text)
+    {
+        return text is not null && text.Count(char.IsDigit) >= MinPhoneDigits;
     }
 }

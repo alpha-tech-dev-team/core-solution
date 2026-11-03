@@ -84,7 +84,7 @@ public sealed class PandoraFlowTests(IntegrationFixture fixture)
 
         Assert.True(result.IsSuccess);
         Assert.True(result.Value!.RequestContact);
-        Assert.Equal("Чтобы отправить номер телефона, отправьте команду /start.", result.Value.Text);
+        Assert.Equal("Отправьте номер телефона", result.Value.Text);
 
         Assert.Null(await GetSessionAsync(provider, telegramUserId));
     }

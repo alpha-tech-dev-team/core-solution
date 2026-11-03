@@ -25,6 +25,8 @@ namespace CoreSolution.Integration.Tests;
 
 public sealed class IntegrationFixture : IAsyncLifetime
 {
+    private const string AtlasTestToken = "123456:integration-test-token";
+
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:18-alpine").Build();
 
     private readonly RedisContainer _atlasRedis = new RedisBuilder("redis:7-alpine").Build();
@@ -127,6 +129,7 @@ public sealed class IntegrationFixture : IAsyncLifetime
 
         services.AddLogging();
         services.AddSingleton<IConfiguration>(configuration);
+        services.AddTelegramBot(AtlasTestToken);
         services.AddBotInfrastructure(configuration);
         services.AddApplication();
         services.AddHttpClient<IIdentityClient, IdentityClient>()
