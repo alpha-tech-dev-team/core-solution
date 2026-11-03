@@ -1,0 +1,38 @@
+name: atlas
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: atlas-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  atlas-tgbot:
+    build:
+      context: ../../..
+      dockerfile: src/services/AtlasService/Atlas.TgBot/Dockerfile
+    container_name: atlas-tgbot
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      DOTNET_ENVIRONMENT: Production
+      Telegram__BotToken: ${TELEGRAM_BOT_TOKEN:?TELEGRAM_BOT_TOKEN is required}
+      Database__RedisConnection: redis:6379
+      SessionSettings__ExpiryMinutes: ${SESSION_EXPIRY_MINUTES:-30}
+      Atlas__Identity__BaseUrl: ${IDENTITY_BASE_URL:-http://host.docker.internal:5257}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  redis-data:
