@@ -1,5 +1,6 @@
 using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
+using CoreSolution.Shared.TgBot.Abstractions;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace CoreSolution.Shared.TgBot.Extensions;
@@ -16,6 +17,13 @@ public static class ResultExtensions
         }
 
         return result.ErrorCode ?? UnknownErrorCode;
+    }
+
+    public static string GetUserText(this Result<WorkflowResponse> result, IUserErrorMapper errorMapper)
+    {
+        return result.IsSuccess
+            ? result.GetDisplayText()
+            : errorMapper.Map(result.ErrorCode ?? string.Empty);
     }
 
     public static ReplyMarkup? ToTelegramMarkup(this Result<WorkflowResponse> result)

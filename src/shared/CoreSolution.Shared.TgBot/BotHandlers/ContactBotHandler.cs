@@ -16,15 +16,18 @@ public sealed class ContactBotHandler : IBotHandler
     private readonly ITelegramNotificationService _telegramNotificationService;
     private readonly IMediator _mediator;
     private readonly ILocalizer _localizer;
+    private readonly IUserErrorMapper _userErrorMapper;
 
     public ContactBotHandler(
         ITelegramNotificationService telegramNotificationService,
         IMediator mediator,
-        ILocalizer localizer)
+        ILocalizer localizer,
+        IUserErrorMapper userErrorMapper)
     {
         _telegramNotificationService = telegramNotificationService;
         _mediator = mediator;
         _localizer = localizer;
+        _userErrorMapper = userErrorMapper;
     }
 
     public bool CanHandle(Update update)
@@ -49,7 +52,7 @@ public sealed class ContactBotHandler : IBotHandler
 
         await _telegramNotificationService.SendMessageAsync(
             tgUserId,
-            result.GetDisplayText(),
+            result.GetUserText(_userErrorMapper),
             result.ToTelegramMarkup(contactButtonText),
             cancellationToken);
     }
