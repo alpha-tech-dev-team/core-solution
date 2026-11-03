@@ -5,20 +5,20 @@
   <Folder Name="/src/services/AtlasService/">
     <Project Path="src/services/AtlasService/Atlas.Api/Atlas.Api.csproj" />
     <Project Path="src/services/AtlasService/Atlas.Application/Atlas.Application.csproj" />
-    <Project Path="src/services/AtlasService/Atlas.Core/Atlas.Core.csproj" />
+    <Project Path="src/services/AtlasService/Atlas.Domain/Atlas.Domain.csproj" />
     <Project Path="src/services/AtlasService/Atlas.Infrastructure/Atlas.Infrastructure.csproj" />
     <Project Path="src/services/AtlasService/Atlas.TgBot/Atlas.TgBot.csproj" />
   </Folder>
   <Folder Name="/src/services/IdentityService/">
     <Project Path="src/services/IdentityService/Identity.Api/Identity.Api.csproj" />
     <Project Path="src/services/IdentityService/Identity.Application/Identity.Application.csproj" Id="39f4ac24-120f-4f65-b504-d3b7338ca3d2" />
-    <Project Path="src/services/IdentityService/Identity.Core/Identity.Core.csproj" />
+    <Project Path="src/services/IdentityService/Identity.Domain/Identity.Domain.csproj" />
     <Project Path="src/services/IdentityService/Identity.Infrastructure/Identity.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/src/services/PandoraService/">
     <Project Path="src/services/PandoraService/Pandora.Api/Pandora.Api.csproj" />
     <Project Path="src/services/PandoraService/Pandora.Application/Pandora.Application.csproj" Id="11d9e8da-6738-487f-9dc6-f061bade9f67" />
-    <Project Path="src/services/PandoraService/Pandora.Core/Pandora.Core.csproj" />
+    <Project Path="src/services/PandoraService/Pandora.Domain/Pandora.Domain.csproj" />
     <Project Path="src/services/PandoraService/Pandora.Infrastructure/Pandora.Infrastructure.csproj" />
     <Project Path="src/services/PandoraService/Pandora.TgBot/Pandora.TgBot.csproj" />
   </Folder>

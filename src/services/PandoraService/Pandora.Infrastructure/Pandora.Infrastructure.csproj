@@ -16,7 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\shared\CoreSolution.Shared.Infrastructure\CoreSolution.Shared.Infrastructure.csproj" />
     <ProjectReference Include="..\..\..\shared\CoreSolution.Shared\CoreSolution.Shared.csproj" />
-    <ProjectReference Include="..\Pandora.Core\Pandora.Core.csproj" />
+    <ProjectReference Include="..\Pandora.Domain\Pandora.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>

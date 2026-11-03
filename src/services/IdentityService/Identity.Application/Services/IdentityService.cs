@@ -1,8 +1,8 @@
 using CoreSolution.Shared.Results;
 using Identity.Application.Errors;
-using Identity.Core.Enums;
-using Identity.Core.Interfaces.Repositories;
-using Identity.Core.Interfaces.Services;
+using Identity.Domain.Enums;
+using Identity.Domain.Interfaces.Repositories;
+using Identity.Domain.Interfaces.Services;
 using Microsoft.Extensions.Logging;
 
 namespace Identity.Application.Services;

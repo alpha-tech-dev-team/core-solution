@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Options;
-using Pandora.Core.Interfaces;
-using Pandora.Core.Models;
+using Pandora.Domain.Interfaces;
+using Pandora.Domain.Models;
 
 namespace Pandora.Infrastructure.Secrets;
 

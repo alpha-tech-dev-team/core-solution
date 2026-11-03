@@ -1,8 +1,8 @@
-using Pandora.Core.Enums;
+using Pandora.Domain.Enums;
 using CoreSolution.Shared.Models;
-using Pandora.Core.Constants.Localization;
+using Pandora.Domain.Constants.Localization;
 using CoreSolution.Shared.Abstractions;
-using Pandora.Core.Interfaces;
+using Pandora.Domain.Interfaces;
 
 namespace Pandora.Application.Common;
 

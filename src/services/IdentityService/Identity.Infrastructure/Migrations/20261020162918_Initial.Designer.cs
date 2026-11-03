@@ -25,7 +25,7 @@ namespace Identity.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Identity.Core.Entities.Roles", b =>
+            modelBuilder.Entity("Identity.Domain.Entities.Roles", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -46,7 +46,7 @@ namespace Identity.Infrastructure.Migrations
                     b.ToTable("roles", (string)null);
                 });
 
-            modelBuilder.Entity("Identity.Core.Entities.User", b =>
+            modelBuilder.Entity("Identity.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -127,7 +127,7 @@ namespace Identity.Infrastructure.Migrations
                     b.ToTable("users", (string)null);
                 });
 
-            modelBuilder.Entity("Identity.Core.Entities.UserRole", b =>
+            modelBuilder.Entity("Identity.Domain.Entities.UserRole", b =>
                 {
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid")
@@ -144,9 +144,9 @@ namespace Identity.Infrastructure.Migrations
                     b.ToTable("user_roles", (string)null);
                 });
 
-            modelBuilder.Entity("Identity.Core.Entities.User", b =>
+            modelBuilder.Entity("Identity.Domain.Entities.User", b =>
                 {
-                    b.HasOne("Identity.Core.Entities.User", "UpdatedBy")
+                    b.HasOne("Identity.Domain.Entities.User", "UpdatedBy")
                         .WithMany()
                         .HasForeignKey("UpdatedById")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -155,15 +155,15 @@ namespace Identity.Infrastructure.Migrations
                     b.Navigation("UpdatedBy");
                 });
 
-            modelBuilder.Entity("Identity.Core.Entities.UserRole", b =>
+            modelBuilder.Entity("Identity.Domain.Entities.UserRole", b =>
                 {
-                    b.HasOne("Identity.Core.Entities.Roles", "Role")
+                    b.HasOne("Identity.Domain.Entities.Roles", "Role")
                         .WithMany("UserRoles")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Identity.Core.Entities.User", "User")
+                    b.HasOne("Identity.Domain.Entities.User", "User")
                         .WithMany("UserRoles")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -174,12 +174,12 @@ namespace Identity.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Identity.Core.Entities.Roles", b =>
+            modelBuilder.Entity("Identity.Domain.Entities.Roles", b =>
                 {
                     b.Navigation("UserRoles");
                 });
 
-            modelBuilder.Entity("Identity.Core.Entities.User", b =>
+            modelBuilder.Entity("Identity.Domain.Entities.User", b =>
                 {
                     b.Navigation("UserRoles");
                 });

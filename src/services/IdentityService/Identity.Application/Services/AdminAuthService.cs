@@ -1,9 +1,9 @@
 using CoreSolution.Shared.Results;
 using Identity.Application.Errors;
-using Identity.Core.Interfaces.Repositories;
-using Identity.Core.Interfaces.Security;
-using Identity.Core.Interfaces.Services;
-using Identity.Core.Models;
+using Identity.Domain.Interfaces.Repositories;
+using Identity.Domain.Interfaces.Security;
+using Identity.Domain.Interfaces.Services;
+using Identity.Domain.Models;
 using Microsoft.Extensions.Logging;
 
 namespace Identity.Application.Services;

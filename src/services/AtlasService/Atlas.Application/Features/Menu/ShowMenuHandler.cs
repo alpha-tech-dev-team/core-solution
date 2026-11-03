@@ -1,6 +1,6 @@
 using Atlas.Application.Common;
-using Atlas.Core.Constants.Localization;
-using Atlas.Core.Enums;
+using Atlas.Domain.Constants.Localization;
+using Atlas.Domain.Enums;
 using CoreSolution.Shared.Abstractions;
 using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;

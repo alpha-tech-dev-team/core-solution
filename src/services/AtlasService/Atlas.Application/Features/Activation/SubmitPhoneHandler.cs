@@ -1,5 +1,5 @@
 using Atlas.Application.Features.Menu;
-using Atlas.Core.Enums;
+using Atlas.Domain.Enums;
 using CoreSolution.Shared.Abstractions;
 using CoreSolution.Shared.Application.Features.Activation;
 using CoreSolution.Shared.Application.Messages;

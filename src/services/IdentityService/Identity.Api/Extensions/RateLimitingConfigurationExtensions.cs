@@ -1,5 +1,5 @@
 using Identity.Api.Constants;
-using Identity.Core.Options;
+using Identity.Domain.Options;
 using Identity.Api.Middleware;
 using Microsoft.AspNetCore.RateLimiting;
 

@@ -1,4 +1,4 @@
-using Atlas.Core.Options;
+using Atlas.Domain.Options;
 using CoreSolution.Shared.TgBot.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

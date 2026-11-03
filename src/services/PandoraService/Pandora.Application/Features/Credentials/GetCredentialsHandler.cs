@@ -2,9 +2,9 @@ using CoreSolution.Shared.Abstractions;
 using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
 using MediatR;
-using Pandora.Core.Constants.Localization;
-using Pandora.Core.Enums;
-using Pandora.Core.Interfaces;
+using Pandora.Domain.Constants.Localization;
+using Pandora.Domain.Enums;
+using Pandora.Domain.Interfaces;
 
 namespace Pandora.Application.Features.Credentials;
 

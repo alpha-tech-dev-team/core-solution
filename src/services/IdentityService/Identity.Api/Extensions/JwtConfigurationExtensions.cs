@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using CoreSolution.Shared.Options;
 using Identity.Api.Constants;
-using Identity.Core.Constants;
+using Identity.Domain.Constants;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 

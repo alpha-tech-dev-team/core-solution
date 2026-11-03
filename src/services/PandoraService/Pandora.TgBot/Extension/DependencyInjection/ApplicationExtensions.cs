@@ -1,8 +1,8 @@
 using CoreSolution.Shared.Application.Behaviors;
 using MediatR;
 using Pandora.Application.Features.Activation;
-using Pandora.Core.Constants;
-using Pandora.Core.Enums;
+using Pandora.Domain.Constants;
+using Pandora.Domain.Enums;
 
 namespace Pandora.TgBot.Extension.DependencyInjection;
 

@@ -1,6 +1,6 @@
 using Atlas.Application.Features.Activation;
-using Atlas.Core.Constants;
-using Atlas.Core.Enums;
+using Atlas.Domain.Constants;
+using Atlas.Domain.Enums;
 using CoreSolution.Shared.Application.Behaviors;
 using MediatR;
 

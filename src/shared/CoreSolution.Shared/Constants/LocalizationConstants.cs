@@ -5,7 +5,6 @@ namespace CoreSolution.Shared.Constants;
 public static class LocalizationConstants
 {
     public const Language DefaultLanguage = Language.Ru;
-
     public const string IdleStateName = "Idle";
 
     public static class Idle

@@ -34,7 +34,7 @@ public sealed class PandoraFlowTests(IntegrationFixture fixture)
 
         var session = await GetSessionAsync(provider, telegramUserId);
         Assert.NotNull(session);
-        Assert.Equal(nameof(Pandora.Core.Enums.WorkflowStep.ServiceSelection), session!.State);
+        Assert.Equal(nameof(Pandora.Domain.Enums.WorkflowStep.ServiceSelection), session!.State);
     }
 
     [Fact]
@@ -61,7 +61,7 @@ public sealed class PandoraFlowTests(IntegrationFixture fixture)
 
         var session = await GetSessionAsync(provider, telegramUserId);
         Assert.NotNull(session);
-        Assert.Equal(nameof(Pandora.Core.Enums.WorkflowStep.ServiceSelection), session!.State);
+        Assert.Equal(nameof(Pandora.Domain.Enums.WorkflowStep.ServiceSelection), session!.State);
     }
 
     [Fact]

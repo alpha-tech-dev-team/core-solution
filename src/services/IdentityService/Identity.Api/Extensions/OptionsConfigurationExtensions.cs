@@ -1,5 +1,5 @@
 using System.Runtime.CompilerServices;
-using Identity.Core.Options;
+using Identity.Domain.Options;
 using Identity.Infrastructure.Constants;
 
 namespace Identity.Infrastructure.Options.Extensions;

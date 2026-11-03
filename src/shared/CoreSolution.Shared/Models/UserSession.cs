@@ -5,6 +5,11 @@ namespace CoreSolution.Shared.Models;
 
 public class UserSession
 {
+    public long TgUserId { get; set; }
+    public string State { get; set; }
+    public Language Language { get; set; }
+    public DateTime LastUpdate { get; set; }
+    
     public UserSession(long tgUserId, string state, Language language, DateTime lastUpdate)
     {
         TgUserId = tgUserId;
@@ -12,11 +17,6 @@ public class UserSession
         Language = language;
         LastUpdate = lastUpdate;
     }
-
-    public long TgUserId { get; set; }
-    public string State { get; set; }
-    public Language Language { get; set; }
-    public DateTime LastUpdate { get; set; }
 
     public static UserSession Create(long tgUserId, string initialStep)
     {

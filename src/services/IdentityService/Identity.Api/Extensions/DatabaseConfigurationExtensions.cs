@@ -1,4 +1,4 @@
-using Identity.Core.Options;
+using Identity.Domain.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 

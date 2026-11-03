@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Pandora.Core.Entities;
+using Pandora.Domain.Entities;
 
 namespace Pandora.Infrastructure.Database.Configuration;
 

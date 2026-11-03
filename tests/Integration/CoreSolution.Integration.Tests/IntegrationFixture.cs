@@ -1,11 +1,11 @@
-using Atlas.Core.Constants;
+using Atlas.Domain.Constants;
 using Atlas.TgBot.Extensions.DependencyInjection;
 using CoreSolution.Shared.Abstractions;
 using CoreSolution.Shared.Infrastructure.Identity;
 using CoreSolution.Shared.TgBot.DependencyInjection;
 using Identity.Api;
-using Identity.Core.Entities;
-using Identity.Core.Enums;
+using Identity.Domain.Entities;
+using Identity.Domain.Enums;
 using Identity.Infrastructure.Database;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;

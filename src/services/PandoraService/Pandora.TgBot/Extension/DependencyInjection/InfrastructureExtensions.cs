@@ -2,8 +2,8 @@ using CoreSolution.Shared.TgBot.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Pandora.Core.Interfaces;
-using Pandora.Core.Options;
+using Pandora.Domain.Interfaces;
+using Pandora.Domain.Options;
 using Pandora.Infrastructure.Database;
 using Pandora.Infrastructure.Secrets;
 

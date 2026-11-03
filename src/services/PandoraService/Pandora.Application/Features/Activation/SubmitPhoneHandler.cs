@@ -5,7 +5,7 @@ using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
 using MediatR;
 using Pandora.Application.Features.Services;
-using Pandora.Core.Enums;
+using Pandora.Domain.Enums;
 
 namespace Pandora.Application.Features.Activation;
 
