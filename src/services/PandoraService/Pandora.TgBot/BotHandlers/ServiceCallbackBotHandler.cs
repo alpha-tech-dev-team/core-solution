@@ -11,11 +11,13 @@ public sealed class ServiceCallbackBotHandler : IBotHandler
 {
     private readonly ITelegramNotificationService _telegramNotificationService;
     private readonly IMediator _mediator;
+    private readonly IUserErrorMapper _userErrorMapper;
 
-    public ServiceCallbackBotHandler(ITelegramNotificationService telegramNotificationService, IMediator mediator)
+    public ServiceCallbackBotHandler(ITelegramNotificationService telegramNotificationService, IMediator mediator, IUserErrorMapper userErrorMapper)
     {
         _telegramNotificationService = telegramNotificationService;
         _mediator = mediator;
+        _userErrorMapper = userErrorMapper;
     }
 
     public bool CanHandle(Update update)
@@ -30,7 +32,7 @@ public sealed class ServiceCallbackBotHandler : IBotHandler
             var serviceName = data[CallbackConstants.ServicePrefix.Length..];
             var result = await _mediator.Send(new GetCredentialsMessage(tgUserId, messageId, serviceName), cancellationToken);
 
-            await _telegramNotificationService.SendMessageAsync(tgUserId, result.GetDisplayText(), result.ToTelegramMarkup(), cancellationToken);
+            await _telegramNotificationService.SendMessageAsync(tgUserId, result.GetUserText(_userErrorMapper), result.ToTelegramMarkup(), cancellationToken);
         }
     }
 }
