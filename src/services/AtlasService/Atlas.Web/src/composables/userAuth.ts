@@ -4,6 +4,7 @@ import type { LoginRequest } from '@/api/contracts/LoginRequest'
 import { useAuthStore } from '@/stores/authStore'
 import { RouteName } from '@/constants/router.Constants'
 import { Atlas } from '@/resources'
+import { loginSchema } from '@/validation/loginSchema'
 import { useRouter } from 'vue-router'
 
 export function useAuth() {
@@ -20,20 +21,20 @@ export function useAuth() {
 
     errorMessage.value = ''
 
-    const username = login.value.trim()
+    const parsed = loginSchema.safeParse({
+      username: login.value,
+      password: password.value,
+    })
 
-    if (!username || !password.value) {
-      errorMessage.value = Atlas.ru.auth.errorRequired
+    if (!parsed.success) {
+      errorMessage.value = parsed.error.issues[0]?.message ?? Atlas.ru.auth.errorDefault
       return
     }
 
     loading.value = true
 
     try {
-      const credentials: LoginRequest = {
-        username,
-        password: password.value,
-      }
+      const credentials: LoginRequest = parsed.data
 
       const session = await identityClient.login(credentials)
       authStore.setSession(session)
