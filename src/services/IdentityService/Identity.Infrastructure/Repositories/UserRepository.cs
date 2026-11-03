@@ -1,5 +1,5 @@
-using Identity.Core.Entities;
-using Identity.Core.Interfaces.Repositories;
+using Identity.Domain.Entities;
+using Identity.Domain.Interfaces.Repositories;
 using Identity.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 

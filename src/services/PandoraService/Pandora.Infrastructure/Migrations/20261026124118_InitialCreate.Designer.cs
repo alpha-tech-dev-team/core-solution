@@ -25,7 +25,7 @@ namespace Pandora.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Pandora.Core.Entities.AuditEntry", b =>
+            modelBuilder.Entity("Pandora.Domain.Entities.AuditEntry", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -64,7 +64,7 @@ namespace Pandora.Infrastructure.Migrations
                     b.ToTable("audit", (string)null);
                 });
 
-            modelBuilder.Entity("Pandora.Core.Entities.Permission", b =>
+            modelBuilder.Entity("Pandora.Domain.Entities.Permission", b =>
                 {
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid")
@@ -86,7 +86,7 @@ namespace Pandora.Infrastructure.Migrations
                     b.ToTable("permissions", (string)null);
                 });
 
-            modelBuilder.Entity("Pandora.Core.Entities.SecretMetadata", b =>
+            modelBuilder.Entity("Pandora.Domain.Entities.SecretMetadata", b =>
                 {
                     b.Property<string>("VaultItemId")
                         .HasMaxLength(36)
@@ -110,9 +110,9 @@ namespace Pandora.Infrastructure.Migrations
                     b.ToTable("secret_metadata", (string)null);
                 });
 
-            modelBuilder.Entity("Pandora.Core.Entities.Permission", b =>
+            modelBuilder.Entity("Pandora.Domain.Entities.Permission", b =>
                 {
-                    b.HasOne("Pandora.Core.Entities.SecretMetadata", null)
+                    b.HasOne("Pandora.Domain.Entities.SecretMetadata", null)
                         .WithMany()
                         .HasForeignKey("VaultItemId")
                         .OnDelete(DeleteBehavior.Cascade)

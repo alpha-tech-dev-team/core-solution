@@ -1,8 +1,8 @@
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
-using Identity.Core.Interfaces.Security;
-using Identity.Core.Options;
+using Identity.Domain.Interfaces.Security;
+using Identity.Domain.Options;
 using Konscious.Security.Cryptography;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

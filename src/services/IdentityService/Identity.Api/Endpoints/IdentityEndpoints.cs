@@ -1,8 +1,8 @@
 using Identity.Api.Constants;
 using Identity.Api.Extensions;
 using Identity.Api.Filters;
-using Identity.App.Contracts;
-using Identity.Core.Interfaces.Services;
+using Identity.Application.Contracts;
+using Identity.Domain.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Identity.Api.Endpoints;

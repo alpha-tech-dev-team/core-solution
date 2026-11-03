@@ -1,8 +1,8 @@
-using Building.Telegram.Abstractions;
-using Building.Telegram.Extensions;
+using CoreSolution.Shared.TgBot.Abstractions;
+using CoreSolution.Shared.TgBot.Extensions;
 using MediatR;
-using Pandora.App.Common;
-using Pandora.App.Features.Credentials;
+using Pandora.Application.Common;
+using Pandora.Application.Features.Credentials;
 using Telegram.Bot.Types;
 
 namespace Pandora.TgBot.BotHandlers;

@@ -1,5 +1,5 @@
 using System.Threading.RateLimiting;
-using Identity.Core.Options;
+using Identity.Domain.Options;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 

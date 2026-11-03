@@ -1,10 +1,10 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
-using Identity.App;
-using Identity.App.Services;
-using Identity.Core.Interfaces.Repositories;
-using Identity.Core.Interfaces.Security;
-using Identity.Core.Interfaces.Services;
+using Identity.Application;
+using Identity.Application.Services;
+using Identity.Domain.Interfaces.Repositories;
+using Identity.Domain.Interfaces.Security;
+using Identity.Domain.Interfaces.Services;
 using Identity.Infrastructure.Database.Extensions;
 using Identity.Infrastructure.Options.Extensions;
 using Identity.Infrastructure.Repositories;

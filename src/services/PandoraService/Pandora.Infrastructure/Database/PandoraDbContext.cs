@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Pandora.Core.Entities;
+using Pandora.Domain.Entities;
 using Pandora.Infrastructure.Database.Configuration;
 
 namespace Pandora.Infrastructure.Database;

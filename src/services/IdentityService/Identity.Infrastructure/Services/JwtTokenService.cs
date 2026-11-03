@@ -1,11 +1,11 @@
 using System.Security.Claims;
 using System.Text;
 using CoreSolution.Shared.Options;
-using Identity.Core.Constants;
-using JwtConstants = Identity.Core.Constants.JwtConstants;
-using Identity.Core.Entities;
-using Identity.Core.Interfaces.Security;
-using Identity.Core.Models;
+using Identity.Domain.Constants;
+using JwtConstants = Identity.Domain.Constants.JwtConstants;
+using Identity.Domain.Entities;
+using Identity.Domain.Interfaces.Security;
+using Identity.Domain.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
