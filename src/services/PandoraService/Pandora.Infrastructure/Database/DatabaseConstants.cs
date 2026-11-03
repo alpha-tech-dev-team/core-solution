@@ -16,7 +16,7 @@ public static class DatabaseConstants
     public static class Permissions
     {
         public const string Table = "permissions";
-        public const string UserId = "user_id";
+        public const string TelegramUserId = "telegram_user_id";
         public const string VaultItemId = "vault_item_id";
         public const string IsActive = "is_active";
         public const int VaultItemIdMaxLength = 36;

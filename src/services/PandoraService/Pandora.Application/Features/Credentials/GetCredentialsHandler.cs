@@ -11,16 +11,25 @@ namespace Pandora.Application.Features.Credentials;
 public sealed class GetCredentialsHandler : IRequestHandler<GetCredentialsMessage, Result<WorkflowResponse>>
 {
     private readonly ISecretStore _secretStore;
+    private readonly IPermissionRepository _permissionRepository;
     private readonly ILocalizer _localizer;
 
-    public GetCredentialsHandler(ISecretStore secretStore, ILocalizer localizer)
+    public GetCredentialsHandler(ISecretStore secretStore, IPermissionRepository permissionRepository, ILocalizer localizer)
     {
         _secretStore = secretStore;
+        _permissionRepository = permissionRepository;
         _localizer = localizer;
     }
 
     public async Task<Result<WorkflowResponse>> Handle(GetCredentialsMessage request, CancellationToken cancellationToken)
     {
+        var hasAccess = await _permissionRepository.HasAccess(request.TelegramUserId, request.ItemId, cancellationToken);
+
+        if (!hasAccess)
+        {
+            return Result<WorkflowResponse>.Failure(ErrorCode.AccessDenied.ToString());
+        }
+
         var secret = await _secretStore.GetSecret(request.ItemId, cancellationToken);
 
         if (secret is null)

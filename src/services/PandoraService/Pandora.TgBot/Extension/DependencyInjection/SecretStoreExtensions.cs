@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Pandora.Domain.Interfaces;
+using Pandora.Infrastructure.Repositories;
 using Pandora.Infrastructure.Secrets;
 
 namespace Pandora.TgBot.Extension.DependencyInjection;
@@ -10,6 +11,8 @@ public static class SecretStoreExtensions
     public static IServiceCollection AddSecretStore(this IServiceCollection services, IConfiguration configuration)
     {
         var options = configuration.GetSection(SecretsOptions.SectionName).Get<SecretsOptions>() ?? new SecretsOptions();
+
+        services.AddScoped<IPermissionRepository, PermissionRepository>();
 
         if (options.UseMock)
         {
