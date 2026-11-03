@@ -6,4 +6,9 @@ export const RouteName = {
 export const RoutePath = {
   Login: '/',
   Admin: '/admin',
+  CatchAll: '/:pathMatch(.*)*',
+} as const
+
+export const RouteMetaKey = {
+  RequiresAuth: 'requiresAuth',
 } as const

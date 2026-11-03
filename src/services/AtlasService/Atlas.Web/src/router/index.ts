@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginForm from '@/views/LoginForm.vue'
 import AdminForm from '@/views/AdminForm.vue'
-import { RouteName, RoutePath } from '@/constants/router.Constants'
+import { RouteMetaKey, RouteName, RoutePath } from '@/constants/router.Constants'
 import { useAuthStore } from '@/stores/authStore'
 
 const router = createRouter({
@@ -16,7 +16,11 @@ const router = createRouter({
       path: RoutePath.Admin,
       name: RouteName.Admin,
       component: AdminForm,
-      meta: { requiresAuth: true },
+      meta: { [RouteMetaKey.RequiresAuth]: true },
+    },
+    {
+      path: RoutePath.CatchAll,
+      redirect: { name: RouteName.Login },
     },
   ],
 })
@@ -24,7 +28,7 @@ const router = createRouter({
 router.beforeEach(async (to) => {
   const authStore = useAuthStore()
 
-  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+  if (to.meta[RouteMetaKey.RequiresAuth] && !authStore.isAuthenticated) {
     const refreshed = await authStore.refreshSession()
     return refreshed ? true : { name: RouteName.Login }
   }
