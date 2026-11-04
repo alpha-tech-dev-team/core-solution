@@ -39,8 +39,8 @@ services:
     depends_on:
       vaultwarden-proxy:
         condition: service_started
-    ports:
-      - "8087:8087"
+    expose:
+      - "8087"
     environment:
       - BW_HOST=https://vaultwarden-proxy:8300
       - BW_LOGIN=${BW_LOGIN}
