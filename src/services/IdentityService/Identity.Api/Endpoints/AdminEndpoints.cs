@@ -3,7 +3,6 @@ using Identity.Api.Extensions;
 using Identity.Api.Filters;
 using Identity.Application.Contracts;
 using Identity.Domain.Interfaces.Services;
-using Identity.Domain.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Identity.Api.Endpoints;
@@ -34,12 +33,7 @@ public static class AdminEndpoints
     {
         var result = await authService.Login(request.Username, request.Password, cancellationToken);
 
-        if (!result.IsSuccess)
-        {
-            return result.ToHttpResult();
-        }
-
-        return RespondWithTokens(result.Value!, response);
+        return result.ToSessionResult(response, clearCookiesOnFailure: false);
     }
 
     private static async Task<IResult> RefreshToken(
@@ -57,26 +51,12 @@ public static class AdminEndpoints
 
         var result = await authService.Refresh(refreshToken, cancellationToken);
 
-        if (!result.IsSuccess)
-        {
-            response.ClearAuthCookies();
-            return result.ToHttpResult();
-        }
-
-        return RespondWithTokens(result.Value!, response);
+        return result.ToSessionResult(response, clearCookiesOnFailure: true);
     }
 
     private static IResult Logout(HttpResponse response)
     {
         response.ClearAuthCookies();
         return Results.Ok();
-    }
-
-    private static IResult RespondWithTokens(AuthTokens tokens, HttpResponse response)
-    {
-        response.SetAccessTokenCookie(tokens.AccessToken, tokens.AccessTokenExpiresAt);
-        response.SetRefreshTokenCookie(tokens.RefreshToken, tokens.RefreshTokenExpiresAt);
-        
-        return Results.Ok(new SessionResponse(tokens.AccessTokenExpiresAt));
     }
 }
