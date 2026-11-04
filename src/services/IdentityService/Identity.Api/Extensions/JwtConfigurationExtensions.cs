@@ -45,6 +45,14 @@ public static class JwtConfigurationExtensions
                     NameClaimType = IdentityClaims.UniqueName,
                     RoleClaimType = IdentityClaims.Role
                 };
+                jwt.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = ctx =>
+                    {
+                        ctx.Token ??= ctx.Request.Cookies[AuthCookieConstants.AccessTokenName];
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
         services.AddAuthorization(authorization =>
