@@ -18,8 +18,9 @@ public static class AdminEndpoints
             .RequireRateLimiting(RateLimitingPolicies.Auth);
 
         group.MapPost(ApiRoutes.RefreshToken, RefreshToken)
-            .AddEndpointFilter<ValidationFilter<RefreshTokenRequest>>()
             .RequireRateLimiting(RateLimitingPolicies.Auth);
+
+        group.MapPost(ApiRoutes.Logout, Logout);
 
         return endpoints;
     }
@@ -27,20 +28,35 @@ public static class AdminEndpoints
     private static async Task<IResult> Login(
         [FromServices] IAdminAuthService authService,
         AdminLoginRequest request,
+        HttpResponse response,
         CancellationToken cancellationToken = default)
     {
         var result = await authService.Login(request.Username, request.Password, cancellationToken);
 
-        return result.ToHttpResult();
+        return result.ToSessionResult(response, clearCookiesOnFailure: false);
     }
 
     private static async Task<IResult> RefreshToken(
         [FromServices] IAdminAuthService authService,
-        RefreshTokenRequest request,
+        HttpRequest request,
+        HttpResponse response,
         CancellationToken cancellationToken = default)
     {
-        var result = await authService.Refresh(request.RefreshToken, cancellationToken);
+        var refreshToken = request.GetRefreshTokenCookie();
 
-        return result.ToHttpResult();
+        if (string.IsNullOrEmpty(refreshToken))
+        {
+            return Results.Unauthorized();
+        }
+
+        var result = await authService.Refresh(refreshToken, cancellationToken);
+
+        return result.ToSessionResult(response, clearCookiesOnFailure: true);
+    }
+
+    private static IResult Logout(HttpResponse response)
+    {
+        response.ClearAuthCookies();
+        return Results.Ok();
     }
 }

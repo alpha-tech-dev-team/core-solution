@@ -8,8 +8,8 @@ import { ROUTES } from '@/constants/routes'
 const router = useRouter()
 const authStore = useAuthStore()
 
-function logout() {
-  authStore.logout()
+async function logout() {
+  await authStore.logout()
   router.push(ROUTES.LOGIN)
 }
 </script>

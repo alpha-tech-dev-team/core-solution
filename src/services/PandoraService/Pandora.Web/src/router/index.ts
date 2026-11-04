@@ -16,9 +16,11 @@ const router = createRouter({
       path: ROUTES.HOME,
       name: ROUTE_NAMES.HOME,
       component: HomeView,
-      beforeEnter: () => {
+      beforeEnter: async () => {
         const authStore = useAuthStore()
-        return authStore.isAuthenticated ? true : ROUTES.LOGIN
+        if (authStore.isAuthenticated) return true
+        const refreshed = await authStore.refreshTokens()
+        return refreshed ? true : ROUTES.LOGIN
       }
     },
     {
