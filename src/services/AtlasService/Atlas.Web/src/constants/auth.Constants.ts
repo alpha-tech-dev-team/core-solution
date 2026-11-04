@@ -1,6 +1,4 @@
 export const StorageKey = {
-  AuthToken: 'auth_token',
-  RefreshToken: 'refresh_token',
   AccessExpiresAt: 'access_token_expires_at',
 } as const
 

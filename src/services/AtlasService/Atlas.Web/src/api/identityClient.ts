@@ -3,20 +3,17 @@ import { HttpMethod, HttpHeader, HttpStatus, MimeType } from '@/constants/http.C
 import { Atlas } from '@/resources'
 import { ApiError } from '@/api/ApiError'
 import type { ApiErrorResponse } from '@/api/contracts/ApiErrorResponse'
-import type { AuthTokensResponse } from '@/api/contracts/AuthTokensResponse'
+import type { SessionResponse } from '@/api/contracts/SessionResponse'
 import type { LoginRequest } from '@/api/contracts/LoginRequest'
-import type { RefreshRequest } from '@/api/contracts/RefreshRequest'
 
-async function postJson<T>(url: string, body: unknown, unauthorizedMessage: string): Promise<T> {
+async function send(
+  url: string,
+  init: RequestInit,
+  unauthorizedMessage: string,
+): Promise<Response> {
   let response: Response
   try {
-    response = await fetch(url, {
-      method: HttpMethod.POST,
-      headers: {
-        [HttpHeader.ContentType]: MimeType.Json,
-      },
-      body: JSON.stringify(body),
-    })
+    response = await fetch(url, init)
   } catch {
     throw new ApiError(Atlas.ru.auth.errorNetwork)
   }
@@ -31,18 +28,47 @@ async function postJson<T>(url: string, body: unknown, unauthorizedMessage: stri
     throw new ApiError(message, response.status)
   }
 
+  return response
+}
+
+async function postJson<T>(
+  url: string,
+  body: unknown,
+  unauthorizedMessage: string,
+): Promise<T> {
+  const response = await send(
+    url,
+    {
+      method: HttpMethod.POST,
+      headers: {
+        [HttpHeader.ContentType]: MimeType.Json,
+      },
+      body: JSON.stringify(body),
+    },
+    unauthorizedMessage,
+  )
+
   return (await response.json()) as T
 }
 
 export const identityClient = {
-  async login(data: LoginRequest): Promise<AuthTokensResponse> {
+  async login(data: LoginRequest): Promise<SessionResponse> {
     const url = `${config.IdentityApiBaseUrl}${config.endpoints.adminLogin}`
-    return await postJson<AuthTokensResponse>(url, data, Atlas.ru.auth.errorInvalidCredentials)
+    return await postJson<SessionResponse>(url, data, Atlas.ru.auth.errorInvalidCredentials)
   },
 
-  async refresh(refreshToken: string): Promise<AuthTokensResponse> {
+  async refresh(): Promise<SessionResponse> {
     const url = `${config.IdentityApiBaseUrl}${config.endpoints.adminRefresh}`
-    const data: RefreshRequest = { refreshToken }
-    return await postJson<AuthTokensResponse>(url, data, Atlas.ru.auth.errorSessionExpired)
+    const response = await send(
+      url,
+      { method: HttpMethod.POST },
+      Atlas.ru.auth.errorSessionExpired,
+    )
+    return (await response.json()) as SessionResponse
+  },
+
+  async logout(): Promise<void> {
+    const url = `${config.IdentityApiBaseUrl}${config.endpoints.adminLogout}`
+    await send(url, { method: HttpMethod.POST }, Atlas.ru.auth.errorSessionExpired)
   },
 }

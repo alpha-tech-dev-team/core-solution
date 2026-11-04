@@ -14,7 +14,7 @@ const stats = [
 ]
 
 async function handleLogout() {
-  authStore.logout()
+  await authStore.logout()
   await router.push({ name: RouteName.Login })
 }
 </script>

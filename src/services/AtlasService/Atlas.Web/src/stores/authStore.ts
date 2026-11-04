@@ -4,8 +4,8 @@ import { StorageKey, StoreId, TokenRefresh } from '@/constants/auth.Constants'
 import { HttpStatus } from '@/constants/http.Constants'
 import { identityClient } from '@/api/identityClient'
 import { ApiError } from '@/api/ApiError'
-import type { AuthTokensResponse } from '@/api/contracts/AuthTokensResponse'
-import { getTokenExpiryMs, isExpired } from '@/utils/jwt'
+import type { SessionResponse } from '@/api/contracts/SessionResponse'
+import { isExpired } from '@/utils/jwt'
 
 function parseExpiry(value: string | null | undefined): number | null {
   if (!value) return null
@@ -18,25 +18,21 @@ function parseExpiry(value: string | null | undefined): number | null {
 }
 
 export const useAuthStore = defineStore(StoreId.Auth, () => {
-  const token = ref<string | null>(localStorage.getItem(StorageKey.AuthToken))
-  const refreshToken = ref<string | null>(localStorage.getItem(StorageKey.RefreshToken))
   const accessTokenExpiresAt = ref<number | null>(
     parseExpiry(localStorage.getItem(StorageKey.AccessExpiresAt)),
   )
   const nowMs = ref(Date.now())
 
-  const isAuthenticated = computed(() => !!token.value && !isAccessTokenExpired())
+  const isAuthenticated = computed(
+    () => accessTokenExpiresAt.value !== null && !isAccessTokenExpired(),
+  )
 
   let refreshTimer: number | undefined
   let clockTimer: number | undefined
   let refreshPromise: Promise<boolean> | null = null
 
-  function resolveExpiresAt(): number | null {
-    return accessTokenExpiresAt.value ?? (token.value ? getTokenExpiryMs(token.value) : null)
-  }
-
   function isAccessTokenExpired(): boolean {
-    return !token.value || isExpired(resolveExpiresAt(), nowMs.value)
+    return isExpired(accessTokenExpiresAt.value, nowMs.value)
   }
 
   function isUnauthorized(error: unknown): boolean {
@@ -68,8 +64,8 @@ export const useAuthStore = defineStore(StoreId.Auth, () => {
   function scheduleTokenRefresh() {
     clearRefreshTimer()
 
-    const expiresAt = resolveExpiresAt()
-    if (expiresAt === null || !refreshToken.value) return
+    const expiresAt = accessTokenExpiresAt.value
+    if (expiresAt === null) return
 
     const delay = Math.max(expiresAt - Date.now() - TokenRefresh.MarginMs, TokenRefresh.MinDelayMs)
 
@@ -78,26 +74,21 @@ export const useAuthStore = defineStore(StoreId.Auth, () => {
     }, delay)
   }
 
-  async function performRefresh(): Promise<boolean> {
-    const currentRefreshToken = refreshToken.value
+  let sessionVersion = 0
 
-    if (!currentRefreshToken) {
-      logout()
-      return false
-    }
+  async function performRefresh(): Promise<boolean> {
+    if (accessTokenExpiresAt.value === null) return false
+
+    const version = sessionVersion
 
     try {
-      const session = await identityClient.refresh(currentRefreshToken)
-
-      if (refreshToken.value !== currentRefreshToken) {
-        return false
-      }
-
+      const session = await identityClient.refresh()
+      if (sessionVersion !== version) return false
       setSession(session)
       return true
     } catch (error) {
-      if (refreshToken.value === currentRefreshToken && isUnauthorized(error)) {
-        logout()
+      if (isUnauthorized(error)) {
+        clearSessionState()
       }
       return false
     }
@@ -113,14 +104,9 @@ export const useAuthStore = defineStore(StoreId.Auth, () => {
     return refreshPromise
   }
 
-  function setSession(session: AuthTokensResponse) {
-    token.value = session.accessToken
-    refreshToken.value = session.refreshToken
-    accessTokenExpiresAt.value =
-      parseExpiry(session.accessTokenExpiresAt) ?? getTokenExpiryMs(session.accessToken)
-
-    localStorage.setItem(StorageKey.AuthToken, session.accessToken)
-    localStorage.setItem(StorageKey.RefreshToken, session.refreshToken)
+  function setSession(session: SessionResponse) {
+    sessionVersion += 1
+    accessTokenExpiresAt.value = parseExpiry(session.accessTokenExpiresAt)
 
     if (accessTokenExpiresAt.value === null) {
       localStorage.removeItem(StorageKey.AccessExpiresAt)
@@ -132,20 +118,27 @@ export const useAuthStore = defineStore(StoreId.Auth, () => {
     scheduleTokenRefresh()
   }
 
-  function logout() {
-    clearRefreshTimer()
-    stopClock()
-    token.value = null
-    refreshToken.value = null
+  function clearSessionState() {
+    sessionVersion += 1
     accessTokenExpiresAt.value = null
-    localStorage.removeItem(StorageKey.AuthToken)
-    localStorage.removeItem(StorageKey.RefreshToken)
     localStorage.removeItem(StorageKey.AccessExpiresAt)
   }
 
+  async function logout() {
+    clearRefreshTimer()
+    stopClock()
+    try {
+      await identityClient.logout()
+    } catch {
+      clearSessionState()
+      return
+    }
+    clearSessionState()
+  }
+
   async function restoreSession() {
-    if (!token.value || !refreshToken.value) {
-      logout()
+    if (accessTokenExpiresAt.value === null) {
+      clearSessionState()
       return
     }
 
@@ -160,8 +153,6 @@ export const useAuthStore = defineStore(StoreId.Auth, () => {
   }
 
   return {
-    token,
-    refreshToken,
     accessTokenExpiresAt,
     isAuthenticated,
     setSession,
