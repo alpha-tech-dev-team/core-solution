@@ -15,5 +15,6 @@ builder.Services.AddBotHandlers<AssemblyMarker>();
 var app = builder.Build();
 
 await app.ApplyMigrations();
+await app.SeedDevelopmentData();
 
 app.Run();
