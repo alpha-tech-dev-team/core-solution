@@ -2,6 +2,7 @@ using CoreSolution.Shared.Abstractions;
 using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using Pandora.Domain.Constants.Localization;
 using Pandora.Domain.Enums;
 using Pandora.Domain.Interfaces;
@@ -13,12 +14,14 @@ public sealed class GetCredentialsHandler : IRequestHandler<GetCredentialsMessag
     private readonly ISecretStore _secretStore;
     private readonly IPermissionRepository _permissionRepository;
     private readonly ILocalizer _localizer;
+    private readonly ILogger<GetCredentialsHandler> _logger;
 
-    public GetCredentialsHandler(ISecretStore secretStore, IPermissionRepository permissionRepository, ILocalizer localizer)
+    public GetCredentialsHandler(ISecretStore secretStore, IPermissionRepository permissionRepository, ILocalizer localizer, ILogger<GetCredentialsHandler> logger)
     {
         _secretStore = secretStore;
         _permissionRepository = permissionRepository;
         _localizer = localizer;
+        _logger = logger;
     }
 
     public async Task<Result<WorkflowResponse>> Handle(GetCredentialsMessage request, CancellationToken cancellationToken)
@@ -27,6 +30,8 @@ public sealed class GetCredentialsHandler : IRequestHandler<GetCredentialsMessag
 
         if (!hasAccess)
         {
+            _logger.LogWarning("Отказано в выдаче секрета {ItemId}, сообщение {MessageId}", request.ItemId, request.MessageId);
+
             return Result<WorkflowResponse>.Failure(ErrorCode.AccessDenied.ToString());
         }
 
