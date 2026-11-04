@@ -26,7 +26,13 @@ public sealed class ShowServicesHandler : IRequestHandler<ShowServicesMessage, R
     public async Task<Result<WorkflowResponse>> Handle(ShowServicesMessage request, CancellationToken cancellationToken)
     {
         var allowedItemIds = await _permissionRepository.GetAllowedItemIds(request.TelegramUserId, cancellationToken);
-        var items = await _secretCatalog.GetItems(cancellationToken);
+        var itemsResult = await _secretCatalog.GetItems(cancellationToken);
+        var items = itemsResult.Value;
+
+        if (items is null)
+        {
+            return Result<WorkflowResponse>.Failure(itemsResult.ErrorCode ?? string.Empty);
+        }
 
         IReadOnlyList<SecretItem> services = items
             .Where(item => allowedItemIds.Contains(item.Id))

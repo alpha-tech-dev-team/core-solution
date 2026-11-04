@@ -30,11 +30,12 @@ public sealed class GetCredentialsHandler : IRequestHandler<GetCredentialsMessag
             return Result<WorkflowResponse>.Failure(ErrorCode.AccessDenied.ToString());
         }
 
-        var secret = await _secretStore.GetSecret(request.ItemId, cancellationToken);
+        var secretResult = await _secretStore.GetSecret(request.ItemId, cancellationToken);
+        var secret = secretResult.Value;
 
         if (secret is null)
         {
-            return Result<WorkflowResponse>.Failure(ErrorCode.SecretNotFound.ToString());
+            return Result<WorkflowResponse>.Failure(secretResult.ErrorCode ?? string.Empty);
         }
 
         var text = string.Format(

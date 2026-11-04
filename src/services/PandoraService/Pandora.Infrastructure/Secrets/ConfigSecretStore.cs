@@ -1,4 +1,6 @@
+using CoreSolution.Shared.Results;
 using Microsoft.Extensions.Options;
+using Pandora.Domain.Enums;
 using Pandora.Domain.Interfaces;
 using Pandora.Domain.Models;
 
@@ -13,20 +15,24 @@ public sealed class ConfigSecretStore : ISecretStore
         _options = options;
     }
 
-    public Task<Secret?> GetSecret(string itemId, CancellationToken cancellationToken)
+    public Task<Result<Secret>> GetSecret(string itemId, CancellationToken cancellationToken)
     {
         var item = _options.CurrentValue.Items.FirstOrDefault(candidate => candidate.Name == itemId);
-        Secret? secret = item is null ? null : new Secret(item.Name, item.Login, item.Password);
 
-        return Task.FromResult(secret);
+        if (item is null)
+        {
+            return Task.FromResult(Result<Secret>.Failure(ErrorCode.SecretNotFound.ToString()));
+        }
+
+        return Task.FromResult(Result<Secret>.Success(new Secret(item.Name, item.Login, item.Password)));
     }
 
-    public Task<IReadOnlyList<SecretItem>> GetItems(CancellationToken cancellationToken)
+    public Task<Result<IReadOnlyList<SecretItem>>> GetItems(CancellationToken cancellationToken)
     {
         IReadOnlyList<SecretItem> items = _options.CurrentValue.Items
             .Select(item => new SecretItem(item.Name, item.Name))
             .ToList();
 
-        return Task.FromResult(items);
+        return Task.FromResult(Result<IReadOnlyList<SecretItem>>.Success(items));
     }
 }

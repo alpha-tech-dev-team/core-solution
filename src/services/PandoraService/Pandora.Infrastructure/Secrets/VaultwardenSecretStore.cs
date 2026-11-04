@@ -1,6 +1,8 @@
 using System.Net.Http.Json;
 using System.Text.Json;
+using CoreSolution.Shared.Results;
 using Microsoft.Extensions.Logging;
+using Pandora.Domain.Enums;
 using Pandora.Domain.Interfaces;
 using Pandora.Domain.Models;
 
@@ -21,37 +23,63 @@ public sealed class VaultwardenSecretStore : ISecretStore
         _logger = logger;
     }
 
-    public async Task<Secret?> GetSecret(string itemId, CancellationToken cancellationToken)
+    public async Task<Result<Secret>> GetSecret(string itemId, CancellationToken cancellationToken)
     {
-        var response = await _httpClient.GetAsync($"{ItemRoute}/{itemId}", cancellationToken);
+        HttpResponseMessage response;
+
+        try
+        {
+            response = await _httpClient.GetAsync($"{ItemRoute}/{itemId}", cancellationToken);
+        }
+        catch (HttpRequestException exception)
+        {
+            _logger.LogWarning(exception, "Не удалось получить секрет {ItemId} из Vaultwarden", itemId);
+
+            return Result<Secret>.Failure(ErrorCode.VaultwardenUnavailable.ToString());
+        }
+
+        VaultwardenResponse<VaultwardenItem>? result;
+
+        try
+        {
+            result = await response.Content.ReadFromJsonAsync<VaultwardenResponse<VaultwardenItem>>(SerializerOptions, cancellationToken);
+        }
+        catch (JsonException exception)
+        {
+            _logger.LogWarning(exception, "Не удалось разобрать ответ шлюза Vaultwarden для элемента {ItemId}", itemId);
+
+            return Result<Secret>.Failure(ErrorCode.VaultwardenUnavailable.ToString());
+        }
 
         if (!response.IsSuccessStatusCode)
         {
             _logger.LogWarning("Шлюз Vaultwarden вернул статус {StatusCode} для элемента {ItemId}", (int)response.StatusCode, itemId);
 
-            return null;
+            // 4xx с семантическим ответом шлюза (success: false) — элемента нет в хранилище, остальное — сбой шлюза
+            return (int)response.StatusCode < 500 && result?.Success == false
+                ? Result<Secret>.Failure(ErrorCode.SecretNotFound.ToString())
+                : Result<Secret>.Failure(ErrorCode.VaultwardenUnavailable.ToString());
         }
 
-        var result = await response.Content.ReadFromJsonAsync<VaultwardenResponse<VaultwardenItem>>(SerializerOptions, cancellationToken);
         var itemDetails = result?.Data;
 
         if (string.IsNullOrWhiteSpace(itemDetails?.Login?.Password))
         {
             _logger.LogWarning("В элементе {ItemId} нет пароля", itemId);
 
-            return null;
+            return Result<Secret>.Failure(ErrorCode.SecretNotFound.ToString());
         }
 
-        return new Secret(itemDetails.Name, itemDetails.Login.Username ?? string.Empty, itemDetails.Login.Password);
+        return Result<Secret>.Success(new Secret(itemDetails.Name, itemDetails.Login.Username ?? string.Empty, itemDetails.Login.Password));
     }
 
-    public async Task<IReadOnlyList<SecretItem>> GetItems(CancellationToken cancellationToken)
+    public async Task<Result<IReadOnlyList<SecretItem>>> GetItems(CancellationToken cancellationToken)
     {
         var items = await FetchItems(cancellationToken);
 
         return items is null
-            ? Array.Empty<SecretItem>()
-            : items.Select(item => new SecretItem(item.Id, item.Name)).ToList();
+            ? Result<IReadOnlyList<SecretItem>>.Failure(ErrorCode.VaultwardenUnavailable.ToString())
+            : Result<IReadOnlyList<SecretItem>>.Success(items.Select(item => new SecretItem(item.Id, item.Name)).ToList());
     }
 
     private async Task<IReadOnlyList<VaultwardenItem>?> FetchItems(CancellationToken cancellationToken)

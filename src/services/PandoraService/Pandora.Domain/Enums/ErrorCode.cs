@@ -4,5 +4,6 @@ public enum ErrorCode
 {
     AccessDenied,
     AccessNotConfirmed,
-    SecretNotFound
+    SecretNotFound,
+    VaultwardenUnavailable
 }
