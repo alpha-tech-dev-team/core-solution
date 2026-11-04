@@ -9,4 +9,5 @@ public static class ApiRoutes
     public const string AdminGroup = "/api/admin";
     public const string Login = "login";
     public const string RefreshToken = "refresh";
+    public const string Logout = "logout";
 }
