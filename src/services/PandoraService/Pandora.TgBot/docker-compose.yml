@@ -57,7 +57,7 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  postgres:
+  pandora-postgres:
     image: postgres:18-alpine
     environment:
       - POSTGRES_DB=${POSTGRES_DB:-alphadev_pandora}
@@ -77,7 +77,7 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  redis:
+  pandora-redis:
     image: redis:7-alpine
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
@@ -99,14 +99,14 @@ services:
       context: ../../../..
       dockerfile: src/services/PandoraService/Pandora.TgBot/Dockerfile
     depends_on:
-      postgres:
+      pandora-postgres:
         condition: service_healthy
-      redis:
+      pandora-redis:
         condition: service_healthy
     environment:
       - Telegram__BotToken=${TELEGRAM_BOT_TOKEN}
-      - Database__ConnectionString=Host=postgres;Port=5432;Database=${POSTGRES_DB:-alphadev_pandora};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
-      - Database__RedisConnection=redis:6379
+      - Database__ConnectionString=Host=pandora-postgres;Port=5432;Database=${POSTGRES_DB:-alphadev_pandora};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
+      - Database__RedisConnection=pandora-redis:6379
       - Identity__BaseUrl=${IDENTITY_BASE_URL:-http://host.docker.internal:5257}
       - Pandora__Secrets__UseMock=${SECRETS_USE_MOCK:-false}
       - Pandora__Vaultwarden__BaseUrl=http://bw-gateway:8087
