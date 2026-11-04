@@ -13,8 +13,9 @@ public static class LocalizationKeysConstants
     public static class ProblemCategorySelection
     {
         public const string Text = "Text";
-        public const string Problems = "Problems";
-        public const string Profile = "Profile";
+        public const string Hardware = "Hardware";
+        public const string Software = "Software";
+        public const string Other = "Other";
         public const string AccessDenied = "AccessDenied";
     }
 }

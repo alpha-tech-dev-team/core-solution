@@ -6,18 +6,18 @@ using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
 using MediatR;
 
-namespace Atlas.Application.Features.Menu;
+namespace Atlas.Application.Features.ProblemCategorySelection;
 
-public sealed class ShowMenuHandler : IRequestHandler<ShowMenuMessage, Result<WorkflowResponse>>
+public sealed class ProblemCategorySelectionHandler : IRequestHandler<ProblemCategorySelectionMessage, Result<WorkflowResponse>>
 {
     private readonly ILocalizer _localizer;
 
-    public ShowMenuHandler(ILocalizer localizer)
+    public ProblemCategorySelectionHandler(ILocalizer localizer)
     {
         _localizer = localizer;
     }
 
-    public Task<Result<WorkflowResponse>> Handle(ShowMenuMessage request, CancellationToken cancellationToken)
+    public Task<Result<WorkflowResponse>> Handle(ProblemCategorySelectionMessage request, CancellationToken cancellationToken)
     {
         return Task.FromResult(Result<WorkflowResponse>.Success(CreateMenu()));
     }
@@ -35,12 +35,17 @@ public sealed class ShowMenuHandler : IRequestHandler<ShowMenuMessage, Result<Wo
                     new WorkflowButton(
                         _localizer.GetPhrase(
                             nameof(WorkflowStep.ProblemCategorySelection),
-                            LocalizationKeysConstants.ProblemCategorySelection.Problems),
+                            LocalizationKeysConstants.ProblemCategorySelection.Hardware),
+                        CallbackConstants.MenuProblems),
+                        new WorkflowButton(
+                        _localizer.GetPhrase(
+                            nameof(WorkflowStep.ProblemCategorySelection),
+                            LocalizationKeysConstants.ProblemCategorySelection.Software),
                         CallbackConstants.MenuProblems),
                     new WorkflowButton(
                         _localizer.GetPhrase(
                             nameof(WorkflowStep.ProblemCategorySelection),
-                            LocalizationKeysConstants.ProblemCategorySelection.Profile),
+                            LocalizationKeysConstants.ProblemCategorySelection.Other),
                         CallbackConstants.MenuProfile))
             ]
         };
