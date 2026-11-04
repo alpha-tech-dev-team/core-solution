@@ -1,9 +1,9 @@
+using CoreSolution.Shared.Results;
 using Pandora.Domain.Models;
 
 namespace Pandora.Domain.Interfaces;
 
-public interface ISecretStore
+public interface ISecretStore : ISecretCatalog
 {
-    Task<Secret?> GetSecret(string secretName, CancellationToken cancellationToken);
-    IReadOnlyList<string> GetServiceNames();
+    Task<Result<Secret>> GetSecret(string itemId, CancellationToken cancellationToken);
 }

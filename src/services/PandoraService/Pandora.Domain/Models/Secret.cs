@@ -1,3 +1,3 @@
 namespace Pandora.Domain.Models;
 
-public sealed record Secret(string Login, string Password);
+public sealed record Secret(string ItemName, string Login, string Password);

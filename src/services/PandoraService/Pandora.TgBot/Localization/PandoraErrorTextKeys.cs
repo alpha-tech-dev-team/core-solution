@@ -11,7 +11,9 @@ public static class PandoraErrorTextKeys
 
     public static readonly FrozenDictionary<string, (string State, string Key)> ByErrorCode = new Dictionary<string, (string State, string Key)>
     {
+        [nameof(ErrorCode.AccessDenied)] = (nameof(WorkflowStep.ServiceSelection), LocalizationKeysConstants.ServiceSelection.AccessDenied),
         [ErrorCodes.AccessNotConfirmed] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.AccessNotConfirmed),
-        [nameof(ErrorCode.SecretNotFound)] = (nameof(WorkflowStep.ServiceSelection), LocalizationKeysConstants.ServiceSelection.SecretNotFound)
+        [nameof(ErrorCode.SecretNotFound)] = (nameof(WorkflowStep.ServiceSelection), LocalizationKeysConstants.ServiceSelection.SecretNotFound),
+        [nameof(ErrorCode.VaultwardenUnavailable)] = (nameof(WorkflowStep.ServiceSelection), LocalizationKeysConstants.ServiceSelection.VaultwardenUnavailable)
     }.ToFrozenDictionary();
 }

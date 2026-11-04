@@ -1,17 +1,17 @@
-using Pandora.Domain.Enums;
+using CoreSolution.Shared.Abstractions;
 using CoreSolution.Shared.Models;
 using Pandora.Domain.Constants.Localization;
-using CoreSolution.Shared.Abstractions;
-using Pandora.Domain.Interfaces;
+using Pandora.Domain.Enums;
+using Pandora.Domain.Models;
 
 namespace Pandora.Application.Common;
 
 internal static class ServiceMenu
 {
-    public static WorkflowResponse Create(IReadOnlyList<string> services, ILocalizer localizer)
+    public static WorkflowResponse Create(IReadOnlyList<SecretItem> items, ILocalizer localizer)
     {
-        var buttonRows = services
-            .Select(service => new WorkflowButtonRow(new WorkflowButton(service, CallbackConstants.ServicePrefix + service)))
+        var buttonRows = items
+            .Select(item => new WorkflowButtonRow(new WorkflowButton(item.Name, CallbackConstants.ServicePrefix + item.Id)))
             .ToList();
 
         return new WorkflowResponse

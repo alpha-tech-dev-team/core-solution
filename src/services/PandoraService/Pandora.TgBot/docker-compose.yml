@@ -1,0 +1,139 @@
+services:
+  vaultwarden:
+    image: vaultwarden/server:1.37.4
+    environment:
+      - SIGNUPS_ALLOWED=false
+      - ADMIN_TOKEN=${VAULTWARDEN_ADMIN_TOKEN}
+      - DOMAIN=${VAULTWARDEN_DOMAIN}
+      - LOGIN_RATELIMIT_MAX_BURST=40
+      - LOGIN_RATELIMIT_SECONDS=60
+    volumes:
+      - vaultwarden-data:/data
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  vaultwarden-proxy:
+    image: caddy:2-alpine
+    depends_on:
+      - vaultwarden
+    ports:
+      - "8300:8300"
+    volumes:
+      - ./vaultwarden-proxy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  bw-gateway:
+    build:
+      context: ./bw-gateway
+    depends_on:
+      vaultwarden-proxy:
+        condition: service_started
+    expose:
+      - "8087"
+    environment:
+      - BW_HOST=https://vaultwarden-proxy:8300
+      - BW_LOGIN=${BW_LOGIN}
+      - BW_PORT=8087
+      - NODE_EXTRA_CA_CERTS=/caddy-ca/caddy/pki/authorities/local/root.crt
+    volumes:
+      - bw-gateway-data:/data
+      - caddy-data:/caddy-ca:ro
+    secrets:
+      - bw_password
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  pandora-postgres:
+    image: postgres:18-alpine
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-alphadev_pandora}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-alphadev_pandora}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  pandora-redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  pandoratgbot:
+    build:
+      context: ../../../..
+      dockerfile: src/services/PandoraService/Pandora.TgBot/Dockerfile
+    depends_on:
+      pandora-postgres:
+        condition: service_healthy
+      pandora-redis:
+        condition: service_healthy
+    environment:
+      - Telegram__BotToken=${TELEGRAM_BOT_TOKEN}
+      - Database__ConnectionString=Host=pandora-postgres;Port=5432;Database=${POSTGRES_DB:-alphadev_pandora};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
+      - Database__RedisConnection=pandora-redis:6379
+      - Identity__BaseUrl=${IDENTITY_BASE_URL:-http://host.docker.internal:5257}
+      - Pandora__Secrets__UseMock=${SECRETS_USE_MOCK:-false}
+      - Pandora__Vaultwarden__BaseUrl=http://bw-gateway:8087
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+secrets:
+  bw_password:
+    file: ./secrets/bw_password
+
+volumes:
+  vaultwarden-data:
+    name: pandora-vaultwarden-data
+  caddy-data:
+    name: pandora-caddy-data
+  caddy-config:
+    name: pandora-caddy-config
+  bw-gateway-data:
+    name: pandora-bw-gateway-data
+  postgres-data:
+    name: pandora-postgres-data
+  redis-data:
+    name: pandora-redis-data

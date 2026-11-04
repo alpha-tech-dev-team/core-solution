@@ -16,6 +16,7 @@ public static class LocalizationKeysConstants
         public const string Text = "Text";
         public const string AccessDenied = "AccessDenied";
         public const string SecretNotFound = "SecretNotFound";
+        public const string VaultwardenUnavailable = "VaultwardenUnavailable";
         public const string LoginLabel = "LoginLabel";
         public const string PasswordLabel = "PasswordLabel";
         public const string CredentialsTemplate = "CredentialsTemplate";

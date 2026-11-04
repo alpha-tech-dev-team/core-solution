@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Pandora.Infrastructure.Secrets;
+using Pandora.Domain.Options;
 
 namespace Pandora.TgBot.Extension.DependencyInjection;
 
