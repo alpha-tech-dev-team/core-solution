@@ -7,5 +7,4 @@ public static class ValidationConstants
     public const int AccessMaxLength = 50;
     public const int AdminUsernameMaxLength = 50;
     public const int PasswordMaxLength = 128;
-    public const int RefreshTokenMaxLength = 4096;
 }
