@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Pandora.Domain.Interfaces;
+using Pandora.Domain.Options;
 using Pandora.Infrastructure.Repositories;
 using Pandora.Infrastructure.Secrets;
 

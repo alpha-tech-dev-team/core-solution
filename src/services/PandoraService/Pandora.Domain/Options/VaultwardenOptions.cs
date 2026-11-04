@@ -1,4 +1,4 @@
-namespace Pandora.Infrastructure.Secrets;
+namespace Pandora.Domain.Options;
 
 public sealed class VaultwardenOptions
 {

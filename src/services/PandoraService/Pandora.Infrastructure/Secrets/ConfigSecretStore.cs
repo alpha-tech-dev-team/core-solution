@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using Pandora.Domain.Enums;
 using Pandora.Domain.Interfaces;
 using Pandora.Domain.Models;
+using Pandora.Domain.Options;
 
 namespace Pandora.Infrastructure.Secrets;
 
