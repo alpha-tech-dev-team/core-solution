@@ -44,12 +44,13 @@ services:
     environment:
       - BW_HOST=https://vaultwarden-proxy:8300
       - BW_LOGIN=${BW_LOGIN}
-      - BW_PASSWORD=${BW_PASSWORD}
       - BW_PORT=8087
       - NODE_EXTRA_CA_CERTS=/caddy-ca/caddy/pki/authorities/local/root.crt
     volumes:
       - bw-gateway-data:/data
       - caddy-data:/caddy-ca:ro
+    secrets:
+      - bw_password
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -118,6 +119,10 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+secrets:
+  bw_password:
+    file: ./secrets/bw_password
 
 volumes:
   vaultwarden-data:

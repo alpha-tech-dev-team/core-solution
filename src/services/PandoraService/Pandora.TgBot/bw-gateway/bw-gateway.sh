@@ -1,15 +1,21 @@
 #!/bin/sh
 
+BW_PASSWORD_FILE="/run/secrets/bw_password"
+
 : "${BW_HOST:?Не задан BW_HOST}"
 : "${BW_LOGIN:?Не задан BW_LOGIN}"
-: "${BW_PASSWORD:?Не задан BW_PASSWORD}"
+
+if [ ! -r "$BW_PASSWORD_FILE" ]; then
+  echo "Недоступен файл пароля шлюза: $BW_PASSWORD_FILE"
+  exit 1
+fi
 
 bw config server "$BW_HOST" > /dev/null 2>&1
 
 echo "Ожидание сервера Vaultwarden: $BW_HOST"
 
 while ! bw login --check > /dev/null 2>&1; do
-  if bw login "$BW_LOGIN" "$BW_PASSWORD" --raw > /dev/null 2>&1; then
+  if bw login "$BW_LOGIN" --passwordfile "$BW_PASSWORD_FILE" --raw > /dev/null 2>&1; then
     break
   fi
 
@@ -17,7 +23,7 @@ while ! bw login --check > /dev/null 2>&1; do
   sleep 10
 done
 
-BW_SESSION="$(bw unlock --passwordenv BW_PASSWORD --raw)"
+BW_SESSION="$(bw unlock --passwordfile "$BW_PASSWORD_FILE" --raw)"
 
 if [ -z "$BW_SESSION" ]; then
   echo "Не удалось разблокировать хранилище"
