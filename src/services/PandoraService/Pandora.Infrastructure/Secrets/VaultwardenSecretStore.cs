@@ -9,6 +9,7 @@ namespace Pandora.Infrastructure.Secrets;
 public sealed class VaultwardenSecretStore : ISecretStore
 {
     private const string ListRoute = "list/object/items";
+    private const string ItemRoute = "object/item";
     private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
 
     private readonly HttpClient _httpClient;
@@ -22,7 +23,7 @@ public sealed class VaultwardenSecretStore : ISecretStore
 
     public async Task<Secret?> GetSecret(string itemId, CancellationToken cancellationToken)
     {
-        var response = await _httpClient.GetAsync($"object/item/{itemId}", cancellationToken);
+        var response = await _httpClient.GetAsync($"{ItemRoute}/{itemId}", cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
