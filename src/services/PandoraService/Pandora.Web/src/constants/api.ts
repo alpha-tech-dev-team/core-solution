@@ -7,6 +7,10 @@ export const AUTH_ENDPOINTS = {
   LOGOUT: '/logout'
 } as const
 
+export const SECRETS_ENDPOINTS = {
+  COLLECTION: '/secrets'
+} as const
+
 export const HEADER_CONTENT_TYPE = 'Content-Type'
 export const CONTENT_TYPE_JSON = 'application/json'
 export const RETRY_FLAG = '_retry'

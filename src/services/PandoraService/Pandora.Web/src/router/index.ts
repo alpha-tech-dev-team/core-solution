@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '@/views/LoginView.vue'
 import HomeView from '@/views/HomeView.vue'
+import SecretsView from '@/views/SecretsView.vue'
 import { useAuthStore } from '@/stores/auth'
 import { CATCH_ALL_PATTERN, ROUTE_NAMES, ROUTES } from '@/constants/routes'
 
@@ -21,6 +22,15 @@ const router = createRouter({
         if (authStore.isAuthenticated) return true
         const refreshed = await authStore.refreshTokens()
         return refreshed ? true : ROUTES.LOGIN
+      }
+    },
+    {
+      path: ROUTES.SECRETS,
+      name: ROUTE_NAMES.SECRETS,
+      component: SecretsView,
+      beforeEnter: () => {
+        const authStore = useAuthStore()
+        return authStore.isAuthenticated ? true : ROUTES.LOGIN
       }
     },
     {
