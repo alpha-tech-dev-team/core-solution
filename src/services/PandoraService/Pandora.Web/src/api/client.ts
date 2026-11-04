@@ -2,9 +2,7 @@ import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios'
 import { useAuthStore } from '@/stores/auth'
 import {
   API_BASE_URL,
-  AUTH_SCHEME_BEARER,
   CONTENT_TYPE_JSON,
-  HEADER_AUTHORIZATION,
   HEADER_CONTENT_TYPE,
   REQUEST_TIMEOUT_MS,
   RETRY_FLAG
@@ -21,17 +19,6 @@ const api: AxiosInstance = axios.create({
   }
 })
 
-api.interceptors.request.use(
-  (config) => {
-    const { accessToken } = useAuthStore()
-    if (accessToken) {
-      config.headers.set(HEADER_AUTHORIZATION, `${AUTH_SCHEME_BEARER} ${accessToken}`)
-    }
-    return config
-  },
-  (error) => Promise.reject(error)
-)
-
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -47,7 +34,7 @@ api.interceptors.response.use(
     const refreshed = await authStore.refreshTokens()
 
     if (!refreshed) {
-      authStore.logout()
+      authStore.clearLocalSession()
       return Promise.reject(error)
     }
 

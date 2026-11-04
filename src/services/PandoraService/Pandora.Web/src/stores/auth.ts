@@ -5,33 +5,29 @@ import { AUTH_ENDPOINTS } from '@/constants/api'
 import { AUTH_STORE_ID } from '@/constants/stores'
 import { toRequestError, type RequestError } from '@/api/request-error'
 import { clearSession, loadSession, saveSession } from './auth.session'
-import type { AuthTokens } from './models/auth-tokens'
+import type { AuthSession } from './models/auth-session'
 
 function isExpired(expiresAt: string): boolean {
   return new Date(expiresAt) <= new Date()
 }
 
 export const useAuthStore = defineStore(AUTH_STORE_ID, () => {
-  const accessToken = ref<string | null>(null)
-  const refreshToken = ref<string | null>(null)
   const accessTokenExpiresAt = ref<string | null>(null)
 
   const isAuthenticated = computed(() => {
-    if (!accessToken.value || !accessTokenExpiresAt.value) return false
+    if (!accessTokenExpiresAt.value) return false
     return !isExpired(accessTokenExpiresAt.value)
   })
 
-  function applyTokens(tokens: AuthTokens): void {
-    accessToken.value = tokens.accessToken
-    refreshToken.value = tokens.refreshToken
-    accessTokenExpiresAt.value = tokens.accessTokenExpiresAt
-    saveSession(tokens)
+  function applySession(session: AuthSession): void {
+    accessTokenExpiresAt.value = session.accessTokenExpiresAt
+    saveSession(session)
   }
 
   async function login(username: string, password: string): Promise<RequestError | null> {
     try {
-      const { data } = await api.post<AuthTokens>(AUTH_ENDPOINTS.LOGIN, { username, password })
-      applyTokens(data)
+      const { data } = await api.post<AuthSession>(AUTH_ENDPOINTS.LOGIN, { username, password })
+      applySession(data)
       return null
     } catch (error) {
       return toRequestError(error)
@@ -39,12 +35,10 @@ export const useAuthStore = defineStore(AUTH_STORE_ID, () => {
   }
 
   async function refreshTokens(): Promise<boolean> {
-    if (!refreshToken.value) return false
+    if (!accessTokenExpiresAt.value) return false
     try {
-      const { data } = await api.post<AuthTokens>(AUTH_ENDPOINTS.REFRESH, {
-        refreshToken: refreshToken.value
-      })
-      applyTokens(data)
+      const { data } = await api.post<AuthSession>(AUTH_ENDPOINTS.REFRESH)
+      applySession(data)
       return true
     } catch {
       return false
@@ -54,26 +48,30 @@ export const useAuthStore = defineStore(AUTH_STORE_ID, () => {
   function restoreSession(): void {
     const session = loadSession()
     if (!session) return
-    accessToken.value = session.accessToken
-    refreshToken.value = session.refreshToken
     accessTokenExpiresAt.value = session.accessTokenExpiresAt
   }
 
-  function logout(): void {
-    accessToken.value = null
-    refreshToken.value = null
+  function clearLocalSession(): void {
     accessTokenExpiresAt.value = null
     clearSession()
   }
 
+  async function logout(): Promise<void> {
+    try {
+      await api.post(AUTH_ENDPOINTS.LOGOUT)
+    } catch {
+    } finally {
+      clearLocalSession()
+    }
+  }
+
   return {
-    accessToken,
-    refreshToken,
     accessTokenExpiresAt,
     isAuthenticated,
     login,
     refreshTokens,
     restoreSession,
+    clearLocalSession,
     logout
   }
 })
