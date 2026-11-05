@@ -1,6 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
-using Identity.Application.Contracts;
+using Identity.Application.Contracts.Client;
 using Xunit;
 
 namespace CoreSolution.Integration.Tests;

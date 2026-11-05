@@ -6,6 +6,7 @@ using CoreSolution.Shared.TgBot.DependencyInjection;
 using Identity.Api;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
+using Identity.Domain.Interfaces.Security;
 using Identity.Infrastructure.Database;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -26,6 +27,8 @@ namespace CoreSolution.Integration.Tests;
 public sealed class IntegrationFixture : IAsyncLifetime
 {
     private const string AtlasTestToken = "123456:integration-test-token";
+
+    private static long _adminPhoneSequence;
 
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:18-alpine").Build();
 
@@ -73,6 +76,38 @@ public sealed class IntegrationFixture : IAsyncLifetime
         await _postgres.DisposeAsync();
     }
 
+    public async Task<Guid> SeedAdminAsync(string username, string password)
+    {
+        using var scope = _identity.Services.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+
+        var role = await database.Roles.SingleOrDefaultAsync(item => item.Name == "Admin")
+            ?? database.Roles.Add(new Roles { Id = Guid.NewGuid(), Name = "Admin" }).Entity;
+
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Name = "Admin",
+            Surname = username,
+            Position = "Admin",
+            Phone = $"+79{Interlocked.Increment(ref _adminPhoneSequence):D9}",
+            Status = UserStatus.Active,
+            AdminUsername = username,
+            AdminPasswordHash = hasher.HashPassword(password),
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        user.UpdatedById = user.Id;
+
+        database.Users.Add(user);
+        database.UserRoles.Add(new UserRole { UserId = user.Id, RoleId = role.Id });
+
+        await database.SaveChangesAsync();
+
+        return user.Id;
+    }
+
     public async Task SeedPendingUserAsync(string phone, string roleName = AtlasConstants.ServiceName)
     {
         using var scope = _identity.Services.CreateScope();
@@ -112,6 +147,15 @@ public sealed class IntegrationFixture : IAsyncLifetime
     public HttpClient CreateIdentityHttpClient()
     {
         return _identity.CreateClient();
+    }
+
+    public HttpClient CreateIdentityHttpClientWithCookies()
+    {
+        return _identity.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost"),
+            HandleCookies = true
+        });
     }
 
     public ServiceProvider CreateAtlasServiceProvider()
