@@ -1,5 +1,6 @@
 include:
-  - src/services/IdentityService/docker-compose.yml
+  - path: src/services/IdentityService/docker-compose.yml
+    env_file: .env
   - path: src/services/PandoraService/Pandora.TgBot/docker-compose.yml
     env_file:
       - .env
