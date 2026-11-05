@@ -1,7 +1,6 @@
 using Identity.Api.Constants;
 using Identity.Domain.Options;
 using Identity.Api.Middleware;
-using Microsoft.AspNetCore.RateLimiting;
 
 namespace Identity.Api.Extensions;
 

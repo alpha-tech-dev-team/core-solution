@@ -3,33 +3,24 @@ using CoreSolution.Shared.Options;
 using Identity.Api.Constants;
 using Identity.Domain.Constants;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Identity.Api.Extensions;
 
 public static class JwtConfigurationExtensions
 {
-    public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddJwtAuthentication(this IServiceCollection services)
     {
-        var section = configuration.GetSection(JwtOptions.SectionName);
-        services.Configure<JwtOptions>(section);
-
-        var options = section.Get<JwtOptions>() ?? new JwtOptions();
-        var secret = options.Secret;
-
-        ArgumentException.ThrowIfNullOrWhiteSpace(secret);
-        ArgumentException.ThrowIfNullOrWhiteSpace(options.Issuer);
-        ArgumentException.ThrowIfNullOrWhiteSpace(options.Audience);
-        ArgumentOutOfRangeException.ThrowIfLessThan(
-            Encoding.UTF8.GetByteCount(secret),
-            JwtOptions.MinimumSecretLength);
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(options.AccessTokenLifetimeMinutes, 0);
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(options.RefreshTokenLifetimeDays, 0);
-
         services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(jwt =>
+            .AddJwtBearer();
+
+        services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+            .Configure<IOptions<JwtOptions>>((jwt, jwtOptionsAccessor) =>
             {
+                var options = jwtOptionsAccessor.Value;
+
                 jwt.MapInboundClaims = JwtConstants.MapInboundClaims;
                 jwt.TokenValidationParameters = new TokenValidationParameters
                 {
@@ -38,7 +29,7 @@ public static class JwtConfigurationExtensions
                     ValidateAudience = JwtConstants.ValidateAudience,
                     ValidAudience = options.Audience,
                     ValidateIssuerSigningKey = JwtConstants.ValidateIssuerSigningKey,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret)),
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(options.Secret)),
                     ValidateLifetime = JwtConstants.ValidateLifetime,
                     ClockSkew = JwtConstants.ClockSkew,
                     ValidAlgorithms = JwtConstants.ValidAlgorithms,
@@ -55,10 +46,10 @@ public static class JwtConfigurationExtensions
                 };
             });
 
-        services.AddAuthorization(authorization =>
-            authorization.AddPolicy(
+        services.AddAuthorizationBuilder()
+            .AddPolicy(
                 AuthorizationPolicies.Admin,
-                policy => policy.RequireRole(AuthorizationPolicies.Admin)));
+                policy => policy.RequireRole(AuthorizationPolicies.Admin));
 
         return services;
     }

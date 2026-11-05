@@ -1,6 +1,5 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
-using Identity.Application;
 using Identity.Application.Services;
 using Identity.Domain.Interfaces.Repositories;
 using Identity.Domain.Interfaces.Security;
@@ -29,6 +28,7 @@ public static class ServiceConfigurationExtensions
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IIdentityService, IdentityService>();
         services.AddScoped<IAdminAuthService, AdminAuthService>();
+        services.AddScoped<IAdminUserService, AdminUserService>();
 
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
@@ -37,7 +37,7 @@ public static class ServiceConfigurationExtensions
         services.AddFluentValidationAutoValidation();
         services.AddValidatorsFromAssemblyContaining<AssemblyMarker>();
 
-        services.AddJwtAuthentication(configuration);
+        services.AddJwtAuthentication();
         services.AddRateLimitingConfiguration(configuration);
 
         return services;

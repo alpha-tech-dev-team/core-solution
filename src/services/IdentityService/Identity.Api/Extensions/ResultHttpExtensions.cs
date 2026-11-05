@@ -1,6 +1,6 @@
 using CoreSolution.Shared.Results;
 using Identity.Api.Constants;
-using Identity.Application.Contracts;
+using Identity.Application.Contracts.Admin;
 using Identity.Domain.Models;
 
 namespace Identity.Api.Extensions;
