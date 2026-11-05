@@ -1,8 +1,8 @@
 import { z } from 'zod'
 import { trValidation } from '@/i18n'
-import { VALIDATION_RULES, type ValidationRule } from '@/constants/i18n'
+import { type ValidationRule } from '@/constants/i18n'
 import { ZOD_ISSUE_CODE } from '@/constants/validation'
-import { secretFormSchema, type SecretForm } from '@/validation/secrets'
+import { createSecretFormSchema, updateSecretFormSchema, type SecretForm } from '@/validation/secrets'
 
 type SecretFormIssue = z.ZodError['issues'][number]
 
@@ -23,11 +23,8 @@ export interface SecretFormValues extends SecretForm {
 }
 
 export function validateSecretForm(values: SecretFormValues): string | null {
-  if (!values.name || !values.username || (!values.isEditing && !values.password)) {
-    return trValidation(VALIDATION_RULES.REQUIRED)
-  }
-
-  const result = secretFormSchema.safeParse({ name: values.name, username: values.username })
+  const schema = values.isEditing ? updateSecretFormSchema : createSecretFormSchema
+  const result = schema.safeParse({ name: values.name, username: values.username, password: values.password })
   if (result.success) return null
 
   const issue = result.error.issues[0]
