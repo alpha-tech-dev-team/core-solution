@@ -1,5 +1,6 @@
 using Identity.Domain.Entities;
 using Identity.Domain.Interfaces.Repositories;
+using Identity.Domain.Models;
 using Identity.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 
@@ -42,6 +43,32 @@ public class UserRepository : IUserRepository
             .Include(x => x.UserRoles)
             .ThenInclude(x => x.Role)
             .FirstOrDefaultAsync(x => x.TelegramUserId == telegramUserId, cancellationToken);
+    }
+
+    public Task<List<EmployeeInfo>> GetEmployees(CancellationToken cancellationToken = default)
+    {
+        return _context.Users
+            .AsNoTracking()
+            .OrderBy(x => x.Surname)
+            .ThenBy(x => x.Name)
+            .Select(x => new EmployeeInfo(
+                x.Id,
+                x.Name,
+                x.Surname,
+                x.Patronymic,
+                x.Position,
+                x.Phone,
+                x.Status.ToString(),
+                x.UserRoles.Select(role => role.Role.Name).ToArray()))
+            .ToListAsync(cancellationToken);
+    }
+
+    public Task<List<Roles>> GetAllRoles(CancellationToken cancellationToken = default)
+    {
+        return _context.Roles
+            .AsNoTracking()
+            .OrderBy(x => x.Name)
+            .ToListAsync(cancellationToken);
     }
 
     public Task<int> SaveChanges(CancellationToken cancellationToken = default)
