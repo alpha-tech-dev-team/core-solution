@@ -3,6 +3,8 @@ namespace Pandora.Api.Constants;
 public static class JwtConstants
 {
     public const string SigningAlgorithm = "HS256";
+    // Кросс-сервисный контракт с Identity (AuthCookieConstants.AccessTokenName): access-токен в http-only cookie
+    public const string AccessTokenCookieName = "access_token";
     public const string SubjectClaim = "sub";
     public const string UniqueNameClaim = "unique_name";
     public const string RoleClaim = "role";
