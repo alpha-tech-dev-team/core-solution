@@ -8,9 +8,8 @@
   },
   "ProblemCategorySelection": {
     "Text": "Меню:",
-    "Hardware": "Оборудование",
-    "Software": "ПО(Софт)",
-    "Other": "Другое",
+    "Problems": "Проблемы",
+    "Profile": "Профиль",
     "AccessDenied": "У вас нет доступа к этой опции'."
   }
 }

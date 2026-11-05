@@ -1,4 +1,4 @@
-using Atlas.Application.Features.ProblemCategorySelection;
+using Atlas.Application.Features.Menu;
 using Atlas.Domain.Enums;
 using CoreSolution.Shared.Abstractions;
 using CoreSolution.Shared.Application.Features.Activation;
@@ -12,12 +12,12 @@ namespace Atlas.Application.Features.Activation;
 public sealed class SubmitPhoneHandler : SubmitPhoneHandlerBase
 {
     public SubmitPhoneHandler(IPhoneConfirmationService phoneConfirmationService, IMediator mediator, ILocalizer localizer)
-        : base(phoneConfirmationService, mediator, localizer, nameof(WorkflowStep.Idle))
+        : base(phoneConfirmationService, mediator, localizer, nameof(WorkflowStep.ProblemCategorySelection))
     {
     }
 
     protected override IRequest<Result<WorkflowResponse>> CreateNextMessage(SubmitPhoneMessage request)
     {
-        return new ProblemCategorySelectionMessage(request.TelegramUserId, request.MessageId);
+        return new ShowMenuMessage(request.TelegramUserId, request.MessageId);
     }
 }
