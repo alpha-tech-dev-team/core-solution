@@ -1,9 +1,12 @@
+using FluentValidation;
+using FluentValidation.Results;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Pandora.Api.Constants;
 using Pandora.Api.Extensions;
 using Pandora.Application.Contracts;
-using Pandora.Domain.Interfaces.Services;
+using Pandora.Application.Features.Secrets;
 
 namespace Pandora.Api.Endpoints;
 
@@ -21,43 +24,63 @@ public static class SecretsEndpoints
         return endpoints;
     }
 
-    private static async Task<IResult> List([FromServices] ISecretAdminService service, CancellationToken cancellationToken = default)
+    private static async Task<IResult> List([FromServices] IMediator mediator, CancellationToken cancellationToken = default)
     {
-        var result = await service.GetItems(cancellationToken);
+        var result = await mediator.Send(new GetSecretsQuery(), cancellationToken);
 
         return result.ToHttpResult();
     }
 
     private static async Task<IResult> Create(
-        [FromServices] ISecretAdminService service,
+        [FromServices] IMediator mediator,
+        [FromServices] IValidator<CreateSecretRequest> validator,
         CreateSecretRequest request,
         HttpContext context,
         CancellationToken cancellationToken = default)
     {
-        var result = await service.Create(GetAdminUserId(context), request.Name, request.Username, request.Password, cancellationToken);
+        var validationProblem = ToValidationProblem(await validator.ValidateAsync(request, cancellationToken));
+
+        if (validationProblem is not null)
+        {
+            return validationProblem;
+        }
+
+        var result = await mediator.Send(
+            new CreateSecretCommand(GetAdminUserId(context), request.Name, request.Username, request.Password),
+            cancellationToken);
 
         return result.ToHttpResult();
     }
 
     private static async Task<IResult> Update(
-        [FromServices] ISecretAdminService service,
+        [FromServices] IMediator mediator,
+        [FromServices] IValidator<UpdateSecretRequest> validator,
         string itemId,
         UpdateSecretRequest request,
         HttpContext context,
         CancellationToken cancellationToken = default)
     {
-        var result = await service.Update(GetAdminUserId(context), itemId, request.Name, request.Username, request.Password, cancellationToken);
+        var validationProblem = ToValidationProblem(await validator.ValidateAsync(request, cancellationToken));
+
+        if (validationProblem is not null)
+        {
+            return validationProblem;
+        }
+
+        var result = await mediator.Send(
+            new UpdateSecretCommand(GetAdminUserId(context), itemId, request.Name, request.Username, request.Password),
+            cancellationToken);
 
         return result.ToHttpResult();
     }
 
     private static async Task<IResult> Delete(
-        [FromServices] ISecretAdminService service,
+        [FromServices] IMediator mediator,
         string itemId,
         HttpContext context,
         CancellationToken cancellationToken = default)
     {
-        var result = await service.Delete(GetAdminUserId(context), itemId, cancellationToken);
+        var result = await mediator.Send(new DeleteSecretCommand(GetAdminUserId(context), itemId), cancellationToken);
 
         return result.ToHttpResult();
     }
@@ -69,5 +92,19 @@ public static class SecretsEndpoints
         ArgumentException.ThrowIfNullOrEmpty(subject);
 
         return Guid.Parse(subject);
+    }
+
+    private static IResult? ToValidationProblem(ValidationResult validationResult)
+    {
+        if (validationResult.IsValid)
+        {
+            return null;
+        }
+
+        var errors = validationResult.Errors
+            .GroupBy(error => error.PropertyName)
+            .ToDictionary(group => group.Key, group => group.Select(error => error.ErrorMessage).ToArray());
+
+        return Results.ValidationProblem(errors);
     }
 }
