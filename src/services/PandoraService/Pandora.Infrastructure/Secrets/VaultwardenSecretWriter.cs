@@ -24,13 +24,10 @@ public sealed class VaultwardenSecretWriter : ISecretWriter
     public async Task<SecretItem?> Create(string name, string username, string password, CancellationToken cancellationToken)
     {
         var item = BuildItem(null, name, username, password);
+        var response = await SendAsync(HttpMethod.Post, ItemRoute, item, "создании", name, cancellationToken);
 
-        var response = await _httpClient.PostAsJsonAsync(ItemRoute, item, SerializerOptions, cancellationToken);
-
-        if (!response.IsSuccessStatusCode)
+        if (response is null)
         {
-            _logger.LogWarning("Шлюз Vaultwarden вернул статус {StatusCode} при создании секрета {Name}", (int)response.StatusCode, name);
-
             return null;
         }
 
@@ -71,46 +68,59 @@ public sealed class VaultwardenSecretWriter : ISecretWriter
         }
 
         var item = BuildItem(itemId, name, username, updatedPassword);
-        var response = await _httpClient.PutAsJsonAsync($"{ItemRoute}/{itemId}", item, SerializerOptions, cancellationToken);
+        var response = await SendAsync(HttpMethod.Put, $"{ItemRoute}/{itemId}", item, "обновлении", itemId, cancellationToken);
 
-        if (!response.IsSuccessStatusCode)
-        {
-            _logger.LogWarning("Шлюз Vaultwarden вернул статус {StatusCode} при обновлении секрета {ItemId}", (int)response.StatusCode, itemId);
-
-            return false;
-        }
-
-        return true;
+        return response is not null;
     }
 
     public async Task<bool> Delete(string itemId, CancellationToken cancellationToken)
     {
-        var response = await _httpClient.DeleteAsync($"{ItemRoute}/{itemId}", cancellationToken);
+        var response = await SendAsync(HttpMethod.Delete, $"{ItemRoute}/{itemId}", null, "удалении", itemId, cancellationToken);
 
-        if (!response.IsSuccessStatusCode)
-        {
-            _logger.LogWarning("Шлюз Vaultwarden вернул статус {StatusCode} при удалении секрета {ItemId}", (int)response.StatusCode, itemId);
-
-            return false;
-        }
-
-        return true;
+        return response is not null;
     }
 
     private async Task<VaultwardenItem?> ReadItem(string itemId, CancellationToken cancellationToken)
     {
-        var response = await _httpClient.GetAsync($"{ItemRoute}/{itemId}", cancellationToken);
+        var response = await SendAsync(HttpMethod.Get, $"{ItemRoute}/{itemId}", null, "чтении", itemId, cancellationToken);
 
-        if (!response.IsSuccessStatusCode)
+        if (response is null)
         {
-            _logger.LogWarning("Шлюз Vaultwarden вернул статус {StatusCode} при чтении секрета {ItemId}", (int)response.StatusCode, itemId);
-
             return null;
         }
 
         var result = await response.Content.ReadFromJsonAsync<VaultwardenResponse<VaultwardenItem>>(SerializerOptions, cancellationToken);
 
         return result?.Data;
+    }
+
+    private async Task<HttpResponseMessage?> SendAsync(
+        HttpMethod method,
+        string route,
+        object? payload,
+        string operation,
+        string target,
+        CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(method, route);
+
+        if (payload is not null)
+        {
+            request.Content = JsonContent.Create(payload, options: SerializerOptions);
+        }
+
+        var response = await _httpClient.SendAsync(request, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogWarning("Шлюз Vaultwarden вернул статус {StatusCode} при {Operation} секрета {Target}", (int)response.StatusCode, operation, target);
+
+            response.Dispose();
+
+            return null;
+        }
+
+        return response;
     }
 
     private static VaultwardenItemRequest BuildItem(string? itemId, string name, string username, string password)
