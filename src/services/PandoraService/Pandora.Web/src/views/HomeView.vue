@@ -21,7 +21,7 @@ async function logout() {
       <button class="home__logout" @click="logout">{{ tr(RESOURCE_KEYS.AUTH_LOGOUT) }}</button>
     </header>
     <main class="home__body">
-      <p>{{ tr(RESOURCE_KEYS.APP_PLACEHOLDER) }}</p>
+      <RouterLink class="home__link" :to="ROUTES.EMPLOYEES">{{ tr(RESOURCE_KEYS.EMPLOYEES_TITLE) }}</RouterLink>
     </main>
   </div>
 </template>
@@ -64,6 +64,17 @@ async function logout() {
   align-items: center;
   justify-content: center;
   font-size: var(--font-size-large);
-  color: var(--color-text-muted);
+}
+
+.home__link {
+  padding: var(--space-3) var(--space-5);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+}
+
+.home__link:hover {
+  opacity: 0.9;
 }
 </style>
