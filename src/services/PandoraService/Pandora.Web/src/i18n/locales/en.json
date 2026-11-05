@@ -19,5 +19,16 @@
   "auth_login": "Log in",
   "auth_logout": "Log out",
   "app_title": "Pandora",
-  "app_placeholder": "Interface under construction"
+  "employees_title": "Employees",
+  "employee_name": "Employee",
+  "employee_position": "Position",
+  "employee_phone": "Phone",
+  "employee_status": "Status",
+  "employee_roles": "Roles",
+  "employee_block": "Block",
+  "employee_unblock": "Unblock",
+  "employees_empty": "No employees yet",
+  "status_pending": "Pending",
+  "status_active": "Active",
+  "status_blocked": "Blocked"
 }

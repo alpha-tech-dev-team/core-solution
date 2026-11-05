@@ -19,5 +19,16 @@
   "auth_login": "Войти",
   "auth_logout": "Выйти",
   "app_title": "Pandora",
-  "app_placeholder": "Интерфейс в разработке"
+  "employees_title": "Сотрудники",
+  "employee_name": "Сотрудник",
+  "employee_position": "Должность",
+  "employee_phone": "Телефон",
+  "employee_status": "Статус",
+  "employee_roles": "Роли",
+  "employee_block": "Заблокировать",
+  "employee_unblock": "Разблокировать",
+  "employees_empty": "Сотрудников пока нет",
+  "status_pending": "Не активирован",
+  "status_active": "Активен",
+  "status_blocked": "Заблокирован"
 }

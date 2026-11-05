@@ -1,3 +1,5 @@
+import { EMPLOYEE_STATUS } from '@/stores/models/employee-status'
+
 export const DEFAULT_LOCALE = 'ru'
 export const SUPPORTED_LOCALES = ['ru', 'en'] as const
 
@@ -9,12 +11,29 @@ export const PLACEHOLDER_PATTERN = /\{(\d+)\}/g
 
 export const RESOURCE_KEYS = {
   APP_TITLE: 'app_title',
-  APP_PLACEHOLDER: 'app_placeholder',
   AUTH_LOGIN: 'auth_login',
   AUTH_LOGOUT: 'auth_logout',
   FIELD_USERNAME: 'login_field_username',
-  FIELD_PASSWORD: 'login_field_password'
+  FIELD_PASSWORD: 'login_field_password',
+  EMPLOYEES_TITLE: 'employees_title',
+  EMPLOYEE_NAME: 'employee_name',
+  EMPLOYEE_POSITION: 'employee_position',
+  EMPLOYEE_PHONE: 'employee_phone',
+  EMPLOYEE_STATUS: 'employee_status',
+  EMPLOYEE_ROLES: 'employee_roles',
+  EMPLOYEE_BLOCK: 'employee_block',
+  EMPLOYEE_UNBLOCK: 'employee_unblock',
+  EMPLOYEES_EMPTY: 'employees_empty',
+  STATUS_PENDING: 'status_pending',
+  STATUS_ACTIVE: 'status_active',
+  STATUS_BLOCKED: 'status_blocked'
 } as const
+
+export const EMPLOYEE_STATUS_RESOURCE_KEYS: Record<string, string> = {
+  [EMPLOYEE_STATUS.PENDING]: RESOURCE_KEYS.STATUS_PENDING,
+  [EMPLOYEE_STATUS.ACTIVE]: RESOURCE_KEYS.STATUS_ACTIVE,
+  [EMPLOYEE_STATUS.BLOCKED]: RESOURCE_KEYS.STATUS_BLOCKED
+}
 
 export const VALIDATION_RULES = {
   REQUIRED: 'required',

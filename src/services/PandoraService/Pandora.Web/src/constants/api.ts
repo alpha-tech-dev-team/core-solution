@@ -7,6 +7,13 @@ export const AUTH_ENDPOINTS = {
   LOGOUT: '/logout'
 } as const
 
+export const EMPLOYEE_ENDPOINTS = {
+  LIST: '/users',
+  ROLES: '/roles',
+  ROLES_OF: (id: string) => `/users/${id}/roles`,
+  STATUS_OF: (id: string) => `/users/${id}/status`
+} as const
+
 export const HEADER_CONTENT_TYPE = 'Content-Type'
 export const CONTENT_TYPE_JSON = 'application/json'
 export const RETRY_FLAG = '_retry'
