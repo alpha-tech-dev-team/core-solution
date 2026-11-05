@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { tr, trRequestError } from '@/i18n'
@@ -29,6 +29,9 @@ const editingId = ref<string | null>(null)
 const formName = ref('')
 const formUsername = ref('')
 const formPassword = ref('')
+const selectedId = ref<string | null>(null)
+
+const selectedItem = computed(() => secrets.value.find((item) => item.id === selectedId.value) ?? null)
 
 async function loadSecrets() {
   isLoading.value = true
@@ -66,6 +69,22 @@ function openEditForm(item: SecretItem) {
 function closeForm() {
   isFormVisible.value = false
   resetForm()
+}
+
+function selectRow(item: SecretItem) {
+  selectedId.value = selectedId.value === item.id ? null : item.id
+}
+
+function editSelected() {
+  if (selectedItem.value !== null) {
+    openEditForm(selectedItem.value)
+  }
+}
+
+function deleteSelected() {
+  if (selectedItem.value !== null) {
+    remove(selectedItem.value)
+  }
 }
 
 async function save() {
@@ -120,6 +139,7 @@ async function remove(item: SecretItem) {
 
   try {
     await deleteSecret(item.id)
+    selectedId.value = null
     await loadSecrets()
   } catch (error) {
     errorMessage.value = trRequestError(toRequestError(error))
@@ -153,9 +173,25 @@ onMounted(loadSecrets)
     <main class="secrets__body">
       <div class="secrets__toolbar">
         <h2>{{ tr(RESOURCE_KEYS.SECRETS_TITLE) }}</h2>
-        <button v-if="!isFormVisible" class="secrets__add" @click="openCreateForm">
-          {{ tr(RESOURCE_KEYS.SECRETS_ADD) }}
-        </button>
+        <div v-if="!isFormVisible" class="secrets__toolbar-actions">
+          <button class="secrets__add" @click="openCreateForm">
+            {{ tr(RESOURCE_KEYS.SECRETS_ADD) }}
+          </button>
+          <button
+            class="secrets__button"
+            :disabled="selectedItem === null"
+            @click="editSelected"
+          >
+            {{ tr(RESOURCE_KEYS.SECRETS_EDIT) }}
+          </button>
+          <button
+            class="secrets__button secrets__button--danger"
+            :disabled="selectedItem === null"
+            @click="deleteSelected"
+          >
+            {{ tr(RESOURCE_KEYS.SECRETS_DELETE) }}
+          </button>
+        </div>
       </div>
 
       <form v-if="isFormVisible" class="secrets__form" @submit.prevent="save">
@@ -197,21 +233,18 @@ onMounted(loadSecrets)
           <tr>
             <th>{{ tr(RESOURCE_KEYS.SECRETS_FIELD_NAME) }}</th>
             <th>{{ tr(RESOURCE_KEYS.SECRETS_FIELD_USERNAME) }}</th>
-            <th></th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="item in secrets" :key="item.id">
+          <tr
+            v-for="item in secrets"
+            :key="item.id"
+            class="secrets__row"
+            :class="{ 'secrets__row--selected': item.id === selectedId }"
+            @click="selectRow(item)"
+          >
             <td>{{ item.name }}</td>
             <td>{{ item.username }}</td>
-            <td class="secrets__actions">
-              <button class="secrets__button secrets__button--secondary" @click="openEditForm(item)">
-                {{ tr(RESOURCE_KEYS.SECRETS_EDIT) }}
-              </button>
-              <button class="secrets__button secrets__button--danger" @click="remove(item)">
-                {{ tr(RESOURCE_KEYS.SECRETS_DELETE) }}
-              </button>
-            </td>
           </tr>
         </tbody>
       </table>
@@ -296,6 +329,11 @@ onMounted(loadSecrets)
   font-size: var(--font-size-large);
 }
 
+.secrets__toolbar-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
 .secrets__add {
   padding: var(--space-2) var(--space-3);
   background: var(--color-primary);
@@ -351,7 +389,7 @@ onMounted(loadSecrets)
 }
 
 .secrets__button:disabled {
-  background: var(--color-primary-disabled);
+  opacity: 0.5;
   cursor: default;
 }
 
@@ -400,9 +438,16 @@ onMounted(loadSecrets)
   color: var(--color-text-secondary);
 }
 
-.secrets__actions {
-  display: flex;
-  gap: var(--space-2);
-  justify-content: flex-end;
+.secrets__row {
+  cursor: pointer;
+}
+
+.secrets__row:hover {
+  background: var(--color-bg);
+}
+
+.secrets__row--selected,
+.secrets__row--selected:hover {
+  background: var(--color-primary-disabled);
 }
 </style>
