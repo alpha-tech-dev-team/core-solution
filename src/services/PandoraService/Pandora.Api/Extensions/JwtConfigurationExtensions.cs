@@ -40,6 +40,14 @@ public static class JwtConfigurationExtensions
                     NameClaimType = JwtConstants.UniqueNameClaim,
                     RoleClaimType = JwtConstants.RoleClaim
                 };
+                jwt.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = ctx =>
+                    {
+                        ctx.Token ??= ctx.Request.Cookies[JwtConstants.AccessTokenCookieName];
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
         services.AddAuthorization(authorization =>
