@@ -8,6 +8,7 @@ internal static class IdentityErrorStatusCodes
         new Dictionary<IdentityErrorCode, int>
         {
             [IdentityErrorCode.UserNotFound] = StatusCodes.Status404NotFound,
+            [IdentityErrorCode.RoleNotFound] = StatusCodes.Status404NotFound,
             [IdentityErrorCode.UserAlreadyActivated] = StatusCodes.Status409Conflict,
             [IdentityErrorCode.AccessDenied] = StatusCodes.Status403Forbidden,
             [IdentityErrorCode.InvalidCredentials] = StatusCodes.Status401Unauthorized,
