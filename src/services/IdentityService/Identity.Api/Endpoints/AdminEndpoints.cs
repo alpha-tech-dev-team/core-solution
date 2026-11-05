@@ -1,7 +1,8 @@
 using Identity.Api.Constants;
 using Identity.Api.Extensions;
 using Identity.Api.Filters;
-using Identity.Application.Contracts;
+using Identity.Application.Contracts.Admin;
+using Identity.Domain.Enums;
 using Identity.Domain.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,7 +23,62 @@ public static class AdminEndpoints
 
         group.MapPost(ApiRoutes.Logout, Logout);
 
+        group.MapGet(ApiRoutes.Users, GetUsers)
+            .RequireAuthorization(AuthorizationPolicies.Admin);
+
+        group.MapGet(ApiRoutes.Roles, GetRoles)
+            .RequireAuthorization(AuthorizationPolicies.Admin);
+
+        group.MapPut(ApiRoutes.UserRoles, SetUserRoles)
+            .AddEndpointFilter<ValidationFilter<SetUserRolesRequest>>()
+            .RequireAuthorization(AuthorizationPolicies.Admin);
+
+        group.MapPut(ApiRoutes.UserStatus, SetUserStatus)
+            .AddEndpointFilter<ValidationFilter<SetUserStatusRequest>>()
+            .RequireAuthorization(AuthorizationPolicies.Admin);
+
         return endpoints;
+    }
+
+    private static async Task<IResult> GetUsers(
+        [FromServices] IAdminUserService adminUserService,
+        CancellationToken cancellationToken = default)
+    {
+        var users = await adminUserService.GetUsers(cancellationToken);
+
+        return Results.Ok(users);
+    }
+
+    private static async Task<IResult> GetRoles(
+        [FromServices] IAdminUserService adminUserService,
+        CancellationToken cancellationToken = default)
+    {
+        var roles = await adminUserService.GetRoles(cancellationToken);
+
+        return Results.Ok(roles);
+    }
+
+    private static async Task<IResult> SetUserRoles(
+        [FromServices] IAdminUserService adminUserService,
+        Guid id,
+        SetUserRolesRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await adminUserService.AssignRoles(id, request.Roles, cancellationToken);
+
+        return result.ToHttpResult();
+    }
+
+    private static async Task<IResult> SetUserStatus(
+        [FromServices] IAdminUserService adminUserService,
+        Guid id,
+        SetUserStatusRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var status = Enum.Parse<UserStatus>(request.Status, ignoreCase: true);
+        var result = await adminUserService.SetStatus(id, status, cancellationToken);
+
+        return result.ToHttpResult();
     }
 
     private static async Task<IResult> Login(
