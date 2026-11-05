@@ -1,6 +1,6 @@
 using FluentValidation;
 using Identity.Application.Constants;
-using Identity.Application.Contracts;
+using Identity.Application.Contracts.Admin;
 
 namespace Identity.Application.Validators;
 
