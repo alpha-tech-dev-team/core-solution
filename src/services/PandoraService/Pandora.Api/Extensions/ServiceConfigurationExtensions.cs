@@ -1,7 +1,10 @@
+using CoreSolution.Shared.Results;
+using FluentValidation;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Pandora.Application.Services;
+using Pandora.Application.Features.Secrets;
 using Pandora.Domain.Interfaces;
-using Pandora.Domain.Interfaces.Services;
+using Pandora.Domain.Models;
 using Pandora.Domain.Options;
 using Pandora.Infrastructure.Database;
 using Pandora.Infrastructure.Repositories;
@@ -31,7 +34,13 @@ public static class ServiceConfigurationExtensions
 
         services.AddSecretWriter(configuration);
 
-        services.AddScoped<ISecretAdminService, SecretAdminService>();
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Pandora.Api.AssemblyMarker>());
+        services.AddScoped<IRequestHandler<GetSecretsQuery, Result<IReadOnlyList<SecretListItem>>>, GetSecretsQueryHandler>();
+        services.AddScoped<IRequestHandler<CreateSecretCommand, Result<SecretListItem>>, CreateSecretCommandHandler>();
+        services.AddScoped<IRequestHandler<UpdateSecretCommand, Result<SecretListItem>>, UpdateSecretCommandHandler>();
+        services.AddScoped<IRequestHandler<DeleteSecretCommand, Result>, DeleteSecretCommandHandler>();
+
+        services.AddValidatorsFromAssemblyContaining<Pandora.Application.AssemblyMarker>();
 
         services.AddJwtAuthentication(configuration);
 
