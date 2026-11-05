@@ -1,18 +1,8 @@
 import api from './client'
 import { SECRETS_ENDPOINTS } from '@/constants/api'
 import type { SecretItem } from '@/stores/models/secret-item'
-
-export interface CreateSecretPayload {
-  name: string
-  username: string
-  password: string
-}
-
-export interface UpdateSecretPayload {
-  name: string
-  username: string
-  password: string | null
-}
+import type { CreateSecretPayload } from '@/stores/models/create-secret-payload'
+import type { UpdateSecretPayload } from '@/stores/models/update-secret-payload'
 
 export async function fetchSecrets(): Promise<SecretItem[]> {
   const { data } = await api.get<SecretItem[]>(SECRETS_ENDPOINTS.COLLECTION)
