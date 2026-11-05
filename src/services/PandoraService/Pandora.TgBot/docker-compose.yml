@@ -95,6 +95,28 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  pandora-api:
+    build:
+      context: ../../../..
+      dockerfile: src/services/PandoraService/Pandora.Api/Dockerfile
+    depends_on:
+      pandora-postgres:
+        condition: service_healthy
+      bw-gateway:
+        condition: service_started
+    expose:
+      - "8080"
+    environment:
+      - Database__ConnectionString=Host=pandora-postgres;Port=5432;Database=${POSTGRES_DB:-alphadev_pandora};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
+      - Jwt__Secret=${JWT_SECRET:?JWT_SECRET is required}
+      - Pandora__Vaultwarden__BaseUrl=http://bw-gateway:8087
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   pandoratgbot:
     build:
       context: ../../../..
