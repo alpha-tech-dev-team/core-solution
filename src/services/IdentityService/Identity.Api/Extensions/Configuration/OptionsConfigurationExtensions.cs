@@ -1,8 +1,12 @@
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json.Serialization;
 using CoreSolution.Shared.Options;
+using Identity.Api.Models;
+using Identity.Application.Errors;
 using Identity.Domain.Options;
 using Identity.Infrastructure.Constants;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Identity.Infrastructure.Options.Extensions;
 
@@ -27,6 +31,24 @@ public static class OptionsConfigurationExtensions
         ValidateInRange(options.Parallelism, PasswordHasherConstants.MinParallelism, PasswordHasherConstants.MaxParallelism);
 
         services.Configure<PasswordHasherOptions>(section);
+
+        services.Configure<JsonOptions>(options =>
+            options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+
+        services.Configure<ApiBehaviorOptions>(options =>
+        {
+            options.InvalidModelStateResponseFactory = context =>
+            {
+                var code = nameof(IdentityErrorCode.ValidationFailed);
+                var errors = context.ModelState
+                    .Where(entry => entry.Value?.Errors.Count > 0)
+                    .ToDictionary(
+                        entry => entry.Key,
+                        entry => entry.Value!.Errors.Select(error => error.ErrorMessage).ToArray());
+
+                return new BadRequestObjectResult(new ValidationErrorResponse(code, errors));
+            };
+        });
 
         return services;
     }
