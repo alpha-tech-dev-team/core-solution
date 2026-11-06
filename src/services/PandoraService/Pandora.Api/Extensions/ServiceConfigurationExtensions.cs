@@ -34,6 +34,8 @@ public static class ServiceConfigurationExtensions
 
         services.AddSecretWriter(configuration);
 
+        services.AddScoped<SecretAuditLogger>();
+
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Pandora.Api.AssemblyMarker>());
         services.AddScoped<IRequestHandler<GetSecretsQuery, Result<IReadOnlyList<SecretListItem>>>, GetSecretsQueryHandler>();
         services.AddScoped<IRequestHandler<CreateSecretCommand, Result<SecretListItem>>, CreateSecretCommandHandler>();

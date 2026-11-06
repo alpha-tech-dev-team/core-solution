@@ -13,18 +13,18 @@ public sealed class CreateSecretCommandHandler : IRequestHandler<CreateSecretCom
 {
     private readonly ISecretWriter _secretWriter;
     private readonly ISecretMetadataRepository _metadataRepository;
-    private readonly IAuditRepository _auditRepository;
+    private readonly SecretAuditLogger _auditLogger;
     private readonly ILogger<CreateSecretCommandHandler> _logger;
 
     public CreateSecretCommandHandler(
         ISecretWriter secretWriter,
         ISecretMetadataRepository metadataRepository,
-        IAuditRepository auditRepository,
+        SecretAuditLogger auditLogger,
         ILogger<CreateSecretCommandHandler> logger)
     {
         _secretWriter = secretWriter;
         _metadataRepository = metadataRepository;
-        _auditRepository = auditRepository;
+        _auditLogger = auditLogger;
         _logger = logger;
     }
 
@@ -62,7 +62,7 @@ public sealed class CreateSecretCommandHandler : IRequestHandler<CreateSecretCom
             return Result<SecretListItem>.Failure(nameof(ErrorCode.DatabaseUnavailable));
         }
 
-        await AddAuditSafely(request.AdminUserId, AuditConstants.ActionSecretCreated, created.Id, cancellationToken);
+        await _auditLogger.LogActionAsync(request.AdminUserId, AuditConstants.ActionSecretCreated, created.Id, cancellationToken);
 
         return Result<SecretListItem>.Success(new SecretListItem(created.Id, name, username));
     }
@@ -81,28 +81,6 @@ public sealed class CreateSecretCommandHandler : IRequestHandler<CreateSecretCom
         catch (Exception exception)
         {
             _logger.LogError(exception, "Не удалось удалить секрет {ItemId} из Vaultwarden после отката создания", itemId);
-        }
-    }
-
-    private async Task AddAuditSafely(Guid adminUserId, string action, string targetItemId, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await _auditRepository.Add(
-                new AuditEntry
-                {
-                    Id = Guid.NewGuid(),
-                    Timestamp = DateTime.UtcNow,
-                    UserId = adminUserId,
-                    Action = action,
-                    TargetItemId = targetItemId,
-                    RequestSource = AuditConstants.SourceWeb
-                },
-                cancellationToken);
-        }
-        catch (Exception exception)
-        {
-            _logger.LogError(exception, "Не удалось записать аудит действия {Action} по секрету {ItemId}", action, targetItemId);
         }
     }
 }
