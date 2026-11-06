@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Atlas.TgBot.Extensions;
 
-public static class HostExtensions
+public static class MigrationExtensions
 {
     public static async Task ApplyMigrations(this IHost host)
     {
