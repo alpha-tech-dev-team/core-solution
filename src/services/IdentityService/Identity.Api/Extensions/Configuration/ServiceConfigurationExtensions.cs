@@ -1,9 +1,11 @@
 using FluentValidation;
 using Identity.Api.Middleware;
 using Identity.Application.Services;
+using Identity.Domain.Interfaces;
 using Identity.Domain.Interfaces.Repositories;
 using Identity.Domain.Interfaces.Security;
 using Identity.Domain.Interfaces.Services;
+using Identity.Infrastructure.Database;
 using Identity.Infrastructure.Database.Extensions;
 using Identity.Infrastructure.Options.Extensions;
 using Identity.Infrastructure.Repositories;
@@ -25,6 +27,8 @@ public static class ServiceConfigurationExtensions
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails();
 
+        services.AddControllers();
+
         services.ConfigureOptions(configuration);
         services.ConfigureDbContext();
 
@@ -37,7 +41,6 @@ public static class ServiceConfigurationExtensions
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
 
-        services.AddControllers();
         services.AddValidatorsFromAssemblyContaining<Identity.Application.AssemblyMarker>();
 
         services.AddJwtAuthentication();

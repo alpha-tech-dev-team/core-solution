@@ -2,9 +2,9 @@ using Identity.Api.Constants;
 using Identity.Api.Extensions.Http;
 using Identity.Api.Filters;
 using Identity.Application.Contracts.Admin;
-using Identity.Domain.Enums;
 using Identity.Domain.Interfaces.Services;
 using Identity.Domain.Models;
+using Mapster;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,11 +16,12 @@ namespace Identity.Api.Controllers;
 public sealed class AdminUsersController(IAdminUserService adminUserService) : ControllerBase
 {
     [HttpGet(ApiRoutes.Users)]
-    public async Task<IActionResult> GetUsers(CancellationToken cancellationToken)
+    [ValidationFilter<GetUsersRequest>]
+    public async Task<IActionResult> GetUsers([FromQuery] GetUsersRequest request, CancellationToken cancellationToken)
     {
-        var users = await adminUserService.GetUsers(cancellationToken);
+        var employees = await adminUserService.GetUsers(request.Page, request.PageSize, cancellationToken);
 
-        return Ok(users);
+        return Ok(employees);
     }
 
     [HttpGet(ApiRoutes.Roles)]
@@ -35,7 +36,7 @@ public sealed class AdminUsersController(IAdminUserService adminUserService) : C
     [ValidationFilter<UserDataRequest>]
     public async Task<IActionResult> CreateUser(UserDataRequest request, CancellationToken cancellationToken)
     {
-        var result = await adminUserService.CreateUser(ToEmployeeData(request), cancellationToken);
+        var result = await adminUserService.CreateUser(request.Adapt<EmployeeData>(), cancellationToken);
 
         return result.ToActionResult();
     }
@@ -44,7 +45,7 @@ public sealed class AdminUsersController(IAdminUserService adminUserService) : C
     [ValidationFilter<UserDataRequest>]
     public async Task<IActionResult> UpdateUser(Guid id, UserDataRequest request, CancellationToken cancellationToken)
     {
-        var result = await adminUserService.UpdateUser(id, ToEmployeeData(request), cancellationToken);
+        var result = await adminUserService.UpdateUser(id, request.Adapt<EmployeeData>(), cancellationToken);
 
         return result.ToActionResult();
     }
@@ -53,7 +54,7 @@ public sealed class AdminUsersController(IAdminUserService adminUserService) : C
     [ValidationFilter<SetUserRolesRequest>]
     public async Task<IActionResult> SetUserRoles(Guid id, SetUserRolesRequest request, CancellationToken cancellationToken)
     {
-        var result = await adminUserService.AssignRoles(id, request.Roles, cancellationToken);
+        var result = await adminUserService.AssignRoles(id, request.Adapt<UserRolesData>(), cancellationToken);
 
         return result.ToActionResult();
     }
@@ -62,14 +63,8 @@ public sealed class AdminUsersController(IAdminUserService adminUserService) : C
     [ValidationFilter<SetUserStatusRequest>]
     public async Task<IActionResult> SetUserStatus(Guid id, SetUserStatusRequest request, CancellationToken cancellationToken)
     {
-        var status = Enum.Parse<UserStatus>(request.Status, ignoreCase: true);
-        var result = await adminUserService.SetStatus(id, status, cancellationToken);
+        var result = await adminUserService.SetStatus(id, request.Status, cancellationToken);
 
         return result.ToActionResult();
-    }
-
-    private static EmployeeData ToEmployeeData(UserDataRequest request)
-    {
-        return new EmployeeData(request.Name, request.Surname, request.Patronymic, request.Position, request.Phone);
     }
 }
