@@ -1,6 +1,8 @@
+using CoreSolution.Shared.Enums;
 using FluentValidation;
 using Identity.Application.Constants;
 using Identity.Application.Contracts.Admin;
+using Identity.Application.Errors;
 
 namespace Identity.Application.Validators.Admin;
 
@@ -15,11 +17,21 @@ public class SetUserRolesRequestValidator : AbstractValidator<SetUserRolesReques
             .IsInEnum();
 
         RuleFor(x => x.AdminLogin)
+            .NotEmpty()
+            .WithErrorCode(nameof(IdentityErrorCode.AdminCredentialsRequired))
             .MaximumLength(ValidationConstants.AdminUsernameMaxLength)
-            .When(x => x.AdminLogin is not null);
+            .When(RequiresAdminCredentials);
 
         RuleFor(x => x.AdminPassword)
+            .NotEmpty()
+            .WithErrorCode(nameof(IdentityErrorCode.AdminCredentialsRequired))
             .MaximumLength(ValidationConstants.PasswordMaxLength)
-            .When(x => x.AdminPassword is not null);
+            .When(RequiresAdminCredentials);
+    }
+
+    private static bool RequiresAdminCredentials(SetUserRolesRequest request)
+    {
+        return request.Roles is not null
+            && request.Roles.Any(role => role is UserRole.AtlasAdmin or UserRole.PandoraAdmin);
     }
 }

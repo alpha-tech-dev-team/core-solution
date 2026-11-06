@@ -3,26 +3,31 @@ using Identity.Application.Errors;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
 using Identity.Domain.Interfaces.Repositories;
+using Identity.Domain.Interfaces.Security;
 using Identity.Domain.Interfaces.Services;
 using Identity.Domain.Models;
+using Mapster;
 using Microsoft.Extensions.Logging;
+using UserRoleEntity = Identity.Domain.Entities.UserRole;
 
 namespace Identity.Application.Services;
 
 public class AdminUserService : IAdminUserService
 {
     private readonly IUserRepository _users;
+    private readonly IPasswordHasher _passwordHasher;
     private readonly ILogger<AdminUserService> _logger;
 
-    public AdminUserService(IUserRepository users, ILogger<AdminUserService> logger)
+    public AdminUserService(IUserRepository users, IPasswordHasher passwordHasher, ILogger<AdminUserService> logger)
     {
         _users = users;
+        _passwordHasher = passwordHasher;
         _logger = logger;
     }
 
-    public async Task<IReadOnlyList<EmployeeInfo>> GetUsers(CancellationToken cancellationToken = default)
+    public async Task<EmployeesPage> GetUsers(int page, int pageSize, CancellationToken cancellationToken = default)
     {
-        return await _users.GetEmployees(cancellationToken);
+        return await _users.GetEmployees(page, pageSize, cancellationToken);
     }
 
     public async Task<IReadOnlyList<string>> GetRoles(CancellationToken cancellationToken = default)
@@ -41,19 +46,7 @@ public class AdminUserService : IAdminUserService
             return Result.Failure(nameof(IdentityErrorCode.PhoneAlreadyExists));
         }
 
-        var user = new User
-        {
-            Id = Guid.NewGuid(),
-            Name = data.Name,
-            Surname = data.Surname,
-            Patronymic = data.Patronymic,
-            Position = data.Position,
-            Phone = data.Phone,
-            Status = UserStatus.Pending,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-        user.UpdatedById = user.Id;
+        var user = new User(data);
 
         _users.Add(user);
         await _users.SaveChanges(cancellationToken);
@@ -82,12 +75,7 @@ public class AdminUserService : IAdminUserService
             }
         }
 
-        user.Name = data.Name;
-        user.Surname = data.Surname;
-        user.Patronymic = data.Patronymic;
-        user.Position = data.Position;
-        user.Phone = data.Phone;
-        user.UpdatedAt = DateTime.UtcNow;
+        data.Adapt(user);
 
         await _users.SaveChanges(cancellationToken);
 
@@ -96,7 +84,7 @@ public class AdminUserService : IAdminUserService
         return Result.Success();
     }
 
-    public async Task<Result> AssignRoles(Guid userId, string[] roles, CancellationToken cancellationToken = default)
+    public async Task<Result> AssignRoles(Guid userId, UserRolesData data, CancellationToken cancellationToken = default)
     {
         var user = await _users.GetById(userId, cancellationToken);
         if (user is null)
@@ -105,13 +93,20 @@ public class AdminUserService : IAdminUserService
             return Result.Failure(nameof(IdentityErrorCode.UserNotFound));
         }
 
+        if (!string.IsNullOrWhiteSpace(data.AdminLogin)
+            && !string.IsNullOrWhiteSpace(data.AdminPassword))
+        {
+            user.AdminUsername = data.AdminLogin;
+            user.AdminPasswordHash = _passwordHasher.HashPassword(data.AdminPassword);
+        }
+
         var knownRoles = await _users.GetAllRoles(cancellationToken);
         var rolesByName = knownRoles.ToDictionary(x => x.Name, StringComparer.OrdinalIgnoreCase);
 
-        var assignedRoles = new List<Roles>(roles.Length);
-        foreach (var roleName in roles.Distinct(StringComparer.OrdinalIgnoreCase))
+        var assignedRoles = new List<Roles>(data.Roles.Length);
+        foreach (var roleName in data.Roles.Distinct())
         {
-            if (!rolesByName.TryGetValue(roleName, out var role))
+            if (!rolesByName.TryGetValue(roleName.ToString(), out var role))
             {
                 _logger.LogWarning("Назначение ролей отклонено: роль не найдена");
                 return Result.Failure(nameof(IdentityErrorCode.RoleNotFound));
@@ -123,13 +118,29 @@ public class AdminUserService : IAdminUserService
         user.UserRoles.Clear();
         foreach (var role in assignedRoles)
         {
-            user.UserRoles.Add(new UserRole { UserId = user.Id, RoleId = role.Id });
+            user.UserRoles.Add(new UserRoleEntity { UserId = user.Id, RoleId = role.Id });
         }
-        user.UpdatedAt = DateTime.UtcNow;
 
         await _users.SaveChanges(cancellationToken);
 
         _logger.LogInformation("Администратор обновил роли пользователя");
+
+        return Result.Success();
+    }
+
+    public async Task<Result> DeleteUser(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var user = await _users.GetById(userId, cancellationToken);
+        if (user is null)
+        {
+            _logger.LogWarning("Удаление сотрудника отклонено: пользователь не найден");
+            return Result.Failure(nameof(IdentityErrorCode.UserNotFound));
+        }
+
+        _users.Remove(user);
+        await _users.SaveChanges(cancellationToken);
+
+        _logger.LogInformation("Администратор удалил сотрудника");
 
         return Result.Success();
     }
@@ -146,7 +157,6 @@ public class AdminUserService : IAdminUserService
         user.Status = status == UserStatus.Active && user.TelegramUserId is null
             ? UserStatus.Pending
             : status;
-        user.UpdatedAt = DateTime.UtcNow;
 
         await _users.SaveChanges(cancellationToken);
 

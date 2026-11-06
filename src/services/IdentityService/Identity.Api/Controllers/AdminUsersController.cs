@@ -50,6 +50,14 @@ public sealed class AdminUsersController(IAdminUserService adminUserService) : C
         return result.ToActionResult();
     }
 
+    [HttpDelete(ApiRoutes.UserById)]
+    public async Task<IActionResult> DeleteUser(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await adminUserService.DeleteUser(id, cancellationToken);
+
+        return result.ToActionResult();
+    }
+
     [HttpPut(ApiRoutes.UserRoles)]
     [ValidationFilter<SetUserRolesRequest>]
     public async Task<IActionResult> SetUserRoles(Guid id, SetUserRolesRequest request, CancellationToken cancellationToken)
