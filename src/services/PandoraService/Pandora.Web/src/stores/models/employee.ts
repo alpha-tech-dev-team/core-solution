@@ -9,4 +9,5 @@ export interface Employee {
   phone: string
   status: EmployeeStatus
   roles: string[]
+  adminUsername: string | null
 }

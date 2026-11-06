@@ -17,6 +17,7 @@ export function useEmployeesPage() {
   const isFormOpen = ref(false)
   const isRolesOpen = ref(false)
   const isSaving = ref(false)
+  const isDeleteOpen = ref(false)
   const formInitial = ref<EmployeeInput | null>(null)
   const editingEmployee = ref<Employee | null>(null)
 
@@ -24,10 +25,16 @@ export function useEmployeesPage() {
     () => employeesStore.employees.find((employee) => employee.id === selectedEmployeeId.value) ?? null
   )
 
-  async function load(): Promise<void> {
+  async function load(pageNumber?: number): Promise<void> {
     errorMessage.value = ''
-    const error = await employeesStore.load()
+    const error = await employeesStore.load(pageNumber)
     if (error !== null) errorMessage.value = trRequestError(error)
+  }
+
+  async function goToPage(pageNumber: number): Promise<void> {
+    if (pageNumber < 1 || pageNumber > employeesStore.totalPages) return
+
+    await load(pageNumber)
   }
 
   function fullName(employee: Employee): string {
@@ -103,20 +110,43 @@ export function useEmployeesPage() {
     isRolesOpen.value = false
   }
 
-  async function toggleRole(role: string, checked: boolean): Promise<void> {
+  function openDelete(): void {
+    if (selectedEmployee.value === null) return
+
+    errorMessage.value = ''
+    isDeleteOpen.value = true
+  }
+
+  function closeDelete(): void {
+    isDeleteOpen.value = false
+  }
+
+  async function confirmDelete(): Promise<void> {
     const employee = selectedEmployee.value
     if (employee === null) return
 
-    const roles = checked
-      ? [...employee.roles, role]
-      : employee.roles.filter((item) => item !== role)
+    errorMessage.value = ''
+    const error = await employeesStore.remove(employee)
+    if (error !== null) {
+      errorMessage.value = trRequestError(error)
+      return
+    }
+
+    isDeleteOpen.value = false
+  }
+
+  async function saveRoles(roleNames: string[], adminLogin: string | null, adminPassword: string | null): Promise<void> {
+    const employee = selectedEmployee.value
+    if (employee === null) return
 
     errorMessage.value = ''
-    const error = await employeesStore.assignRoles(employee, roles)
-    if (error === null) return
+    const error = await employeesStore.assignRoles(employee, roleNames, adminLogin, adminPassword)
+    if (error !== null) {
+      errorMessage.value = trRequestError(error)
+      return
+    }
 
-    errorMessage.value = trRequestError(error)
-    await employeesStore.load()
+    isRolesOpen.value = false
   }
 
   async function toggleBlock(): Promise<void> {
@@ -145,17 +175,22 @@ export function useEmployeesPage() {
     isFormOpen,
     isRolesOpen,
     isSaving,
+    isDeleteOpen,
     formInitial,
     fullName,
     logout,
     select,
+    goToPage,
     openCreateForm,
     openEditForm,
     closeForm,
     save,
     openRoles,
     closeRoles,
-    toggleRole,
+    openDelete,
+    closeDelete,
+    confirmDelete,
+    saveRoles,
     toggleBlock
   }
 }

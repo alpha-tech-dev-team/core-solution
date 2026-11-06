@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { computed, ref, watch } from 'vue'
 import { tr } from '@/i18n'
 import type { Employee } from '@/stores/models/employee'
+import { isAdminRole } from '@/constants/roles'
 import ModalDialog from '@/components/ModalDialog.vue'
 
-defineProps<{
+const props = defineProps<{
   open: boolean
   employee: Employee | null
   roles: string[]
@@ -11,12 +13,43 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{
-  toggle: [payload: { role: string; checked: boolean }]
+  save: [payload: { roles: string[]; adminLogin: string | null; adminPassword: string | null }]
   close: []
 }>()
 
-function hasRole(employee: Employee, role: string): boolean {
-  return employee.roles.includes(role)
+const selectedRoles = ref<string[]>([])
+const adminLogin = ref('')
+const adminPassword = ref('')
+
+watch(
+  () => props.open,
+  (open) => {
+    if (!open) return
+
+    selectedRoles.value = [...(props.employee?.roles ?? [])]
+    adminLogin.value = props.employee?.adminUsername ?? ''
+    adminPassword.value = ''
+  }
+)
+
+const needsCredentials = computed(() => selectedRoles.value.some(isAdminRole))
+
+const canSave = computed(
+  () => !needsCredentials.value || (adminLogin.value.trim() !== '' && adminPassword.value !== '')
+)
+
+function toggle(role: string, checked: boolean): void {
+  selectedRoles.value = checked
+    ? [...selectedRoles.value, role]
+    : selectedRoles.value.filter((item) => item !== role)
+}
+
+function save(): void {
+  emit('save', {
+    roles: selectedRoles.value,
+    adminLogin: adminLogin.value.trim() || null,
+    adminPassword: adminPassword.value || null
+  })
 }
 </script>
 
@@ -28,16 +61,26 @@ function hasRole(employee: Employee, role: string): boolean {
       <label v-for="role in roles" :key="role" class="dialog__role">
         <input
           type="checkbox"
-          :checked="hasRole(employee, role)"
-          @change="emit('toggle', { role, checked: ($event.target as HTMLInputElement).checked })"
+          :checked="selectedRoles.includes(role)"
+          @change="toggle(role, ($event.target as HTMLInputElement).checked)"
         />
         {{ role }}
       </label>
     </div>
 
+    <label v-if="needsCredentials" class="dialog__field">
+      {{ tr('employee_admin_login') }}
+      <input v-model="adminLogin" type="text" />
+    </label>
+    <label v-if="needsCredentials" class="dialog__field">
+      {{ tr('employee_admin_password') }}
+      <input v-model="adminPassword" type="password" />
+    </label>
+
     <p v-if="error" class="dialog__error">{{ error }}</p>
 
     <div class="dialog__actions">
+      <button type="button" class="dialog__button" :disabled="!canSave" @click="save">{{ tr('employee_save') }}</button>
       <button type="button" class="dialog__button" @click="emit('close')">{{ tr('employee_close') }}</button>
     </div>
   </ModalDialog>
@@ -59,6 +102,20 @@ function hasRole(employee: Employee, role: string): boolean {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  font-size: var(--font-size-base);
+}
+
+.dialog__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--font-size-small);
+}
+
+.dialog__field input {
+  padding: var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
   font-size: var(--font-size-base);
 }
 
