@@ -11,6 +11,7 @@ public static class ApplicationConfigurationExtensions
         var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
         await context.Database.MigrateAsync();
+        await RoleSeeder.SeedRolesAsync(context);
 
         return app;
     }
