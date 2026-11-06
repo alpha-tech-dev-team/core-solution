@@ -356,6 +356,35 @@ namespace Atlas.Infrastructure.Database.Migrations
                         .HasDatabaseName("incident_categories_name_key");
 
                     b.ToTable("incident_categories", "atlas");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("0f8fad5b-d9cb-469f-a165-70867728950e"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Hardware incidents",
+                            IsActive = true,
+                            Name = "hardware",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("7c9e6679-7425-40de-944b-e07fc1f90ae7"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Software incidents",
+                            IsActive = true,
+                            Name = "software",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("f47ac10b-58cc-4372-a567-0e02b2c3d479"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Other incidents",
+                            IsActive = true,
+                            Name = "other",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        });
                 });
 
             modelBuilder.Entity("Atlas.Domain.Entities.IncidentFeedback", b =>

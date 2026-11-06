@@ -55,6 +55,12 @@ public static class DBKeys
         public const string Description = "description";
         public const string PrimaryKey = "incident_categories_pkey";
         public const string NameUniqueIndex = "incident_categories_name_key";
+        public const string HardwareId = "0f8fad5b-d9cb-469f-a165-70867728950e";
+        public const string SoftwareId = "7c9e6679-7425-40de-944b-e07fc1f90ae7";
+        public const string OtherId = "f47ac10b-58cc-4372-a567-0e02b2c3d479";
+        public const string HardwareName = "hardware";
+        public const string SoftwareName = "software";
+        public const string OtherName = "other";
     }
 
     public static class Incident
