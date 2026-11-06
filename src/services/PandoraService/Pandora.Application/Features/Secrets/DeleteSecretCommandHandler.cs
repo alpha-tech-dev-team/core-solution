@@ -2,7 +2,6 @@ using CoreSolution.Shared.Results;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Pandora.Domain.Constants;
-using Pandora.Domain.Entities;
 using Pandora.Domain.Enums;
 using Pandora.Domain.Interfaces;
 
@@ -12,18 +11,18 @@ public sealed class DeleteSecretCommandHandler : IRequestHandler<DeleteSecretCom
 {
     private readonly ISecretWriter _secretWriter;
     private readonly ISecretMetadataRepository _metadataRepository;
-    private readonly IAuditRepository _auditRepository;
+    private readonly SecretAuditLogger _auditLogger;
     private readonly ILogger<DeleteSecretCommandHandler> _logger;
 
     public DeleteSecretCommandHandler(
         ISecretWriter secretWriter,
         ISecretMetadataRepository metadataRepository,
-        IAuditRepository auditRepository,
+        SecretAuditLogger auditLogger,
         ILogger<DeleteSecretCommandHandler> logger)
     {
         _secretWriter = secretWriter;
         _metadataRepository = metadataRepository;
-        _auditRepository = auditRepository;
+        _auditLogger = auditLogger;
         _logger = logger;
     }
 
@@ -54,30 +53,8 @@ public sealed class DeleteSecretCommandHandler : IRequestHandler<DeleteSecretCom
             return Result.Failure(nameof(ErrorCode.DatabaseUnavailable));
         }
 
-        await AddAuditSafely(request.AdminUserId, AuditConstants.ActionSecretDeleted, request.ItemId, cancellationToken);
+        await _auditLogger.LogActionAsync(request.AdminUserId, AuditConstants.ActionSecretDeleted, request.ItemId, cancellationToken);
 
         return Result.Success();
-    }
-
-    private async Task AddAuditSafely(Guid adminUserId, string action, string targetItemId, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await _auditRepository.Add(
-                new AuditEntry
-                {
-                    Id = Guid.NewGuid(),
-                    Timestamp = DateTime.UtcNow,
-                    UserId = adminUserId,
-                    Action = action,
-                    TargetItemId = targetItemId,
-                    RequestSource = AuditConstants.SourceWeb
-                },
-                cancellationToken);
-        }
-        catch (Exception exception)
-        {
-            _logger.LogError(exception, "Не удалось записать аудит действия {Action} по секрету {ItemId}", action, targetItemId);
-        }
     }
 }
