@@ -1,3 +1,4 @@
+using Atlas.Domain.Constants.AtlasDBConfiguration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Pgvector.EntityFrameworkCore;
@@ -14,7 +15,7 @@ public static class DatabaseConfigurationExtensions
             options.UseNpgsql(connectionString, npgsql =>
             {
                 npgsql.UseVector();
-                npgsql.MigrationsHistoryTable("__EFMigrationsHistory", "atlas");
+                npgsql.MigrationsHistoryTable(DBKeys.Shared.MigrationsHistoryTable, DBKeys.Shared.Schema);
             }));
 
         return services;
