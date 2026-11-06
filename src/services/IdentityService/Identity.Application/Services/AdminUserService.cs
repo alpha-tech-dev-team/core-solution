@@ -150,7 +150,7 @@ public class AdminUserService : IAdminUserService
 
         await _users.SaveChanges(cancellationToken);
 
-        _logger.LogInformation($"Администратор изменил статус пользователя");
+        _logger.LogInformation("Администратор изменил статус пользователя {UserId} на {Status}", user.Id, user.Status);
 
         return Result.Success();
     }
