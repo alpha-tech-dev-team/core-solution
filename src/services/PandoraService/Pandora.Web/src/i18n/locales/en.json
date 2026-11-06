@@ -85,5 +85,11 @@
   "secrets_field_username": "Username",
   "secrets_field_password": "Password",
   "secrets_password_keep": "keep unchanged",
-  "app_placeholder": "Interface under construction"
+  "app_placeholder": "Interface under construction",
+  "error_code_accessDenied": "You don't have access to this secret",
+  "error_code_accessNotConfirmed": "Access has not been confirmed yet",
+  "error_code_secretNotFound": "Secret not found",
+  "error_code_invalidSecretData": "Invalid secret data",
+  "error_code_vaultwardenUnavailable": "The secret vault is temporarily unavailable",
+  "error_code_databaseUnavailable": "The database is temporarily unavailable"
 }

@@ -85,5 +85,11 @@
   "secrets_field_username": "Логин",
   "secrets_field_password": "Пароль",
   "secrets_password_keep": "оставить без изменений",
-  "app_placeholder": "Интерфейс в разработке"
+  "app_placeholder": "Интерфейс в разработке",
+  "error_code_accessDenied": "Нет доступа к секрету",
+  "error_code_accessNotConfirmed": "Доступ ещё не подтверждён",
+  "error_code_secretNotFound": "Секрет не найден",
+  "error_code_invalidSecretData": "Некорректные данные секрета",
+  "error_code_vaultwardenUnavailable": "Хранилище секретов временно недоступно",
+  "error_code_databaseUnavailable": "База данных временно недоступна"
 }

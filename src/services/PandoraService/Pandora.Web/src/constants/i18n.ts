@@ -51,3 +51,12 @@ export const EMPLOYEE_FORM_MESSAGES = {
   POSITION: 'employee_error_position',
   PHONE: 'employee_error_phone'
 } as const satisfies Record<string, ResourceKey>
+
+export const SERVER_ERROR_KEYS: Record<string, string> = {
+  AccessDenied: 'error_code_accessDenied',
+  AccessNotConfirmed: 'error_code_accessNotConfirmed',
+  SecretNotFound: 'error_code_secretNotFound',
+  InvalidSecretData: 'error_code_invalidSecretData',
+  VaultwardenUnavailable: 'error_code_vaultwardenUnavailable',
+  DatabaseUnavailable: 'error_code_databaseUnavailable'
+}

@@ -2,10 +2,12 @@ import {
   DEFAULT_LOCALE,
   ERROR_KEY_PREFIX,
   PLACEHOLDER_PATTERN,
+  SERVER_ERROR_KEYS,
   VALIDATION_KEY_PREFIX,
   type Locale,
   type ValidationRule
 } from '@/constants/i18n'
+import { REQUEST_ERROR } from '@/constants/api'
 import ru from './locales/ru.json'
 import en from './locales/en.json'
 
@@ -39,8 +41,13 @@ export function tr(key: ResourceKey, ...params: readonly unknown[]): string {
   return lookup(key, params)
 }
 
-export function trRequestError(code: string): string {
-  return lookup(`${ERROR_KEY_PREFIX}_${code}`)
+export function trRequestError(error: string): string {
+  const serverKey = SERVER_ERROR_KEYS[error]
+  if (serverKey) return lookup(serverKey)
+  if (error !== REQUEST_ERROR.NETWORK && error !== REQUEST_ERROR.UNKNOWN) {
+    return lookup(`${ERROR_KEY_PREFIX}_${REQUEST_ERROR.UNKNOWN}`)
+  }
+  return lookup(`${ERROR_KEY_PREFIX}_${error}`)
 }
 
 export function trStatus(status: string): string {
