@@ -16,6 +16,7 @@ export function useEmployeesPage() {
   const selectedEmployeeId = ref<string | null>(null)
   const isFormOpen = ref(false)
   const isRolesOpen = ref(false)
+  const isSaving = ref(false)
   const formInitial = ref<EmployeeInput | null>(null)
   const editingEmployee = ref<Employee | null>(null)
 
@@ -70,18 +71,25 @@ export function useEmployeesPage() {
   }
 
   async function save(input: EmployeeInput): Promise<void> {
-    errorMessage.value = ''
-    const error = editingEmployee.value === null
-      ? await employeesStore.create(input)
-      : await employeesStore.update(editingEmployee.value, input)
+    if (isSaving.value) return
 
-    if (error !== null) {
-      errorMessage.value = trRequestError(error)
-      return
+    isSaving.value = true
+    try {
+      errorMessage.value = ''
+      const error = editingEmployee.value === null
+        ? await employeesStore.create(input)
+        : await employeesStore.update(editingEmployee.value, input)
+
+      if (error !== null) {
+        errorMessage.value = trRequestError(error)
+        return
+      }
+
+      isFormOpen.value = false
+      editingEmployee.value = null
+    } finally {
+      isSaving.value = false
     }
-
-    isFormOpen.value = false
-    editingEmployee.value = null
   }
 
   function openRoles(): void {
@@ -136,6 +144,7 @@ export function useEmployeesPage() {
     selectedEmployeeId,
     isFormOpen,
     isRolesOpen,
+    isSaving,
     formInitial,
     fullName,
     logout,

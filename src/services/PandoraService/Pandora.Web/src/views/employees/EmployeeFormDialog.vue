@@ -8,6 +8,7 @@ const props = defineProps<{
   open: boolean
   initial: EmployeeInput | null
   error: string
+  saving: boolean
 }>()
 
 const emit = defineEmits<{
@@ -84,7 +85,7 @@ function submit() {
       <p v-if="error" class="dialog__error">{{ error }}</p>
 
       <div class="dialog__actions">
-        <button type="submit" class="dialog__button">{{ tr('employee_save') }}</button>
+        <button type="submit" class="dialog__button" :disabled="saving">{{ tr('employee_save') }}</button>
         <button type="button" class="dialog__button" @click="emit('close')">{{ tr('employee_cancel') }}</button>
       </div>
     </form>

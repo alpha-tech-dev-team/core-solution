@@ -16,6 +16,7 @@ const {
   selectedEmployeeId,
   isFormOpen,
   isRolesOpen,
+  isSaving,
   formInitial,
   fullName,
   logout
@@ -86,7 +87,7 @@ const {
             v-for="employee in employeesStore.employees"
             :key="employee.id"
             tabindex="0"
-            :aria-selected="employee.id === selectedEmployeeId"
+            :aria-current="employee.id === selectedEmployeeId ? 'true' : undefined"
             :class="{ 'employees__row--selected': employee.id === selectedEmployeeId }"
             @click="page.select(employee.id)"
             @keydown.enter.prevent="page.select(employee.id)"
@@ -104,6 +105,7 @@ const {
         :open="isFormOpen"
         :initial="formInitial"
         :error="isFormOpen ? errorMessage : ''"
+        :saving="isSaving"
         @submit="page.save($event)"
         @close="page.closeForm()"
       />
@@ -215,6 +217,11 @@ const {
 
 .employees tbody tr:hover {
   background: var(--color-bg);
+}
+
+.employees tbody tr:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
 }
 
 .employees__row--selected,

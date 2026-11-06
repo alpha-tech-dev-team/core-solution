@@ -1,3 +1,5 @@
+import type { ResourceKey } from '@/i18n'
+
 export const DEFAULT_LOCALE = 'ru'
 export const SUPPORTED_LOCALES = ['ru', 'en'] as const
 
@@ -16,8 +18,6 @@ export const VALIDATION_RULES = {
 } as const
 
 export type ValidationRule = (typeof VALIDATION_RULES)[keyof typeof VALIDATION_RULES]
-
-import type { ResourceKey } from '@/i18n'
 
 export const EMPLOYEE_FORM_MESSAGES = {
   NAME: 'employee_error_name',
