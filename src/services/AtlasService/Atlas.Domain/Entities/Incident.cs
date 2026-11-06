@@ -9,7 +9,7 @@ public sealed class Incident : IHasUpdatedAt
     public long TicketNumber { get; set; }
     public Guid EmployeeId { get; set; }
     public Guid CategoryId { get; set; }
-    public Guid? OfficeId { get; set; }
+    public Guid? CabinetId { get; set; }
     public Guid? HardwareId { get; set; }
     public Guid? SoftwareId { get; set; }
     public string UserDescription { get; set; } = string.Empty;
@@ -25,7 +25,7 @@ public sealed class Incident : IHasUpdatedAt
     public EmployeeAccess Employee { get; set; } = default!;
     public EmployeeAccess? AssignedEngineer { get; set; }
     public IncidentCategory Category { get; set; } = default!;
-    public Office? Office { get; set; }
+    public Cabinet? Cabinet { get; set; }
     public Hardware? Hardware { get; set; }
     public Software? Software { get; set; }
     public KnowledgeArticle? Article { get; set; }

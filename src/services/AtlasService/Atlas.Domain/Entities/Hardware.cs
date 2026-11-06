@@ -9,11 +9,11 @@ public sealed class Hardware : IHasUpdatedAt
     public string Type { get; set; } = string.Empty;
     public string? InventoryNumber { get; set; }
     public string? SerialNumber { get; set; }
-    public Guid? OfficeId { get; set; }
+    public Guid CabinetId { get; set; }
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 
-    public Office? Office { get; set; }
+    public Cabinet? Cabinet { get; set; }
     public ICollection<Incident> Incidents { get; set; } = new List<Incident>();
 }

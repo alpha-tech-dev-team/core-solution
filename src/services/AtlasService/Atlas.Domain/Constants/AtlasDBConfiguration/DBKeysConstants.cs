@@ -41,11 +41,11 @@ public static class DBKeys
         public const string Type = "type";
         public const string InventoryNumber = "inventory_number";
         public const string SerialNumber = "serial_number";
-        public const string OfficeId = "office_id";
+        public const string CabinetId = "cabinet_id";
         public const string PrimaryKey = "hardware_pkey";
         public const string InventoryNumberUniqueIndex = "hardware_inventory_number_key";
-        public const string OfficeTypeIndex = "idx_hardware_office_type";
-        public const string OfficeForeignKey = "hardware_office_id_fkey";
+        public const string CabinetTypeIndex = "idx_hardware_cabinet_type";
+        public const string CabinetForeignKey = "hardware_cabinet_id_fkey";
     }
 
     public static class IncidentCategory
@@ -63,7 +63,7 @@ public static class DBKeys
         public const string TicketNumber = "ticket_number";
         public const string EmployeeId = "employee_id";
         public const string CategoryId = "category_id";
-        public const string OfficeId = "office_id";
+        public const string CabinetId = "cabinet_id";
         public const string HardwareId = "hardware_id";
         public const string SoftwareId = "software_id";
         public const string UserDescription = "user_description";
@@ -102,7 +102,7 @@ public static class DBKeys
         public const string EmployeeForeignKey = "incidents_employee_id_fkey";
         public const string AssignedEngineerForeignKey = "incidents_assigned_engineer_id_fkey";
         public const string CategoryForeignKey = "incidents_category_id_fkey";
-        public const string OfficeForeignKey = "incidents_office_id_fkey";
+        public const string CabinetForeignKey = "incidents_cabinet_id_fkey";
         public const string HardwareForeignKey = "incidents_hardware_id_fkey";
         public const string SoftwareForeignKey = "incidents_software_id_fkey";
         public const string ArticleForeignKey = "fk_incidents_article";
@@ -176,13 +176,13 @@ public static class DBKeys
         public const string ArticleForeignKey = "knowledge_article_vectors_article_id_fkey";
     }
 
-    public static class Office
+    public static class Cabinet
     {
-        public const string Table = "offices";
-        public const string RoomNumber = "room_number";
+        public const string Table = "cabinets";
+        public const string Number = "number";
         public const string Description = "description";
-        public const string PrimaryKey = "offices_pkey";
-        public const string RoomNumberUniqueIndex = "offices_room_number_key";
+        public const string PrimaryKey = "cabinets_pkey";
+        public const string NumberUniqueIndex = "cabinets_number_key";
     }
 
     public static class Software
