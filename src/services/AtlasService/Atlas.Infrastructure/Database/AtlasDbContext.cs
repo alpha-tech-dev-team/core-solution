@@ -1,5 +1,6 @@
 using Atlas.Domain.Constants.AtlasDBConfiguration;
 using Atlas.Domain.Entities;
+using Atlas.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace Atlas.Infrastructure.Database;
@@ -58,6 +59,21 @@ public sealed class AtlasDbContext : DbContext
 
     public AtlasDbContext(DbContextOptions<AtlasDbContext> options) : base(options)
     {
+    }
+
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        var now = DateTime.UtcNow;
+
+        foreach (var entry in ChangeTracker.Entries<IHasUpdatedAt>())
+        {
+            if (entry.State is EntityState.Added or EntityState.Modified)
+            {
+                entry.Entity.UpdatedAt = now;
+            }
+        }
+
+        return base.SaveChangesAsync(cancellationToken);
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
