@@ -24,7 +24,7 @@ public sealed class VaultwardenSecretWriter : ISecretWriter
     public async Task<SecretItem?> Create(string name, string username, string password, CancellationToken cancellationToken)
     {
         var item = BuildItem(null, name, username, password);
-        var response = await SendAsync(HttpMethod.Post, ItemRoute, item, "создании", name, cancellationToken);
+        using var response = await SendAsync(HttpMethod.Post, ItemRoute, item, "создании", name, cancellationToken);
 
         if (response is null)
         {
@@ -68,21 +68,21 @@ public sealed class VaultwardenSecretWriter : ISecretWriter
         }
 
         var item = BuildItem(itemId, name, username, updatedPassword);
-        var response = await SendAsync(HttpMethod.Put, $"{ItemRoute}/{itemId}", item, "обновлении", itemId, cancellationToken);
+        using var response = await SendAsync(HttpMethod.Put, $"{ItemRoute}/{itemId}", item, "обновлении", itemId, cancellationToken);
 
         return response is not null;
     }
 
     public async Task<bool> Delete(string itemId, CancellationToken cancellationToken)
     {
-        var response = await SendAsync(HttpMethod.Delete, $"{ItemRoute}/{itemId}", null, "удалении", itemId, cancellationToken);
+        using var response = await SendAsync(HttpMethod.Delete, $"{ItemRoute}/{itemId}", null, "удалении", itemId, cancellationToken);
 
         return response is not null;
     }
 
     private async Task<VaultwardenItem?> ReadItem(string itemId, CancellationToken cancellationToken)
     {
-        var response = await SendAsync(HttpMethod.Get, $"{ItemRoute}/{itemId}", null, "чтении", itemId, cancellationToken);
+        using var response = await SendAsync(HttpMethod.Get, $"{ItemRoute}/{itemId}", null, "чтении", itemId, cancellationToken);
 
         if (response is null)
         {
