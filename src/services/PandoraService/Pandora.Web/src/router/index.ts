@@ -28,9 +28,11 @@ const router = createRouter({
       path: ROUTES.SECRETS,
       name: ROUTE_NAMES.SECRETS,
       component: SecretsView,
-      beforeEnter: () => {
+      beforeEnter: async () => {
         const authStore = useAuthStore()
-        return authStore.isAuthenticated ? true : ROUTES.LOGIN
+        if (authStore.isAuthenticated) return true
+        const refreshed = await authStore.refreshTokens()
+        return refreshed ? true : ROUTES.LOGIN
       }
     },
     {
