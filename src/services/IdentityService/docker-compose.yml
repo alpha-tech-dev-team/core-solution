@@ -5,14 +5,16 @@ services:
       dockerfile: src/services/IdentityService/Dockerfile
     ports:
       - "5001:8080"
-    env_file: src/services/IdentityService/.env
+    env_file: .env
+    environment:
+      - Jwt__Secret=${JWT_SECRET:?JWT_SECRET is required}
     depends_on:
       identity-db:
         condition: service_healthy
 
   identity-db:
     image: postgres:18-alpine
-    env_file: src/services/IdentityService/.env
+    env_file: .env
     volumes:
       - identity-db-data:/var/lib/postgresql
     healthcheck:

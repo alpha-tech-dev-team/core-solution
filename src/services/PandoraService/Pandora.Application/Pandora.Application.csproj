@@ -7,12 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="11.11.0" />
     <PackageReference Include="MediatR" Version="14.2.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Pandora.Domain\Pandora.Domain.csproj" />
-    <ProjectReference Include="..\..\..\shared\CoreSolution.Shared.Application\CoreSolution.Shared.Application.csproj" />
     <ProjectReference Include="..\..\..\shared\CoreSolution.Shared\CoreSolution.Shared.csproj" />
   </ItemGroup>
 
