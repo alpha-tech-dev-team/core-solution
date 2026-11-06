@@ -13,7 +13,7 @@ public static class ApplicationExtensions
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<SubmitPhoneHandler>());
-        services.AddSingleton(new SessionBehaviorOptions(nameof(WorkflowStep.ProblemCategorySelection), AtlasConstants.ServiceName));
+        services.AddSingleton(new SessionBehaviorOptions(nameof(WorkflowStep.Idle), AtlasConstants.ServiceName));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(SessionBehavior<,>));
         services.AddScoped<IUserErrorMapper, AtlasUserErrorMapper>();
 
