@@ -42,5 +42,36 @@ public sealed class IncidentCategoryConfiguration : IEntityTypeConfiguration<Inc
         builder.HasIndex(x => x.Name)
             .IsUnique()
             .HasDatabaseName(DBKeys.IncidentCategory.NameUniqueIndex);
+
+        builder.HasData(
+            new IncidentCategory
+            {
+                Id = Guid.Parse(DBKeys.IncidentCategory.HardwareId),
+                Name = DBKeys.IncidentCategory.HardwareName,
+                Description = "Hardware incidents",
+                IsActive = true,
+                CreatedAt = SeedTimestamp,
+                UpdatedAt = SeedTimestamp
+            },
+            new IncidentCategory
+            {
+                Id = Guid.Parse(DBKeys.IncidentCategory.SoftwareId),
+                Name = DBKeys.IncidentCategory.SoftwareName,
+                Description = "Software incidents",
+                IsActive = true,
+                CreatedAt = SeedTimestamp,
+                UpdatedAt = SeedTimestamp
+            },
+            new IncidentCategory
+            {
+                Id = Guid.Parse(DBKeys.IncidentCategory.OtherId),
+                Name = DBKeys.IncidentCategory.OtherName,
+                Description = "Other incidents",
+                IsActive = true,
+                CreatedAt = SeedTimestamp,
+                UpdatedAt = SeedTimestamp
+            });
     }
+
+    private static readonly DateTime SeedTimestamp = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 }
