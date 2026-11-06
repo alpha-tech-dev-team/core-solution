@@ -41,3 +41,12 @@ export const VALIDATION_RULES = {
 } as const
 
 export type ValidationRule = (typeof VALIDATION_RULES)[keyof typeof VALIDATION_RULES]
+
+export const SERVER_ERROR_KEYS: Record<string, string> = {
+  AccessDenied: 'error_code_accessDenied',
+  AccessNotConfirmed: 'error_code_accessNotConfirmed',
+  SecretNotFound: 'error_code_secretNotFound',
+  InvalidSecretData: 'error_code_invalidSecretData',
+  VaultwardenUnavailable: 'error_code_vaultwardenUnavailable',
+  DatabaseUnavailable: 'error_code_databaseUnavailable'
+}
