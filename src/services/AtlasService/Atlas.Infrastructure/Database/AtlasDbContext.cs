@@ -7,9 +7,9 @@ namespace Atlas.Infrastructure.Database;
 
 public sealed class AtlasDbContext : DbContext
 {
-    public DbSet<Office> Offices
+    public DbSet<Cabinet> Cabinets
     {
-        get { return Set<Office>(); }
+        get { return Set<Cabinet>(); }
     }
 
     public DbSet<Hardware> Hardware

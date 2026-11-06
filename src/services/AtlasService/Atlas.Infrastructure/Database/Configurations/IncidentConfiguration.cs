@@ -51,8 +51,8 @@ public sealed class IncidentConfiguration : IEntityTypeConfiguration<Incident>
             .HasColumnName(DBKeys.Incident.CategoryId)
             .IsRequired();
 
-        builder.Property(x => x.OfficeId)
-            .HasColumnName(DBKeys.Incident.OfficeId);
+        builder.Property(x => x.CabinetId)
+            .HasColumnName(DBKeys.Incident.CabinetId);
 
         builder.Property(x => x.HardwareId)
             .HasColumnName(DBKeys.Incident.HardwareId);
@@ -133,10 +133,10 @@ public sealed class IncidentConfiguration : IEntityTypeConfiguration<Incident>
             .HasConstraintName(DBKeys.Incident.CategoryForeignKey)
             .OnDelete(DeleteBehavior.NoAction);
 
-        builder.HasOne(x => x.Office)
+        builder.HasOne(x => x.Cabinet)
             .WithMany(x => x.Incidents)
-            .HasForeignKey(x => x.OfficeId)
-            .HasConstraintName(DBKeys.Incident.OfficeForeignKey)
+            .HasForeignKey(x => x.CabinetId)
+            .HasConstraintName(DBKeys.Incident.CabinetForeignKey)
             .OnDelete(DeleteBehavior.NoAction);
 
         builder.HasOne(x => x.Hardware)

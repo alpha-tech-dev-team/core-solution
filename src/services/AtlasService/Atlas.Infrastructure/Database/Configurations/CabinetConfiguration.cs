@@ -5,24 +5,24 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Atlas.Infrastructure.Database.Configurations;
 
-public sealed class OfficeConfiguration : IEntityTypeConfiguration<Office>
+public sealed class CabinetConfiguration : IEntityTypeConfiguration<Cabinet>
 {
-    public void Configure(EntityTypeBuilder<Office> builder)
+    public void Configure(EntityTypeBuilder<Cabinet> builder)
     {
-        builder.ToTable(DBKeys.Office.Table, DBKeys.Shared.Schema);
+        builder.ToTable(DBKeys.Cabinet.Table, DBKeys.Shared.Schema);
 
-        builder.HasKey(x => x.Id).HasName(DBKeys.Office.PrimaryKey);
+        builder.HasKey(x => x.Id).HasName(DBKeys.Cabinet.PrimaryKey);
         builder.Property(x => x.Id)
             .HasColumnName(DBKeys.Shared.Id)
             .HasDefaultValueSql(DBKeys.Shared.GenRandomUuidSql);
 
-        builder.Property(x => x.RoomNumber)
-            .HasColumnName(DBKeys.Office.RoomNumber)
+        builder.Property(x => x.Number)
+            .HasColumnName(DBKeys.Cabinet.Number)
             .HasMaxLength(DBKeys.Shared.MaxLength50)
             .IsRequired();
 
         builder.Property(x => x.Description)
-            .HasColumnName(DBKeys.Office.Description);
+            .HasColumnName(DBKeys.Cabinet.Description);
 
         builder.Property(x => x.IsActive)
             .HasColumnName(DBKeys.Shared.IsActive)
@@ -39,8 +39,8 @@ public sealed class OfficeConfiguration : IEntityTypeConfiguration<Office>
             .HasColumnType(DBKeys.Shared.TimestampWithTimeZone)
             .HasDefaultValueSql(DBKeys.Shared.NowSql);
 
-        builder.HasIndex(x => x.RoomNumber)
+        builder.HasIndex(x => x.Number)
             .IsUnique()
-            .HasDatabaseName(DBKeys.Office.RoomNumberUniqueIndex);
+            .HasDatabaseName(DBKeys.Cabinet.NumberUniqueIndex);
     }
 }

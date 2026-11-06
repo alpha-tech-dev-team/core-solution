@@ -25,6 +25,52 @@ namespace Atlas.Infrastructure.Database.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "vector");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Atlas.Domain.Entities.Cabinet", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("number");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.HasKey("Id")
+                        .HasName("cabinets_pkey");
+
+                    b.HasIndex("Number")
+                        .IsUnique()
+                        .HasDatabaseName("cabinets_number_key");
+
+                    b.ToTable("cabinets", "atlas");
+                });
+
             modelBuilder.Entity("Atlas.Domain.Entities.EmployeeAccess", b =>
                 {
                     b.Property<Guid>("EmployeeId")
@@ -83,6 +129,10 @@ namespace Atlas.Infrastructure.Database.Migrations
                         .HasColumnName("id")
                         .HasDefaultValueSql("gen_random_uuid()");
 
+                    b.Property<Guid>("CabinetId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("cabinet_id");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
@@ -105,10 +155,6 @@ namespace Atlas.Infrastructure.Database.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)")
                         .HasColumnName("name");
-
-                    b.Property<Guid?>("OfficeId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("office_id");
 
                     b.Property<string>("SerialNumber")
                         .HasMaxLength(255)
@@ -134,8 +180,8 @@ namespace Atlas.Infrastructure.Database.Migrations
                         .IsUnique()
                         .HasDatabaseName("hardware_inventory_number_key");
 
-                    b.HasIndex("OfficeId", "Type")
-                        .HasDatabaseName("idx_hardware_office_type");
+                    b.HasIndex("CabinetId", "Type")
+                        .HasDatabaseName("idx_hardware_cabinet_type");
 
                     b.ToTable("hardware", "atlas");
                 });
@@ -156,6 +202,10 @@ namespace Atlas.Infrastructure.Database.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("assigned_engineer_id");
 
+                    b.Property<Guid?>("CabinetId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("cabinet_id");
+
                     b.Property<Guid>("CategoryId")
                         .HasColumnType("uuid")
                         .HasColumnName("category_id");
@@ -173,10 +223,6 @@ namespace Atlas.Infrastructure.Database.Migrations
                     b.Property<Guid?>("HardwareId")
                         .HasColumnType("uuid")
                         .HasColumnName("hardware_id");
-
-                    b.Property<Guid?>("OfficeId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("office_id");
 
                     b.Property<string>("Priority")
                         .IsRequired()
@@ -232,6 +278,8 @@ namespace Atlas.Infrastructure.Database.Migrations
                     b.HasIndex("AssignedEngineerId")
                         .HasDatabaseName("idx_incidents_assigned_engineer");
 
+                    b.HasIndex("CabinetId");
+
                     b.HasIndex("CategoryId")
                         .HasDatabaseName("idx_incidents_category");
 
@@ -242,8 +290,6 @@ namespace Atlas.Infrastructure.Database.Migrations
                         .HasDatabaseName("idx_incidents_employee");
 
                     b.HasIndex("HardwareId");
-
-                    b.HasIndex("OfficeId");
 
                     b.HasIndex("SoftwareId");
 
@@ -520,52 +566,6 @@ namespace Atlas.Infrastructure.Database.Migrations
                     b.ToTable("knowledge_article_vectors", "atlas");
                 });
 
-            modelBuilder.Entity("Atlas.Domain.Entities.Office", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id")
-                        .HasDefaultValueSql("gen_random_uuid()");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at")
-                        .HasDefaultValueSql("now()");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text")
-                        .HasColumnName("description");
-
-                    b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true)
-                        .HasColumnName("is_active");
-
-                    b.Property<string>("RoomNumber")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("room_number");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at")
-                        .HasDefaultValueSql("now()");
-
-                    b.HasKey("Id")
-                        .HasName("offices_pkey");
-
-                    b.HasIndex("RoomNumber")
-                        .IsUnique()
-                        .HasDatabaseName("offices_room_number_key");
-
-                    b.ToTable("offices", "atlas");
-                });
-
             modelBuilder.Entity("Atlas.Domain.Entities.Software", b =>
                 {
                     b.Property<Guid>("Id")
@@ -615,13 +615,14 @@ namespace Atlas.Infrastructure.Database.Migrations
 
             modelBuilder.Entity("Atlas.Domain.Entities.Hardware", b =>
                 {
-                    b.HasOne("Atlas.Domain.Entities.Office", "Office")
+                    b.HasOne("Atlas.Domain.Entities.Cabinet", "Cabinet")
                         .WithMany("Hardware")
-                        .HasForeignKey("OfficeId")
+                        .HasForeignKey("CabinetId")
                         .OnDelete(DeleteBehavior.NoAction)
-                        .HasConstraintName("hardware_office_id_fkey");
+                        .IsRequired()
+                        .HasConstraintName("hardware_cabinet_id_fkey");
 
-                    b.Navigation("Office");
+                    b.Navigation("Cabinet");
                 });
 
             modelBuilder.Entity("Atlas.Domain.Entities.Incident", b =>
@@ -637,6 +638,12 @@ namespace Atlas.Infrastructure.Database.Migrations
                         .HasForeignKey("AssignedEngineerId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .HasConstraintName("incidents_assigned_engineer_id_fkey");
+
+                    b.HasOne("Atlas.Domain.Entities.Cabinet", "Cabinet")
+                        .WithMany("Incidents")
+                        .HasForeignKey("CabinetId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .HasConstraintName("incidents_cabinet_id_fkey");
 
                     b.HasOne("Atlas.Domain.Entities.IncidentCategory", "Category")
                         .WithMany("Incidents")
@@ -658,12 +665,6 @@ namespace Atlas.Infrastructure.Database.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .HasConstraintName("incidents_hardware_id_fkey");
 
-                    b.HasOne("Atlas.Domain.Entities.Office", "Office")
-                        .WithMany("Incidents")
-                        .HasForeignKey("OfficeId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .HasConstraintName("incidents_office_id_fkey");
-
                     b.HasOne("Atlas.Domain.Entities.Software", "Software")
                         .WithMany("Incidents")
                         .HasForeignKey("SoftwareId")
@@ -674,13 +675,13 @@ namespace Atlas.Infrastructure.Database.Migrations
 
                     b.Navigation("AssignedEngineer");
 
+                    b.Navigation("Cabinet");
+
                     b.Navigation("Category");
 
                     b.Navigation("Employee");
 
                     b.Navigation("Hardware");
-
-                    b.Navigation("Office");
 
                     b.Navigation("Software");
                 });
@@ -765,6 +766,13 @@ namespace Atlas.Infrastructure.Database.Migrations
                     b.Navigation("Article");
                 });
 
+            modelBuilder.Entity("Atlas.Domain.Entities.Cabinet", b =>
+                {
+                    b.Navigation("Hardware");
+
+                    b.Navigation("Incidents");
+                });
+
             modelBuilder.Entity("Atlas.Domain.Entities.EmployeeAccess", b =>
                 {
                     b.Navigation("AssignedIncidents");
@@ -800,13 +808,6 @@ namespace Atlas.Infrastructure.Database.Migrations
                     b.Navigation("Feedback");
 
                     b.Navigation("Vector");
-                });
-
-            modelBuilder.Entity("Atlas.Domain.Entities.Office", b =>
-                {
-                    b.Navigation("Hardware");
-
-                    b.Navigation("Incidents");
                 });
 
             modelBuilder.Entity("Atlas.Domain.Entities.Software", b =>

@@ -34,8 +34,9 @@ public sealed class HardwareConfiguration : IEntityTypeConfiguration<Hardware>
             .HasColumnName(DBKeys.Hardware.SerialNumber)
             .HasMaxLength(DBKeys.Shared.MaxLength255);
 
-        builder.Property(x => x.OfficeId)
-            .HasColumnName(DBKeys.Hardware.OfficeId);
+        builder.Property(x => x.CabinetId)
+            .HasColumnName(DBKeys.Hardware.CabinetId)
+            .IsRequired();
 
         builder.Property(x => x.IsActive)
             .HasColumnName(DBKeys.Shared.IsActive)
@@ -56,13 +57,13 @@ public sealed class HardwareConfiguration : IEntityTypeConfiguration<Hardware>
             .IsUnique()
             .HasDatabaseName(DBKeys.Hardware.InventoryNumberUniqueIndex);
 
-        builder.HasIndex(x => new { x.OfficeId, x.Type })
-            .HasDatabaseName(DBKeys.Hardware.OfficeTypeIndex);
+        builder.HasIndex(x => new { x.CabinetId, x.Type })
+            .HasDatabaseName(DBKeys.Hardware.CabinetTypeIndex);
 
-        builder.HasOne(x => x.Office)
+        builder.HasOne(x => x.Cabinet)
             .WithMany(x => x.Hardware)
-            .HasForeignKey(x => x.OfficeId)
-            .HasConstraintName(DBKeys.Hardware.OfficeForeignKey)
+            .HasForeignKey(x => x.CabinetId)
+            .HasConstraintName(DBKeys.Hardware.CabinetForeignKey)
             .OnDelete(DeleteBehavior.NoAction);
     }
 }
