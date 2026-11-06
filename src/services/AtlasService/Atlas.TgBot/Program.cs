@@ -1,4 +1,5 @@
 using Atlas.TgBot;
+using Atlas.TgBot.Extensions;
 using Atlas.TgBot.Extensions.DependencyInjection;
 using CoreSolution.Shared.TgBot.DependencyInjection;
 
@@ -10,5 +11,7 @@ builder.Services.AddApplication();
 builder.Services.AddBotHandlers<AssemblyMarker>();
 
 var app = builder.Build();
+
+await app.ApplyMigrations();
 
 app.Run();
