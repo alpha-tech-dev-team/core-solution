@@ -9,13 +9,25 @@ public static class ResultHttpExtensions
     {
         return result.IsSuccess
             ? Results.Ok()
-            : Results.StatusCode(PandoraErrorStatusCodes.Get(result.ErrorCode));
+            : ToProblem(result.ErrorCode);
     }
 
     public static IResult ToHttpResult<T>(this Result<T> result)
     {
         return result.IsSuccess
             ? Results.Ok(result.Value)
-            : Results.StatusCode(PandoraErrorStatusCodes.Get(result.ErrorCode));
+            : ToProblem(result.ErrorCode);
+    }
+
+    private static IResult ToProblem(string? errorCode)
+    {
+        var statusCode = PandoraErrorStatusCodes.Get(errorCode);
+
+        return Results.Problem(
+            statusCode: statusCode,
+            extensions: new Dictionary<string, object?>
+            {
+                [ProblemFields.Code] = errorCode ?? ProblemFields.InternalError
+            });
     }
 }
