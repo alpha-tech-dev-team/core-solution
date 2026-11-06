@@ -46,17 +46,17 @@ public sealed class VaultwardenSecretWriter : ISecretWriter
 
     public async Task<SecretUpdateResult> Update(string itemId, string name, string username, string? password, CancellationToken cancellationToken)
     {
+        var current = await ReadItem(itemId, cancellationToken);
+
+        if (current is null)
+        {
+            return SecretUpdateResult.GatewayError;
+        }
+
         var updatedPassword = password;
 
         if (updatedPassword is null)
         {
-            var current = await ReadItem(itemId, cancellationToken);
-
-            if (current is null)
-            {
-                return SecretUpdateResult.GatewayError;
-            }
-
             updatedPassword = current.Login?.Password;
 
             if (string.IsNullOrWhiteSpace(updatedPassword))
@@ -67,7 +67,7 @@ public sealed class VaultwardenSecretWriter : ISecretWriter
             }
         }
 
-        var item = BuildItem(itemId, name, username, updatedPassword);
+        var item = BuildUpdateItem(current, name, username, updatedPassword);
         using var response = await SendAsync(HttpMethod.Put, $"{ItemRoute}/{itemId}", item, "обновлении", itemId, cancellationToken);
 
         return response is not null ? SecretUpdateResult.Success : SecretUpdateResult.GatewayError;
@@ -145,9 +145,41 @@ public sealed class VaultwardenSecretWriter : ISecretWriter
         };
     }
 
+    private static VaultwardenItemRequest BuildUpdateItem(VaultwardenItem current, string name, string username, string password)
+    {
+        return new VaultwardenItemRequest
+        {
+            Id = current.Id,
+            OrganizationId = current.OrganizationId,
+            Type = LoginItemType,
+            Name = name,
+            Notes = current.Notes,
+            Favorite = current.Favorite,
+            Reprompt = current.Reprompt,
+            Login = new VaultwardenLoginRequest
+            {
+                Username = username,
+                Password = password,
+                SecurityAnswers = current.Login?.SecurityAnswers ?? new(),
+                Uris = current.Login?.Uris ?? new()
+            },
+            CollectionIds = current.CollectionIds ?? new()
+        };
+    }
+
     private sealed record VaultwardenResponse<T>(T? Data);
-    private sealed record VaultwardenItem(string? Id, string? Name, VaultwardenLogin? Login);
-    private sealed record VaultwardenLogin(string? Username, string? Password);
+
+    private sealed record VaultwardenItem(
+        string? Id,
+        string? Name,
+        string? OrganizationId,
+        VaultwardenLogin? Login,
+        List<string>? CollectionIds,
+        bool Favorite,
+        int Reprompt,
+        string? Notes);
+
+    private sealed record VaultwardenLogin(string? Username, string? Password, List<string>? SecurityAnswers, List<string>? Uris);
 
     private sealed class VaultwardenItemRequest
     {
