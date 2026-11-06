@@ -1,3 +1,4 @@
+using Atlas.Domain.Constants.AtlasDBConfiguration;
 using Atlas.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -8,87 +9,87 @@ public sealed class KnowledgeArticleConfiguration : IEntityTypeConfiguration<Kno
 {
     public void Configure(EntityTypeBuilder<KnowledgeArticle> builder)
     {
-        builder.ToTable("knowledge_articles", "atlas", table =>
+        builder.ToTable(DBKeys.KnowledgeArticle.Table, DBKeys.Shared.Schema, table =>
         {
             table.HasCheckConstraint(
-                "chk_article_status",
-                "status IN ('draft', 'published', 'archived')");
+                DBKeys.KnowledgeArticle.StatusCheckConstraint,
+                DBKeys.KnowledgeArticle.StatusCheckSql);
             table.HasCheckConstraint(
-                "chk_article_title",
-                "length(trim(title)) > 0");
+                DBKeys.KnowledgeArticle.TitleCheckConstraint,
+                DBKeys.KnowledgeArticle.TitleCheckSql);
             table.HasCheckConstraint(
-                "chk_article_solution",
-                "length(trim(solution)) > 0");
+                DBKeys.KnowledgeArticle.SolutionCheckConstraint,
+                DBKeys.KnowledgeArticle.SolutionCheckSql);
         });
 
-        builder.HasKey(x => x.Id).HasName("knowledge_articles_pkey");
+        builder.HasKey(x => x.Id).HasName(DBKeys.KnowledgeArticle.PrimaryKey);
         builder.Property(x => x.Id)
-            .HasColumnName("id")
-            .HasDefaultValueSql("gen_random_uuid()");
+            .HasColumnName(DBKeys.Shared.Id)
+            .HasDefaultValueSql(DBKeys.Shared.GenRandomUuidSql);
 
         builder.Property(x => x.CategoryId)
-            .HasColumnName("category_id");
+            .HasColumnName(DBKeys.KnowledgeArticle.CategoryId);
 
         builder.Property(x => x.Title)
-            .HasColumnName("title")
-            .HasMaxLength(255)
+            .HasColumnName(DBKeys.KnowledgeArticle.Title)
+            .HasMaxLength(DBKeys.Shared.MaxLength255)
             .IsRequired();
 
         builder.Property(x => x.Symptoms)
-            .HasColumnName("symptoms");
+            .HasColumnName(DBKeys.KnowledgeArticle.Symptoms);
 
         builder.Property(x => x.Solution)
-            .HasColumnName("solution")
+            .HasColumnName(DBKeys.KnowledgeArticle.Solution)
             .IsRequired();
 
         builder.Property(x => x.Status)
-            .HasColumnName("status")
-            .HasMaxLength(20)
-            .HasDefaultValue("draft")
+            .HasColumnName(DBKeys.KnowledgeArticle.Status)
+            .HasMaxLength(DBKeys.Shared.MaxLength20)
+            .HasDefaultValue(DBKeys.KnowledgeArticle.StatusDefaultValue)
             .IsRequired();
 
         builder.Property(x => x.CreatedBy)
-            .HasColumnName("created_by");
+            .HasColumnName(DBKeys.KnowledgeArticle.CreatedBy);
 
         builder.Property(x => x.SourceIncidentId)
-            .HasColumnName("source_incident_id");
+            .HasColumnName(DBKeys.KnowledgeArticle.SourceIncidentId);
 
         builder.Property(x => x.CreatedAt)
-            .HasColumnName("created_at")
-            .HasColumnType("timestamp with time zone")
-            .HasDefaultValueSql("now()");
+            .HasColumnName(DBKeys.Shared.CreatedAt)
+            .HasColumnType(DBKeys.Shared.TimestampWithTimeZone)
+            .HasDefaultValueSql(DBKeys.Shared.NowSql);
 
         builder.Property(x => x.UpdatedAt)
-            .HasColumnName("updated_at")
-            .HasColumnType("timestamp with time zone")
-            .HasDefaultValueSql("now()");
+            .HasColumnName(DBKeys.Shared.UpdatedAt)
+            .HasColumnType(DBKeys.Shared.TimestampWithTimeZone)
+            .HasDefaultValueSql(DBKeys.Shared.NowSql);
 
         builder.HasIndex(x => x.CategoryId)
-            .HasDatabaseName("idx_knowledge_articles_category");
+            .HasDatabaseName(DBKeys.KnowledgeArticle.CategoryIndex);
 
         builder.HasIndex(x => x.Status)
-            .HasDatabaseName("idx_knowledge_articles_status");
+            .HasDatabaseName(DBKeys.KnowledgeArticle.StatusIndex);
 
         builder.HasIndex(x => x.SourceIncidentId)
             .IsUnique()
-            .HasDatabaseName("knowledge_articles_source_incident_id_key");
+            .HasDatabaseName(DBKeys.KnowledgeArticle.SourceIncidentUniqueIndex);
 
         builder.HasOne(x => x.Category)
             .WithMany(x => x.Articles)
             .HasForeignKey(x => x.CategoryId)
-            .HasConstraintName("knowledge_articles_category_id_fkey")
+            .HasConstraintName(DBKeys.KnowledgeArticle.CategoryForeignKey)
             .OnDelete(DeleteBehavior.NoAction);
 
         builder.HasOne(x => x.CreatedByEmployee)
             .WithMany(x => x.CreatedArticles)
             .HasForeignKey(x => x.CreatedBy)
-            .HasConstraintName("knowledge_articles_created_by_fkey")
+            .HasConstraintName(DBKeys.KnowledgeArticle.CreatedByForeignKey)
             .OnDelete(DeleteBehavior.NoAction);
 
         builder.HasOne(x => x.SourceIncident)
             .WithMany()
             .HasForeignKey(x => x.SourceIncidentId)
-            .HasConstraintName("knowledge_articles_source_incident_id_fkey")
+            .HasConstraintName(DBKeys.KnowledgeArticle.SourceIncidentForeignKey)
             .OnDelete(DeleteBehavior.SetNull);
     }
 }

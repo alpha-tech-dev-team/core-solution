@@ -1,3 +1,4 @@
+using Atlas.Domain.Constants.AtlasDBConfiguration;
 using Atlas.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -8,38 +9,38 @@ public sealed class SoftwareConfiguration : IEntityTypeConfiguration<Software>
 {
     public void Configure(EntityTypeBuilder<Software> builder)
     {
-        builder.ToTable("software", "atlas");
+        builder.ToTable(DBKeys.Software.Table, DBKeys.Shared.Schema);
 
-        builder.HasKey(x => x.Id).HasName("software_pkey");
+        builder.HasKey(x => x.Id).HasName(DBKeys.Software.PrimaryKey);
         builder.Property(x => x.Id)
-            .HasColumnName("id")
-            .HasDefaultValueSql("gen_random_uuid()");
+            .HasColumnName(DBKeys.Shared.Id)
+            .HasDefaultValueSql(DBKeys.Shared.GenRandomUuidSql);
 
         builder.Property(x => x.Name)
-            .HasColumnName("name")
-            .HasMaxLength(255)
+            .HasColumnName(DBKeys.Software.Name)
+            .HasMaxLength(DBKeys.Shared.MaxLength255)
             .IsRequired();
 
         builder.Property(x => x.Version)
-            .HasColumnName("version")
-            .HasMaxLength(100);
+            .HasColumnName(DBKeys.Software.Version)
+            .HasMaxLength(DBKeys.Shared.MaxLength100);
 
         builder.Property(x => x.IsActive)
-            .HasColumnName("is_active")
+            .HasColumnName(DBKeys.Shared.IsActive)
             .HasDefaultValue(true);
 
         builder.Property(x => x.CreatedAt)
-            .HasColumnName("created_at")
-            .HasColumnType("timestamp with time zone")
-            .HasDefaultValueSql("now()");
+            .HasColumnName(DBKeys.Shared.CreatedAt)
+            .HasColumnType(DBKeys.Shared.TimestampWithTimeZone)
+            .HasDefaultValueSql(DBKeys.Shared.NowSql);
 
         builder.Property(x => x.UpdatedAt)
-            .HasColumnName("updated_at")
-            .HasColumnType("timestamp with time zone")
-            .HasDefaultValueSql("now()");
+            .HasColumnName(DBKeys.Shared.UpdatedAt)
+            .HasColumnType(DBKeys.Shared.TimestampWithTimeZone)
+            .HasDefaultValueSql(DBKeys.Shared.NowSql);
 
         builder.HasIndex(x => new { x.Name, x.Version })
             .IsUnique()
-            .HasDatabaseName("uq_software_name_version");
+            .HasDatabaseName(DBKeys.Software.NameVersionUniqueIndex);
     }
 }

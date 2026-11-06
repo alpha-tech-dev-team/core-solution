@@ -1,3 +1,4 @@
+using Atlas.Domain.Constants.AtlasDBConfiguration;
 using Atlas.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -8,59 +9,59 @@ public sealed class HardwareConfiguration : IEntityTypeConfiguration<Hardware>
 {
     public void Configure(EntityTypeBuilder<Hardware> builder)
     {
-        builder.ToTable("hardware", "atlas");
+        builder.ToTable(DBKeys.Hardware.Table, DBKeys.Shared.Schema);
 
-        builder.HasKey(x => x.Id).HasName("hardware_pkey");
+        builder.HasKey(x => x.Id).HasName(DBKeys.Hardware.PrimaryKey);
         builder.Property(x => x.Id)
-            .HasColumnName("id")
-            .HasDefaultValueSql("gen_random_uuid()");
+            .HasColumnName(DBKeys.Shared.Id)
+            .HasDefaultValueSql(DBKeys.Shared.GenRandomUuidSql);
 
         builder.Property(x => x.Name)
-            .HasColumnName("name")
-            .HasMaxLength(255)
+            .HasColumnName(DBKeys.Hardware.Name)
+            .HasMaxLength(DBKeys.Shared.MaxLength255)
             .IsRequired();
 
         builder.Property(x => x.Type)
-            .HasColumnName("type")
-            .HasMaxLength(100)
+            .HasColumnName(DBKeys.Hardware.Type)
+            .HasMaxLength(DBKeys.Shared.MaxLength100)
             .IsRequired();
 
         builder.Property(x => x.InventoryNumber)
-            .HasColumnName("inventory_number")
-            .HasMaxLength(100);
+            .HasColumnName(DBKeys.Hardware.InventoryNumber)
+            .HasMaxLength(DBKeys.Shared.MaxLength100);
 
         builder.Property(x => x.SerialNumber)
-            .HasColumnName("serial_number")
-            .HasMaxLength(255);
+            .HasColumnName(DBKeys.Hardware.SerialNumber)
+            .HasMaxLength(DBKeys.Shared.MaxLength255);
 
         builder.Property(x => x.OfficeId)
-            .HasColumnName("office_id");
+            .HasColumnName(DBKeys.Hardware.OfficeId);
 
         builder.Property(x => x.IsActive)
-            .HasColumnName("is_active")
+            .HasColumnName(DBKeys.Shared.IsActive)
             .HasDefaultValue(true);
 
         builder.Property(x => x.CreatedAt)
-            .HasColumnName("created_at")
-            .HasColumnType("timestamp with time zone")
-            .HasDefaultValueSql("now()");
+            .HasColumnName(DBKeys.Shared.CreatedAt)
+            .HasColumnType(DBKeys.Shared.TimestampWithTimeZone)
+            .HasDefaultValueSql(DBKeys.Shared.NowSql);
 
         builder.Property(x => x.UpdatedAt)
-            .HasColumnName("updated_at")
-            .HasColumnType("timestamp with time zone")
-            .HasDefaultValueSql("now()");
+            .HasColumnName(DBKeys.Shared.UpdatedAt)
+            .HasColumnType(DBKeys.Shared.TimestampWithTimeZone)
+            .HasDefaultValueSql(DBKeys.Shared.NowSql);
 
         builder.HasIndex(x => x.InventoryNumber)
             .IsUnique()
-            .HasDatabaseName("hardware_inventory_number_key");
+            .HasDatabaseName(DBKeys.Hardware.InventoryNumberUniqueIndex);
 
         builder.HasIndex(x => new { x.OfficeId, x.Type })
-            .HasDatabaseName("idx_hardware_office_type");
+            .HasDatabaseName(DBKeys.Hardware.OfficeTypeIndex);
 
         builder.HasOne(x => x.Office)
             .WithMany(x => x.Hardware)
             .HasForeignKey(x => x.OfficeId)
-            .HasConstraintName("hardware_office_id_fkey")
+            .HasConstraintName(DBKeys.Hardware.OfficeForeignKey)
             .OnDelete(DeleteBehavior.NoAction);
     }
 }

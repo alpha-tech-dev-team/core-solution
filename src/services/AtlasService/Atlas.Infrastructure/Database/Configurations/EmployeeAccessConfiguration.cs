@@ -1,3 +1,4 @@
+using Atlas.Domain.Constants.AtlasDBConfiguration;
 using Atlas.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -8,40 +9,40 @@ public sealed class EmployeeAccessConfiguration : IEntityTypeConfiguration<Emplo
 {
     public void Configure(EntityTypeBuilder<EmployeeAccess> builder)
     {
-        builder.ToTable("employee_access", "atlas", table =>
+        builder.ToTable(DBKeys.EmployeeAccess.Table, DBKeys.Shared.Schema, table =>
             table.HasCheckConstraint(
-                "chk_employee_access_role",
-                "role IN ('employee', 'engineer', 'admin')"));
+                DBKeys.EmployeeAccess.RoleCheckConstraint,
+                DBKeys.EmployeeAccess.RoleCheckSql));
 
-        builder.HasKey(x => x.EmployeeId).HasName("employee_access_pkey");
+        builder.HasKey(x => x.EmployeeId).HasName(DBKeys.EmployeeAccess.PrimaryKey);
         builder.Property(x => x.EmployeeId)
-            .HasColumnName("employee_id");
+            .HasColumnName(DBKeys.EmployeeAccess.EmployeeId);
 
         builder.Property(x => x.TelegramId)
-            .HasColumnName("telegram_id");
+            .HasColumnName(DBKeys.EmployeeAccess.TelegramId);
 
         builder.Property(x => x.Role)
-            .HasColumnName("role")
-            .HasMaxLength(20)
-            .HasDefaultValue("employee")
+            .HasColumnName(DBKeys.EmployeeAccess.Role)
+            .HasMaxLength(DBKeys.Shared.MaxLength20)
+            .HasDefaultValue(DBKeys.EmployeeAccess.RoleDefaultValue)
             .IsRequired();
 
         builder.Property(x => x.IsActive)
-            .HasColumnName("is_active")
+            .HasColumnName(DBKeys.Shared.IsActive)
             .HasDefaultValue(true);
 
         builder.Property(x => x.CreatedAt)
-            .HasColumnName("created_at")
-            .HasColumnType("timestamp with time zone")
-            .HasDefaultValueSql("now()");
+            .HasColumnName(DBKeys.Shared.CreatedAt)
+            .HasColumnType(DBKeys.Shared.TimestampWithTimeZone)
+            .HasDefaultValueSql(DBKeys.Shared.NowSql);
 
         builder.Property(x => x.UpdatedAt)
-            .HasColumnName("updated_at")
-            .HasColumnType("timestamp with time zone")
-            .HasDefaultValueSql("now()");
+            .HasColumnName(DBKeys.Shared.UpdatedAt)
+            .HasColumnType(DBKeys.Shared.TimestampWithTimeZone)
+            .HasDefaultValueSql(DBKeys.Shared.NowSql);
 
         builder.HasIndex(x => x.TelegramId)
             .IsUnique()
-            .HasDatabaseName("employee_access_telegram_id_key");
+            .HasDatabaseName(DBKeys.EmployeeAccess.TelegramIdUniqueIndex);
     }
 }

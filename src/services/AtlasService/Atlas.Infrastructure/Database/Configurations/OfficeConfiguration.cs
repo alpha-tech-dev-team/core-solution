@@ -1,3 +1,4 @@
+using Atlas.Domain.Constants.AtlasDBConfiguration;
 using Atlas.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -8,37 +9,37 @@ public sealed class OfficeConfiguration : IEntityTypeConfiguration<Office>
 {
     public void Configure(EntityTypeBuilder<Office> builder)
     {
-        builder.ToTable("offices", "atlas");
+        builder.ToTable(DBKeys.Office.Table, DBKeys.Shared.Schema);
 
-        builder.HasKey(x => x.Id).HasName("offices_pkey");
+        builder.HasKey(x => x.Id).HasName(DBKeys.Office.PrimaryKey);
         builder.Property(x => x.Id)
-            .HasColumnName("id")
-            .HasDefaultValueSql("gen_random_uuid()");
+            .HasColumnName(DBKeys.Shared.Id)
+            .HasDefaultValueSql(DBKeys.Shared.GenRandomUuidSql);
 
         builder.Property(x => x.RoomNumber)
-            .HasColumnName("room_number")
-            .HasMaxLength(50)
+            .HasColumnName(DBKeys.Office.RoomNumber)
+            .HasMaxLength(DBKeys.Shared.MaxLength50)
             .IsRequired();
 
         builder.Property(x => x.Description)
-            .HasColumnName("description");
+            .HasColumnName(DBKeys.Office.Description);
 
         builder.Property(x => x.IsActive)
-            .HasColumnName("is_active")
+            .HasColumnName(DBKeys.Shared.IsActive)
             .HasDefaultValue(true);
 
         builder.Property(x => x.CreatedAt)
-            .HasColumnName("created_at")
-            .HasColumnType("timestamp with time zone")
-            .HasDefaultValueSql("now()");
+            .HasColumnName(DBKeys.Shared.CreatedAt)
+            .HasColumnType(DBKeys.Shared.TimestampWithTimeZone)
+            .HasDefaultValueSql(DBKeys.Shared.NowSql);
 
         builder.Property(x => x.UpdatedAt)
-            .HasColumnName("updated_at")
-            .HasColumnType("timestamp with time zone")
-            .HasDefaultValueSql("now()");
+            .HasColumnName(DBKeys.Shared.UpdatedAt)
+            .HasColumnType(DBKeys.Shared.TimestampWithTimeZone)
+            .HasDefaultValueSql(DBKeys.Shared.NowSql);
 
         builder.HasIndex(x => x.RoomNumber)
             .IsUnique()
-            .HasDatabaseName("offices_room_number_key");
+            .HasDatabaseName(DBKeys.Office.RoomNumberUniqueIndex);
     }
 }

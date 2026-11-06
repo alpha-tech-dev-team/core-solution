@@ -1,3 +1,4 @@
+using Atlas.Domain.Constants.AtlasDBConfiguration;
 using Atlas.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -8,47 +9,47 @@ public sealed class IncidentFeedbackConfiguration : IEntityTypeConfiguration<Inc
 {
     public void Configure(EntityTypeBuilder<IncidentFeedback> builder)
     {
-        builder.ToTable("incident_feedback", "atlas");
+        builder.ToTable(DBKeys.IncidentFeedback.Table, DBKeys.Shared.Schema);
 
-        builder.HasKey(x => x.Id).HasName("incident_feedback_pkey");
+        builder.HasKey(x => x.Id).HasName(DBKeys.IncidentFeedback.PrimaryKey);
         builder.Property(x => x.Id)
-            .HasColumnName("id")
-            .HasDefaultValueSql("gen_random_uuid()");
+            .HasColumnName(DBKeys.Shared.Id)
+            .HasDefaultValueSql(DBKeys.Shared.GenRandomUuidSql);
 
         builder.Property(x => x.IncidentId)
-            .HasColumnName("incident_id")
+            .HasColumnName(DBKeys.IncidentFeedback.IncidentId)
             .IsRequired();
 
         builder.Property(x => x.ArticleId)
-            .HasColumnName("article_id")
+            .HasColumnName(DBKeys.IncidentFeedback.ArticleId)
             .IsRequired();
 
         builder.Property(x => x.WasHelpful)
-            .HasColumnName("was_helpful")
+            .HasColumnName(DBKeys.IncidentFeedback.WasHelpful)
             .IsRequired();
 
         builder.Property(x => x.CreatedAt)
-            .HasColumnName("created_at")
-            .HasColumnType("timestamp with time zone")
-            .HasDefaultValueSql("now()");
+            .HasColumnName(DBKeys.Shared.CreatedAt)
+            .HasColumnType(DBKeys.Shared.TimestampWithTimeZone)
+            .HasDefaultValueSql(DBKeys.Shared.NowSql);
 
         builder.HasIndex(x => new { x.IncidentId, x.ArticleId })
             .IsUnique()
-            .HasDatabaseName("uq_incident_feedback");
+            .HasDatabaseName(DBKeys.IncidentFeedback.IncidentArticleUniqueIndex);
 
         builder.HasIndex(x => x.ArticleId)
-            .HasDatabaseName("idx_incident_feedback_article");
+            .HasDatabaseName(DBKeys.IncidentFeedback.ArticleIndex);
 
         builder.HasOne(x => x.Incident)
             .WithMany(x => x.Feedback)
             .HasForeignKey(x => x.IncidentId)
-            .HasConstraintName("incident_feedback_incident_id_fkey")
+            .HasConstraintName(DBKeys.IncidentFeedback.IncidentForeignKey)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(x => x.Article)
             .WithMany(x => x.Feedback)
             .HasForeignKey(x => x.ArticleId)
-            .HasConstraintName("incident_feedback_article_id_fkey")
+            .HasConstraintName(DBKeys.IncidentFeedback.ArticleForeignKey)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

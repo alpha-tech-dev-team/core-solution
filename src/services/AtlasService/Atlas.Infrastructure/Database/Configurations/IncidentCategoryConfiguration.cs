@@ -1,3 +1,4 @@
+using Atlas.Domain.Constants.AtlasDBConfiguration;
 using Atlas.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -8,37 +9,37 @@ public sealed class IncidentCategoryConfiguration : IEntityTypeConfiguration<Inc
 {
     public void Configure(EntityTypeBuilder<IncidentCategory> builder)
     {
-        builder.ToTable("incident_categories", "atlas");
+        builder.ToTable(DBKeys.IncidentCategory.Table, DBKeys.Shared.Schema);
 
-        builder.HasKey(x => x.Id).HasName("incident_categories_pkey");
+        builder.HasKey(x => x.Id).HasName(DBKeys.IncidentCategory.PrimaryKey);
         builder.Property(x => x.Id)
-            .HasColumnName("id")
-            .HasDefaultValueSql("gen_random_uuid()");
+            .HasColumnName(DBKeys.Shared.Id)
+            .HasDefaultValueSql(DBKeys.Shared.GenRandomUuidSql);
 
         builder.Property(x => x.Name)
-            .HasColumnName("name")
-            .HasMaxLength(100)
+            .HasColumnName(DBKeys.IncidentCategory.Name)
+            .HasMaxLength(DBKeys.Shared.MaxLength100)
             .IsRequired();
 
         builder.Property(x => x.Description)
-            .HasColumnName("description");
+            .HasColumnName(DBKeys.IncidentCategory.Description);
 
         builder.Property(x => x.IsActive)
-            .HasColumnName("is_active")
+            .HasColumnName(DBKeys.Shared.IsActive)
             .HasDefaultValue(true);
 
         builder.Property(x => x.CreatedAt)
-            .HasColumnName("created_at")
-            .HasColumnType("timestamp with time zone")
-            .HasDefaultValueSql("now()");
+            .HasColumnName(DBKeys.Shared.CreatedAt)
+            .HasColumnType(DBKeys.Shared.TimestampWithTimeZone)
+            .HasDefaultValueSql(DBKeys.Shared.NowSql);
 
         builder.Property(x => x.UpdatedAt)
-            .HasColumnName("updated_at")
-            .HasColumnType("timestamp with time zone")
-            .HasDefaultValueSql("now()");
+            .HasColumnName(DBKeys.Shared.UpdatedAt)
+            .HasColumnType(DBKeys.Shared.TimestampWithTimeZone)
+            .HasDefaultValueSql(DBKeys.Shared.NowSql);
 
         builder.HasIndex(x => x.Name)
             .IsUnique()
-            .HasDatabaseName("incident_categories_name_key");
+            .HasDatabaseName(DBKeys.IncidentCategory.NameUniqueIndex);
     }
 }
