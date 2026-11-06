@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Identity.Application.Services;
 
-public partial class AdminUserService : IAdminUserService
+public class AdminUserService : IAdminUserService
 {
     private readonly IUserRepository _users;
     private readonly ILogger<AdminUserService> _logger;
@@ -30,6 +30,70 @@ public partial class AdminUserService : IAdminUserService
         var roles = await _users.GetAllRoles(cancellationToken);
 
         return roles.Select(x => x.Name).ToArray();
+    }
+
+    public async Task<Result> CreateUser(EmployeeData data, CancellationToken cancellationToken = default)
+    {
+        var existing = await _users.GetByPhone(data.Phone, cancellationToken);
+        if (existing is not null)
+        {
+            _logger.LogWarning("Добавление сотрудника отклонено: телефон уже занят");
+            return Result.Failure(nameof(IdentityErrorCode.PhoneAlreadyExists));
+        }
+
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Name = data.Name,
+            Surname = data.Surname,
+            Patronymic = data.Patronymic,
+            Position = data.Position,
+            Phone = data.Phone,
+            Status = UserStatus.Pending,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        user.UpdatedById = user.Id;
+
+        _users.Add(user);
+        await _users.SaveChanges(cancellationToken);
+
+        _logger.LogInformation("Администратор добавил сотрудника");
+
+        return Result.Success();
+    }
+
+    public async Task<Result> UpdateUser(Guid userId, EmployeeData data, CancellationToken cancellationToken = default)
+    {
+        var user = await _users.GetById(userId, cancellationToken);
+        if (user is null)
+        {
+            _logger.LogWarning("Изменение сотрудника отклонено: пользователь не найден");
+            return Result.Failure(nameof(IdentityErrorCode.UserNotFound));
+        }
+
+        if (!string.Equals(user.Phone, data.Phone, StringComparison.Ordinal))
+        {
+            var existing = await _users.GetByPhone(data.Phone, cancellationToken);
+            if (existing is not null)
+            {
+                _logger.LogWarning("Изменение сотрудника отклонено: телефон уже занят");
+                return Result.Failure(nameof(IdentityErrorCode.PhoneAlreadyExists));
+            }
+        }
+
+        user.Name = data.Name;
+        user.Surname = data.Surname;
+        user.Patronymic = data.Patronymic;
+        user.Position = data.Position;
+        user.Phone = data.Phone;
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _users.SaveChanges(cancellationToken);
+
+        _logger.LogInformation("Администратор изменил данные сотрудника");
+
+        return Result.Success();
     }
 
     public async Task<Result> AssignRoles(Guid userId, string[] roles, CancellationToken cancellationToken = default)
@@ -79,16 +143,15 @@ public partial class AdminUserService : IAdminUserService
             return Result.Failure(nameof(IdentityErrorCode.UserNotFound));
         }
 
-        user.Status = status;
+        user.Status = status == UserStatus.Active && user.TelegramUserId is null
+            ? UserStatus.Pending
+            : status;
         user.UpdatedAt = DateTime.UtcNow;
 
         await _users.SaveChanges(cancellationToken);
 
-        LogStatusChanged(_logger, status);
+        _logger.LogInformation($"Администратор изменил статус пользователя");
 
         return Result.Success();
     }
-
-    [LoggerMessage(EventId = 1, Level = LogLevel.Information, Message = "Администратор изменил статус пользователя на {Status}")]
-    private static partial void LogStatusChanged(ILogger logger, UserStatus status);
 }
