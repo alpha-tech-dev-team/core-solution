@@ -2,7 +2,7 @@ using FluentValidation;
 using Identity.Application.Constants;
 using Identity.Application.Contracts.Client;
 
-namespace Identity.Application.Validators;
+namespace Identity.Application.Validators.Client;
 
 public class CheckUserRequestValidator : AbstractValidator<CheckUserRequest>
 {

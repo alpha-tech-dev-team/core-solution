@@ -2,7 +2,7 @@ using FluentValidation;
 using Identity.Application.Constants;
 using Identity.Application.Contracts.Admin;
 
-namespace Identity.Application.Validators;
+namespace Identity.Application.Validators.Admin;
 
 public class SetUserRolesRequestValidator : AbstractValidator<SetUserRolesRequest>
 {
