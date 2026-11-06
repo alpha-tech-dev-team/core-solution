@@ -1,3 +1,4 @@
+using Atlas.Domain.Constants.AtlasDBConfiguration;
 using Atlas.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -8,51 +9,51 @@ public sealed class IncidentStatusHistoryConfiguration : IEntityTypeConfiguratio
 {
     public void Configure(EntityTypeBuilder<IncidentStatusHistory> builder)
     {
-        builder.ToTable("incident_status_history", "atlas");
+        builder.ToTable(DBKeys.IncidentStatusHistory.Table, DBKeys.Shared.Schema);
 
-        builder.HasKey(x => x.Id).HasName("incident_status_history_pkey");
+        builder.HasKey(x => x.Id).HasName(DBKeys.IncidentStatusHistory.PrimaryKey);
         builder.Property(x => x.Id)
-            .HasColumnName("id")
+            .HasColumnName(DBKeys.Shared.Id)
             .ValueGeneratedOnAdd()
             .UseIdentityAlwaysColumn();
 
         builder.Property(x => x.IncidentId)
-            .HasColumnName("incident_id")
+            .HasColumnName(DBKeys.IncidentStatusHistory.IncidentId)
             .IsRequired();
 
         builder.Property(x => x.OldStatus)
-            .HasColumnName("old_status")
-            .HasMaxLength(30);
+            .HasColumnName(DBKeys.IncidentStatusHistory.OldStatus)
+            .HasMaxLength(DBKeys.Shared.MaxLength30);
 
         builder.Property(x => x.NewStatus)
-            .HasColumnName("new_status")
-            .HasMaxLength(30)
+            .HasColumnName(DBKeys.IncidentStatusHistory.NewStatus)
+            .HasMaxLength(DBKeys.Shared.MaxLength30)
             .IsRequired();
 
         builder.Property(x => x.ChangedBy)
-            .HasColumnName("changed_by");
+            .HasColumnName(DBKeys.IncidentStatusHistory.ChangedBy);
 
         builder.Property(x => x.Comment)
-            .HasColumnName("comment");
+            .HasColumnName(DBKeys.IncidentStatusHistory.Comment);
 
         builder.Property(x => x.CreatedAt)
-            .HasColumnName("created_at")
-            .HasColumnType("timestamp with time zone")
-            .HasDefaultValueSql("now()");
+            .HasColumnName(DBKeys.Shared.CreatedAt)
+            .HasColumnType(DBKeys.Shared.TimestampWithTimeZone)
+            .HasDefaultValueSql(DBKeys.Shared.NowSql);
 
         builder.HasIndex(x => new { x.IncidentId, x.CreatedAt })
-            .HasDatabaseName("idx_incident_status_history_incident");
+            .HasDatabaseName(DBKeys.IncidentStatusHistory.IncidentCreatedAtIndex);
 
         builder.HasOne(x => x.Incident)
             .WithMany(x => x.StatusHistory)
             .HasForeignKey(x => x.IncidentId)
-            .HasConstraintName("incident_status_history_incident_id_fkey")
+            .HasConstraintName(DBKeys.IncidentStatusHistory.IncidentForeignKey)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(x => x.ChangedByEmployee)
             .WithMany(x => x.StatusChanges)
             .HasForeignKey(x => x.ChangedBy)
-            .HasConstraintName("incident_status_history_changed_by_fkey")
+            .HasConstraintName(DBKeys.IncidentStatusHistory.ChangedByForeignKey)
             .OnDelete(DeleteBehavior.NoAction);
     }
 }

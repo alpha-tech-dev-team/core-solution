@@ -1,3 +1,4 @@
+using Atlas.Domain.Constants.AtlasDBConfiguration;
 using Atlas.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -8,153 +9,153 @@ public sealed class IncidentConfiguration : IEntityTypeConfiguration<Incident>
 {
     public void Configure(EntityTypeBuilder<Incident> builder)
     {
-        builder.ToTable("incidents", "atlas", table =>
+        builder.ToTable(DBKeys.Incident.Table, DBKeys.Shared.Schema, table =>
         {
             table.HasCheckConstraint(
-                "chk_incident_status",
-                "status IN ('created', 'in_progress', 'resolved', 'resolved_automatically', 'closed', 'cancelled')");
+                DBKeys.Incident.StatusCheckConstraint,
+                DBKeys.Incident.StatusCheckSql);
             table.HasCheckConstraint(
-                "chk_incident_priority",
-                "priority IN ('low', 'medium', 'high', 'critical')");
+                DBKeys.Incident.PriorityCheckConstraint,
+                DBKeys.Incident.PriorityCheckSql);
             table.HasCheckConstraint(
-                "chk_incident_description",
-                "length(trim(user_description)) > 0");
+                DBKeys.Incident.DescriptionCheckConstraint,
+                DBKeys.Incident.DescriptionCheckSql);
             table.HasCheckConstraint(
-                "chk_incident_resolution",
-                "status NOT IN ('resolved', 'resolved_automatically') OR (resolution IS NOT NULL AND length(trim(resolution)) > 0)");
+                DBKeys.Incident.ResolutionCheckConstraint,
+                DBKeys.Incident.ResolutionCheckSql);
             table.HasCheckConstraint(
-                "chk_incident_assignee",
-                "status <> 'in_progress' OR assigned_engineer_id IS NOT NULL");
+                DBKeys.Incident.AssigneeCheckConstraint,
+                DBKeys.Incident.AssigneeCheckSql);
             table.HasCheckConstraint(
-                "chk_incident_asset",
-                "hardware_id IS NULL OR software_id IS NULL");
+                DBKeys.Incident.AssetCheckConstraint,
+                DBKeys.Incident.AssetCheckSql);
         });
 
-        builder.HasKey(x => x.Id).HasName("incidents_pkey");
+        builder.HasKey(x => x.Id).HasName(DBKeys.Incident.PrimaryKey);
         builder.Property(x => x.Id)
-            .HasColumnName("id")
-            .HasDefaultValueSql("gen_random_uuid()");
+            .HasColumnName(DBKeys.Shared.Id)
+            .HasDefaultValueSql(DBKeys.Shared.GenRandomUuidSql);
 
         builder.Property(x => x.TicketNumber)
-            .HasColumnName("ticket_number")
+            .HasColumnName(DBKeys.Incident.TicketNumber)
             .ValueGeneratedOnAdd()
             .UseIdentityAlwaysColumn();
 
         builder.Property(x => x.EmployeeId)
-            .HasColumnName("employee_id")
+            .HasColumnName(DBKeys.Incident.EmployeeId)
             .IsRequired();
 
         builder.Property(x => x.CategoryId)
-            .HasColumnName("category_id")
+            .HasColumnName(DBKeys.Incident.CategoryId)
             .IsRequired();
 
         builder.Property(x => x.OfficeId)
-            .HasColumnName("office_id");
+            .HasColumnName(DBKeys.Incident.OfficeId);
 
         builder.Property(x => x.HardwareId)
-            .HasColumnName("hardware_id");
+            .HasColumnName(DBKeys.Incident.HardwareId);
 
         builder.Property(x => x.SoftwareId)
-            .HasColumnName("software_id");
+            .HasColumnName(DBKeys.Incident.SoftwareId);
 
         builder.Property(x => x.UserDescription)
-            .HasColumnName("user_description")
+            .HasColumnName(DBKeys.Incident.UserDescription)
             .IsRequired();
 
         builder.Property(x => x.Status)
-            .HasColumnName("status")
-            .HasMaxLength(30)
-            .HasDefaultValue("created")
+            .HasColumnName(DBKeys.Incident.Status)
+            .HasMaxLength(DBKeys.Shared.MaxLength30)
+            .HasDefaultValue(DBKeys.Incident.StatusDefaultValue)
             .IsRequired();
 
         builder.Property(x => x.Priority)
-            .HasColumnName("priority")
-            .HasMaxLength(20)
-            .HasDefaultValue("medium")
+            .HasColumnName(DBKeys.Incident.Priority)
+            .HasMaxLength(DBKeys.Shared.MaxLength20)
+            .HasDefaultValue(DBKeys.Incident.PriorityDefaultValue)
             .IsRequired();
 
         builder.Property(x => x.AssignedEngineerId)
-            .HasColumnName("assigned_engineer_id");
+            .HasColumnName(DBKeys.Incident.AssignedEngineerId);
 
         builder.Property(x => x.ArticleId)
-            .HasColumnName("article_id");
+            .HasColumnName(DBKeys.Incident.ArticleId);
 
         builder.Property(x => x.Resolution)
-            .HasColumnName("resolution");
+            .HasColumnName(DBKeys.Incident.Resolution);
 
         builder.Property(x => x.ResolvedAt)
-            .HasColumnName("resolved_at")
-            .HasColumnType("timestamp with time zone");
+            .HasColumnName(DBKeys.Incident.ResolvedAt)
+            .HasColumnType(DBKeys.Shared.TimestampWithTimeZone);
 
         builder.Property(x => x.CreatedAt)
-            .HasColumnName("created_at")
-            .HasColumnType("timestamp with time zone")
-            .HasDefaultValueSql("now()");
+            .HasColumnName(DBKeys.Shared.CreatedAt)
+            .HasColumnType(DBKeys.Shared.TimestampWithTimeZone)
+            .HasDefaultValueSql(DBKeys.Shared.NowSql);
 
         builder.Property(x => x.UpdatedAt)
-            .HasColumnName("updated_at")
-            .HasColumnType("timestamp with time zone")
-            .HasDefaultValueSql("now()");
+            .HasColumnName(DBKeys.Shared.UpdatedAt)
+            .HasColumnType(DBKeys.Shared.TimestampWithTimeZone)
+            .HasDefaultValueSql(DBKeys.Shared.NowSql);
 
         builder.HasIndex(x => x.TicketNumber)
             .IsUnique()
-            .HasDatabaseName("incidents_ticket_number_key");
+            .HasDatabaseName(DBKeys.Incident.TicketNumberUniqueIndex);
 
         builder.HasIndex(x => x.AssignedEngineerId)
-            .HasDatabaseName("idx_incidents_assigned_engineer");
+            .HasDatabaseName(DBKeys.Incident.AssignedEngineerIndex);
 
         builder.HasIndex(x => x.CategoryId)
-            .HasDatabaseName("idx_incidents_category");
+            .HasDatabaseName(DBKeys.Incident.CategoryIndex);
 
         builder.HasIndex(x => x.CreatedAt)
-            .HasDatabaseName("idx_incidents_created_at");
+            .HasDatabaseName(DBKeys.Incident.CreatedAtIndex);
 
         builder.HasIndex(x => x.EmployeeId)
-            .HasDatabaseName("idx_incidents_employee");
+            .HasDatabaseName(DBKeys.Incident.EmployeeIndex);
 
         builder.HasIndex(x => new { x.Status, x.Priority })
-            .HasDatabaseName("idx_incidents_status_priority");
+            .HasDatabaseName(DBKeys.Incident.StatusPriorityIndex);
 
         builder.HasOne(x => x.Employee)
             .WithMany(x => x.EmployeeIncidents)
             .HasForeignKey(x => x.EmployeeId)
-            .HasConstraintName("incidents_employee_id_fkey")
+            .HasConstraintName(DBKeys.Incident.EmployeeForeignKey)
             .OnDelete(DeleteBehavior.NoAction);
 
         builder.HasOne(x => x.AssignedEngineer)
             .WithMany(x => x.AssignedIncidents)
             .HasForeignKey(x => x.AssignedEngineerId)
-            .HasConstraintName("incidents_assigned_engineer_id_fkey")
+            .HasConstraintName(DBKeys.Incident.AssignedEngineerForeignKey)
             .OnDelete(DeleteBehavior.NoAction);
 
         builder.HasOne(x => x.Category)
             .WithMany(x => x.Incidents)
             .HasForeignKey(x => x.CategoryId)
-            .HasConstraintName("incidents_category_id_fkey")
+            .HasConstraintName(DBKeys.Incident.CategoryForeignKey)
             .OnDelete(DeleteBehavior.NoAction);
 
         builder.HasOne(x => x.Office)
             .WithMany(x => x.Incidents)
             .HasForeignKey(x => x.OfficeId)
-            .HasConstraintName("incidents_office_id_fkey")
+            .HasConstraintName(DBKeys.Incident.OfficeForeignKey)
             .OnDelete(DeleteBehavior.NoAction);
 
         builder.HasOne(x => x.Hardware)
             .WithMany(x => x.Incidents)
             .HasForeignKey(x => x.HardwareId)
-            .HasConstraintName("incidents_hardware_id_fkey")
+            .HasConstraintName(DBKeys.Incident.HardwareForeignKey)
             .OnDelete(DeleteBehavior.NoAction);
 
         builder.HasOne(x => x.Software)
             .WithMany(x => x.Incidents)
             .HasForeignKey(x => x.SoftwareId)
-            .HasConstraintName("incidents_software_id_fkey")
+            .HasConstraintName(DBKeys.Incident.SoftwareForeignKey)
             .OnDelete(DeleteBehavior.NoAction);
 
         builder.HasOne(x => x.Article)
             .WithMany()
             .HasForeignKey(x => x.ArticleId)
-            .HasConstraintName("fk_incidents_article")
+            .HasConstraintName(DBKeys.Incident.ArticleForeignKey)
             .OnDelete(DeleteBehavior.SetNull);
     }
 }

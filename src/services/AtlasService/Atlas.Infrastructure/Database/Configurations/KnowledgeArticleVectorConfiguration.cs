@@ -1,3 +1,4 @@
+using Atlas.Domain.Constants.AtlasDBConfiguration;
 using Atlas.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -9,40 +10,40 @@ public sealed class KnowledgeArticleVectorConfiguration : IEntityTypeConfigurati
 {
     public void Configure(EntityTypeBuilder<KnowledgeArticleVector> builder)
     {
-        builder.ToTable("knowledge_article_vectors", "atlas");
+        builder.ToTable(DBKeys.KnowledgeArticleVector.Table, DBKeys.Shared.Schema);
 
-        builder.HasKey(x => x.ArticleId).HasName("knowledge_article_vectors_pkey");
+        builder.HasKey(x => x.ArticleId).HasName(DBKeys.KnowledgeArticleVector.PrimaryKey);
         builder.Property(x => x.ArticleId)
-            .HasColumnName("article_id");
+            .HasColumnName(DBKeys.KnowledgeArticleVector.ArticleId);
 
         builder.Property(x => x.Embedding)
-            .HasColumnName("embedding")
-            .HasColumnType("vector(1536)")
+            .HasColumnName(DBKeys.KnowledgeArticleVector.Embedding)
+            .HasColumnType(DBKeys.KnowledgeArticleVector.EmbeddingColumnType)
             .IsRequired();
 
         builder.Property(x => x.EmbeddingModel)
-            .HasColumnName("embedding_model")
-            .HasMaxLength(100)
+            .HasColumnName(DBKeys.KnowledgeArticleVector.EmbeddingModel)
+            .HasMaxLength(DBKeys.Shared.MaxLength100)
             .IsRequired();
 
         builder.Property(x => x.EmbeddedText)
-            .HasColumnName("embedded_text")
+            .HasColumnName(DBKeys.KnowledgeArticleVector.EmbeddedText)
             .IsRequired();
 
         builder.Property(x => x.UpdatedAt)
-            .HasColumnName("updated_at")
-            .HasColumnType("timestamp with time zone")
-            .HasDefaultValueSql("now()");
+            .HasColumnName(DBKeys.Shared.UpdatedAt)
+            .HasColumnType(DBKeys.Shared.TimestampWithTimeZone)
+            .HasDefaultValueSql(DBKeys.Shared.NowSql);
 
         builder.HasIndex(x => x.Embedding)
-            .HasMethod("hnsw")
-            .HasOperators("vector_cosine_ops")
-            .HasDatabaseName("idx_article_vectors_embedding");
+            .HasMethod(DBKeys.KnowledgeArticleVector.EmbeddingIndexMethod)
+            .HasOperators(DBKeys.KnowledgeArticleVector.EmbeddingIndexOperators)
+            .HasDatabaseName(DBKeys.KnowledgeArticleVector.EmbeddingIndex);
 
         builder.HasOne(x => x.Article)
             .WithOne(x => x.Vector)
             .HasForeignKey<KnowledgeArticleVector>(x => x.ArticleId)
-            .HasConstraintName("knowledge_article_vectors_article_id_fkey")
+            .HasConstraintName(DBKeys.KnowledgeArticleVector.ArticleForeignKey)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }
