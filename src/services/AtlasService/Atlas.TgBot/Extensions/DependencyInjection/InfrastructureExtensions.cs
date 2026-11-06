@@ -13,9 +13,12 @@ public static class InfrastructureExtensions
         var databaseOptions = configuration.GetSection(DatabaseOptions.SectionName).Get<DatabaseOptions>()
             ?? throw new InvalidOperationException($"Missing configuration section {DatabaseOptions.SectionName}.");
 
+        var redisOptions = configuration.GetSection(RedisOptions.SectionName).Get<RedisOptions>()
+            ?? throw new InvalidOperationException($"Missing configuration section {RedisOptions.SectionName}.");
+
         services.AddAtlasDatabase(databaseOptions.ConnectionString);
         services.AddIdentityClient(configuration);
-        services.AddSessionInfrastructure(configuration, databaseOptions.RedisConnection);
+        services.AddSessionInfrastructure(configuration, redisOptions.ConnectionString);
         services.AddLocalization(typeof(Atlas.Infrastructure.AssemblyMarker).Assembly);
 
         return services;
