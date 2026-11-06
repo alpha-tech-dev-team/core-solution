@@ -1,5 +1,4 @@
 using FluentValidation;
-using FluentValidation.AspNetCore;
 using Identity.Api.Middleware;
 using Identity.Application.Services;
 using Identity.Domain.Interfaces.Repositories;
@@ -38,7 +37,7 @@ public static class ServiceConfigurationExtensions
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
 
-        services.AddFluentValidationAutoValidation();
+        services.AddControllers();
         services.AddValidatorsFromAssemblyContaining<Identity.Application.AssemblyMarker>();
 
         services.AddJwtAuthentication();

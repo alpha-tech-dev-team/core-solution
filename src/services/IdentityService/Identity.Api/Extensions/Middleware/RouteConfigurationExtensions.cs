@@ -1,5 +1,3 @@
-using Identity.Api.Endpoints;
-
 namespace Identity.Api.Extensions.Middleware;
 
 public static class RouteConfigurationExtensions
@@ -11,8 +9,7 @@ public static class RouteConfigurationExtensions
             app.MapOpenApi();
         }
 
-        app.MapIdentityEndpoints();
-        app.MapAdminEndpoints();
+        app.MapControllers();
 
         return app;
     }

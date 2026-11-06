@@ -1,32 +1,30 @@
 using FluentValidation;
-using FluentValidation.Results;
 using Identity.Api.Constants;
 using Identity.Api.Models;
 using Identity.Application.Errors;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace Identity.Api.Filters;
 
-public class ValidationFilter<T> : IEndpointFilter where T : class
+public sealed class ValidationFilter<T>(IValidator<T> validator) : IAsyncActionFilter where T : class
 {
-    public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
+    public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
-        var validator = context.HttpContext.RequestServices.GetService<IValidator<T>>();
-        var request = context.Arguments.OfType<T>().FirstOrDefault();
-
-        if (validator is null || request is null)
+        var request = context.ActionArguments.Values.OfType<T>().FirstOrDefault();
+        if (request is null)
         {
-            return await next(context);
+            await next();
+            return;
         }
 
         var validation = await validator.ValidateAsync(request, context.HttpContext.RequestAborted);
+        if (validation.IsValid)
+        {
+            await next();
+            return;
+        }
 
-        return validation.IsValid
-            ? await next(context)
-            : ToValidationError(validation);
-    }
-
-    private static IResult ToValidationError(ValidationResult validation)
-    {
         var code = nameof(IdentityErrorCode.ValidationFailed);
         var errors = validation.Errors
             .GroupBy(failure => failure.PropertyName)
@@ -34,8 +32,9 @@ public class ValidationFilter<T> : IEndpointFilter where T : class
                 group => group.Key,
                 group => group.Select(failure => failure.ErrorCode).Distinct().ToArray());
 
-        return Results.Json(
-            new ValidationErrorResponse(code, errors),
-            statusCode: IdentityErrorStatusCodes.Get(code));
+        context.Result = new ObjectResult(new ValidationErrorResponse(code, errors))
+        {
+            StatusCode = IdentityErrorStatusCodes.Get(code)
+        };
     }
 }

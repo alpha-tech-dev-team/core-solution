@@ -4,26 +4,27 @@ using Identity.Api.Models;
 using Identity.Application.Contracts.Admin;
 using Identity.Application.Errors;
 using Identity.Domain.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Identity.Api.Extensions.Http;
 
-public static class ResultHttpExtensions
+public static class ResultActionResultExtensions
 {
-    public static IResult ToHttpResult(this Result result)
+    public static IActionResult ToActionResult(this Result result)
     {
         return result.IsSuccess
-            ? Results.Ok()
+            ? new OkResult()
             : ToErrorResult(result.ErrorCode);
     }
 
-    public static IResult ToHttpResult<T>(this Result<T> result)
+    public static IActionResult ToActionResult<T>(this Result<T> result)
     {
         return result.IsSuccess
-            ? Results.Ok(result.Value)
+            ? new OkObjectResult(result.Value)
             : ToErrorResult(result.ErrorCode);
     }
 
-    public static IResult ToSessionResult(
+    public static IActionResult ToSessionActionResult(
         this Result<AuthTokens> result,
         HttpResponse response,
         bool clearCookiesOnFailure)
@@ -32,7 +33,7 @@ public static class ResultHttpExtensions
         {
             response.SetAccessTokenCookie(tokens.AccessToken, tokens.AccessTokenExpiresAt);
             response.SetRefreshTokenCookie(tokens.RefreshToken, tokens.RefreshTokenExpiresAt);
-            return Results.Ok(new SessionResponse(tokens.AccessTokenExpiresAt));
+            return new OkObjectResult(new SessionResponse(tokens.AccessTokenExpiresAt));
         }
 
         if (clearCookiesOnFailure)
@@ -40,13 +41,16 @@ public static class ResultHttpExtensions
             response.ClearAuthCookies();
         }
 
-        return result.ToHttpResult();
+        return result.ToActionResult();
     }
 
-    private static IResult ToErrorResult(string? errorCode)
+    private static IActionResult ToErrorResult(string? errorCode)
     {
         var code = errorCode ?? nameof(IdentityErrorCode.InternalError);
 
-        return Results.Json(new ErrorResponse(code), statusCode: IdentityErrorStatusCodes.Get(code));
+        return new ObjectResult(new ErrorResponse(code))
+        {
+            StatusCode = IdentityErrorStatusCodes.Get(code)
+        };
     }
 }
