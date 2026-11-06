@@ -60,7 +60,9 @@ public sealed class IntegrationFixture : IAsyncLifetime
                     ["Database:ConnectionString"] = _postgres.GetConnectionString(),
                     ["Jwt:Secret"] = "integration-test-secret-key-at-least-32-chars",
                     ["Jwt:Issuer"] = "integration-tests",
-                    ["Jwt:Audience"] = "integration-tests"
+                    ["Jwt:Audience"] = "integration-tests",
+                    ["RateLimiting:TokenLimit"] = "1000",
+                    ["RateLimiting:TokensPerPeriod"] = "1000"
                 });
             });
         });

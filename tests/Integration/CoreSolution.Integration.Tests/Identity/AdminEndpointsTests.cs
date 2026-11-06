@@ -1,11 +1,13 @@
 using System.Net;
 using System.Net.Http.Json;
+using Identity.Api.Models;
 using Identity.Application.Contracts.Admin;
 using Identity.Application.Contracts.Client;
+using Identity.Application.Errors;
 using Identity.Domain.Enums;
 using Xunit;
 
-namespace CoreSolution.Integration.Tests;
+namespace CoreSolution.Integration.Tests.IdentityTests;
 
 [Collection(nameof(IntegrationCollection))]
 public sealed class AdminEndpointsTests(IntegrationFixture fixture)
@@ -103,6 +105,135 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
         var refreshed = await client.GetFromJsonAsync<EmployeeInfoDto[]>(UsersRoute);
         var updated = Array.Find(refreshed!, user => user.Phone == phone)!;
         Assert.Equal(["Admin"], updated.Roles);
+    }
+
+    [Fact]
+    public async Task CreateUser_AsAdmin_CreatesPendingEmployee()
+    {
+        const string phone = "+79995550206";
+        using var client = await CreateLoggedInAdminClient();
+
+        var response = await client.PostAsJsonAsync(
+            UsersRoute,
+            new UserDataRequest("Иван", "Иванов", "Иванович", "Инженер", phone));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var users = await client.GetFromJsonAsync<EmployeeInfoDto[]>(UsersRoute);
+        var created = Assert.Single(users!, user => user.Phone == phone);
+        Assert.Equal("Иванов", created.Surname);
+        Assert.Equal("Иванович", created.Patronymic);
+        Assert.Equal("Инженер", created.Position);
+        Assert.Equal(nameof(UserStatus.Pending), created.Status);
+        Assert.Empty(created.Roles);
+    }
+
+    [Fact]
+    public async Task CreateUser_DuplicatePhone_ReturnsConflict()
+    {
+        const string phone = "+79995550207";
+        await fixture.SeedPendingUserAsync(phone);
+        using var client = await CreateLoggedInAdminClient();
+
+        var response = await client.PostAsJsonAsync(
+            UsersRoute,
+            new UserDataRequest("Иван", "Иванов", null, "Инженер", phone));
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateUser_InvalidData_ReturnsBadRequest()
+    {
+        using var client = await CreateLoggedInAdminClient();
+
+        var response = await client.PostAsJsonAsync(
+            UsersRoute,
+            new UserDataRequest(string.Empty, "Иванов", null, "Инженер", "+79995550208"));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.ValidationFailed), error!.Code);
+    }
+
+    [Fact]
+    public async Task CreateUser_JunkValues_ReturnsBadRequest()
+    {
+        using var client = await CreateLoggedInAdminClient();
+
+        var response = await client.PostAsJsonAsync(
+            UsersRoute,
+            new UserDataRequest("а", "а", null, "а", "а"));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task SetStatus_UnblockNeverActivatedUser_RestoresPending()
+    {
+        const string phone = "+79995550213";
+        await fixture.SeedPendingUserAsync(phone);
+        using var client = await CreateLoggedInAdminClient();
+        var users = await client.GetFromJsonAsync<EmployeeInfoDto[]>(UsersRoute);
+        var seeded = Array.Find(users!, user => user.Phone == phone)!;
+
+        _ = await client.PutAsJsonAsync($"{UsersRoute}/{seeded.Id}/status", new SetUserStatusRequest("Blocked"));
+        var response = await client.PutAsJsonAsync($"{UsersRoute}/{seeded.Id}/status", new SetUserStatusRequest("Active"));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var (_, status) = await fixture.GetUserStateAsync(phone);
+        Assert.Equal(UserStatus.Pending, status);
+    }
+
+    [Fact]
+    public async Task UpdateUser_AsAdmin_UpdatesFields()
+    {
+        const string phone = "+79995550209";
+        await fixture.SeedPendingUserAsync(phone);
+        using var client = await CreateLoggedInAdminClient();
+        var users = await client.GetFromJsonAsync<EmployeeInfoDto[]>(UsersRoute);
+        var seeded = Array.Find(users!, user => user.Phone == phone)!;
+
+        var response = await client.PutAsJsonAsync(
+            $"{UsersRoute}/{seeded.Id}",
+            new UserDataRequest("Пётр", "Петров", "Петрович", "Ведущий инженер", phone));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var refreshed = await client.GetFromJsonAsync<EmployeeInfoDto[]>(UsersRoute);
+        var updated = Array.Find(refreshed!, user => user.Id == seeded.Id)!;
+        Assert.Equal("Петров", updated.Surname);
+        Assert.Equal("Пётр", updated.Name);
+        Assert.Equal("Петрович", updated.Patronymic);
+        Assert.Equal("Ведущий инженер", updated.Position);
+    }
+
+    [Fact]
+    public async Task UpdateUser_DuplicatePhone_ReturnsConflict()
+    {
+        const string phone = "+79995550210";
+        const string otherPhone = "+79995550211";
+        await fixture.SeedPendingUserAsync(phone);
+        await fixture.SeedPendingUserAsync(otherPhone);
+        using var client = await CreateLoggedInAdminClient();
+        var users = await client.GetFromJsonAsync<EmployeeInfoDto[]>(UsersRoute);
+        var seeded = Array.Find(users!, user => user.Phone == phone)!;
+
+        var response = await client.PutAsJsonAsync(
+            $"{UsersRoute}/{seeded.Id}",
+            new UserDataRequest("Иван", "Иванов", null, "Инженер", otherPhone));
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateUser_UnknownId_ReturnsNotFound()
+    {
+        using var client = await CreateLoggedInAdminClient();
+
+        var response = await client.PutAsJsonAsync(
+            $"{UsersRoute}/{Guid.NewGuid()}",
+            new UserDataRequest("Иван", "Иванов", null, "Инженер", "+79995550212"));
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     private async Task<HttpClient> CreateLoggedInAdminClient()

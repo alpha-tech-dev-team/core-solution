@@ -9,7 +9,7 @@ using PandoraApplicationExtensions = Pandora.TgBot.Extension.DependencyInjection
 using PandoraHandler = Pandora.Application.Features.Activation.SubmitPhoneHandler;
 using Xunit;
 
-namespace CoreSolution.Integration.Tests;
+namespace CoreSolution.Integration.Tests.Shared;
 
 public sealed class MediatRHandlerRegistrationTests
 {

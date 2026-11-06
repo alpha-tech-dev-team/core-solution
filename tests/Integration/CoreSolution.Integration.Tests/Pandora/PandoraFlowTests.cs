@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Pandora.Application.Features.Credentials;
 using Xunit;
 
-namespace CoreSolution.Integration.Tests;
+namespace CoreSolution.Integration.Tests.PandoraTests;
 
 [Collection(nameof(IntegrationCollection))]
 public sealed class PandoraFlowTests(IntegrationFixture fixture)

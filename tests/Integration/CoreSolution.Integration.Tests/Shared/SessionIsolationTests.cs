@@ -3,7 +3,7 @@ using CoreSolution.Shared.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
-namespace CoreSolution.Integration.Tests;
+namespace CoreSolution.Integration.Tests.Shared;
 
 [Collection(nameof(IntegrationCollection))]
 public sealed class SessionIsolationTests(IntegrationFixture fixture)

@@ -3,7 +3,7 @@ using System.Net.Http.Json;
 using Identity.Application.Contracts.Client;
 using Xunit;
 
-namespace CoreSolution.Integration.Tests;
+namespace CoreSolution.Integration.Tests.IdentityTests;
 
 [Collection(nameof(IntegrationCollection))]
 public sealed class IdentityApiTests(IntegrationFixture fixture)
