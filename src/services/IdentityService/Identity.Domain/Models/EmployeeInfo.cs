@@ -8,4 +8,5 @@ public sealed record EmployeeInfo(
     string Position,
     string Phone,
     string Status,
-    IReadOnlyList<string> Roles);
+    IReadOnlyList<string> Roles,
+    string? AdminUsername);
