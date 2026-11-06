@@ -57,7 +57,7 @@ public sealed class CreateSecretCommandHandler : IRequestHandler<CreateSecretCom
         {
             _logger.LogError(exception, "Не удалось сохранить метаданные секрета {ItemId}, откатываю создание в Vaultwarden", created.Id);
 
-            await _secretWriter.Delete(created.Id, CancellationToken.None);
+            await CompensateCreationAsync(created.Id);
 
             return Result<SecretListItem>.Failure(nameof(ErrorCode.DatabaseUnavailable));
         }
@@ -65,6 +65,23 @@ public sealed class CreateSecretCommandHandler : IRequestHandler<CreateSecretCom
         await AddAuditSafely(request.AdminUserId, AuditConstants.ActionSecretCreated, created.Id, cancellationToken);
 
         return Result<SecretListItem>.Success(new SecretListItem(created.Id, name, username));
+    }
+
+    private async Task CompensateCreationAsync(string itemId)
+    {
+        try
+        {
+            var deleted = await _secretWriter.Delete(itemId, CancellationToken.None);
+
+            if (!deleted)
+            {
+                _logger.LogError("Не удалось удалить секрет {ItemId} из Vaultwarden после отката создания", itemId);
+            }
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Не удалось удалить секрет {ItemId} из Vaultwarden после отката создания", itemId);
+        }
     }
 
     private async Task AddAuditSafely(Guid adminUserId, string action, string targetItemId, CancellationToken cancellationToken)
