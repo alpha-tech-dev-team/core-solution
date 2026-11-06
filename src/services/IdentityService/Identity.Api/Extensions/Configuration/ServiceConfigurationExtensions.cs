@@ -7,9 +7,11 @@ using Identity.Domain.Interfaces.Security;
 using Identity.Domain.Interfaces.Services;
 using Identity.Infrastructure.Database;
 using Identity.Infrastructure.Database.Extensions;
+using Identity.Infrastructure.Mapping;
 using Identity.Infrastructure.Options.Extensions;
 using Identity.Infrastructure.Repositories;
 using Identity.Infrastructure.Services;
+using Mapster;
 using Serilog;
 
 namespace Identity.Api.Extensions.Configuration;
@@ -18,6 +20,8 @@ public static class ServiceConfigurationExtensions
 {
     public static IServiceCollection AddServiceConfiguration(this IServiceCollection services, IConfiguration configuration)
     {
+        TypeAdapterConfig.GlobalSettings.Apply(new EmployeeMappingConfig());
+
         services.AddOpenApi();
 
         services.AddSerilog((serviceProvider, loggerConfiguration) => loggerConfiguration
