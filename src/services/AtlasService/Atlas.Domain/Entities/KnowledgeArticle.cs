@@ -1,6 +1,8 @@
+using Atlas.Domain.Interfaces;
+
 namespace Atlas.Domain.Entities;
 
-public sealed class KnowledgeArticle
+public sealed class KnowledgeArticle : IHasUpdatedAt
 {
     public Guid Id { get; set; }
     public Guid? CategoryId { get; set; }

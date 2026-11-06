@@ -1,6 +1,8 @@
+using Atlas.Domain.Interfaces;
+
 namespace Atlas.Domain.Entities;
 
-public sealed class Office
+public sealed class Office : IHasUpdatedAt
 {
     public Guid Id { get; set; }
     public string RoomNumber { get; set; } = string.Empty;

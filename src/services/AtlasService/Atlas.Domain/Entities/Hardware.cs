@@ -1,6 +1,8 @@
+using Atlas.Domain.Interfaces;
+
 namespace Atlas.Domain.Entities;
 
-public sealed class Hardware
+public sealed class Hardware : IHasUpdatedAt
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;

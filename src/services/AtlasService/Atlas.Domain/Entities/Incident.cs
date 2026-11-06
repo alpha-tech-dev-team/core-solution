@@ -1,8 +1,9 @@
 using Atlas.Domain.Enums;
+using Atlas.Domain.Interfaces;
 
 namespace Atlas.Domain.Entities;
 
-public sealed class Incident
+public sealed class Incident : IHasUpdatedAt
 {
     public Guid Id { get; set; }
     public long TicketNumber { get; set; }

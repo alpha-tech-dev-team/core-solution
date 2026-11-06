@@ -1,6 +1,8 @@
+using Atlas.Domain.Interfaces;
+
 namespace Atlas.Domain.Entities;
 
-public sealed class IncidentCategory
+public sealed class IncidentCategory : IHasUpdatedAt
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
