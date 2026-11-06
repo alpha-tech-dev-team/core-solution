@@ -11,5 +11,6 @@ public interface IUserRepository
     Task<User?> GetByAdminUsername(string username, CancellationToken cancellationToken = default);
     Task<List<EmployeeInfo>> GetEmployees(CancellationToken cancellationToken = default);
     Task<List<Roles>> GetAllRoles(CancellationToken cancellationToken = default);
+    void Add(User user);
     Task<int> SaveChanges(CancellationToken cancellationToken = default);
 }

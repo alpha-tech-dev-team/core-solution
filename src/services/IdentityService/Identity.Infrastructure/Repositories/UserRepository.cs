@@ -71,6 +71,11 @@ public class UserRepository : IUserRepository
             .ToListAsync(cancellationToken);
     }
 
+    public void Add(User user)
+    {
+        _context.Users.Add(user);
+    }
+
     public Task<int> SaveChanges(CancellationToken cancellationToken = default)
     {
         return _context.SaveChangesAsync(cancellationToken);
