@@ -1,29 +1,23 @@
 using Identity.Domain.Entities;
 using Identity.Domain.Interfaces.Repositories;
 using Identity.Domain.Models;
+using Mapster;
 using Identity.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 
 namespace Identity.Infrastructure.Repositories;
 
-public class UserRepository : IUserRepository
+public class UserRepository(AppDbContext context) : BaseRepository<User>(context), IUserRepository
 {
-    private readonly AppDbContext _context;
-
-    public UserRepository(AppDbContext context)
-    {
-        _context = context;
-    }
-
     public Task<User?> GetByPhone(string phone, CancellationToken cancellationToken = default)
     {
-        return _context.Users
+        return Context.Users
             .FirstOrDefaultAsync(x => x.Phone == phone, cancellationToken);
     }
 
     public Task<User?> GetById(Guid id, CancellationToken cancellationToken = default)
     {
-        return _context.Users
+        return Context.Users
             .Include(x => x.UserRoles)
             .ThenInclude(x => x.Role)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
@@ -31,7 +25,7 @@ public class UserRepository : IUserRepository
 
     public Task<User?> GetByAdminUsername(string username, CancellationToken cancellationToken = default)
     {
-        return _context.Users
+        return Context.Users
             .Include(x => x.UserRoles)
             .ThenInclude(x => x.Role)
             .FirstOrDefaultAsync(x => x.AdminUsername == username, cancellationToken);
@@ -39,43 +33,52 @@ public class UserRepository : IUserRepository
 
     public Task<User?> GetByTelegramUserId(long telegramUserId, CancellationToken cancellationToken = default)
     {
-        return _context.Users
+        return Context.Users
             .Include(x => x.UserRoles)
             .ThenInclude(x => x.Role)
             .FirstOrDefaultAsync(x => x.TelegramUserId == telegramUserId, cancellationToken);
     }
 
-    public Task<List<EmployeeInfo>> GetEmployees(CancellationToken cancellationToken = default)
+    public async Task<EmployeesPage> GetEmployees(int page, int pageSize, CancellationToken cancellationToken = default)
     {
-        return _context.Users
+        var items = await Context.Users
             .OrderBy(x => x.Surname)
             .ThenBy(x => x.Name)
-            .Select(x => new EmployeeInfo(
-                x.Id,
-                x.Name,
-                x.Surname,
-                x.Patronymic,
-                x.Position,
-                x.Phone,
-                x.Status.ToString(),
-                x.UserRoles.Select(role => role.Role.Name).ToArray()))
+            .ThenBy(x => x.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ProjectToType<EmployeeInfo>()
             .ToListAsync(cancellationToken);
+
+        var total = await Context.Users.CountAsync(cancellationToken);
+
+        return new EmployeesPage(items, total, page, pageSize);
     }
 
     public Task<List<Roles>> GetAllRoles(CancellationToken cancellationToken = default)
     {
-        return _context.Roles
+        return Context.Roles
             .OrderBy(x => x.Name)
             .ToListAsync(cancellationToken);
     }
 
-    public void Add(User user)
+    protected override void ApplyTimestamps(DateTime now)
     {
-        _context.Users.Add(user);
-    }
+        base.ApplyTimestamps(now);
 
-    public Task<int> SaveChanges(CancellationToken cancellationToken = default)
-    {
-        return _context.SaveChangesAsync(cancellationToken);
+        var usersWithChangedRoles = Context.ChangeTracker
+            .Entries<UserRole>()
+            .Where(entry => entry.State is EntityState.Added or EntityState.Deleted)
+            .Select(entry => entry.Entity.UserId)
+            .ToHashSet();
+
+        foreach (var entry in Context.ChangeTracker.Entries<User>())
+        {
+            if (entry.State is not (EntityState.Added or EntityState.Modified)
+                && usersWithChangedRoles.Contains(entry.Entity.Id))
+            {
+                entry.Entity.UpdatedAt = now;
+            }
+        }
     }
 }
