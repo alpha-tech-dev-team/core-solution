@@ -2,9 +2,11 @@ using Identity.Api.Constants;
 using Identity.Api.Extensions.Http;
 using Identity.Api.Filters;
 using Identity.Application.Contracts.Admin;
+using Identity.Application.Errors;
 using Identity.Domain.Enums;
 using Identity.Domain.Interfaces.Services;
 using Identity.Domain.Models;
+using CoreSolution.Shared.Results;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Identity.Api.Endpoints;
@@ -135,12 +137,9 @@ public static class AdminEndpoints
     {
         var refreshToken = request.GetRefreshTokenCookie();
 
-        if (string.IsNullOrEmpty(refreshToken))
-        {
-            return Results.Unauthorized();
-        }
-
-        var result = await authService.Refresh(refreshToken, cancellationToken);
+        var result = string.IsNullOrEmpty(refreshToken)
+            ? Result<AuthTokens>.Failure(nameof(IdentityErrorCode.InvalidRefreshToken))
+            : await authService.Refresh(refreshToken, cancellationToken);
 
         return result.ToSessionResult(response, clearCookiesOnFailure: true);
     }
