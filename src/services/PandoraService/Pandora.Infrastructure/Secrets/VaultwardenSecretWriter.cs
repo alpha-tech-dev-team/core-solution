@@ -44,7 +44,7 @@ public sealed class VaultwardenSecretWriter : ISecretWriter
         return new SecretItem(created.Id, created.Name ?? name);
     }
 
-    public async Task<bool> Update(string itemId, string name, string username, string? password, CancellationToken cancellationToken)
+    public async Task<SecretUpdateResult> Update(string itemId, string name, string username, string? password, CancellationToken cancellationToken)
     {
         var updatedPassword = password;
 
@@ -54,7 +54,7 @@ public sealed class VaultwardenSecretWriter : ISecretWriter
 
             if (current is null)
             {
-                return false;
+                return SecretUpdateResult.GatewayError;
             }
 
             updatedPassword = current.Login?.Password;
@@ -63,14 +63,14 @@ public sealed class VaultwardenSecretWriter : ISecretWriter
             {
                 _logger.LogWarning("В элементе {ItemId} нет пароля, новый пароль не передан", itemId);
 
-                return false;
+                return SecretUpdateResult.NoPassword;
             }
         }
 
         var item = BuildItem(itemId, name, username, updatedPassword);
         using var response = await SendAsync(HttpMethod.Put, $"{ItemRoute}/{itemId}", item, "обновлении", itemId, cancellationToken);
 
-        return response is not null;
+        return response is not null ? SecretUpdateResult.Success : SecretUpdateResult.GatewayError;
     }
 
     public async Task<bool> Delete(string itemId, CancellationToken cancellationToken)

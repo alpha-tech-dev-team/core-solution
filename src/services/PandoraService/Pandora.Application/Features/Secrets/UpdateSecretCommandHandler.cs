@@ -45,11 +45,18 @@ public sealed class UpdateSecretCommandHandler : IRequestHandler<UpdateSecretCom
             return Result<SecretListItem>.Failure(nameof(ErrorCode.SecretNotFound));
         }
 
-        if (!await _secretWriter.Update(request.ItemId, name, username, request.Password, cancellationToken))
+        var updateResult = await _secretWriter.Update(request.ItemId, name, username, request.Password, cancellationToken);
+
+        if (updateResult is SecretUpdateResult.GatewayError)
         {
             _logger.LogWarning("Шлюз Vaultwarden отклонил обновление секрета {ItemId}", request.ItemId);
 
             return Result<SecretListItem>.Failure(nameof(ErrorCode.VaultwardenUnavailable));
+        }
+
+        if (updateResult is SecretUpdateResult.NoPassword)
+        {
+            return Result<SecretListItem>.Failure(nameof(ErrorCode.InvalidSecretData));
         }
 
         try
