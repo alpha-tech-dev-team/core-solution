@@ -76,6 +76,12 @@ public static class DBKeys
         public const string PrimaryKey = "incidents_pkey";
         public const string StatusCheckConstraint = "chk_incident_status";
         public const string StatusCheckSql = "status IN ('created', 'in_progress', 'resolved', 'resolved_automatically', 'closed', 'cancelled')";
+        public const string StatusCreated = "created";
+        public const string StatusInProgress = "in_progress";
+        public const string StatusResolved = "resolved";
+        public const string StatusResolvedAutomatically = "resolved_automatically";
+        public const string StatusClosed = "closed";
+        public const string StatusCancelled = "cancelled";
         public const string PriorityCheckConstraint = "chk_incident_priority";
         public const string PriorityCheckSql = "priority IN ('low', 'medium', 'high', 'critical')";
         public const string DescriptionCheckConstraint = "chk_incident_description";
@@ -86,7 +92,7 @@ public static class DBKeys
         public const string AssigneeCheckSql = "status <> 'in_progress' OR assigned_engineer_id IS NOT NULL";
         public const string AssetCheckConstraint = "chk_incident_asset";
         public const string AssetCheckSql = "hardware_id IS NULL OR software_id IS NULL";
-        public const string StatusDefaultValue = "created";
+        public const string StatusDefaultValue = StatusCreated;
         public const string PriorityDefaultValue = "medium";
         public const string TicketNumberUniqueIndex = "incidents_ticket_number_key";
         public const string AssignedEngineerIndex = "idx_incidents_assigned_engineer";
