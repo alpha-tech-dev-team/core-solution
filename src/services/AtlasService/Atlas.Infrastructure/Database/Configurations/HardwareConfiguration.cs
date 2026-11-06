@@ -39,7 +39,8 @@ public sealed class HardwareConfiguration : IEntityTypeConfiguration<Hardware>
 
         builder.Property(x => x.IsActive)
             .HasColumnName(DBKeys.Shared.IsActive)
-            .HasDefaultValue(true);
+            .HasDefaultValue(true)
+            .HasSentinel(true);
 
         builder.Property(x => x.CreatedAt)
             .HasColumnName(DBKeys.Shared.CreatedAt)
