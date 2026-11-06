@@ -16,7 +16,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\shared\CoreSolution.Shared.TgBot\CoreSolution.Shared.TgBot.csproj" />
-    <ProjectReference Include="..\Pandora.Application\Pandora.Application.csproj" />
     <ProjectReference Include="..\Pandora.Infrastructure\Pandora.Infrastructure.csproj" />
   </ItemGroup>
 

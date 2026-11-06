@@ -1,4 +1,4 @@
-namespace Pandora.Application.Common;
+namespace Pandora.TgBot.Common;
 
 public static class CallbackConstants
 {
