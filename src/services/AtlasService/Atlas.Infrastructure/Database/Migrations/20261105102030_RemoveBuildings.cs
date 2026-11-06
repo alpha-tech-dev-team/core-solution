@@ -16,8 +16,10 @@ namespace Atlas.Infrastructure.Database.Migrations
                 schema: "atlas",
                 table: "offices");
 
-            migrationBuilder.Sql("ALTER TABLE atlas.offices DROP CONSTRAINT IF EXISTS uq_offices_building_room;");
-            migrationBuilder.Sql("DROP INDEX IF EXISTS atlas.uq_offices_building_room;");
+            migrationBuilder.DropIndex(
+                name: "uq_offices_building_room",
+                schema: "atlas",
+                table: "offices");
 
             migrationBuilder.DropColumn(
                 name: "building_id",
