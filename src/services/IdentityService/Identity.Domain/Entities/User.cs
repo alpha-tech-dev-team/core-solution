@@ -1,9 +1,10 @@
 using Identity.Domain.Enums;
 using Identity.Domain.Interfaces.Entities;
+using Identity.Domain.Models;
 
 namespace Identity.Domain.Entities;
 
-public class User : IEntity
+public class User : IEntity, IAuditableEntity
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
@@ -22,4 +23,22 @@ public class User : IEntity
     public User UpdatedBy { get; set; } = default!;
 
     public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+
+    public User()
+    {
+    }
+
+    public User(EmployeeData data)
+    {
+        Id = Guid.NewGuid();
+        Name = data.Name;
+        Surname = data.Surname;
+        Patronymic = data.Patronymic;
+        Position = data.Position;
+        Phone = data.Phone;
+        Status = UserStatus.Pending;
+        CreatedAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
+        UpdatedById = Id;
+    }
 }
