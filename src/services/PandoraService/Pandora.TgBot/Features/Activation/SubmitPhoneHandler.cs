@@ -4,10 +4,10 @@ using CoreSolution.Shared.Application.Messages;
 using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
 using MediatR;
-using Pandora.Application.Features.Services;
 using Pandora.Domain.Enums;
+using Pandora.TgBot.Features.Services;
 
-namespace Pandora.Application.Features.Activation;
+namespace Pandora.TgBot.Features.Activation;
 
 public sealed class SubmitPhoneHandler : SubmitPhoneHandlerBase
 {

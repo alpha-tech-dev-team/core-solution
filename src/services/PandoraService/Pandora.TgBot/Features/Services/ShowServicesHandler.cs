@@ -2,13 +2,13 @@ using CoreSolution.Shared.Abstractions;
 using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
 using MediatR;
-using Pandora.Application.Common;
 using Pandora.Domain.Constants.Localization;
 using Pandora.Domain.Enums;
 using Pandora.Domain.Interfaces;
 using Pandora.Domain.Models;
+using Pandora.TgBot.Common;
 
-namespace Pandora.Application.Features.Services;
+namespace Pandora.TgBot.Features.Services;
 
 public sealed class ShowServicesHandler : IRequestHandler<ShowServicesMessage, Result<WorkflowResponse>>
 {
