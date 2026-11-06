@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using CoreSolution.Shared.Enums;
 using CoreSolution.Shared.Options;
 using Identity.Api.Constants;
 using Identity.Domain.Constants;
@@ -49,7 +50,7 @@ public static class JwtConfigurationExtensions
         services.AddAuthorizationBuilder()
             .AddPolicy(
                 AuthorizationPolicies.Admin,
-                policy => policy.RequireRole(AuthorizationPolicies.Admin));
+                policy => policy.RequireRole(nameof(UserRole.AtlasAdmin), nameof(UserRole.PandoraAdmin)));
 
         return services;
     }
