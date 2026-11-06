@@ -11,6 +11,7 @@ internal static class IdentityErrorStatusCodes
             [IdentityErrorCode.RoleNotFound] = StatusCodes.Status404NotFound,
             [IdentityErrorCode.UserAlreadyActivated] = StatusCodes.Status409Conflict,
             [IdentityErrorCode.PhoneAlreadyExists] = StatusCodes.Status409Conflict,
+            [IdentityErrorCode.AdminCredentialsRequired] = StatusCodes.Status400BadRequest,
             [IdentityErrorCode.AccessDenied] = StatusCodes.Status403Forbidden,
             [IdentityErrorCode.InvalidCredentials] = StatusCodes.Status401Unauthorized,
             [IdentityErrorCode.InvalidRefreshToken] = StatusCodes.Status401Unauthorized,
