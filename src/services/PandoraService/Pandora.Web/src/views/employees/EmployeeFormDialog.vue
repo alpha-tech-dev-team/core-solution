@@ -3,6 +3,7 @@ import { reactive, ref, watch } from 'vue'
 import { tr } from '@/i18n'
 import type { EmployeeInput } from '@/stores/models/employee-input'
 import { validateEmployeeForm, type EmployeeFormField, type EmployeeFormErrors } from '@/validation/employee'
+import ModalDialog from '@/components/ModalDialog.vue'
 
 const props = defineProps<{
   open: boolean
@@ -50,12 +51,12 @@ function submit() {
 </script>
 
 <template>
-  <div v-if="open" class="dialog-overlay" @click.self="emit('close')">
+  <ModalDialog
+    :open="open"
+    :title="initial ? tr('employee_edit_title') : tr('employee_add')"
+    @close="emit('close')"
+  >
     <form class="dialog" @submit.prevent="submit">
-      <h2 class="dialog__title">
-        {{ initial ? tr('employee_edit_title') : tr('employee_add') }}
-      </h2>
-
       <label class="dialog__field">
         {{ tr('employee_field_surname') }}
         <input v-model="draft.surname" type="text" />
@@ -89,33 +90,14 @@ function submit() {
         <button type="button" class="dialog__button" @click="emit('close')">{{ tr('employee_cancel') }}</button>
       </div>
     </form>
-  </div>
+  </ModalDialog>
 </template>
 
 <style scoped>
-.dialog-overlay {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-overlay);
-}
-
 .dialog {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  width: 100%;
-  max-width: var(--size-form);
-  padding: var(--space-5);
-  background: var(--color-surface);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius);
-}
-
-.dialog__title {
-  font-size: var(--font-size-large);
 }
 
 .dialog__field {
