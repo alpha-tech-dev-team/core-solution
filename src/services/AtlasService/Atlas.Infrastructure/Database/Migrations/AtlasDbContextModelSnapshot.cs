@@ -71,7 +71,7 @@ namespace Atlas.Infrastructure.Database.Migrations
                     b.ToTable("cabinets", "atlas");
                 });
 
-            modelBuilder.Entity("Atlas.Domain.Entities.EmployeeAccess", b =>
+            modelBuilder.Entity("Atlas.Domain.Entities.Employee", b =>
                 {
                     b.Property<Guid>("EmployeeId")
                         .ValueGeneratedOnAdd()
@@ -109,15 +109,15 @@ namespace Atlas.Infrastructure.Database.Migrations
                         .HasDefaultValueSql("now()");
 
                     b.HasKey("EmployeeId")
-                        .HasName("employee_access_pkey");
+                        .HasName("employees_pkey");
 
                     b.HasIndex("TelegramId")
                         .IsUnique()
-                        .HasDatabaseName("employee_access_telegram_id_key");
+                        .HasDatabaseName("employees_telegram_id_key");
 
-                    b.ToTable("employee_access", "atlas", t =>
+                    b.ToTable("employees", "atlas", t =>
                         {
-                            t.HasCheckConstraint("chk_employee_access_role", "role IN ('employee', 'engineer', 'admin')");
+                            t.HasCheckConstraint("chk_employee_role", "role IN ('employee', 'engineer', 'admin')");
                         });
                 });
 
@@ -633,7 +633,7 @@ namespace Atlas.Infrastructure.Database.Migrations
                         .OnDelete(DeleteBehavior.SetNull)
                         .HasConstraintName("fk_incidents_article");
 
-                    b.HasOne("Atlas.Domain.Entities.EmployeeAccess", "AssignedEngineer")
+                    b.HasOne("Atlas.Domain.Entities.Employee", "AssignedEngineer")
                         .WithMany("AssignedIncidents")
                         .HasForeignKey("AssignedEngineerId")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -652,7 +652,7 @@ namespace Atlas.Infrastructure.Database.Migrations
                         .IsRequired()
                         .HasConstraintName("incidents_category_id_fkey");
 
-                    b.HasOne("Atlas.Domain.Entities.EmployeeAccess", "Employee")
+                    b.HasOne("Atlas.Domain.Entities.Employee", "Employee")
                         .WithMany("EmployeeIncidents")
                         .HasForeignKey("EmployeeId")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -709,7 +709,7 @@ namespace Atlas.Infrastructure.Database.Migrations
 
             modelBuilder.Entity("Atlas.Domain.Entities.IncidentStatusHistory", b =>
                 {
-                    b.HasOne("Atlas.Domain.Entities.EmployeeAccess", "ChangedByEmployee")
+                    b.HasOne("Atlas.Domain.Entities.Employee", "ChangedByEmployee")
                         .WithMany("StatusChanges")
                         .HasForeignKey("ChangedBy")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -735,7 +735,7 @@ namespace Atlas.Infrastructure.Database.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .HasConstraintName("knowledge_articles_category_id_fkey");
 
-                    b.HasOne("Atlas.Domain.Entities.EmployeeAccess", "CreatedByEmployee")
+                    b.HasOne("Atlas.Domain.Entities.Employee", "CreatedByEmployee")
                         .WithMany("CreatedArticles")
                         .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -773,7 +773,7 @@ namespace Atlas.Infrastructure.Database.Migrations
                     b.Navigation("Incidents");
                 });
 
-            modelBuilder.Entity("Atlas.Domain.Entities.EmployeeAccess", b =>
+            modelBuilder.Entity("Atlas.Domain.Entities.Employee", b =>
                 {
                     b.Navigation("AssignedIncidents");
 

@@ -22,8 +22,8 @@ public sealed class Incident : IHasUpdatedAt
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 
-    public EmployeeAccess Employee { get; set; } = default!;
-    public EmployeeAccess? AssignedEngineer { get; set; }
+    public Employee Employee { get; set; } = default!;
+    public Employee? AssignedEngineer { get; set; }
     public IncidentCategory Category { get; set; } = default!;
     public Cabinet? Cabinet { get; set; }
     public Hardware? Hardware { get; set; }
