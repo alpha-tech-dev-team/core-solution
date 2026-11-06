@@ -10,21 +10,31 @@ public class UserDataRequestValidator : AbstractValidator<UserDataRequest>
     {
         RuleFor(x => x.Name)
             .NotEmpty()
-            .MaximumLength(ValidationConstants.PersonNameMaxLength);
+            .MinimumLength(ValidationConstants.PersonNameMinLength)
+            .MaximumLength(ValidationConstants.PersonNameMaxLength)
+            .Matches(ValidationConstants.PersonNamePattern);
 
         RuleFor(x => x.Surname)
             .NotEmpty()
-            .MaximumLength(ValidationConstants.PersonNameMaxLength);
+            .MinimumLength(ValidationConstants.PersonNameMinLength)
+            .MaximumLength(ValidationConstants.PersonNameMaxLength)
+            .Matches(ValidationConstants.PersonNamePattern);
 
         RuleFor(x => x.Patronymic)
-            .MaximumLength(ValidationConstants.PersonNameMaxLength);
+            .MinimumLength(ValidationConstants.PersonNameMinLength)
+            .MaximumLength(ValidationConstants.PersonNameMaxLength)
+            .Matches(ValidationConstants.PersonNamePattern)
+            .When(x => !string.IsNullOrWhiteSpace(x.Patronymic));
 
         RuleFor(x => x.Position)
             .NotEmpty()
-            .MaximumLength(ValidationConstants.PositionMaxLength);
+            .MinimumLength(ValidationConstants.PositionMinLength)
+            .MaximumLength(ValidationConstants.PositionMaxLength)
+            .Matches(ValidationConstants.PositionPattern);
 
         RuleFor(x => x.Phone)
             .NotEmpty()
-            .MaximumLength(ValidationConstants.PhoneMaxLength);
+            .MaximumLength(ValidationConstants.PhoneMaxLength)
+            .Matches(ValidationConstants.PhonePattern);
     }
 }
