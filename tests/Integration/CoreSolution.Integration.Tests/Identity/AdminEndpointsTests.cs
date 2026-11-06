@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using Identity.Api.Models;
 using Identity.Application.Contracts.Admin;
 using Identity.Application.Contracts.Client;
+using CoreSolution.Shared.Enums;
 using Identity.Application.Errors;
 using Identity.Domain.Enums;
 using Xunit;
@@ -48,10 +49,36 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
         var response = await client.GetAsync(UsersRoute);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var users = await response.Content.ReadFromJsonAsync<EmployeeInfoDto[]>();
+        var users = (await response.Content.ReadFromJsonAsync<EmployeesPageDto>())!.Items;
         var seeded = Assert.Single(users!, user => user.Phone == phone);
         Assert.Equal(nameof(UserStatus.Pending), seeded.Status);
         Assert.Contains("Pandora", seeded.Roles);
+    }
+
+    [Fact]
+    public async Task GetUsers_Pagination_ReturnsRequestedPageAndTotal()
+    {
+        using var client = await CreateLoggedInAdminClient();
+
+        var first = await client.GetFromJsonAsync<EmployeesPageDto>($"{UsersRoute}?page=1&pageSize=1");
+        var second = await client.GetFromJsonAsync<EmployeesPageDto>($"{UsersRoute}?page=2&pageSize=1");
+
+        Assert.Single(first!.Items);
+        Assert.Single(second!.Items);
+        Assert.True(first.Total >= 2);
+        Assert.NotEqual(first.Items[0].Id, second.Items[0].Id);
+    }
+
+    [Fact]
+    public async Task GetUsers_InvalidPageSize_ReturnsBadRequest()
+    {
+        using var client = await CreateLoggedInAdminClient();
+
+        var response = await client.GetAsync($"{UsersRoute}?pageSize=1000");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.ValidationFailed), error!.Code);
     }
 
     [Fact]
@@ -68,17 +95,69 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
     }
 
     [Fact]
-    public async Task SetRoles_UnknownRole_ReturnsNotFound()
+    public async Task SetRoles_UnknownRole_ReturnsBadRequest()
     {
-        const string phone = "+79995550203";
+        using var client = await CreateLoggedInAdminClient();
+
+        var response = await client.PutAsJsonAsync(
+            $"{UsersRoute}/{Guid.NewGuid()}/roles",
+            new { roles = new[] { "NoSuchRole" } });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.ValidationFailed), error!.Code);
+    }
+
+    [Fact]
+    public async Task SetStatus_UnknownValue_ReturnsBadRequest()
+    {
+        using var client = await CreateLoggedInAdminClient();
+
+        var response = await client.PutAsJsonAsync(
+            $"{UsersRoute}/{Guid.NewGuid()}/status",
+            new { status = "Zzz" });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.ValidationFailed), error!.Code);
+    }
+
+    [Fact]
+    public async Task SetRoles_AdminRoleWithoutCredentials_ReturnsBadRequest()
+    {
+        const string phone = "+79995550214";
         await fixture.SeedPendingUserAsync(phone);
         using var client = await CreateLoggedInAdminClient();
-        var users = await client.GetFromJsonAsync<EmployeeInfoDto[]>(UsersRoute);
-        var seeded = Array.Find(users!, user => user.Phone == phone)!;
+        var users = await GetUsers(client);
+        var seeded = Array.Find(users, user => user.Phone == phone)!;
 
-        var response = await client.PutAsJsonAsync($"{UsersRoute}/{seeded.Id}/roles", new SetUserRolesRequest(["NoSuchRole"]));
+        var response = await client.PutAsJsonAsync(
+            $"{UsersRoute}/{seeded.Id}/roles",
+            new SetUserRolesRequest([UserRole.AtlasAdmin]));
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.ValidationFailed), error!.Code);
+    }
+
+    [Fact]
+    public async Task SetRoles_AdminRoleWithCredentials_SavesAdminLogin()
+    {
+        const string phone = "+79995550215";
+        await fixture.SeedPendingUserAsync(phone, nameof(UserRole.PandoraAdmin));
+        using var client = await CreateLoggedInAdminClient();
+        var users = await GetUsers(client);
+        var seeded = Array.Find(users, user => user.Phone == phone)!;
+
+        var response = await client.PutAsJsonAsync(
+            $"{UsersRoute}/{seeded.Id}/roles",
+            new SetUserRolesRequest([UserRole.PandoraAdmin], "pandora-admin", "admin-password-123"));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var refreshed = await GetUsers(client);
+        var updated = Array.Find(refreshed, user => user.Id == seeded.Id)!;
+        Assert.Equal("pandora-admin", updated.AdminUsername);
+        Assert.Contains(nameof(UserRole.PandoraAdmin), updated.Roles);
     }
 
     [Fact]
@@ -88,11 +167,11 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
         const long telegramUserId = 9104;
         await fixture.SeedPendingUserAsync(phone);
         using var client = await CreateLoggedInAdminClient();
-        var users = await client.GetFromJsonAsync<EmployeeInfoDto[]>(UsersRoute);
+        var users = await GetUsers(client);
         var seeded = Array.Find(users!, user => user.Phone == phone)!;
         _ = await client.PostAsJsonAsync("/api/client/activate", new ActivateUserRequest(telegramUserId, phone));
 
-        var response = await client.PutAsJsonAsync($"{UsersRoute}/{seeded.Id}/status", new SetUserStatusRequest("Blocked"));
+        var response = await client.PutAsJsonAsync($"{UsersRoute}/{seeded.Id}/status", new SetUserStatusRequest(UserStatus.Blocked));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var (_, status) = await fixture.GetUserStateAsync(phone);
@@ -108,15 +187,15 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
         const string phone = "+79995550205";
         await fixture.SeedPendingUserAsync(phone, "Pandora");
         using var client = await CreateLoggedInAdminClient();
-        var users = await client.GetFromJsonAsync<EmployeeInfoDto[]>(UsersRoute);
+        var users = await GetUsers(client);
         var seeded = Array.Find(users!, user => user.Phone == phone)!;
 
-        var response = await client.PutAsJsonAsync($"{UsersRoute}/{seeded.Id}/roles", new SetUserRolesRequest(["Admin"]));
+        var response = await client.PutAsJsonAsync($"{UsersRoute}/{seeded.Id}/roles", new SetUserRolesRequest([UserRole.Pandora]));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var refreshed = await client.GetFromJsonAsync<EmployeeInfoDto[]>(UsersRoute);
+        var refreshed = await GetUsers(client);
         var updated = Array.Find(refreshed!, user => user.Phone == phone)!;
-        Assert.Equal(["Admin"], updated.Roles);
+        Assert.Equal(["Pandora"], updated.Roles);
     }
 
     [Fact]
@@ -130,7 +209,7 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
             new UserDataRequest("Иван", "Иванов", "Иванович", "Инженер", phone));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var users = await client.GetFromJsonAsync<EmployeeInfoDto[]>(UsersRoute);
+        var users = await GetUsers(client);
         var created = Assert.Single(users!, user => user.Phone == phone);
         Assert.Equal("Иванов", created.Surname);
         Assert.Equal("Иванович", created.Patronymic);
@@ -185,15 +264,41 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
         const string phone = "+79995550213";
         await fixture.SeedPendingUserAsync(phone);
         using var client = await CreateLoggedInAdminClient();
-        var users = await client.GetFromJsonAsync<EmployeeInfoDto[]>(UsersRoute);
+        var users = await GetUsers(client);
         var seeded = Array.Find(users!, user => user.Phone == phone)!;
 
-        _ = await client.PutAsJsonAsync($"{UsersRoute}/{seeded.Id}/status", new SetUserStatusRequest("Blocked"));
-        var response = await client.PutAsJsonAsync($"{UsersRoute}/{seeded.Id}/status", new SetUserStatusRequest("Active"));
+        _ = await client.PutAsJsonAsync($"{UsersRoute}/{seeded.Id}/status", new SetUserStatusRequest(UserStatus.Blocked));
+        var response = await client.PutAsJsonAsync($"{UsersRoute}/{seeded.Id}/status", new SetUserStatusRequest(UserStatus.Active));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var (_, status) = await fixture.GetUserStateAsync(phone);
         Assert.Equal(UserStatus.Pending, status);
+    }
+
+    [Fact]
+    public async Task DeleteUser_AsAdmin_RemovesUser()
+    {
+        const string phone = "+79995550216";
+        await fixture.SeedPendingUserAsync(phone);
+        using var client = await CreateLoggedInAdminClient();
+        var users = await GetUsers(client);
+        var seeded = Array.Find(users, user => user.Phone == phone)!;
+
+        var response = await client.DeleteAsync($"{UsersRoute}/{seeded.Id}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var refreshed = await GetUsers(client);
+        Assert.DoesNotContain(refreshed, user => user.Id == seeded.Id);
+    }
+
+    [Fact]
+    public async Task DeleteUser_UnknownId_ReturnsNotFound()
+    {
+        using var client = await CreateLoggedInAdminClient();
+
+        var response = await client.DeleteAsync($"{UsersRoute}/{Guid.NewGuid()}");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
@@ -202,7 +307,7 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
         const string phone = "+79995550209";
         await fixture.SeedPendingUserAsync(phone);
         using var client = await CreateLoggedInAdminClient();
-        var users = await client.GetFromJsonAsync<EmployeeInfoDto[]>(UsersRoute);
+        var users = await GetUsers(client);
         var seeded = Array.Find(users!, user => user.Phone == phone)!;
 
         var response = await client.PutAsJsonAsync(
@@ -210,7 +315,7 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
             new UserDataRequest("Пётр", "Петров", "Петрович", "Ведущий инженер", phone));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var refreshed = await client.GetFromJsonAsync<EmployeeInfoDto[]>(UsersRoute);
+        var refreshed = await GetUsers(client);
         var updated = Array.Find(refreshed!, user => user.Id == seeded.Id)!;
         Assert.Equal("Петров", updated.Surname);
         Assert.Equal("Пётр", updated.Name);
@@ -226,7 +331,7 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
         await fixture.SeedPendingUserAsync(phone);
         await fixture.SeedPendingUserAsync(otherPhone);
         using var client = await CreateLoggedInAdminClient();
-        var users = await client.GetFromJsonAsync<EmployeeInfoDto[]>(UsersRoute);
+        var users = await GetUsers(client);
         var seeded = Array.Find(users!, user => user.Phone == phone)!;
 
         var response = await client.PutAsJsonAsync(
@@ -260,6 +365,15 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
         return client;
     }
 
+    private static async Task<EmployeeInfoDto[]> GetUsers(HttpClient client)
+    {
+        var page = await client.GetFromJsonAsync<EmployeesPageDto>($"{UsersRoute}?pageSize=50");
+
+        return page!.Items;
+    }
+
+    private sealed record EmployeesPageDto(EmployeeInfoDto[] Items, int Total);
+
     private sealed record EmployeeInfoDto(
         Guid Id,
         string Name,
@@ -268,5 +382,6 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
         string Position,
         string Phone,
         string Status,
-        string[] Roles);
+        string[] Roles,
+        string? AdminUsername);
 }

@@ -1,4 +1,5 @@
 using Atlas.Domain.Constants;
+using AppRole = CoreSolution.Shared.Enums.UserRole;
 using Atlas.TgBot.Extensions.DependencyInjection;
 using CoreSolution.Shared.Abstractions;
 using CoreSolution.Shared.Infrastructure.Identity;
@@ -84,8 +85,8 @@ public sealed class IntegrationFixture : IAsyncLifetime
         var database = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
 
-        var role = await database.Roles.SingleOrDefaultAsync(item => item.Name == "Admin")
-            ?? database.Roles.Add(new Roles { Id = Guid.NewGuid(), Name = "Admin" }).Entity;
+        var role = await database.Roles.SingleOrDefaultAsync(item => item.Name == nameof(AppRole.AtlasAdmin))
+            ?? database.Roles.Add(new Roles { Id = Guid.NewGuid(), Name = nameof(AppRole.AtlasAdmin) }).Entity;
 
         var user = new User
         {
