@@ -5,6 +5,7 @@ import { EMPLOYEE_ENDPOINTS } from '@/constants/api'
 import { EMPLOYEE_STORE_ID } from '@/constants/stores'
 import { toRequestError, type RequestError } from '@/api/request-error'
 import type { Employee } from './models/employee'
+import type { EmployeeInput } from './models/employee-input'
 import type { EmployeeStatus } from './models/employee-status'
 
 export const useEmployeesStore = defineStore(EMPLOYEE_STORE_ID, () => {
@@ -29,6 +30,24 @@ export const useEmployeesStore = defineStore(EMPLOYEE_STORE_ID, () => {
     }
   }
 
+  async function create(input: EmployeeInput): Promise<RequestError | null> {
+    try {
+      await api.post(EMPLOYEE_ENDPOINTS.LIST, input)
+      return await load()
+    } catch (error) {
+      return toRequestError(error)
+    }
+  }
+
+  async function update(employee: Employee, input: EmployeeInput): Promise<RequestError | null> {
+    try {
+      await api.put(EMPLOYEE_ENDPOINTS.BY_ID(employee.id), input)
+      return await load()
+    } catch (error) {
+      return toRequestError(error)
+    }
+  }
+
   async function assignRoles(employee: Employee, roleNames: string[]): Promise<RequestError | null> {
     try {
       await api.put(EMPLOYEE_ENDPOINTS.ROLES_OF(employee.id), { roles: roleNames })
@@ -42,8 +61,7 @@ export const useEmployeesStore = defineStore(EMPLOYEE_STORE_ID, () => {
   async function setStatus(employee: Employee, status: EmployeeStatus): Promise<RequestError | null> {
     try {
       await api.put(EMPLOYEE_ENDPOINTS.STATUS_OF(employee.id), { status })
-      employee.status = status
-      return null
+      return await load()
     } catch (error) {
       return toRequestError(error)
     }
@@ -54,6 +72,8 @@ export const useEmployeesStore = defineStore(EMPLOYEE_STORE_ID, () => {
     roles,
     isLoading,
     load,
+    create,
+    update,
     assignRoles,
     setStatus
   }
