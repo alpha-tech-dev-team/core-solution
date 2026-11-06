@@ -12,7 +12,14 @@ public class SetUserRolesRequestValidator : AbstractValidator<SetUserRolesReques
             .NotNull();
 
         RuleForEach(x => x.Roles)
-            .NotEmpty()
-            .MaximumLength(ValidationConstants.AccessMaxLength);
+            .IsInEnum();
+
+        RuleFor(x => x.AdminLogin)
+            .MaximumLength(ValidationConstants.AdminUsernameMaxLength)
+            .When(x => x.AdminLogin is not null);
+
+        RuleFor(x => x.AdminPassword)
+            .MaximumLength(ValidationConstants.PasswordMaxLength)
+            .When(x => x.AdminPassword is not null);
     }
 }

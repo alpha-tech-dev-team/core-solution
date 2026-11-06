@@ -1,3 +1,5 @@
+using Identity.Domain.Enums;
+
 namespace Identity.Application.Contracts.Admin;
 
-public record SetUserStatusRequest(string Status);
+public record SetUserStatusRequest(UserStatus Status);

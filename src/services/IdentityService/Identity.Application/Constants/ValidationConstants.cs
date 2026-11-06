@@ -3,6 +3,10 @@ namespace Identity.Application.Constants;
 public static class ValidationConstants
 {
     public const long TelegramUserIdMinExclusive = 0;
+    public const int PageMin = 1;
+    public const int PageSizeMin = 1;
+    public const int PageSizeMax = 50;
+    public const int PageSizeDefault = 20;
     public const int PhoneMaxLength = 20;
     public const int PersonNameMaxLength = 50;
     public const int PositionMaxLength = 50;

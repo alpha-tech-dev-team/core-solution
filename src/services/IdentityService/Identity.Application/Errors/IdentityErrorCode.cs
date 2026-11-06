@@ -6,6 +6,7 @@ public enum IdentityErrorCode
     RoleNotFound,
     UserAlreadyActivated,
     PhoneAlreadyExists,
+    AdminCredentialsRequired,
     AccessDenied,
     InvalidCredentials,
     InvalidRefreshToken,
