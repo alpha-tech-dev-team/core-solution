@@ -100,10 +100,6 @@ public sealed class IncidentConfiguration : IEntityTypeConfiguration<Incident>
             .HasColumnType(DBKeys.Shared.TimestampWithTimeZone)
             .HasDefaultValueSql(DBKeys.Shared.NowSql);
 
-        builder.HasIndex(x => x.TicketNumber)
-            .IsUnique()
-            .HasDatabaseName(DBKeys.Incident.TicketNumberUniqueIndex);
-
         builder.HasIndex(x => x.AssignedEngineerId)
             .HasDatabaseName(DBKeys.Incident.AssignedEngineerIndex);
 
