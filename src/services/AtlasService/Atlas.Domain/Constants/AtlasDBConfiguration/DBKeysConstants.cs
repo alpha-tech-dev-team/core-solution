@@ -12,6 +12,8 @@ public static class DBKeys
         public const string NowSql = "now()";
         public const string GenRandomUuidSql = "gen_random_uuid()";
         public const string TimestampWithTimeZone = "timestamp with time zone";
+        public const string VectorExtension = "vector";
+        public const string MigrationsHistoryTable = "__EFMigrationsHistory";
         public const int MaxLength255 = 255;
         public const int MaxLength100 = 100;
         public const int MaxLength50 = 50;
