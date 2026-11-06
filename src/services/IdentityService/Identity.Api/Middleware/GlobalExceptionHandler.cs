@@ -17,11 +17,7 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
             return false;
         }
 
-        logger.LogError(
-            exception,
-            "Необработанное исключение при обработке {Method} {Path}",
-            httpContext.Request.Method,
-            httpContext.Request.Path);
+        logger.LogError(exception, "Необработанное исключение при обработке {Method} {Path}", httpContext.Request.Method, httpContext.Request.Path);
 
         var code = nameof(IdentityErrorCode.InternalError);
         httpContext.Response.StatusCode = IdentityErrorStatusCodes.Get(code);
