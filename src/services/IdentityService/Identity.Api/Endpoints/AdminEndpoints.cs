@@ -1,9 +1,10 @@
 using Identity.Api.Constants;
-using Identity.Api.Extensions;
+using Identity.Api.Extensions.Http;
 using Identity.Api.Filters;
 using Identity.Application.Contracts.Admin;
 using Identity.Domain.Enums;
 using Identity.Domain.Interfaces.Services;
+using Identity.Domain.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Identity.Api.Endpoints;
@@ -24,6 +25,14 @@ public static class AdminEndpoints
         group.MapPost(ApiRoutes.Logout, Logout);
 
         group.MapGet(ApiRoutes.Users, GetUsers)
+            .RequireAuthorization(AuthorizationPolicies.Admin);
+
+        group.MapPost(ApiRoutes.Users, CreateUser)
+            .AddEndpointFilter<ValidationFilter<UserDataRequest>>()
+            .RequireAuthorization(AuthorizationPolicies.Admin);
+
+        group.MapPut(ApiRoutes.UserById, UpdateUser)
+            .AddEndpointFilter<ValidationFilter<UserDataRequest>>()
             .RequireAuthorization(AuthorizationPolicies.Admin);
 
         group.MapGet(ApiRoutes.Roles, GetRoles)
@@ -56,6 +65,32 @@ public static class AdminEndpoints
         var roles = await adminUserService.GetRoles(cancellationToken);
 
         return Results.Ok(roles);
+    }
+
+    private static async Task<IResult> CreateUser(
+        [FromServices] IAdminUserService adminUserService,
+        UserDataRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await adminUserService.CreateUser(ToEmployeeData(request), cancellationToken);
+
+        return result.ToHttpResult();
+    }
+
+    private static async Task<IResult> UpdateUser(
+        [FromServices] IAdminUserService adminUserService,
+        Guid id,
+        UserDataRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await adminUserService.UpdateUser(id, ToEmployeeData(request), cancellationToken);
+
+        return result.ToHttpResult();
+    }
+
+    private static EmployeeData ToEmployeeData(UserDataRequest request)
+    {
+        return new EmployeeData(request.Name, request.Surname, request.Patronymic, request.Position, request.Phone);
     }
 
     private static async Task<IResult> SetUserRoles(
