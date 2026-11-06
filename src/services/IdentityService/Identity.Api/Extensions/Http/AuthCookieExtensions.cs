@@ -1,6 +1,6 @@
 using Identity.Api.Constants;
 
-namespace Identity.Api.Extensions;
+namespace Identity.Api.Extensions.Http;
 
 public static class AuthCookieExtensions
 {

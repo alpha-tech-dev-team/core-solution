@@ -1,5 +1,5 @@
 using Identity.Api.Constants;
-using Identity.Api.Extensions;
+using Identity.Api.Extensions.Http;
 using Identity.Api.Filters;
 using Identity.Application.Contracts.Client;
 using Identity.Domain.Interfaces.Services;

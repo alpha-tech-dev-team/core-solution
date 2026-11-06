@@ -1,5 +1,5 @@
 using FluentValidation;
-using Identity.Api.Extensions;
+using Identity.Api.Extensions.Http;
 
 namespace Identity.Api.Filters;
 

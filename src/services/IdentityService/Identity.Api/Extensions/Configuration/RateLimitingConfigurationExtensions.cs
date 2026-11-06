@@ -2,7 +2,7 @@ using Identity.Api.Constants;
 using Identity.Domain.Options;
 using Identity.Api.Middleware;
 
-namespace Identity.Api.Extensions;
+namespace Identity.Api.Extensions.Configuration;
 
 public static class RateLimitingConfigurationExtensions
 {

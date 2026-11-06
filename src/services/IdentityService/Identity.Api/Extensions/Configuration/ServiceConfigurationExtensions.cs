@@ -10,7 +10,7 @@ using Identity.Infrastructure.Repositories;
 using Identity.Infrastructure.Services;
 using Serilog;
 
-namespace Identity.Api.Extensions;
+namespace Identity.Api.Extensions.Configuration;
 
 public static class ServiceConfigurationExtensions
 {
@@ -35,7 +35,7 @@ public static class ServiceConfigurationExtensions
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
 
         services.AddFluentValidationAutoValidation();
-        services.AddValidatorsFromAssemblyContaining<AssemblyMarker>();
+        services.AddValidatorsFromAssemblyContaining<Identity.Application.AssemblyMarker>();
 
         services.AddJwtAuthentication();
         services.AddRateLimitingConfiguration(configuration);

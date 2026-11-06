@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Identity.Api.Extensions;
+namespace Identity.Api.Extensions.Configuration;
 
 public static class JwtConfigurationExtensions
 {

@@ -3,7 +3,7 @@ using Identity.Api.Constants;
 using Identity.Application.Contracts.Admin;
 using Identity.Domain.Models;
 
-namespace Identity.Api.Extensions;
+namespace Identity.Api.Extensions.Http;
 
 public static class ResultHttpExtensions
 {

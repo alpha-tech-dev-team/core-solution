@@ -1,7 +1,7 @@
 using Identity.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 
-namespace Identity.Api.Extensions;
+namespace Identity.Api.Extensions.Configuration;
 
 public static class ApplicationConfigurationExtensions
 {

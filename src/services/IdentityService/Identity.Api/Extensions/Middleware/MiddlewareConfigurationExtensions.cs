@@ -1,6 +1,6 @@
 using Serilog;
 
-namespace Identity.Api.Extensions;
+namespace Identity.Api.Extensions.Middleware;
 
 public static class MiddlewareConfigurationExtensions
 {
