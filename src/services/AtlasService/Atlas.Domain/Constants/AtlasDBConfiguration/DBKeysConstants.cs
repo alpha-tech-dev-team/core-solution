@@ -111,7 +111,7 @@ public static class DBKeys
         public const string CabinetForeignKey = "incidents_cabinet_id_fkey";
         public const string HardwareForeignKey = "incidents_hardware_id_fkey";
         public const string SoftwareForeignKey = "incidents_software_id_fkey";
-        public const string ArticleForeignKey = "fk_incidents_article";
+        public const string ArticleForeignKey = "incidents_article_id_fkey";
     }
 
     public static class IncidentFeedback

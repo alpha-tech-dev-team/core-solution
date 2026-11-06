@@ -660,7 +660,7 @@ namespace Atlas.Infrastructure.Database.Migrations
                         .WithMany()
                         .HasForeignKey("ArticleId")
                         .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("fk_incidents_article");
+                        .HasConstraintName("incidents_article_id_fkey");
 
                     b.HasOne("Atlas.Domain.Entities.Employee", "AssignedEngineer")
                         .WithMany("AssignedIncidents")
