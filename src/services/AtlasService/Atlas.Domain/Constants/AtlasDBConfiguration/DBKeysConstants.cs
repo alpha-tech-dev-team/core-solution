@@ -94,7 +94,6 @@ public static class DBKeys
         public const string AssetCheckSql = "hardware_id IS NULL OR software_id IS NULL";
         public const string StatusDefaultValue = StatusCreated;
         public const string PriorityDefaultValue = "medium";
-        public const string TicketNumberUniqueIndex = "incidents_ticket_number_key";
         public const string AssignedEngineerIndex = "idx_incidents_assigned_engineer";
         public const string CategoryIndex = "idx_incidents_category";
         public const string CreatedAtIndex = "idx_incidents_created_at";

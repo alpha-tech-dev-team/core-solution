@@ -247,10 +247,6 @@ namespace Atlas.Infrastructure.Database.Migrations
 
                     b.HasIndex("SoftwareId");
 
-                    b.HasIndex("TicketNumber")
-                        .IsUnique()
-                        .HasDatabaseName("incidents_ticket_number_key");
-
                     b.HasIndex("Status", "Priority")
                         .HasDatabaseName("idx_incidents_status_priority");
 
