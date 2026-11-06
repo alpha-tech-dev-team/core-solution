@@ -21,17 +21,17 @@ public static class DBKeys
         public const int MaxLength20 = 20;
     }
 
-    public static class EmployeeAccess
+    public static class Employee
     {
-        public const string Table = "employee_access";
+        public const string Table = "employees";
         public const string EmployeeId = "employee_id";
         public const string TelegramId = "telegram_id";
         public const string Role = "role";
-        public const string PrimaryKey = "employee_access_pkey";
-        public const string RoleCheckConstraint = "chk_employee_access_role";
+        public const string PrimaryKey = "employees_pkey";
+        public const string RoleCheckConstraint = "chk_employee_role";
         public const string RoleCheckSql = "role IN ('employee', 'engineer', 'admin')";
         public const string RoleDefaultValue = "employee";
-        public const string TelegramIdUniqueIndex = "employee_access_telegram_id_key";
+        public const string TelegramIdUniqueIndex = "employees_telegram_id_key";
     }
 
     public static class Hardware

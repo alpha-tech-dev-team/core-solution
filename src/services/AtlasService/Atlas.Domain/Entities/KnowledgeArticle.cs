@@ -16,7 +16,7 @@ public sealed class KnowledgeArticle : IHasUpdatedAt
     public DateTime UpdatedAt { get; set; }
 
     public IncidentCategory? Category { get; set; }
-    public EmployeeAccess? CreatedByEmployee { get; set; }
+    public Employee? CreatedByEmployee { get; set; }
     public Incident? SourceIncident { get; set; }
     public KnowledgeArticleVector? Vector { get; set; }
     public ICollection<IncidentFeedback> Feedback { get; set; } = new List<IncidentFeedback>();

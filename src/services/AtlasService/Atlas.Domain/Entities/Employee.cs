@@ -2,7 +2,7 @@ using Atlas.Domain.Interfaces;
 
 namespace Atlas.Domain.Entities;
 
-public sealed class EmployeeAccess : IHasUpdatedAt
+public sealed class Employee : IHasUpdatedAt
 {
     public Guid EmployeeId { get; set; }
     public long? TelegramId { get; set; }

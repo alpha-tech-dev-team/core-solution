@@ -22,9 +22,9 @@ public sealed class AtlasDbContext : DbContext
         get { return Set<Software>(); }
     }
 
-    public DbSet<EmployeeAccess> EmployeeAccess
+    public DbSet<Employee> Employees
     {
-        get { return Set<EmployeeAccess>(); }
+        get { return Set<Employee>(); }
     }
 
     public DbSet<IncidentCategory> IncidentCategories

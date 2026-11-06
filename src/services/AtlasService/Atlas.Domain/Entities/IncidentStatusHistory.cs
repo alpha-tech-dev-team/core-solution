@@ -11,5 +11,5 @@ public sealed class IncidentStatusHistory
     public DateTime CreatedAt { get; set; }
 
     public Incident Incident { get; set; } = default!;
-    public EmployeeAccess? ChangedByEmployee { get; set; }
+    public Employee? ChangedByEmployee { get; set; }
 }

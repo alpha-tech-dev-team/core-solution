@@ -5,26 +5,26 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Atlas.Infrastructure.Database.Configurations;
 
-public sealed class EmployeeAccessConfiguration : IEntityTypeConfiguration<EmployeeAccess>
+public sealed class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
 {
-    public void Configure(EntityTypeBuilder<EmployeeAccess> builder)
+    public void Configure(EntityTypeBuilder<Employee> builder)
     {
-        builder.ToTable(DBKeys.EmployeeAccess.Table, DBKeys.Shared.Schema, table =>
+        builder.ToTable(DBKeys.Employee.Table, DBKeys.Shared.Schema, table =>
             table.HasCheckConstraint(
-                DBKeys.EmployeeAccess.RoleCheckConstraint,
-                DBKeys.EmployeeAccess.RoleCheckSql));
+                DBKeys.Employee.RoleCheckConstraint,
+                DBKeys.Employee.RoleCheckSql));
 
-        builder.HasKey(x => x.EmployeeId).HasName(DBKeys.EmployeeAccess.PrimaryKey);
+        builder.HasKey(x => x.EmployeeId).HasName(DBKeys.Employee.PrimaryKey);
         builder.Property(x => x.EmployeeId)
-            .HasColumnName(DBKeys.EmployeeAccess.EmployeeId);
+            .HasColumnName(DBKeys.Employee.EmployeeId);
 
         builder.Property(x => x.TelegramId)
-            .HasColumnName(DBKeys.EmployeeAccess.TelegramId);
+            .HasColumnName(DBKeys.Employee.TelegramId);
 
         builder.Property(x => x.Role)
-            .HasColumnName(DBKeys.EmployeeAccess.Role)
+            .HasColumnName(DBKeys.Employee.Role)
             .HasMaxLength(DBKeys.Shared.MaxLength20)
-            .HasDefaultValue(DBKeys.EmployeeAccess.RoleDefaultValue)
+            .HasDefaultValue(DBKeys.Employee.RoleDefaultValue)
             .IsRequired();
 
         builder.Property(x => x.IsActive)
@@ -44,6 +44,6 @@ public sealed class EmployeeAccessConfiguration : IEntityTypeConfiguration<Emplo
 
         builder.HasIndex(x => x.TelegramId)
             .IsUnique()
-            .HasDatabaseName(DBKeys.EmployeeAccess.TelegramIdUniqueIndex);
+            .HasDatabaseName(DBKeys.Employee.TelegramIdUniqueIndex);
     }
 }
