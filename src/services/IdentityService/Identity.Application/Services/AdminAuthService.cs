@@ -1,5 +1,6 @@
 using CoreSolution.Shared.Results;
 using Identity.Application.Errors;
+using Identity.Domain.Enums;
 using Identity.Domain.Interfaces.Repositories;
 using Identity.Domain.Interfaces.Security;
 using Identity.Domain.Interfaces.Services;
@@ -38,6 +39,12 @@ public class AdminAuthService : IAdminAuthService
             return Result<AuthTokens>.Failure(nameof(IdentityErrorCode.InvalidCredentials));
         }
 
+        if (user.Status == UserStatus.Blocked)
+        {
+            _logger.LogWarning("Вход администратора отклонен: пользователь заблокирован");
+            return Result<AuthTokens>.Failure(nameof(IdentityErrorCode.AccessDenied));
+        }
+
         _logger.LogInformation("Администратор вошел в систему");
 
         return Result<AuthTokens>.Success(_tokens.IssueTokens(user));
@@ -53,6 +60,12 @@ public class AdminAuthService : IAdminAuthService
         if (user?.AdminUsername is null || user.AdminPasswordHash is null)
         {
             _logger.LogWarning("Обновление токена отклонено: refresh-токен недействителен");
+            return Result<AuthTokens>.Failure(nameof(IdentityErrorCode.InvalidRefreshToken));
+        }
+
+        if (user.Status == UserStatus.Blocked)
+        {
+            _logger.LogWarning("Обновление токена отклонено: пользователь заблокирован");
             return Result<AuthTokens>.Failure(nameof(IdentityErrorCode.InvalidRefreshToken));
         }
 

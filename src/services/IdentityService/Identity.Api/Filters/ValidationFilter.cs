@@ -1,5 +1,8 @@
 using FluentValidation;
-using Identity.Api.Extensions;
+using FluentValidation.Results;
+using Identity.Api.Constants;
+using Identity.Api.Models;
+using Identity.Application.Errors;
 
 namespace Identity.Api.Filters;
 
@@ -19,6 +22,20 @@ public class ValidationFilter<T> : IEndpointFilter where T : class
 
         return validation.IsValid
             ? await next(context)
-            : validation.ToValidationProblem();
+            : ToValidationError(validation);
+    }
+
+    private static IResult ToValidationError(ValidationResult validation)
+    {
+        var code = nameof(IdentityErrorCode.ValidationFailed);
+        var errors = validation.Errors
+            .GroupBy(failure => failure.PropertyName)
+            .ToDictionary(
+                group => group.Key,
+                group => group.Select(failure => failure.ErrorCode).Distinct().ToArray());
+
+        return Results.Json(
+            new ValidationErrorResponse(code, errors),
+            statusCode: IdentityErrorStatusCodes.Get(code));
     }
 }

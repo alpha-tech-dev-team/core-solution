@@ -2,6 +2,7 @@ import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios'
 import { useAuthStore } from '@/stores/auth'
 import {
   API_BASE_URL,
+  AUTH_ENDPOINTS,
   CONTENT_TYPE_JSON,
   HEADER_CONTENT_TYPE,
   REQUEST_TIMEOUT_MS,
@@ -24,8 +25,9 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config as RetriableRequestConfig | undefined
     const isUnauthorized = error.response?.status === HTTP_STATUS.UNAUTHORIZED
+    const isRefreshRequest = originalRequest?.url === AUTH_ENDPOINTS.REFRESH
 
-    if (!isUnauthorized || !originalRequest || originalRequest[RETRY_FLAG]) {
+    if (!isUnauthorized || !originalRequest || originalRequest[RETRY_FLAG] || isRefreshRequest) {
       return Promise.reject(error)
     }
 
