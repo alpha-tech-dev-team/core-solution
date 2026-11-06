@@ -1,5 +1,7 @@
 using Atlas.Domain.Constants.AtlasDBConfiguration;
 using Atlas.Domain.Entities;
+using Atlas.Domain.Enums;
+using Atlas.Infrastructure.Database.Converters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -64,8 +66,9 @@ public sealed class IncidentConfiguration : IEntityTypeConfiguration<Incident>
 
         builder.Property(x => x.Status)
             .HasColumnName(DBKeys.Incident.Status)
+            .HasConversion<IncidentStatusConverter>()
             .HasMaxLength(DBKeys.Shared.MaxLength30)
-            .HasDefaultValue(DBKeys.Incident.StatusDefaultValue)
+            .HasDefaultValue(IncidentStatus.Created)
             .IsRequired();
 
         builder.Property(x => x.Priority)

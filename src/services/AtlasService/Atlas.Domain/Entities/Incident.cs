@@ -1,3 +1,5 @@
+using Atlas.Domain.Enums;
+
 namespace Atlas.Domain.Entities;
 
 public sealed class Incident
@@ -10,7 +12,7 @@ public sealed class Incident
     public Guid? HardwareId { get; set; }
     public Guid? SoftwareId { get; set; }
     public string UserDescription { get; set; } = string.Empty;
-    public string Status { get; set; } = string.Empty;
+    public IncidentStatus Status { get; set; } = IncidentStatus.Created;
     public string Priority { get; set; } = string.Empty;
     public Guid? AssignedEngineerId { get; set; }
     public Guid? ArticleId { get; set; }
