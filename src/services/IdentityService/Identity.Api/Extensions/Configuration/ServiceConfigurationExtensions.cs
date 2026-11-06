@@ -1,5 +1,6 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Identity.Api.Middleware;
 using Identity.Application.Services;
 using Identity.Domain.Interfaces.Repositories;
 using Identity.Domain.Interfaces.Security;
@@ -21,6 +22,9 @@ public static class ServiceConfigurationExtensions
         services.AddSerilog((serviceProvider, loggerConfiguration) => loggerConfiguration
             .ReadFrom.Configuration(configuration)
             .ReadFrom.Services(serviceProvider));
+
+        services.AddExceptionHandler<GlobalExceptionHandler>();
+        services.AddProblemDetails();
 
         services.ConfigureOptions(configuration);
         services.ConfigureDbContext();
