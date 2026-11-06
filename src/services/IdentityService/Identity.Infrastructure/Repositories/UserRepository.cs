@@ -48,7 +48,6 @@ public class UserRepository : IUserRepository
     public Task<List<EmployeeInfo>> GetEmployees(CancellationToken cancellationToken = default)
     {
         return _context.Users
-            .AsNoTracking()
             .OrderBy(x => x.Surname)
             .ThenBy(x => x.Name)
             .Select(x => new EmployeeInfo(
@@ -66,7 +65,6 @@ public class UserRepository : IUserRepository
     public Task<List<Roles>> GetAllRoles(CancellationToken cancellationToken = default)
     {
         return _context.Roles
-            .AsNoTracking()
             .OrderBy(x => x.Name)
             .ToListAsync(cancellationToken);
     }
