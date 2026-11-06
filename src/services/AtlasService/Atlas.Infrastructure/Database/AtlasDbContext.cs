@@ -61,7 +61,69 @@ public sealed class AtlasDbContext : DbContext
     {
     }
 
-    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        await ValidateIncidentAssetsAsync(cancellationToken);
+        ApplyUpdatedAt();
+
+        return await base.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task ValidateIncidentAssetsAsync(CancellationToken cancellationToken)
+    {
+        var incidents = ChangeTracker.Entries<Incident>()
+            .Where(entry => entry.State is EntityState.Added or EntityState.Modified)
+            .Select(entry => entry.Entity)
+            .ToList();
+
+        if (incidents.Count == 0)
+        {
+            return;
+        }
+
+        var categoryIds = incidents.Select(x => x.CategoryId).Distinct().ToList();
+        var categories = await IncidentCategories
+            .Where(category => categoryIds.Contains(category.Id))
+            .ToDictionaryAsync(category => category.Id, category => category.Name, cancellationToken);
+
+        foreach (var incident in incidents)
+        {
+            if (!categories.TryGetValue(incident.CategoryId, out var categoryName))
+            {
+                throw new InvalidOperationException($"Incident category '{incident.CategoryId}' was not found.");
+            }
+
+            var (requiresHardware, requiresSoftware) = categoryName switch
+            {
+                DBKeys.IncidentCategory.HardwareName => (true, false),
+                DBKeys.IncidentCategory.SoftwareName => (false, true),
+                DBKeys.IncidentCategory.OtherName => (false, false),
+                _ => throw new InvalidOperationException($"Unknown incident category '{categoryName}'.")
+            };
+
+            if (requiresHardware && incident.HardwareId is null)
+            {
+                throw new InvalidOperationException("Hardware is required for the 'hardware' incident category.");
+            }
+
+            if (!requiresHardware && incident.HardwareId is not null)
+            {
+                throw new InvalidOperationException("Hardware is not allowed for this incident category.");
+            }
+
+            if (requiresSoftware && incident.SoftwareId is null)
+            {
+                throw new InvalidOperationException("Software is required for the 'software' incident category.");
+            }
+
+            if (!requiresSoftware && incident.SoftwareId is not null)
+            {
+                throw new InvalidOperationException("Software is not allowed for this incident category.");
+            }
+        }
+    }
+
+    private void ApplyUpdatedAt()
     {
         var now = DateTime.UtcNow;
 
@@ -72,8 +134,6 @@ public sealed class AtlasDbContext : DbContext
                 entry.Entity.UpdatedAt = now;
             }
         }
-
-        return base.SaveChangesAsync(cancellationToken);
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
