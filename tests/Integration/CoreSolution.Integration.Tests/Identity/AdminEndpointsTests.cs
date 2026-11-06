@@ -27,6 +27,18 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
     }
 
     [Fact]
+    public async Task Refresh_WithoutCookie_ReturnsUnauthorizedWithErrorCode()
+    {
+        using var client = fixture.CreateIdentityHttpClient();
+
+        var response = await client.PostAsync("/api/admin/refresh", content: null);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.InvalidRefreshToken), error!.Code);
+    }
+
+    [Fact]
     public async Task GetUsers_AsAdmin_ReturnsSeededUserWithRoles()
     {
         const string phone = "+79995550201";
