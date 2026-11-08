@@ -15,5 +15,10 @@ public class UpdateSecretRequestValidator : AbstractValidator<UpdateSecretReques
         RuleFor(x => x.Username)
             .NotEmpty()
             .MaximumLength(SecretMetadataLimits.UsernameMaxLength);
+
+        RuleFor(x => x.Password)
+            .NotEmpty()
+            .MaximumLength(SecretMetadataLimits.PasswordMaxLength)
+            .When(x => x.Password is not null);
     }
 }

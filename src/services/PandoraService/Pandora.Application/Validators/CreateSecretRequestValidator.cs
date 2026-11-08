@@ -17,6 +17,7 @@ public class CreateSecretRequestValidator : AbstractValidator<CreateSecretReques
             .MaximumLength(SecretMetadataLimits.UsernameMaxLength);
 
         RuleFor(x => x.Password)
-            .NotEmpty();
+            .NotEmpty()
+            .MaximumLength(SecretMetadataLimits.PasswordMaxLength);
     }
 }
