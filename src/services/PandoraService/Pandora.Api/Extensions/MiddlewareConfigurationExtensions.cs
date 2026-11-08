@@ -6,9 +6,9 @@ public static class MiddlewareConfigurationExtensions
 {
     public static WebApplication UseMiddlewareConfiguration(this WebApplication app)
     {
-        app.UseExceptionHandler();
-
         app.UseSerilogRequestLogging();
+
+        app.UseExceptionHandler();
 
         app.UseHttpsRedirection();
 
