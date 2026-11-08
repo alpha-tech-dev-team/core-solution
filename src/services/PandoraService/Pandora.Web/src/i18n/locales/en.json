@@ -91,5 +91,11 @@
   "error_code_secretNotFound": "Secret not found",
   "error_code_invalidSecretData": "Invalid secret data",
   "error_code_vaultwardenUnavailable": "The secret vault is temporarily unavailable",
-  "error_code_databaseUnavailable": "The database is temporarily unavailable"
+  "error_code_databaseUnavailable": "The database is temporarily unavailable",
+  "error_code_internalError": "Internal server error",
+  "error_code_badRequest": "Invalid request",
+  "error_code_conflict": "Data conflict",
+  "secrets_page_prev": "Previous",
+  "secrets_page_next": "Next",
+  "secrets_page_info": "Page {0} of {1}"
 }

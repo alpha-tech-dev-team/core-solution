@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using Pandora.Api.Middleware;
 using Pandora.Application.Features.Secrets;
 using Pandora.Domain.Interfaces;
 using Pandora.Domain.Options;
@@ -14,6 +15,9 @@ public static class ServiceConfigurationExtensions
     public static IServiceCollection AddServiceConfiguration(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddOpenApi();
+
+        services.AddProblemDetails();
+        services.AddExceptionHandler<GlobalExceptionHandler>();
 
         services.AddSerilog((serviceProvider, loggerConfiguration) => loggerConfiguration
             .ReadFrom.Configuration(configuration)

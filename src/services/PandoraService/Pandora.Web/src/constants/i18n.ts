@@ -29,7 +29,10 @@ export const RESOURCE_KEYS = {
   SECRETS_FIELD_NAME: 'secrets_field_name',
   SECRETS_FIELD_USERNAME: 'secrets_field_username',
   SECRETS_FIELD_PASSWORD: 'secrets_field_password',
-  SECRETS_PASSWORD_KEEP: 'secrets_password_keep'
+  SECRETS_PASSWORD_KEEP: 'secrets_password_keep',
+  SECRETS_PAGE_PREV: 'secrets_page_prev',
+  SECRETS_PAGE_NEXT: 'secrets_page_next',
+  SECRETS_PAGE_INFO: 'secrets_page_info'
 } as const
 
 export const VALIDATION_RULES = {
@@ -58,5 +61,8 @@ export const SERVER_ERROR_KEYS: Record<string, string> = {
   SecretNotFound: 'error_code_secretNotFound',
   InvalidSecretData: 'error_code_invalidSecretData',
   VaultwardenUnavailable: 'error_code_vaultwardenUnavailable',
-  DatabaseUnavailable: 'error_code_databaseUnavailable'
+  DatabaseUnavailable: 'error_code_databaseUnavailable',
+  InternalError: 'error_code_internalError',
+  BadRequest: 'error_code_badRequest',
+  Conflict: 'error_code_conflict'
 }

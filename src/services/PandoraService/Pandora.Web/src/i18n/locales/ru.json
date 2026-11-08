@@ -91,5 +91,11 @@
   "error_code_secretNotFound": "Секрет не найден",
   "error_code_invalidSecretData": "Некорректные данные секрета",
   "error_code_vaultwardenUnavailable": "Хранилище секретов временно недоступно",
-  "error_code_databaseUnavailable": "База данных временно недоступна"
+  "error_code_databaseUnavailable": "База данных временно недоступна",
+  "error_code_internalError": "Внутренняя ошибка сервера",
+  "error_code_badRequest": "Некорректный запрос",
+  "error_code_conflict": "Конфликт данных",
+  "secrets_page_prev": "Назад",
+  "secrets_page_next": "Вперёд",
+  "secrets_page_info": "Страница {0} из {1}"
 }
