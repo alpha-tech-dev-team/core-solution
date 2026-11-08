@@ -6,6 +6,7 @@ import { tr, trRequestError } from '@/i18n'
 import { RESOURCE_KEYS } from '@/constants/i18n'
 import { ROUTES } from '@/constants/routes'
 import { LOADING_PLACEHOLDER } from '@/constants/ui'
+import { FIRST_PAGE, SECRETS_PAGE_SIZE } from '@/constants/pagination'
 import { toRequestError } from '@/api/request-error'
 import { validateSecretForm } from './secrets/validate-secret-form'
 import {
@@ -20,6 +21,9 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 const secrets = ref<SecretItem[]>([])
+const page = ref(FIRST_PAGE)
+const pageSize = ref(SECRETS_PAGE_SIZE)
+const total = ref(0)
 const isLoading = ref(false)
 const isSaving = ref(false)
 const isDeleting = ref(false)
@@ -32,18 +36,37 @@ const formPassword = ref('')
 const selectedId = ref<string | null>(null)
 
 const selectedItem = computed(() => secrets.value.find((item) => item.id === selectedId.value) ?? null)
+const totalPages = computed(() => Math.max(FIRST_PAGE, Math.ceil(total.value / pageSize.value)))
 
 async function loadSecrets() {
   isLoading.value = true
   errorMessage.value = ''
 
   try {
-    secrets.value = await fetchSecrets()
+    let result = await fetchSecrets(page.value, pageSize.value)
+
+    while (result.items.length === 0 && result.total > 0 && page.value > FIRST_PAGE) {
+      page.value -= 1
+      result = await fetchSecrets(page.value, pageSize.value)
+    }
+
+    secrets.value = result.items
+    page.value = result.page
+    pageSize.value = result.pageSize
+    total.value = result.total
   } catch (error) {
     errorMessage.value = trRequestError(toRequestError(error))
   } finally {
     isLoading.value = false
   }
+}
+
+async function changePage(target: number) {
+  if (target < FIRST_PAGE || target > totalPages.value || target === page.value) return
+
+  page.value = target
+  selectedId.value = null
+  await loadSecrets()
 }
 
 function resetForm() {
@@ -248,6 +271,26 @@ onMounted(loadSecrets)
           </tr>
         </tbody>
       </table>
+
+      <div v-if="totalPages > 1" class="secrets__pagination">
+        <button
+          class="secrets__button secrets__button--secondary"
+          :disabled="page <= FIRST_PAGE"
+          @click="changePage(page - 1)"
+        >
+          {{ tr(RESOURCE_KEYS.SECRETS_PAGE_PREV) }}
+        </button>
+        <span class="secrets__pagination-info">
+          {{ tr(RESOURCE_KEYS.SECRETS_PAGE_INFO, page, totalPages) }}
+        </span>
+        <button
+          class="secrets__button secrets__button--secondary"
+          :disabled="page >= totalPages"
+          @click="changePage(page + 1)"
+        >
+          {{ tr(RESOURCE_KEYS.SECRETS_PAGE_NEXT) }}
+        </button>
+      </div>
     </main>
   </div>
 </template>
@@ -449,5 +492,17 @@ onMounted(loadSecrets)
 .secrets__row--selected,
 .secrets__row--selected:hover {
   background: var(--color-primary-disabled);
+}
+
+.secrets__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.secrets__pagination-info {
+  font-size: var(--font-size-small);
+  color: var(--color-text-secondary);
 }
 </style>
