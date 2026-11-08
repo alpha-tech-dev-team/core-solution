@@ -2,7 +2,8 @@ import { z } from 'zod'
 import { trValidation } from '@/i18n'
 import { type ValidationRule } from '@/constants/i18n'
 import { ZOD_ISSUE_CODE } from '@/constants/validation'
-import { createSecretFormSchema, updateSecretFormSchema, type SecretForm } from '@/validation/secrets'
+import { createSecretFormSchema, updateSecretFormSchema } from '@/validation/secrets'
+import { type SecretFormValues } from '@/views/secrets/models/secret-form-values'
 
 type SecretFormIssue = z.ZodError['issues'][number]
 
@@ -15,11 +16,6 @@ function extractLimit(issue: SecretFormIssue): unknown {
     default:
       return undefined
   }
-}
-
-export interface SecretFormValues extends SecretForm {
-  password: string
-  isEditing: boolean
 }
 
 export function validateSecretForm(values: SecretFormValues): string | null {
