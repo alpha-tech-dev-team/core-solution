@@ -21,15 +21,13 @@ public sealed class SecretAuditLogger
         try
         {
             await _auditRepository.Add(
-                new AuditEntry
-                {
-                    Id = Guid.NewGuid(),
-                    Timestamp = DateTime.UtcNow,
-                    UserId = adminUserId,
-                    Action = action,
-                    TargetItemId = targetItemId,
-                    RequestSource = AuditConstants.SourceWeb
-                },
+                new AuditEntry(
+                    Guid.NewGuid(),
+                    DateTime.UtcNow,
+                    adminUserId,
+                    action,
+                    targetItemId,
+                    AuditConstants.SourceWeb),
                 cancellationToken);
         }
         catch (Exception exception)

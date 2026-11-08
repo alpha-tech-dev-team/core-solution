@@ -4,21 +4,22 @@ using Microsoft.Extensions.Logging;
 using Pandora.Domain.Constants;
 using Pandora.Domain.Enums;
 using Pandora.Domain.Interfaces;
+using Pandora.Domain.Models;
 
 namespace Pandora.Application.Features.Secrets;
 
-public sealed class DeleteSecretCommandHandler : IRequestHandler<DeleteSecretCommand, Result>
+public sealed class DeleteSecretMessageHandler : IRequestHandler<DeleteSecretMessage, Result>
 {
     private readonly ISecretWriter _secretWriter;
     private readonly ISecretMetadataRepository _metadataRepository;
     private readonly SecretAuditLogger _auditLogger;
-    private readonly ILogger<DeleteSecretCommandHandler> _logger;
+    private readonly ILogger<DeleteSecretMessageHandler> _logger;
 
-    public DeleteSecretCommandHandler(
+    public DeleteSecretMessageHandler(
         ISecretWriter secretWriter,
         ISecretMetadataRepository metadataRepository,
         SecretAuditLogger auditLogger,
-        ILogger<DeleteSecretCommandHandler> logger)
+        ILogger<DeleteSecretMessageHandler> logger)
     {
         _secretWriter = secretWriter;
         _metadataRepository = metadataRepository;
@@ -26,16 +27,20 @@ public sealed class DeleteSecretCommandHandler : IRequestHandler<DeleteSecretCom
         _logger = logger;
     }
 
-    public async Task<Result> Handle(DeleteSecretCommand request, CancellationToken cancellationToken)
+    public async Task<Result> Handle(DeleteSecretMessage request, CancellationToken cancellationToken)
     {
-        var metadata = await _metadataRepository.Get(request.ItemId, cancellationToken);
+        var metadata = await _metadataRepository.GetById(request.ItemId, cancellationToken);
 
         if (metadata is null)
         {
             return Result.Failure(nameof(ErrorCode.SecretNotFound));
         }
 
-        if (!await _secretWriter.Delete(request.ItemId, cancellationToken))
+        var deleteResult = await _secretWriter.Delete(request.ItemId, cancellationToken);
+
+        var isOrphaned = deleteResult is SecretDeleteResult.NotFound;
+
+        if (deleteResult is SecretDeleteResult.GatewayError)
         {
             _logger.LogWarning("Шлюз Vaultwarden отклонил удаление секрета {ItemId}", request.ItemId);
 
@@ -51,6 +56,11 @@ public sealed class DeleteSecretCommandHandler : IRequestHandler<DeleteSecretCom
             _logger.LogError(exception, "Не удалось удалить секрет {ItemId} из базы данных, в Vaultwarden он уже удалён", request.ItemId);
 
             return Result.Failure(nameof(ErrorCode.DatabaseUnavailable));
+        }
+
+        if (isOrphaned)
+        {
+            _logger.LogWarning("Элемент {ItemId} уже отсутствует в Vaultwarden, устаревшая запись метаданных очищена", request.ItemId);
         }
 
         await _auditLogger.LogActionAsync(request.AdminUserId, AuditConstants.ActionSecretDeleted, request.ItemId, cancellationToken);

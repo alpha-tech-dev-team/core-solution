@@ -8,18 +8,18 @@ using Pandora.Domain.Models;
 
 namespace Pandora.Application.Features.Secrets;
 
-public sealed class UpdateSecretCommandHandler : IRequestHandler<UpdateSecretCommand, Result<SecretListItem>>
+public sealed class UpdateSecretMessageHandler : IRequestHandler<UpdateSecretMessage, Result<SecretListItem>>
 {
     private readonly ISecretWriter _secretWriter;
     private readonly ISecretMetadataRepository _metadataRepository;
     private readonly SecretAuditLogger _auditLogger;
-    private readonly ILogger<UpdateSecretCommandHandler> _logger;
+    private readonly ILogger<UpdateSecretMessageHandler> _logger;
 
-    public UpdateSecretCommandHandler(
+    public UpdateSecretMessageHandler(
         ISecretWriter secretWriter,
         ISecretMetadataRepository metadataRepository,
         SecretAuditLogger auditLogger,
-        ILogger<UpdateSecretCommandHandler> logger)
+        ILogger<UpdateSecretMessageHandler> logger)
     {
         _secretWriter = secretWriter;
         _metadataRepository = metadataRepository;
@@ -27,7 +27,7 @@ public sealed class UpdateSecretCommandHandler : IRequestHandler<UpdateSecretCom
         _logger = logger;
     }
 
-    public async Task<Result<SecretListItem>> Handle(UpdateSecretCommand request, CancellationToken cancellationToken)
+    public async Task<Result<SecretListItem>> Handle(UpdateSecretMessage request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.ItemId))
         {
@@ -37,14 +37,22 @@ public sealed class UpdateSecretCommandHandler : IRequestHandler<UpdateSecretCom
         var name = request.Name.Trim();
         var username = request.Username.Trim();
 
-        var metadata = await _metadataRepository.Get(request.ItemId, cancellationToken);
+        var metadata = await _metadataRepository.GetById(request.ItemId, cancellationToken);
 
         if (metadata is null)
         {
             return Result<SecretListItem>.Failure(nameof(ErrorCode.SecretNotFound));
         }
 
-        var updateResult = await _secretWriter.Update(request.ItemId, name, username, request.Password, cancellationToken);
+        var updateResult = await _secretWriter.Update(
+            request.ItemId,
+            new SecretUpdateData(name, username, request.Password),
+            cancellationToken);
+
+        if (updateResult is SecretUpdateResult.NotFound)
+        {
+            return Result<SecretListItem>.Failure(nameof(ErrorCode.SecretNotFound));
+        }
 
         if (updateResult is SecretUpdateResult.GatewayError)
         {
@@ -60,8 +68,7 @@ public sealed class UpdateSecretCommandHandler : IRequestHandler<UpdateSecretCom
 
         try
         {
-            metadata.ResourceName = name;
-            metadata.Username = username;
+            metadata.Rename(name, username);
 
             await _metadataRepository.Update(metadata, cancellationToken);
         }

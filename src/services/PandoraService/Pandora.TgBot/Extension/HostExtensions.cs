@@ -43,8 +43,8 @@ public static class HostExtensions
         }
 
         db.SecretMetadata.AddRange(
-            new SecretMetadata { VaultItemId = ClickUpItemId, ResourceName = ClickUpResourceName, Username = DevUsername },
-            new SecretMetadata { VaultItemId = GitHubItemId, ResourceName = GitHubResourceName, Username = DevUsername });
+            new SecretMetadata(ClickUpItemId, ClickUpResourceName, DevUsername),
+            new SecretMetadata(GitHubItemId, GitHubResourceName, DevUsername));
 
         db.Permission.AddRange(
             new Permission { TelegramUserId = DevTelegramUserId, VaultItemId = ClickUpItemId, IsActive = true },

@@ -4,4 +4,4 @@ using Pandora.Domain.Models;
 
 namespace Pandora.Application.Features.Secrets;
 
-public sealed record GetSecretsQuery : IRequest<Result<IReadOnlyList<SecretListItem>>>;
+public sealed record GetSecretsMessage(int Page, int PageSize) : IRequest<Result<SecretListPage>>;

@@ -3,4 +3,4 @@ using MediatR;
 
 namespace Pandora.Application.Features.Secrets;
 
-public sealed record DeleteSecretCommand(Guid AdminUserId, string ItemId) : IRequest<Result>;
+public sealed record DeleteSecretMessage(Guid AdminUserId, string ItemId) : IRequest<Result>;

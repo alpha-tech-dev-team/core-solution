@@ -9,18 +9,18 @@ using Pandora.Domain.Models;
 
 namespace Pandora.Application.Features.Secrets;
 
-public sealed class CreateSecretCommandHandler : IRequestHandler<CreateSecretCommand, Result<SecretListItem>>
+public sealed class CreateSecretMessageHandler : IRequestHandler<CreateSecretMessage, Result<SecretListItem>>
 {
     private readonly ISecretWriter _secretWriter;
     private readonly ISecretMetadataRepository _metadataRepository;
     private readonly SecretAuditLogger _auditLogger;
-    private readonly ILogger<CreateSecretCommandHandler> _logger;
+    private readonly ILogger<CreateSecretMessageHandler> _logger;
 
-    public CreateSecretCommandHandler(
+    public CreateSecretMessageHandler(
         ISecretWriter secretWriter,
         ISecretMetadataRepository metadataRepository,
         SecretAuditLogger auditLogger,
-        ILogger<CreateSecretCommandHandler> logger)
+        ILogger<CreateSecretMessageHandler> logger)
     {
         _secretWriter = secretWriter;
         _metadataRepository = metadataRepository;
@@ -28,7 +28,7 @@ public sealed class CreateSecretCommandHandler : IRequestHandler<CreateSecretCom
         _logger = logger;
     }
 
-    public async Task<Result<SecretListItem>> Handle(CreateSecretCommand request, CancellationToken cancellationToken)
+    public async Task<Result<SecretListItem>> Handle(CreateSecretMessage request, CancellationToken cancellationToken)
     {
         var name = request.Name.Trim();
         var username = request.Username.Trim();
@@ -44,12 +44,7 @@ public sealed class CreateSecretCommandHandler : IRequestHandler<CreateSecretCom
 
         try
         {
-            var metadata = new SecretMetadata
-            {
-                VaultItemId = created.Id,
-                ResourceName = name,
-                Username = username
-            };
+            var metadata = new SecretMetadata(created.Id, name, username);
 
             await _metadataRepository.Add(metadata, cancellationToken);
         }
@@ -71,9 +66,9 @@ public sealed class CreateSecretCommandHandler : IRequestHandler<CreateSecretCom
     {
         try
         {
-            var deleted = await _secretWriter.Delete(itemId, CancellationToken.None);
+            var deleteResult = await _secretWriter.Delete(itemId, CancellationToken.None);
 
-            if (!deleted)
+            if (deleteResult is SecretDeleteResult.GatewayError)
             {
                 _logger.LogError("Не удалось удалить секрет {ItemId} из Vaultwarden после отката создания", itemId);
             }
