@@ -57,6 +57,7 @@ public static class ServiceConfigurationExtensions
             .AddInterceptors(serviceProvider.GetRequiredService<AuditSaveChangesInterceptor>()));
 
         services.AddScoped<ISecretMetadataRepository, SecretMetadataRepository>();
+        services.AddScoped<IPermissionRepository, PermissionRepository>();
 
         return services;
     }
