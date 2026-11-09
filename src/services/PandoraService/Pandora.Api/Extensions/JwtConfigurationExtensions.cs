@@ -1,4 +1,5 @@
 using System.Text;
+using CoreSolution.Shared.Constants;
 using CoreSolution.Shared.Options;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -25,26 +26,26 @@ public static class JwtConfigurationExtensions
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(jwt =>
             {
-                jwt.MapInboundClaims = JwtConstants.MapInboundClaims;
+                jwt.MapInboundClaims = JwtValidationConstants.MapInboundClaims;
                 jwt.TokenValidationParameters = new TokenValidationParameters
                 {
-                    ValidateIssuer = JwtConstants.ValidateIssuer,
+                    ValidateIssuer = JwtValidationConstants.ValidateIssuer,
                     ValidIssuer = options.Issuer,
-                    ValidateAudience = JwtConstants.ValidateAudience,
+                    ValidateAudience = JwtValidationConstants.ValidateAudience,
                     ValidAudience = options.Audience,
-                    ValidateIssuerSigningKey = JwtConstants.ValidateIssuerSigningKey,
+                    ValidateIssuerSigningKey = JwtValidationConstants.ValidateIssuerSigningKey,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret)),
-                    ValidateLifetime = JwtConstants.ValidateLifetime,
-                    ClockSkew = JwtConstants.ClockSkew,
-                    ValidAlgorithms = JwtConstants.ValidAlgorithms,
-                    NameClaimType = JwtConstants.UniqueNameClaim,
-                    RoleClaimType = JwtConstants.RoleClaim
+                    ValidateLifetime = JwtValidationConstants.ValidateLifetime,
+                    ClockSkew = JwtValidationConstants.ClockSkew,
+                    ValidAlgorithms = JwtValidationConstants.ValidAlgorithms,
+                    NameClaimType = PandoraJwtConstants.UniqueNameClaim,
+                    RoleClaimType = PandoraJwtConstants.RoleClaim
                 };
                 jwt.Events = new JwtBearerEvents
                 {
                     OnMessageReceived = ctx =>
                     {
-                        ctx.Token ??= ctx.Request.Cookies[JwtConstants.AccessTokenCookieName];
+                        ctx.Token ??= ctx.Request.Cookies[PandoraJwtConstants.AccessTokenCookieName];
                         return Task.CompletedTask;
                     }
                 };

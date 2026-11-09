@@ -1,12 +1,8 @@
-namespace Pandora.Api.Constants;
+namespace CoreSolution.Shared.Constants;
 
-public static class JwtConstants
+public static class JwtValidationConstants
 {
     public const string SigningAlgorithm = "HS256";
-    public const string AccessTokenCookieName = "access_token";
-    public const string SubjectClaim = "sub";
-    public const string UniqueNameClaim = "unique_name";
-    public const string RoleClaim = "role";
     public const bool MapInboundClaims = false;
     public const bool ValidateIssuer = true;
     public const bool ValidateAudience = true;

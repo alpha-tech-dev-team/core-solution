@@ -96,7 +96,7 @@ public static class SecretsEndpoints
 
     private static bool TryGetAdminUserId(HttpContext context, out Guid adminUserId)
     {
-        var subject = context.User.FindFirst(JwtConstants.SubjectClaim)?.Value;
+        var subject = context.User.FindFirst(PandoraJwtConstants.SubjectClaim)?.Value;
 
         return Guid.TryParse(subject, out adminUserId);
     }
