@@ -242,8 +242,9 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
             new UserDataRequest(string.Empty, "Иванов", null, "Инженер", "+79995550208"));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        var error = await response.Content.ReadFromJsonAsync<ValidationErrorResponse>();
         Assert.Equal(nameof(IdentityErrorCode.ValidationFailed), error!.Code);
+        Assert.All(error.Errors.Values.SelectMany(messages => messages), message => Assert.DoesNotContain("Validator", message));
     }
 
     [Fact]
@@ -351,6 +352,113 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
             new UserDataRequest("Иван", "Иванов", null, "Инженер", "+79995550212"));
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task SetRoles_DuplicateAdminLogin_ReturnsConflict()
+    {
+        const string firstPhone = "+79995550220";
+        const string secondPhone = "+79995550221";
+        await fixture.SeedPendingUserAsync(firstPhone);
+        await fixture.SeedPendingUserAsync(secondPhone);
+        using var client = await CreateLoggedInAdminClient();
+        var users = await GetUsers(client);
+        var first = Array.Find(users, user => user.Phone == firstPhone)!;
+        var second = Array.Find(users, user => user.Phone == secondPhone)!;
+
+        var firstResponse = await client.PutAsJsonAsync(
+            $"{UsersRoute}/{first.Id}/roles",
+            new SetUserRolesRequest([UserRole.AtlasAdmin], "duplicate-admin", "admin-password-123"));
+        Assert.Equal(HttpStatusCode.OK, firstResponse.StatusCode);
+
+        var secondResponse = await client.PutAsJsonAsync(
+            $"{UsersRoute}/{second.Id}/roles",
+            new SetUserRolesRequest([UserRole.AtlasAdmin], "duplicate-admin", "admin-password-123"));
+
+        Assert.Equal(HttpStatusCode.Conflict, secondResponse.StatusCode);
+        var error = await secondResponse.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.AdminLoginAlreadyExists), error!.Code);
+    }
+
+    [Fact]
+    public async Task Login_AdminRoleRemoved_ReturnsForbidden()
+    {
+        var username = $"admin_{Guid.NewGuid():N}";
+        await fixture.SeedAdminAsync(username, "admin-password-123");
+
+        using var client = await CreateLoggedInAdminClient();
+        var users = await GetUsers(client);
+        var target = Array.Find(users, user => user.AdminUsername == username)!;
+
+        var setRoles = await client.PutAsJsonAsync(
+            $"{UsersRoute}/{target.Id}/roles",
+            new SetUserRolesRequest([UserRole.Atlas], null, null));
+        Assert.Equal(HttpStatusCode.OK, setRoles.StatusCode);
+
+        using var loginClient = fixture.CreateIdentityHttpClientWithCookies();
+        var response = await loginClient.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.AccessDenied), error!.Code);
+    }
+
+    [Fact]
+    public async Task GetUsers_AtlasAdminOnly_ReturnsForbidden()
+    {
+        var username = $"admin_{Guid.NewGuid():N}";
+        await fixture.SeedAdminAsync(username, "admin-password-123", nameof(UserRole.AtlasAdmin));
+        using var client = fixture.CreateIdentityHttpClientWithCookies();
+        var login = await client.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+
+        var response = await client.GetAsync(UsersRoute);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task SetRoles_RemoveOwnAdminRole_ReturnsUnauthorized()
+    {
+        var username = $"admin_{Guid.NewGuid():N}";
+        await fixture.SeedAdminAsync(username, "admin-password-123");
+        using var client = fixture.CreateIdentityHttpClientWithCookies();
+        var login = await client.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+        var users = await GetUsers(client);
+        var self = Array.Find(users, user => user.AdminUsername == username)!;
+
+        var response = await client.PutAsJsonAsync(
+            $"{UsersRoute}/{self.Id}/roles",
+            new SetUserRolesRequest([UserRole.Atlas], null, null));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+
+        using var loginClient = fixture.CreateIdentityHttpClientWithCookies();
+        var retry = await loginClient.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
+        Assert.Equal(HttpStatusCode.Forbidden, retry.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeleteUser_Self_ReturnsUnauthorized()
+    {
+        var username = $"admin_{Guid.NewGuid():N}";
+        await fixture.SeedAdminAsync(username, "admin-password-123");
+        using var client = fixture.CreateIdentityHttpClientWithCookies();
+        var login = await client.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+        var users = await GetUsers(client);
+        var self = Array.Find(users, user => user.AdminUsername == username)!;
+
+        var response = await client.DeleteAsync($"{UsersRoute}/{self.Id}");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+
+        using var loginClient = fixture.CreateIdentityHttpClientWithCookies();
+        var retry = await loginClient.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
+        Assert.Equal(HttpStatusCode.Unauthorized, retry.StatusCode);
+        var error = await retry.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.InvalidCredentials), error!.Code);
     }
 
     private async Task<HttpClient> CreateLoggedInAdminClient()

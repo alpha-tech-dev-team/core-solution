@@ -79,14 +79,14 @@ public sealed class IntegrationFixture : IAsyncLifetime
         await _postgres.DisposeAsync();
     }
 
-    public async Task<Guid> SeedAdminAsync(string username, string password)
+    public async Task<Guid> SeedAdminAsync(string username, string password, string roleName = nameof(AppRole.PandoraAdmin))
     {
         using var scope = _identity.Services.CreateScope();
         var database = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
 
-        var role = await database.Roles.SingleOrDefaultAsync(item => item.Name == nameof(AppRole.AtlasAdmin))
-            ?? database.Roles.Add(new Roles { Id = Guid.NewGuid(), Name = nameof(AppRole.AtlasAdmin) }).Entity;
+        var role = await database.Roles.SingleOrDefaultAsync(item => item.Name == roleName)
+            ?? database.Roles.Add(new Roles { Id = Guid.NewGuid(), Name = roleName }).Entity;
 
         var user = new User
         {
