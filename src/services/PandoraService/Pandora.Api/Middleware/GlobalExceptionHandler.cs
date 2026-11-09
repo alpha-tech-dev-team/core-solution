@@ -80,13 +80,9 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
 
     private static (int StatusCode, string Code) MapPostgres(PostgresException exception)
     {
-        return exception.SqlState switch
-        {
-            PostgresErrorCodes.UniqueViolation => (StatusCodes.Status409Conflict, ProblemFields.Conflict),
-            PostgresErrorCodes.NotNullViolation or PostgresErrorCodes.ForeignKeyViolation or PostgresErrorCodes.CheckViolation
-                => (StatusCodes.Status400BadRequest, nameof(ErrorCode.InvalidSecretData)),
-            _ => (StatusCodes.Status503ServiceUnavailable, nameof(ErrorCode.DatabaseUnavailable))
-        };
+        return exception.IsTransient
+            ? (StatusCodes.Status503ServiceUnavailable, nameof(ErrorCode.DatabaseUnavailable))
+            : (StatusCodes.Status500InternalServerError, ProblemFields.InternalError);
     }
 
     private static PostgresException? FindPostgresException(Exception exception)

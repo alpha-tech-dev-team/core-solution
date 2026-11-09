@@ -63,6 +63,5 @@ export const SERVER_ERROR_KEYS: Record<string, string> = {
   VaultwardenUnavailable: 'error_code_vaultwardenUnavailable',
   DatabaseUnavailable: 'error_code_databaseUnavailable',
   InternalError: 'error_code_internalError',
-  BadRequest: 'error_code_badRequest',
-  Conflict: 'error_code_conflict'
+  BadRequest: 'error_code_badRequest'
 }
