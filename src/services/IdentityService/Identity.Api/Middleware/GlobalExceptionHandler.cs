@@ -17,6 +17,16 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
             return false;
         }
 
+        if (UniqueConstraintErrorCodes.TryGetErrorCode(exception, out var errorCode))
+        {
+            logger.LogWarning("Нарушение уникальности при сохранении {Method} {Path}: {ErrorCode}", httpContext.Request.Method, httpContext.Request.Path, errorCode);
+
+            httpContext.Response.StatusCode = IdentityErrorStatusCodes.Get(errorCode);
+            await httpContext.Response.WriteAsJsonAsync(new ErrorResponse(errorCode), cancellationToken);
+
+            return true;
+        }
+
         logger.LogError(exception, "Необработанное исключение при обработке {Method} {Path}", httpContext.Request.Method, httpContext.Request.Path);
 
         var code = nameof(IdentityErrorCode.InternalError);

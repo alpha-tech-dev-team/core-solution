@@ -71,12 +71,15 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired();
 
         builder.HasIndex(x => x.Phone)
+            .HasDatabaseName(DatabaseConstants.Users.PhoneIndex)
             .IsUnique();
 
         builder.HasIndex(x => x.TelegramUserId)
+            .HasDatabaseName(DatabaseConstants.Users.TelegramUserIdIndex)
             .IsUnique();
 
         builder.HasIndex(x => x.AdminUsername)
+            .HasDatabaseName(DatabaseConstants.Users.AdminLoginIndex)
             .IsUnique();
 
         builder.HasOne(x => x.UpdatedBy)
