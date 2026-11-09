@@ -11,6 +11,12 @@ export const SECRET_ENDPOINTS = {
   BY_ID: (id: string) => `/secrets/${id}`,
 } as const
 
+export const EMPLOYEE_SECRET_ENDPOINTS = {
+  LIST: (telegramUserId: number) => `/employees/${telegramUserId}/secrets`,
+  BY_ID: (telegramUserId: number, itemId: string) =>
+    `/employees/${telegramUserId}/secrets/${itemId}`,
+} as const
+
 export const PAGINATION_QUERY = {
   PAGE: 'page',
   PAGE_SIZE: 'pageSize',

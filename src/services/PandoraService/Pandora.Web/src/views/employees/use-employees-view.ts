@@ -9,6 +9,7 @@ import type { Employee } from '@/models/employee'
 import { useEmployeeDelete } from './use-employee-delete'
 import { useEmployeeForm } from './use-employee-form'
 import { useEmployeeRoles } from './use-employee-roles'
+import { useEmployeeSecrets } from './use-employee-secrets'
 
 export function useEmployeesView() {
   const authStore = useAuthStore()
@@ -27,6 +28,7 @@ export function useEmployeesView() {
   const form = useEmployeeForm(employeesStore, run, clearError)
   const roles = useEmployeeRoles(employeesStore, run, clearError, getSelected)
   const deletion = useEmployeeDelete(employeesStore, run, clearError, getSelected)
+  const secrets = useEmployeeSecrets(run, clearError, getSelected)
 
   async function load(pageNumber?: number): Promise<void> {
     await run(async () => {
@@ -107,5 +109,16 @@ export function useEmployeesView() {
     openDelete: deletion.open,
     closeDelete: deletion.close,
     confirmDelete: deletion.confirm,
+
+    isSecretsOpen: secrets.isOpen,
+    employeeSecrets: secrets.items,
+    isSecretsLoading: secrets.isLoading,
+    savingSecretId: secrets.savingItemId,
+    secretsPage: secrets.page,
+    secretsTotalPages: secrets.totalPages,
+    openSecrets: secrets.open,
+    closeSecrets: secrets.close,
+    changeSecretsPage: secrets.changePage,
+    toggleSecretAccess: secrets.toggle,
   }
 }

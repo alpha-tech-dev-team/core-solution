@@ -41,6 +41,12 @@ export const RESOURCE_KEYS = {
   EMPLOYEE_ERROR_PATRONYMIC: 'employee_error_patronymic',
   EMPLOYEE_ERROR_POSITION: 'employee_error_position',
   EMPLOYEE_ERROR_PHONE: 'employee_error_phone',
+  EMPLOYEE_SECRETS: 'employee_secrets',
+  EMPLOYEE_SECRETS_TITLE: 'employee_secrets_title',
+  EMPLOYEE_SECRETS_EMPTY: 'employee_secrets_empty',
+  EMPLOYEE_SECRETS_HINT: 'employee_secrets_hint',
+  EMPLOYEE_SECRETS_NO_TELEGRAM: 'employee_secrets_no_telegram',
+  EMPLOYEE_SECRETS_CLOSE: 'employee_secrets_close',
 
   SECRETS_TITLE: 'secrets_title',
   SECRETS_ADD: 'secrets_add',

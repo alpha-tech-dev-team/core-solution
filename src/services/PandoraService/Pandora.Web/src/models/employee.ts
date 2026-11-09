@@ -8,6 +8,7 @@ export interface Employee {
   position: string
   phone: string
   status: EmployeeStatus
+  telegramUserId: number | null
   roles: string[]
   adminUsername: string | null
 }

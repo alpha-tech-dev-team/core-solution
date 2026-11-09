@@ -10,6 +10,7 @@ import { useEmployeesView } from './use-employees-view'
 import EmployeeDeleteDialog from './EmployeeDeleteDialog.vue'
 import EmployeeFormDialog from './EmployeeFormDialog.vue'
 import EmployeeRolesDialog from './EmployeeRolesDialog.vue'
+import EmployeeSecretsDialog from './EmployeeSecretsDialog.vue'
 
 const {
   employeesStore,
@@ -38,6 +39,16 @@ const {
   openDelete,
   closeDelete,
   confirmDelete,
+  isSecretsOpen,
+  employeeSecrets,
+  isSecretsLoading,
+  savingSecretId,
+  secretsPage,
+  secretsTotalPages,
+  openSecrets,
+  closeSecrets,
+  changeSecretsPage,
+  toggleSecretAccess,
 } = useEmployeesView()
 
 const { tr, trStatus } = useTranslations()
@@ -56,7 +67,10 @@ const { tr, trStatus } = useTranslations()
     </header>
 
     <main class="page__body">
-      <p v-if="errorMessage && !isFormOpen && !isRolesOpen" class="alert alert--error">
+      <p
+        v-if="errorMessage && !isFormOpen && !isRolesOpen && !isSecretsOpen"
+        class="alert alert--error"
+      >
         {{ errorMessage }}
       </p>
 
@@ -64,6 +78,13 @@ const { tr, trStatus } = useTranslations()
         <div class="toolbar__group">
           <button class="btn btn--ghost" :disabled="selectedEmployee === null" @click="openRoles()">
             {{ tr(RESOURCE_KEYS.EMPLOYEE_ROLES) }}
+          </button>
+          <button
+            class="btn btn--ghost"
+            :disabled="selectedEmployee === null"
+            @click="openSecrets()"
+          >
+            {{ tr(RESOURCE_KEYS.EMPLOYEE_SECRETS) }}
           </button>
           <button
             class="btn btn--ghost"
@@ -196,6 +217,20 @@ const { tr, trStatus } = useTranslations()
         :error="isDeleteOpen ? errorMessage : ''"
         @confirm="confirmDelete()"
         @close="closeDelete()"
+      />
+
+      <EmployeeSecretsDialog
+        :open="isSecretsOpen"
+        :employee="selectedEmployee"
+        :secrets="employeeSecrets"
+        :is-loading="isSecretsLoading"
+        :saving-item-id="savingSecretId"
+        :error="isSecretsOpen ? errorMessage : ''"
+        :page="secretsPage"
+        :total-pages="secretsTotalPages"
+        @toggle="toggleSecretAccess($event)"
+        @page-change="changeSecretsPage($event)"
+        @close="closeSecrets()"
       />
     </main>
   </div>
