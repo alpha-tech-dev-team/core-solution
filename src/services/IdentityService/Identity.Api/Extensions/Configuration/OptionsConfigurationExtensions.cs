@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json.Serialization;
 using CoreSolution.Shared.Options;
 using Identity.Api.Models;
 using Identity.Application.Errors;
@@ -30,6 +31,9 @@ public static class OptionsConfigurationExtensions
         ValidateInRange(options.Parallelism, PasswordHasherConstants.MinParallelism, PasswordHasherConstants.MaxParallelism);
 
         services.Configure<PasswordHasherOptions>(section);
+
+        services.Configure<JsonOptions>(options =>
+            options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
         services.Configure<ApiBehaviorOptions>(options =>
         {
