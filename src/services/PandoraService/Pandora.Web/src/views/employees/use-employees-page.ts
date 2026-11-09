@@ -25,10 +25,23 @@ export function useEmployeesPage() {
     () => employeesStore.employees.find((employee) => employee.id === selectedEmployeeId.value) ?? null
   )
 
+  function showError(error: string): void {
+    if (!authStore.isAuthenticated) {
+      void router.push(ROUTES.LOGIN)
+      return
+    }
+
+    errorMessage.value = trRequestError(error)
+  }
+
   async function load(pageNumber?: number): Promise<void> {
     errorMessage.value = ''
-    const error = await employeesStore.load(pageNumber)
-    if (error !== null) errorMessage.value = trRequestError(error)
+    const [employeesError, rolesError] = await Promise.all([
+      employeesStore.load(pageNumber),
+      employeesStore.loadRoles()
+    ])
+    const error = employeesError ?? rolesError
+    if (error !== null) showError(error)
   }
 
   async function goToPage(pageNumber: number): Promise<void> {
@@ -88,7 +101,7 @@ export function useEmployeesPage() {
         : await employeesStore.update(editingEmployee.value, input)
 
       if (error !== null) {
-        errorMessage.value = trRequestError(error)
+        showError(error)
         return
       }
 
@@ -128,7 +141,7 @@ export function useEmployeesPage() {
     errorMessage.value = ''
     const error = await employeesStore.remove(employee)
     if (error !== null) {
-      errorMessage.value = trRequestError(error)
+      showError(error)
       return
     }
 
@@ -142,7 +155,7 @@ export function useEmployeesPage() {
     errorMessage.value = ''
     const error = await employeesStore.assignRoles(employee, roleNames, adminLogin, adminPassword)
     if (error !== null) {
-      errorMessage.value = trRequestError(error)
+      showError(error)
       return
     }
 
@@ -161,8 +174,7 @@ export function useEmployeesPage() {
     const error = await employeesStore.setStatus(employee, nextStatus)
     if (error === null) return
 
-    errorMessage.value = trRequestError(error)
-    await employeesStore.load()
+    showError(error)
   }
 
   onMounted(load)

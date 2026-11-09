@@ -17,24 +17,34 @@ export const useEmployeesStore = defineStore(EMPLOYEE_STORE_ID, () => {
   const total = ref(0)
   const totalPages = computed(() => pageSize.value === 0 ? 0 : Math.ceil(total.value / pageSize.value))
   const isLoading = ref(false)
+  const rolesLoaded = ref(false)
 
   async function load(pageNumber: number = page.value): Promise<RequestError | null> {
     isLoading.value = true
     try {
-      const [employeesResponse, rolesResponse] = await Promise.all([
-        api.get<EmployeesPage>(EMPLOYEE_ENDPOINTS.LIST, { params: { page: pageNumber } }),
-        api.get<string[]>(EMPLOYEE_ENDPOINTS.ROLES)
-      ])
-      employees.value = employeesResponse.data.items
-      page.value = employeesResponse.data.page
-      pageSize.value = employeesResponse.data.pageSize
-      total.value = employeesResponse.data.total
-      roles.value = rolesResponse.data
+      const response = await api.get<EmployeesPage>(EMPLOYEE_ENDPOINTS.LIST, { params: { page: pageNumber } })
+      employees.value = response.data.items
+      page.value = response.data.page
+      pageSize.value = response.data.pageSize
+      total.value = response.data.total
       return null
     } catch (error) {
       return toRequestError(error)
     } finally {
       isLoading.value = false
+    }
+  }
+
+  async function loadRoles(): Promise<RequestError | null> {
+    if (rolesLoaded.value) return null
+
+    try {
+      const response = await api.get<string[]>(EMPLOYEE_ENDPOINTS.ROLES)
+      roles.value = response.data
+      rolesLoaded.value = true
+      return null
+    } catch (error) {
+      return toRequestError(error)
     }
   }
 
@@ -97,6 +107,7 @@ export const useEmployeesStore = defineStore(EMPLOYEE_STORE_ID, () => {
     totalPages,
     isLoading,
     load,
+    loadRoles,
     create,
     update,
     remove,

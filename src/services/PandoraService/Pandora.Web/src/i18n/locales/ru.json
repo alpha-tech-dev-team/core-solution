@@ -5,6 +5,7 @@
   "error_RoleNotFound": "Роль не найдена",
   "error_UserAlreadyActivated": "Пользователь уже активирован",
   "error_PhoneAlreadyExists": "Сотрудник с таким телефоном уже существует",
+  "error_AdminLoginAlreadyExists": "Администратор с таким логином уже существует",
   "error_AdminCredentialsRequired": "Укажите логин и пароль администратора",
   "error_InvalidRefreshToken": "Сессия истекла. Войдите заново.",
   "error_ValidationFailed": "Проверьте правильность заполнения полей",

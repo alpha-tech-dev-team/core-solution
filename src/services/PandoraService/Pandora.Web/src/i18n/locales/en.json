@@ -5,6 +5,7 @@
   "error_RoleNotFound": "Role not found",
   "error_UserAlreadyActivated": "User already activated",
   "error_PhoneAlreadyExists": "An employee with this phone number already exists",
+  "error_AdminLoginAlreadyExists": "An administrator with this login already exists",
   "error_AdminCredentialsRequired": "Enter the administrator login and password",
   "error_InvalidRefreshToken": "Session expired. Please log in again.",
   "error_ValidationFailed": "Please check the entered fields",
