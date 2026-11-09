@@ -14,7 +14,7 @@ using RoleType = CoreSolution.Shared.Enums.UserRole;
 namespace Identity.Api.Controllers;
 
 [ApiController]
-[Authorize(Policy = AuthorizationPolicies.Admin)]
+[Authorize(Policy = AuthorizationPolicies.PandoraAdmin)]
 [Route(ApiRoutes.AdminGroup)]
 public sealed class AdminUsersController(IAdminUserService adminUserService) : ControllerBase
 {
@@ -65,7 +65,7 @@ public sealed class AdminUsersController(IAdminUserService adminUserService) : C
     {
         var result = await adminUserService.AssignRoles(id, request.Adapt<UserRolesData>(), cancellationToken);
 
-        return result.IsSuccess && IsCurrentUser(id) && !request.Roles.Any(IsAdminRole)
+        return result.IsSuccess && IsCurrentUser(id) && !request.Roles.Contains(RoleType.PandoraAdmin)
             ? InvalidateCurrentSession()
             : result.ToActionResult();
     }
@@ -82,11 +82,6 @@ public sealed class AdminUsersController(IAdminUserService adminUserService) : C
 
         var code = nameof(IdentityErrorCode.AccessDenied);
         return StatusCode(StatusCodes.Status401Unauthorized, new ErrorResponse(code));
-    }
-
-    private static bool IsAdminRole(RoleType role)
-    {
-        return role is RoleType.AtlasAdmin or RoleType.PandoraAdmin;
     }
 
     [HttpPut(ApiRoutes.UserStatus)]
