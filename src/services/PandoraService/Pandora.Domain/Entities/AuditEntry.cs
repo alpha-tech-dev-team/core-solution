@@ -2,6 +2,13 @@ namespace Pandora.Domain.Entities;
 
 public sealed class AuditEntry
 {
+    public Guid Id { get; }
+    public DateTime Timestamp { get; }
+    public Guid UserId { get; }
+    public string Action { get; }
+    public string? TargetItemId { get; }
+    public string RequestSource { get; }
+
     public AuditEntry(Guid id, DateTime timestamp, Guid userId, string action, string? targetItemId, string requestSource)
     {
         Id = id;
@@ -11,11 +18,4 @@ public sealed class AuditEntry
         TargetItemId = targetItemId;
         RequestSource = requestSource;
     }
-
-    public Guid Id { get; }
-    public DateTime Timestamp { get; }
-    public Guid UserId { get; }
-    public string Action { get; }
-    public string? TargetItemId { get; }
-    public string RequestSource { get; }
 }
