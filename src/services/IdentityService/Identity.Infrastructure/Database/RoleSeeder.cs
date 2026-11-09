@@ -1,6 +1,6 @@
 using Identity.Domain.Entities;
-using RoleType = CoreSolution.Shared.Enums.UserRole;
 using Microsoft.EntityFrameworkCore;
+using RoleType = CoreSolution.Shared.Enums.UserRole;
 
 namespace Identity.Infrastructure.Database;
 
@@ -12,9 +12,20 @@ public static class RoleSeeder
             .Select(role => role.Name)
             .ToListAsync(cancellationToken);
 
-        var missingRoles = Enum.GetValues<RoleType>()
+        var knownRoles = Enum.GetValues<RoleType>()
             .Select(role => role.ToString())
-            .Where(name => !existingRoles.Contains(name))
+            .ToArray();
+
+        var unknownRoles = existingRoles.Except(knownRoles, StringComparer.OrdinalIgnoreCase).ToArray();
+        if (unknownRoles.Length > 0)
+        {
+            throw new InvalidOperationException(
+                $"Таблица ролей содержит значения, отсутствующие в enum {nameof(RoleType)}: {string.Join(", ", unknownRoles)}. "
+                + "Названия ролей в базе должны совпадать с enum.");
+        }
+
+        var missingRoles = knownRoles
+            .Where(name => !existingRoles.Contains(name, StringComparer.OrdinalIgnoreCase))
             .Select(name => new Roles { Id = Guid.NewGuid(), Name = name })
             .ToArray();
 
