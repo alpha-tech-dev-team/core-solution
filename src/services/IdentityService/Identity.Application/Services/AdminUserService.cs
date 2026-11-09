@@ -25,16 +25,18 @@ public class AdminUserService : IAdminUserService
         _logger = logger;
     }
 
-    public async Task<EmployeesPage> GetUsers(int page, int pageSize, CancellationToken cancellationToken = default)
+    public async Task<Result<EmployeesPage>> GetUsers(int page, int pageSize, CancellationToken cancellationToken = default)
     {
-        return await _users.GetEmployees(page, pageSize, cancellationToken);
+        var employees = await _users.GetEmployees(page, pageSize, cancellationToken);
+
+        return Result<EmployeesPage>.Success(employees);
     }
 
-    public async Task<IReadOnlyList<string>> GetRoles(CancellationToken cancellationToken = default)
+    public async Task<Result<IReadOnlyList<string>>> GetRoles(CancellationToken cancellationToken = default)
     {
         var roles = await _users.GetAllRoles(cancellationToken);
 
-        return roles.Select(x => x.Name).ToArray();
+        return Result<IReadOnlyList<string>>.Success(roles.Select(x => x.Name).ToArray());
     }
 
     public async Task<Result> CreateUser(EmployeeData data, CancellationToken cancellationToken = default)
@@ -58,7 +60,7 @@ public class AdminUserService : IAdminUserService
 
     public async Task<Result> UpdateUser(Guid userId, EmployeeData data, CancellationToken cancellationToken = default)
     {
-        var user = await _users.GetById(userId, cancellationToken);
+        var user = await _users.GetById(userId, cancellationToken: cancellationToken);
         if (user is null)
         {
             _logger.LogWarning("Изменение сотрудника отклонено: пользователь не найден");
@@ -86,7 +88,7 @@ public class AdminUserService : IAdminUserService
 
     public async Task<Result> AssignRoles(Guid userId, UserRolesData data, CancellationToken cancellationToken = default)
     {
-        var user = await _users.GetById(userId, cancellationToken);
+        var user = await _users.GetById(userId, includeRoles: true, cancellationToken);
         if (user is null)
         {
             _logger.LogWarning("Назначение ролей отклонено: пользователь не найден");
@@ -130,7 +132,7 @@ public class AdminUserService : IAdminUserService
 
     public async Task<Result> DeleteUser(Guid userId, CancellationToken cancellationToken = default)
     {
-        var user = await _users.GetById(userId, cancellationToken);
+        var user = await _users.GetById(userId, cancellationToken: cancellationToken);
         if (user is null)
         {
             _logger.LogWarning("Удаление сотрудника отклонено: пользователь не найден");
@@ -147,7 +149,7 @@ public class AdminUserService : IAdminUserService
 
     public async Task<Result> SetStatus(Guid userId, UserStatus status, CancellationToken cancellationToken = default)
     {
-        var user = await _users.GetById(userId, cancellationToken);
+        var user = await _users.GetById(userId, cancellationToken: cancellationToken);
         if (user is null)
         {
             _logger.LogWarning("Смена статуса отклонена: пользователь не найден");

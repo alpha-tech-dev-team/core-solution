@@ -7,8 +7,8 @@ namespace Identity.Domain.Interfaces.Services;
 
 public interface IAdminUserService
 {
-    Task<EmployeesPage> GetUsers(int page, int pageSize, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<string>> GetRoles(CancellationToken cancellationToken = default);
+    Task<Result<EmployeesPage>> GetUsers(int page, int pageSize, CancellationToken cancellationToken = default);
+    Task<Result<IReadOnlyList<string>>> GetRoles(CancellationToken cancellationToken = default);
     Task<Result> CreateUser(EmployeeData data, CancellationToken cancellationToken = default);
     Task<Result> UpdateUser(Guid userId, EmployeeData data, CancellationToken cancellationToken = default);
     Task<Result> AssignRoles(Guid userId, UserRolesData data, CancellationToken cancellationToken = default);

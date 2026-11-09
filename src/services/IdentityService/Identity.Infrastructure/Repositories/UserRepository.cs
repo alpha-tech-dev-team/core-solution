@@ -15,12 +15,16 @@ public class UserRepository(AppDbContext context) : BaseRepository<User>(context
             .FirstOrDefaultAsync(x => x.Phone == phone, cancellationToken);
     }
 
-    public Task<User?> GetById(Guid id, CancellationToken cancellationToken = default)
+    public Task<User?> GetById(Guid id, bool includeRoles = false, CancellationToken cancellationToken = default)
     {
-        return Context.Users
-            .Include(x => x.UserRoles)
-            .ThenInclude(x => x.Role)
-            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        var query = Context.Users.AsQueryable();
+
+        if (includeRoles)
+        {
+            query = query.Include(x => x.UserRoles).ThenInclude(x => x.Role);
+        }
+
+        return query.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
 
     public Task<User?> GetByAdminUsername(string username, CancellationToken cancellationToken = default)
