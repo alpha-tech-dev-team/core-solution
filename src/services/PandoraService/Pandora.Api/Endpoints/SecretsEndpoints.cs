@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -43,17 +44,12 @@ public static class SecretsEndpoints
 
     private static async Task<IResult> Create(
         [FromServices] IMediator mediator,
+        ClaimsPrincipal user,
         CreateSecretRequest request,
-        HttpContext context,
         CancellationToken cancellationToken = default)
     {
-        if (!TryGetAdminUserId(context, out var adminUserId))
-        {
-            return Results.Unauthorized();
-        }
-
         var result = await mediator.Send(
-            new CreateSecretMessage(adminUserId, request.Name, request.Username, request.Password),
+            new CreateSecretMessage(user.GetAdminUserId(), request.Name, request.Username, request.Password),
             cancellationToken);
 
         return result.ToHttpResult();
@@ -61,18 +57,13 @@ public static class SecretsEndpoints
 
     private static async Task<IResult> Update(
         [FromServices] IMediator mediator,
+        ClaimsPrincipal user,
         string itemId,
         UpdateSecretRequest request,
-        HttpContext context,
         CancellationToken cancellationToken = default)
     {
-        if (!TryGetAdminUserId(context, out var adminUserId))
-        {
-            return Results.Unauthorized();
-        }
-
         var result = await mediator.Send(
-            new UpdateSecretMessage(adminUserId, itemId, request.Name, request.Username, request.Password),
+            new UpdateSecretMessage(user.GetAdminUserId(), itemId, request.Name, request.Username, request.Password),
             cancellationToken);
 
         return result.ToHttpResult();
@@ -80,24 +71,12 @@ public static class SecretsEndpoints
 
     private static async Task<IResult> Delete(
         [FromServices] IMediator mediator,
+        ClaimsPrincipal user,
         string itemId,
-        HttpContext context,
         CancellationToken cancellationToken = default)
     {
-        if (!TryGetAdminUserId(context, out var adminUserId))
-        {
-            return Results.Unauthorized();
-        }
-
-        var result = await mediator.Send(new DeleteSecretMessage(adminUserId, itemId), cancellationToken);
+        var result = await mediator.Send(new DeleteSecretMessage(user.GetAdminUserId(), itemId), cancellationToken);
 
         return result.ToHttpResult();
-    }
-
-    private static bool TryGetAdminUserId(HttpContext context, out Guid adminUserId)
-    {
-        var subject = context.User.FindFirst(PandoraJwtConstants.SubjectClaim)?.Value;
-
-        return Guid.TryParse(subject, out adminUserId);
     }
 }
