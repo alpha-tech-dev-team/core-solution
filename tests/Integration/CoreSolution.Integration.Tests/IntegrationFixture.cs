@@ -22,6 +22,7 @@ using Xunit;
 using PandoraApplicationExtensions = Pandora.TgBot.Extension.DependencyInjection.ApplicationExtensions;
 using PandoraInfrastructureExtensions = Pandora.TgBot.Extension.DependencyInjection.InfrastructureExtensions;
 using PandoraOptionsExtensions = Pandora.TgBot.Extension.DependencyInjection.OptionsExtensions;
+using PandoraSecretStoreExtensions = Pandora.TgBot.Extension.DependencyInjection.SecretStoreExtensions;
 
 namespace CoreSolution.Integration.Tests;
 
@@ -138,6 +139,28 @@ public sealed class IntegrationFixture : IAsyncLifetime
         await database.SaveChangesAsync();
     }
 
+    public async Task SeedPandoraPermissionAsync(long telegramUserId, string itemId)
+    {
+        await using var connection = new NpgsqlConnection(
+            _postgres.GetConnectionString().Replace("Database=postgres", "Database=pandora_integration"));
+        await connection.OpenAsync();
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            insert into secret_metadata (vault_item_id, resource_name, username)
+            values (@itemId, @itemId, 'test-login')
+            on conflict (vault_item_id) do nothing;
+
+            insert into permissions (telegram_user_id, vault_item_id, is_active)
+            values (@telegramUserId, @itemId, true)
+            on conflict (telegram_user_id, vault_item_id) do nothing;
+            """;
+        command.Parameters.AddWithValue("itemId", itemId);
+        command.Parameters.AddWithValue("telegramUserId", telegramUserId);
+
+        await command.ExecuteNonQueryAsync();
+    }
+
     public async Task<(long? TelegramUserId, UserStatus Status)> GetUserStateAsync(string phone)
     {
         using var scope = _identity.Services.CreateScope();
@@ -204,6 +227,7 @@ public sealed class IntegrationFixture : IAsyncLifetime
                 ["Database:RedisConnection"] = _pandoraRedis.GetConnectionString(),
                 ["SessionSettings:ExpiryMinutes"] = "30",
                 ["Identity:BaseUrl"] = "http://localhost",
+                ["Pandora:Secrets:UseMock"] = "true",
                 ["Pandora:Secrets:Items:0:Name"] = "TestService",
                 ["Pandora:Secrets:Items:0:Login"] = "test-login",
                 ["Pandora:Secrets:Items:0:Password"] = "test-password"
@@ -216,6 +240,7 @@ public sealed class IntegrationFixture : IAsyncLifetime
         services.AddSingleton<IConfiguration>(configuration);
         PandoraOptionsExtensions.AddPandoraOptions(services, configuration);
         PandoraInfrastructureExtensions.AddBotInfrastructure(services, configuration);
+        PandoraSecretStoreExtensions.AddSecretStore(services, configuration);
         PandoraApplicationExtensions.AddApplication(services);
         services.AddHttpClient<IIdentityClient, IdentityClient>()
             .ConfigurePrimaryHttpMessageHandler(() => _identity.Server.CreateHandler());
