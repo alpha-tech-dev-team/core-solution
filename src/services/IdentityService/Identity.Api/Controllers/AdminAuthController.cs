@@ -1,7 +1,6 @@
 using CoreSolution.Shared.Results;
 using Identity.Api.Constants;
 using Identity.Api.Extensions.Http;
-using Identity.Api.Filters;
 using Identity.Application.Contracts.Admin;
 using Identity.Application.Errors;
 using Identity.Domain.Interfaces.Services;
@@ -17,7 +16,6 @@ public sealed class AdminAuthController(IAdminAuthService authService) : Control
 {
     [HttpPost(ApiRoutes.Login)]
     [EnableRateLimiting(RateLimitingPolicies.Auth)]
-    [ValidationFilter<AdminLoginRequest>]
     public async Task<IActionResult> Login(AdminLoginRequest request, CancellationToken cancellationToken)
     {
         var result = await authService.Login(request.Username, request.Password, cancellationToken);

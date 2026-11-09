@@ -1,12 +1,15 @@
 using Identity.Api.Constants;
 using Identity.Api.Extensions.Http;
-using Identity.Api.Filters;
+using Identity.Api.Models;
 using Identity.Application.Contracts.Admin;
+using Identity.Application.Errors;
+using Identity.Domain.Constants;
 using Identity.Domain.Interfaces.Services;
 using Identity.Domain.Models;
 using Mapster;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RoleType = CoreSolution.Shared.Enums.UserRole;
 
 namespace Identity.Api.Controllers;
 
@@ -16,24 +19,22 @@ namespace Identity.Api.Controllers;
 public sealed class AdminUsersController(IAdminUserService adminUserService) : ControllerBase
 {
     [HttpGet(ApiRoutes.Users)]
-    [ValidationFilter<GetUsersRequest>]
     public async Task<IActionResult> GetUsers([FromQuery] GetUsersRequest request, CancellationToken cancellationToken)
     {
-        var employees = await adminUserService.GetUsers(request.Page, request.PageSize, cancellationToken);
+        var result = await adminUserService.GetUsers(request.Page, request.PageSize, cancellationToken);
 
-        return Ok(employees);
+        return result.ToActionResult();
     }
 
     [HttpGet(ApiRoutes.Roles)]
     public async Task<IActionResult> GetRoles(CancellationToken cancellationToken)
     {
-        var roles = await adminUserService.GetRoles(cancellationToken);
+        var result = await adminUserService.GetRoles(cancellationToken);
 
-        return Ok(roles);
+        return result.ToActionResult();
     }
 
     [HttpPost(ApiRoutes.Users)]
-    [ValidationFilter<UserDataRequest>]
     public async Task<IActionResult> CreateUser(UserDataRequest request, CancellationToken cancellationToken)
     {
         var result = await adminUserService.CreateUser(request.Adapt<EmployeeData>(), cancellationToken);
@@ -42,7 +43,6 @@ public sealed class AdminUsersController(IAdminUserService adminUserService) : C
     }
 
     [HttpPut(ApiRoutes.UserById)]
-    [ValidationFilter<UserDataRequest>]
     public async Task<IActionResult> UpdateUser(Guid id, UserDataRequest request, CancellationToken cancellationToken)
     {
         var result = await adminUserService.UpdateUser(id, request.Adapt<EmployeeData>(), cancellationToken);
@@ -55,20 +55,41 @@ public sealed class AdminUsersController(IAdminUserService adminUserService) : C
     {
         var result = await adminUserService.DeleteUser(id, cancellationToken);
 
-        return result.ToActionResult();
+        return result.IsSuccess && IsCurrentUser(id)
+            ? InvalidateCurrentSession()
+            : result.ToActionResult();
     }
 
     [HttpPut(ApiRoutes.UserRoles)]
-    [ValidationFilter<SetUserRolesRequest>]
     public async Task<IActionResult> SetUserRoles(Guid id, SetUserRolesRequest request, CancellationToken cancellationToken)
     {
         var result = await adminUserService.AssignRoles(id, request.Adapt<UserRolesData>(), cancellationToken);
 
-        return result.ToActionResult();
+        return result.IsSuccess && IsCurrentUser(id) && !request.Roles.Any(IsAdminRole)
+            ? InvalidateCurrentSession()
+            : result.ToActionResult();
+    }
+
+    private bool IsCurrentUser(Guid userId)
+    {
+        return Guid.TryParse(User.FindFirst(IdentityClaims.Subject)?.Value, out var currentUserId)
+            && currentUserId == userId;
+    }
+
+    private IActionResult InvalidateCurrentSession()
+    {
+        Response.ClearAuthCookies();
+
+        var code = nameof(IdentityErrorCode.AccessDenied);
+        return StatusCode(StatusCodes.Status401Unauthorized, new ErrorResponse(code));
+    }
+
+    private static bool IsAdminRole(RoleType role)
+    {
+        return role is RoleType.AtlasAdmin or RoleType.PandoraAdmin;
     }
 
     [HttpPut(ApiRoutes.UserStatus)]
-    [ValidationFilter<SetUserStatusRequest>]
     public async Task<IActionResult> SetUserStatus(Guid id, SetUserStatusRequest request, CancellationToken cancellationToken)
     {
         var result = await adminUserService.SetStatus(id, request.Status, cancellationToken);

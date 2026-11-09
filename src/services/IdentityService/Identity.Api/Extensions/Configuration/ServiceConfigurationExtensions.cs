@@ -1,4 +1,5 @@
 using FluentValidation;
+using FluentValidation.AspNetCore;
 using Identity.Api.Middleware;
 using Identity.Application.Services;
 using Identity.Domain.Interfaces;
@@ -12,6 +13,7 @@ using Identity.Infrastructure.Options.Extensions;
 using Identity.Infrastructure.Repositories;
 using Identity.Infrastructure.Services;
 using Mapster;
+using ApplicationAssemblyMarker = Identity.Application.AssemblyMarker;
 using Serilog;
 
 namespace Identity.Api.Extensions.Configuration;
@@ -45,7 +47,8 @@ public static class ServiceConfigurationExtensions
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
 
-        services.AddValidatorsFromAssemblyContaining<Identity.Application.AssemblyMarker>();
+        services.AddValidatorsFromAssemblyContaining<ApplicationAssemblyMarker>();
+        services.AddFluentValidationAutoValidation();
 
         services.AddJwtAuthentication();
         services.AddRateLimitingConfiguration(configuration);
