@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using Pandora.Domain.Entities;
 using Pandora.Infrastructure.Database;
 
@@ -21,9 +22,9 @@ public static class HostExtensions
 
     public static async Task SeedDevelopmentData(this IHost host)
     {
-        var environmentName = host.Services.GetRequiredService<Microsoft.Extensions.Hosting.IHostEnvironment>().EnvironmentName;
+        var environmentName = host.Services.GetRequiredService<IHostEnvironment>().EnvironmentName;
 
-        if (environmentName != Microsoft.Extensions.Hosting.Environments.Development)
+        if (environmentName != Environments.Development)
         {
             return;
         }
