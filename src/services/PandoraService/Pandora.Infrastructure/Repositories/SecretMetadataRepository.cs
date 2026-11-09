@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Pandora.Domain.Constants;
 using Pandora.Domain.Entities;
 using Pandora.Domain.Interfaces;
 using Pandora.Domain.Models;
@@ -20,7 +21,7 @@ public sealed class SecretMetadataRepository : ISecretMetadataRepository
         var query = _context.SecretMetadata.AsNoTracking();
 
         var total = await query.CountAsync(cancellationToken);
-        var skip = (long)(page - 1) * pageSize;
+        var skip = (long)(page - PaginationLimits.FirstPage) * pageSize;
 
         var items = await query
             .OrderBy(metadata => metadata.ResourceName)
