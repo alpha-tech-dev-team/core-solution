@@ -7,6 +7,7 @@ using Pandora.Domain.Options;
 using Pandora.Infrastructure.Database;
 using Pandora.Infrastructure.Repositories;
 using Serilog;
+using ApplicationAssemblyMarker = Pandora.Application.AssemblyMarker;
 
 namespace Pandora.Api.Extensions;
 
@@ -37,9 +38,9 @@ public static class ServiceConfigurationExtensions
 
         services.AddScoped<SecretAuditLogger>();
 
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Pandora.Application.AssemblyMarker>());
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<ApplicationAssemblyMarker>());
 
-        services.AddValidatorsFromAssemblyContaining<Pandora.Application.AssemblyMarker>();
+        services.AddValidatorsFromAssemblyContaining<ApplicationAssemblyMarker>();
 
         services.AddJwtAuthentication(configuration);
 
