@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
+using Pandora.Domain.Entities;
 using Pandora.Infrastructure.Database;
 using StackExchange.Redis;
 using Testcontainers.PostgreSql;
@@ -20,12 +21,14 @@ using Xunit;
 using PandoraApplicationExtensions = Pandora.TgBot.Extension.DependencyInjection.ApplicationExtensions;
 using PandoraInfrastructureExtensions = Pandora.TgBot.Extension.DependencyInjection.InfrastructureExtensions;
 using PandoraOptionsExtensions = Pandora.TgBot.Extension.DependencyInjection.OptionsExtensions;
+using PandoraSecretStoreExtensions = Pandora.TgBot.Extension.DependencyInjection.SecretStoreExtensions;
 
 namespace CoreSolution.Integration.Tests;
 
 public sealed class IntegrationFixture : IAsyncLifetime
 {
     private const string AtlasTestToken = "123456:integration-test-token";
+    private const string PandoraTestItemId = "TestService";
 
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:18-alpine").Build();
 
@@ -114,6 +117,31 @@ public sealed class IntegrationFixture : IAsyncLifetime
         return _identity.CreateClient();
     }
 
+    public async Task SeedPandoraAccessAsync(IServiceProvider pandoraProvider, long telegramUserId)
+    {
+        using var scope = pandoraProvider.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<PandoraDbContext>();
+
+        if (!await database.SecretMetadata.AnyAsync(item => item.VaultItemId == PandoraTestItemId))
+        {
+            database.SecretMetadata.Add(new SecretMetadata
+            {
+                VaultItemId = PandoraTestItemId,
+                ResourceName = PandoraTestItemId,
+                Username = "test-login"
+            });
+        }
+
+        database.Permission.Add(new Permission
+        {
+            TelegramUserId = telegramUserId,
+            VaultItemId = PandoraTestItemId,
+            IsActive = true
+        });
+
+        await database.SaveChangesAsync();
+    }
+
     public ServiceProvider CreateAtlasServiceProvider()
     {
         var configuration = new ConfigurationBuilder()
@@ -147,6 +175,7 @@ public sealed class IntegrationFixture : IAsyncLifetime
                 ["Database:RedisConnection"] = _pandoraRedis.GetConnectionString(),
                 ["SessionSettings:ExpiryMinutes"] = "30",
                 ["Identity:BaseUrl"] = "http://localhost",
+                ["Pandora:Secrets:UseMock"] = "true",
                 ["Pandora:Secrets:Items:0:Name"] = "TestService",
                 ["Pandora:Secrets:Items:0:Login"] = "test-login",
                 ["Pandora:Secrets:Items:0:Password"] = "test-password"
@@ -160,6 +189,7 @@ public sealed class IntegrationFixture : IAsyncLifetime
         PandoraOptionsExtensions.AddPandoraOptions(services, configuration);
         PandoraInfrastructureExtensions.AddBotInfrastructure(services, configuration);
         PandoraApplicationExtensions.AddApplication(services);
+        PandoraSecretStoreExtensions.AddSecretStore(services, configuration);
         services.AddHttpClient<IIdentityClient, IdentityClient>()
             .ConfigurePrimaryHttpMessageHandler(() => _identity.Server.CreateHandler());
 

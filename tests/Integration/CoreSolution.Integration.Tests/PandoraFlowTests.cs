@@ -22,6 +22,7 @@ public sealed class PandoraFlowTests(IntegrationFixture fixture)
 
         await fixture.SeedPendingUserAsync(phone, "Pandora");
         await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+        await fixture.SeedPandoraAccessAsync(provider, telegramUserId);
 
         var result = await SendSubmitPhoneAsync(provider, telegramUserId, "+7 (999) 555-01-01");
 
@@ -45,6 +46,7 @@ public sealed class PandoraFlowTests(IntegrationFixture fixture)
 
         await fixture.SeedPendingUserAsync(phone, "Pandora");
         await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+        await fixture.SeedPandoraAccessAsync(provider, telegramUserId);
         _ = await SendSubmitPhoneAsync(provider, telegramUserId, "+7 (999) 555-01-02");
 
         using (var scope = provider.CreateScope())
