@@ -18,7 +18,10 @@ async function logout() {
   <div class="home">
     <header class="home__header">
       <h1>{{ tr(RESOURCE_KEYS.APP_TITLE) }}</h1>
-      <button class="home__logout" @click="logout">{{ tr(RESOURCE_KEYS.AUTH_LOGOUT) }}</button>
+      <nav class="home__nav">
+        <button class="home__logout" @click="router.push(ROUTES.AUDIT)">{{ tr(RESOURCE_KEYS.NAV_AUDIT) }}</button>
+        <button class="home__logout" @click="logout">{{ tr(RESOURCE_KEYS.AUTH_LOGOUT) }}</button>
+      </nav>
     </header>
     <main class="home__body">
       <p>{{ tr(RESOURCE_KEYS.APP_PLACEHOLDER) }}</p>
@@ -44,6 +47,11 @@ async function logout() {
 
 .home__header h1 {
   font-size: var(--font-size-heading);
+}
+
+.home__nav {
+  display: flex;
+  gap: var(--space-2);
 }
 
 .home__logout {
