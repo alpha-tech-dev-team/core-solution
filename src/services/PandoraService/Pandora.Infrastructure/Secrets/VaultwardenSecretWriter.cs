@@ -222,7 +222,9 @@ public sealed class VaultwardenSecretWriter : ISecretWriter
         string? Notes,
         DateTime? DeletedDate);
 
-    private sealed record VaultwardenLogin(string? Username, string? Password, List<string>? SecurityAnswers, List<string>? Uris);
+    private sealed record VaultwardenLogin(string? Username, string? Password, List<VaultwardenUri>? SecurityAnswers, List<VaultwardenUri>? Uris);
+
+    private sealed record VaultwardenUri(string? Uri, int Match);
 
     private sealed class VaultwardenItemRequest
     {
@@ -241,7 +243,7 @@ public sealed class VaultwardenSecretWriter : ISecretWriter
     {
         public string? Username { get; init; }
         public string? Password { get; init; }
-        public List<string> SecurityAnswers { get; init; } = new();
-        public List<string> Uris { get; init; } = new();
+        public List<VaultwardenUri> SecurityAnswers { get; init; } = new();
+        public List<VaultwardenUri> Uris { get; init; } = new();
     }
 }
