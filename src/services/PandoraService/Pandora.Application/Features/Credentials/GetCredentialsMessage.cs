@@ -9,6 +9,6 @@ namespace Pandora.Application.Features.Credentials;
 
 public record GetCredentialsMessage(long TelegramUserId, int MessageId, string ItemId) : IRequest<Result<WorkflowResponse>>, IAuthorizedBotRequest, IUserActionMessage
 {
-    public string Action => AuditConstants.ActionGetCredentials;
+    public string Action => AuditConstants.Actions.GetCredentials;
     public string? TargetItemId => ItemId;
 }

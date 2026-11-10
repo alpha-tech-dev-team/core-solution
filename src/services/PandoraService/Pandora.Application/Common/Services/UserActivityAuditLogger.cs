@@ -19,7 +19,7 @@ public sealed class UserActivityAuditLogger
 
     public async Task LogAsync(IUserActionMessage userAction, CancellationToken cancellationToken)
     {
-        var entry = new AuditEntry(Guid.NewGuid(), DateTime.UtcNow, userAction.TelegramUserId, userAction.Action, userAction.TargetItemId, AuditConstants.SourceTelegram);
+        var entry = new AuditEntry(Guid.NewGuid(), DateTime.UtcNow, userAction.TelegramUserId, userAction.Action, userAction.TargetItemId, AuditConstants.Sources.Telegram);
 
         try
         {
