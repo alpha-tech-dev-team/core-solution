@@ -4,7 +4,7 @@ using Pandora.Domain.Constants;
 
 namespace Pandora.Application.Validators;
 
-public sealed class GetSecretsRequestValidator : AbstractValidator<GetSecretsRequest>
+public class GetSecretsRequestValidator : AbstractValidator<GetSecretsRequest>
 {
     public GetSecretsRequestValidator()
     {
