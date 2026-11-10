@@ -28,7 +28,7 @@ public static class DatabaseConstants
         public const string Table = "audit";
         public const string Id = "id";
         public const string Timestamp = "timestamp";
-        public const string UserId = "user_id";
+        public const string TelegramUserId = "telegram_user_id";
         public const string Action = "action";
         public const string TargetItemId = "target_item_id";
         public const string RequestSource = "request_source";

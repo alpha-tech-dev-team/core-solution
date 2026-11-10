@@ -46,17 +46,17 @@ namespace Pandora.Infrastructure.Migrations
                         .HasColumnType("character varying(36)")
                         .HasColumnName("target_item_id");
 
+                    b.Property<long>("TelegramUserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("telegram_user_id");
+
                     b.Property<DateTime>("Timestamp")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("timestamp");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("TelegramUserId");
 
                     b.ToTable("audit", (string)null);
                 });
