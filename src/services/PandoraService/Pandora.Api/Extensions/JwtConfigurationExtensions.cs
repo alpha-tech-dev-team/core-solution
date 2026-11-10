@@ -4,7 +4,6 @@ using CoreSolution.Shared.Options;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
-using Pandora.Api.Authorization;
 using Pandora.Api.Constants;
 
 namespace Pandora.Api.Extensions;
@@ -53,16 +52,10 @@ public static class JwtConfigurationExtensions
                 };
             });
 
-        services.AddSingleton<IAuthorizationHandler, AdminUserIdAuthorizationHandler>();
-
         services.AddAuthorization(authorization =>
             authorization.AddPolicy(
                 AuthorizationPolicies.Admin,
-                policy =>
-                {
-                    policy.RequireRole(AuthorizationPolicies.Admin);
-                    policy.Requirements.Add(new AdminUserIdRequirement());
-                }));
+                policy => policy.RequireRole(AuthorizationPolicies.Admin)));
 
         return services;
     }
