@@ -7,6 +7,15 @@ export const AUTH_ENDPOINTS = {
   LOGOUT: '/logout'
 } as const
 
+export const AUDIT_ENDPOINTS = {
+  COLLECTION: '/audit'
+} as const
+
+export const PAGINATION_QUERY = {
+  PAGE: 'page',
+  PAGE_SIZE: 'pageSize'
+} as const
+
 export const HEADER_CONTENT_TYPE = 'Content-Type'
 export const CONTENT_TYPE_JSON = 'application/json'
 export const RETRY_FLAG = '_retry'
