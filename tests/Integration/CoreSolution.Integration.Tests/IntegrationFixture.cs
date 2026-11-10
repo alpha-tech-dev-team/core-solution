@@ -142,6 +142,9 @@ public sealed class IntegrationFixture : IAsyncLifetime
         await database.SaveChangesAsync();
     }
 
+    public string PandoraConnectionString =>
+        _postgres.GetConnectionString().Replace("Database=postgres", "Database=pandora_integration");
+
     public ServiceProvider CreateAtlasServiceProvider()
     {
         var configuration = new ConfigurationBuilder()
@@ -171,7 +174,7 @@ public sealed class IntegrationFixture : IAsyncLifetime
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["Database:ConnectionString"] = _postgres.GetConnectionString().Replace("Database=postgres", "Database=pandora_integration"),
+                ["Database:ConnectionString"] = PandoraConnectionString,
                 ["Database:RedisConnection"] = _pandoraRedis.GetConnectionString(),
                 ["SessionSettings:ExpiryMinutes"] = "30",
                 ["Identity:BaseUrl"] = "http://localhost",

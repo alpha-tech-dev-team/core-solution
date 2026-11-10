@@ -142,11 +142,19 @@ public sealed class UserActivityBehaviorTests
 
             return Task.CompletedTask;
         }
+
+        public Task<AuditEntryPage> GetPage(int page, int pageSize, CancellationToken cancellationToken) =>
+            Task.FromResult(new AuditEntryPage(Entries, page, pageSize, Entries.Count));
     }
 
     private sealed class FailingAuditRepository : IAuditRepository
     {
         public Task Add(AuditEntry entry, CancellationToken cancellationToken)
+        {
+            throw new InvalidOperationException("audit table is unavailable");
+        }
+
+        public Task<AuditEntryPage> GetPage(int page, int pageSize, CancellationToken cancellationToken)
         {
             throw new InvalidOperationException("audit table is unavailable");
         }
