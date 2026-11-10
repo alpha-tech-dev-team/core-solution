@@ -1,9 +1,9 @@
 using Identity.Api.Constants;
 using Identity.Api.Extensions.Http;
 using Identity.Api.Models;
+using Identity.Api.Interfaces;
 using Identity.Application.Contracts.Admin;
 using Identity.Application.Errors;
-using Identity.Domain.Constants;
 using Identity.Domain.Interfaces.Services;
 using Identity.Domain.Models;
 using Mapster;
@@ -16,7 +16,7 @@ namespace Identity.Api.Controllers;
 [ApiController]
 [Authorize(Policy = AuthorizationPolicies.PandoraAdmin)]
 [Route(ApiRoutes.AdminGroup)]
-public sealed class AdminUsersController(IAdminUserService adminUserService) : ControllerBase
+public sealed class AdminUsersController(IAdminUserService adminUserService, ICurrentUserService currentUser) : ControllerBase
 {
     [HttpGet(ApiRoutes.Users)]
     public async Task<IActionResult> GetUsers([FromQuery] GetUsersRequest request, CancellationToken cancellationToken)
@@ -37,7 +37,7 @@ public sealed class AdminUsersController(IAdminUserService adminUserService) : C
     [HttpPost(ApiRoutes.Users)]
     public async Task<IActionResult> CreateUser(UserDataRequest request, CancellationToken cancellationToken)
     {
-        var result = await adminUserService.CreateUser(request.Adapt<EmployeeData>(), cancellationToken);
+        var result = await adminUserService.CreateUser(request.Adapt<EmployeeData>(), currentUser.UserId, cancellationToken);
 
         return result.ToActionResult();
     }
@@ -45,7 +45,7 @@ public sealed class AdminUsersController(IAdminUserService adminUserService) : C
     [HttpPut(ApiRoutes.UserById)]
     public async Task<IActionResult> UpdateUser(Guid id, UserDataRequest request, CancellationToken cancellationToken)
     {
-        var result = await adminUserService.UpdateUser(id, request.Adapt<EmployeeData>(), cancellationToken);
+        var result = await adminUserService.UpdateUser(id, request.Adapt<EmployeeData>(), currentUser.UserId, cancellationToken);
 
         return result.ToActionResult();
     }
@@ -55,7 +55,7 @@ public sealed class AdminUsersController(IAdminUserService adminUserService) : C
     {
         var result = await adminUserService.DeleteUser(id, cancellationToken);
 
-        return result.IsSuccess && IsCurrentUser(id)
+        return result.IsSuccess && currentUser.IsCurrentUser(id)
             ? InvalidateCurrentSession()
             : result.ToActionResult();
     }
@@ -63,17 +63,19 @@ public sealed class AdminUsersController(IAdminUserService adminUserService) : C
     [HttpPut(ApiRoutes.UserRoles)]
     public async Task<IActionResult> SetUserRoles(Guid id, SetUserRolesRequest request, CancellationToken cancellationToken)
     {
-        var result = await adminUserService.AssignRoles(id, request.Adapt<UserRolesData>(), cancellationToken);
+        var result = await adminUserService.AssignRoles(id, request.Adapt<UserRolesData>(), currentUser.UserId, cancellationToken);
 
-        return result.IsSuccess && IsCurrentUser(id) && !request.Roles.Contains(RoleType.PandoraAdmin)
+        return result.IsSuccess && currentUser.IsCurrentUser(id) && !request.Roles.Contains(RoleType.PandoraAdmin)
             ? InvalidateCurrentSession()
             : result.ToActionResult();
     }
 
-    private bool IsCurrentUser(Guid userId)
+    [HttpPut(ApiRoutes.UserStatus)]
+    public async Task<IActionResult> SetUserStatus(Guid id, SetUserStatusRequest request, CancellationToken cancellationToken)
     {
-        return Guid.TryParse(User.FindFirst(IdentityClaims.Subject)?.Value, out var currentUserId)
-            && currentUserId == userId;
+        var result = await adminUserService.SetStatus(id, request.Status, currentUser.UserId, cancellationToken);
+
+        return result.ToActionResult();
     }
 
     private IActionResult InvalidateCurrentSession()
@@ -82,13 +84,5 @@ public sealed class AdminUsersController(IAdminUserService adminUserService) : C
 
         var code = nameof(IdentityErrorCode.AccessDenied);
         return StatusCode(StatusCodes.Status401Unauthorized, new ErrorResponse(code));
-    }
-
-    [HttpPut(ApiRoutes.UserStatus)]
-    public async Task<IActionResult> SetUserStatus(Guid id, SetUserStatusRequest request, CancellationToken cancellationToken)
-    {
-        var result = await adminUserService.SetStatus(id, request.Status, cancellationToken);
-
-        return result.ToActionResult();
     }
 }

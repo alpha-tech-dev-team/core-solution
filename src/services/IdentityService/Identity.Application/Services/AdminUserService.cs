@@ -39,7 +39,7 @@ public class AdminUserService : IAdminUserService
         return Result<IReadOnlyList<string>>.Success(roles.Select(x => x.Name).ToArray());
     }
 
-    public async Task<Result> CreateUser(EmployeeData data, CancellationToken cancellationToken = default)
+    public async Task<Result> CreateUser(EmployeeData data, Guid actorId, CancellationToken cancellationToken = default)
     {
         var existing = await _users.GetByPhone(data.Phone, cancellationToken);
         if (existing is not null)
@@ -48,7 +48,10 @@ public class AdminUserService : IAdminUserService
             return Result.Failure(nameof(IdentityErrorCode.PhoneAlreadyExists));
         }
 
-        var user = new User(data);
+        var user = new User(data)
+        {
+            UpdatedById = actorId
+        };
 
         _users.Add(user);
         await _users.SaveChanges(cancellationToken);
@@ -58,7 +61,7 @@ public class AdminUserService : IAdminUserService
         return Result.Success();
     }
 
-    public async Task<Result> UpdateUser(Guid userId, EmployeeData data, CancellationToken cancellationToken = default)
+    public async Task<Result> UpdateUser(Guid userId, EmployeeData data, Guid actorId, CancellationToken cancellationToken = default)
     {
         var user = await _users.GetById(userId, cancellationToken: cancellationToken);
         if (user is null)
@@ -78,6 +81,7 @@ public class AdminUserService : IAdminUserService
         }
 
         data.Adapt(user);
+        user.UpdatedById = actorId;
 
         await _users.SaveChanges(cancellationToken);
 
@@ -86,7 +90,7 @@ public class AdminUserService : IAdminUserService
         return Result.Success();
     }
 
-    public async Task<Result> AssignRoles(Guid userId, UserRolesData data, CancellationToken cancellationToken = default)
+    public async Task<Result> AssignRoles(Guid userId, UserRolesData data, Guid actorId, CancellationToken cancellationToken = default)
     {
         var user = await _users.GetById(userId, includeRoles: true, cancellationToken);
         if (user is null)
@@ -123,6 +127,8 @@ public class AdminUserService : IAdminUserService
             user.UserRoles.Add(new UserRoleEntity { UserId = user.Id, RoleId = role.Id });
         }
 
+        user.UpdatedById = actorId;
+
         await _users.SaveChanges(cancellationToken);
 
         _logger.LogInformation("Администратор обновил роли пользователя");
@@ -147,7 +153,7 @@ public class AdminUserService : IAdminUserService
         return Result.Success();
     }
 
-    public async Task<Result> SetStatus(Guid userId, UserStatus status, CancellationToken cancellationToken = default)
+    public async Task<Result> SetStatus(Guid userId, UserStatus status, Guid actorId, CancellationToken cancellationToken = default)
     {
         var user = await _users.GetById(userId, cancellationToken: cancellationToken);
         if (user is null)
@@ -159,6 +165,7 @@ public class AdminUserService : IAdminUserService
         user.Status = status == UserStatus.Active && user.TelegramUserId is null
             ? UserStatus.Pending
             : status;
+        user.UpdatedById = actorId;
 
         await _users.SaveChanges(cancellationToken);
 
