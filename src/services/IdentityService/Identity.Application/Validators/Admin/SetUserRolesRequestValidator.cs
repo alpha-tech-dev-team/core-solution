@@ -19,12 +19,14 @@ public class SetUserRolesRequestValidator : AbstractValidator<SetUserRolesReques
         RuleFor(x => x.AdminLogin)
             .NotEmpty()
             .WithErrorCode(nameof(IdentityErrorCode.AdminCredentialsRequired))
+            .MinimumLength(ValidationConstants.AdminUsernameMinLength)
             .MaximumLength(ValidationConstants.AdminUsernameMaxLength)
             .When(RequiresAdminCredentials);
 
         RuleFor(x => x.AdminPassword)
             .NotEmpty()
             .WithErrorCode(nameof(IdentityErrorCode.AdminCredentialsRequired))
+            .MinimumLength(ValidationConstants.PasswordMinLength)
             .MaximumLength(ValidationConstants.PasswordMaxLength)
             .When(RequiresAdminCredentials);
     }
