@@ -1,11 +1,17 @@
 import {
+  AUDIT_ACTIONS,
+  AUDIT_SOURCES,
   DEFAULT_LOCALE,
   ERROR_KEY_PREFIX,
   PLACEHOLDER_PATTERN,
+  SERVER_ERROR_KEYS,
   VALIDATION_KEY_PREFIX,
+  type AuditAction,
+  type AuditSource,
   type Locale,
   type ValidationRule
 } from '@/constants/i18n'
+import { REQUEST_ERROR } from '@/constants/api'
 import ru from './locales/ru.json'
 import en from './locales/en.json'
 
@@ -34,9 +40,25 @@ export function tr(key: string, ...params: readonly unknown[]): string {
 }
 
 export function trRequestError(error: number | string): string {
+  if (typeof error === 'number') return tr(`${ERROR_KEY_PREFIX}_${error}`)
+  const serverKey = SERVER_ERROR_KEYS[error]
+  if (serverKey) return tr(serverKey)
+  if (error !== REQUEST_ERROR.NETWORK && error !== REQUEST_ERROR.UNKNOWN) {
+    return tr(`${ERROR_KEY_PREFIX}_${REQUEST_ERROR.UNKNOWN}`)
+  }
   return tr(`${ERROR_KEY_PREFIX}_${error}`)
 }
 
 export function trValidation(rule: ValidationRule, ...params: readonly unknown[]): string {
   return tr(`${VALIDATION_KEY_PREFIX}_${rule}`, ...params)
+}
+
+export function trAuditAction(action: string): string {
+  const key = AUDIT_ACTIONS[action as AuditAction]
+  return key === undefined ? action : tr(key)
+}
+
+export function trAuditSource(source: string): string {
+  const key = AUDIT_SOURCES[source as AuditSource]
+  return key === undefined ? source : tr(key)
 }
