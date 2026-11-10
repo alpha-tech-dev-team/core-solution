@@ -1,6 +1,8 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Identity.Api.Middleware;
+using Identity.Api.Interfaces;
+using Identity.Api.Services;
 using Identity.Application.Services;
 using Identity.Domain.Interfaces;
 using Identity.Domain.Interfaces.Repositories;
@@ -20,7 +22,7 @@ namespace Identity.Api.Extensions.Configuration;
 
 public static class ServiceConfigurationExtensions
 {
-    public static IServiceCollection AddServiceConfiguration(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddServiceConfiguration(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
         TypeAdapterConfig.GlobalSettings.Apply(new EmployeeMappingConfig());
 
@@ -42,6 +44,8 @@ public static class ServiceConfigurationExtensions
         services.AddScoped<IIdentityService, IdentityService>();
         services.AddScoped<IAdminAuthService, AdminAuthService>();
         services.AddScoped<IAdminUserService, AdminUserService>();
+        services.AddHttpContextAccessor();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
 
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
@@ -50,7 +54,7 @@ public static class ServiceConfigurationExtensions
         services.AddValidatorsFromAssemblyContaining<ApplicationAssemblyMarker>();
         services.AddFluentValidationAutoValidation();
 
-        services.AddJwtAuthentication();
+        services.AddJwtAuthentication(environment);
         services.AddRateLimitingConfiguration(configuration);
 
         return services;

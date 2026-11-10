@@ -11,8 +11,17 @@ namespace Identity.Api.Extensions.Configuration;
 
 public static class JwtConfigurationExtensions
 {
-    public static IServiceCollection AddJwtAuthentication(this IServiceCollection services)
+    private const string SecretEnvironmentVariable = "Jwt__Secret";
+
+    public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IHostEnvironment environment)
     {
+        if (environment.IsProduction()
+            && string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(SecretEnvironmentVariable)))
+        {
+            throw new InvalidOperationException(
+                $"В Production секрет JWT задаётся только переменной окружения {SecretEnvironmentVariable}");
+        }
+
         services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer();
@@ -48,9 +57,6 @@ public static class JwtConfigurationExtensions
             });
 
         services.AddAuthorizationBuilder()
-            .AddPolicy(
-                AuthorizationPolicies.Admin,
-                policy => policy.RequireRole(nameof(UserRole.AtlasAdmin), nameof(UserRole.PandoraAdmin)))
             .AddPolicy(
                 AuthorizationPolicies.PandoraAdmin,
                 policy => policy.RequireRole(nameof(UserRole.PandoraAdmin)));
