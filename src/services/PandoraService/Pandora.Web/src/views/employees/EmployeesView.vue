@@ -146,6 +146,7 @@ const {
       <EmployeeRolesDialog
         :open="isRolesOpen"
         :employee="selectedEmployee"
+        :is-self="page.isSelf(selectedEmployee)"
         :roles="employeesStore.roles"
         :error="isRolesOpen ? errorMessage : ''"
         @save="page.saveRoles($event.roles, $event.adminLogin, $event.adminPassword)"
@@ -155,6 +156,7 @@ const {
       <EmployeeDeleteDialog
         :open="isDeleteOpen"
         :employee="selectedEmployee"
+        :is-self="page.isSelf(selectedEmployee)"
         :error="isDeleteOpen ? errorMessage : ''"
         @confirm="page.confirmDelete()"
         @close="page.closeDelete()"

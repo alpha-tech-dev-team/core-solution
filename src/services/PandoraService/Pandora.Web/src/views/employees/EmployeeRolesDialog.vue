@@ -2,13 +2,14 @@
 import { computed, ref, watch } from 'vue'
 import { tr } from '@/i18n'
 import type { Employee } from '@/stores/models/employee'
-import { isAdminRole } from '@/constants/roles'
+import { isAdminRole, PANDORA_ADMIN_ROLE } from '@/constants/roles'
 import ModalDialog from '@/components/ModalDialog.vue'
 
 const props = defineProps<{
   open: boolean
   employee: Employee | null
   roles: string[]
+  isSelf: boolean
   error: string
 }>()
 
@@ -33,6 +34,8 @@ watch(
 )
 
 const needsCredentials = computed(() => selectedRoles.value.some(isAdminRole))
+
+const losesOwnAccess = computed(() => props.isSelf && !selectedRoles.value.includes(PANDORA_ADMIN_ROLE))
 
 const canSave = computed(
   () => !needsCredentials.value || (adminLogin.value.trim() !== '' && adminPassword.value !== '')
@@ -77,6 +80,8 @@ function save(): void {
       <input v-model="adminPassword" type="password" />
     </label>
 
+    <p v-if="losesOwnAccess" class="dialog__warning">{{ tr('employee_roles_self_warning') }}</p>
+
     <p v-if="error" class="dialog__error">{{ error }}</p>
 
     <div class="dialog__actions">
@@ -117,6 +122,12 @@ function save(): void {
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
   font-size: var(--font-size-base);
+}
+
+.dialog__warning {
+  color: var(--color-error);
+  font-size: var(--font-size-small);
+  font-weight: 600;
 }
 
 .dialog__error {

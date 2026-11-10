@@ -6,6 +6,7 @@ import ModalDialog from '@/components/ModalDialog.vue'
 defineProps<{
   open: boolean
   employee: Employee | null
+  isSelf: boolean
   error: string
 }>()
 
@@ -24,6 +25,7 @@ function fullName(employee: Employee): string {
     <p v-if="employee" class="dialog__question">
       {{ tr('employee_delete_question', fullName(employee)) }}
     </p>
+    <p v-if="isSelf" class="dialog__warning">{{ tr('employee_delete_self_warning') }}</p>
 
     <p v-if="error" class="dialog__error">{{ error }}</p>
 
@@ -41,6 +43,12 @@ function fullName(employee: Employee): string {
 <style scoped>
 .dialog__question {
   font-size: var(--font-size-base);
+}
+
+.dialog__warning {
+  color: var(--color-error);
+  font-size: var(--font-size-small);
+  font-weight: 600;
 }
 
 .dialog__error {

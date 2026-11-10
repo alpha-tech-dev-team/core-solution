@@ -50,6 +50,10 @@ export function useEmployeesPage() {
     await load(pageNumber)
   }
 
+  function isSelf(employee: Employee | null): boolean {
+    return employee?.adminUsername !== null && employee?.adminUsername === authStore.username
+  }
+
   function fullName(employee: Employee): string {
     return [employee.surname, employee.name, employee.patronymic].filter(Boolean).join(' ')
   }
@@ -190,6 +194,7 @@ export function useEmployeesPage() {
     isDeleteOpen,
     formInitial,
     fullName,
+    isSelf,
     logout,
     select,
     goToPage,
