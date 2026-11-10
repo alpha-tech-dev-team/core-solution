@@ -39,14 +39,14 @@ public static class JwtConfigurationExtensions
                     ValidateLifetime = JwtValidationConstants.ValidateLifetime,
                     ClockSkew = JwtValidationConstants.ClockSkew,
                     ValidAlgorithms = JwtValidationConstants.ValidAlgorithms,
-                    NameClaimType = PandoraJwtConstants.UniqueNameClaim,
-                    RoleClaimType = PandoraJwtConstants.RoleClaim
+                    NameClaimType = JwtClaimConstants.UniqueName,
+                    RoleClaimType = JwtClaimConstants.Role
                 };
                 jwt.Events = new JwtBearerEvents
                 {
                     OnMessageReceived = ctx =>
                     {
-                        ctx.Token ??= ctx.Request.Cookies[PandoraJwtConstants.AccessTokenCookieName];
+                        ctx.Token ??= ctx.Request.Cookies[AuthCookieConstants.AccessTokenName];
                         return Task.CompletedTask;
                     }
                 };

@@ -1,6 +1,6 @@
-namespace Identity.Domain.Constants;
+namespace CoreSolution.Shared.Constants;
 
-public static class IdentityClaims
+public static class JwtClaimConstants
 {
     public const string Subject = "sub";
     public const string UniqueName = "unique_name";

@@ -50,8 +50,8 @@ public static class JwtConfigurationExtensions
                     ValidateLifetime = JwtValidationConstants.ValidateLifetime,
                     ClockSkew = JwtValidationConstants.ClockSkew,
                     ValidAlgorithms = JwtValidationConstants.ValidAlgorithms,
-                    NameClaimType = IdentityClaims.UniqueName,
-                    RoleClaimType = IdentityClaims.Role
+                    NameClaimType = JwtClaimConstants.UniqueName,
+                    RoleClaimType = JwtClaimConstants.Role
                 };
                 jwt.Events = new JwtBearerEvents
                 {

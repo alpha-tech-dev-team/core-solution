@@ -1,4 +1,4 @@
-namespace Identity.Api.Constants;
+namespace CoreSolution.Shared.Constants;
 
 public static class AuthCookieConstants
 {

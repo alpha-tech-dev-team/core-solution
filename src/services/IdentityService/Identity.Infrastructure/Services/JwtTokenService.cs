@@ -62,7 +62,7 @@ public sealed class JwtTokenService : IJwtTokenService
                 return null;
             }
 
-            return Guid.TryParse(validation.ClaimsIdentity.FindFirst(IdentityClaims.Subject)?.Value, out var userId)
+            return Guid.TryParse(validation.ClaimsIdentity.FindFirst(JwtClaimConstants.Subject)?.Value, out var userId)
                 ? userId
                 : null;
         }
@@ -91,18 +91,18 @@ public sealed class JwtTokenService : IJwtTokenService
 
     private static IEnumerable<Claim> BuildClaims(User user)
     {
-        yield return new Claim(IdentityClaims.Subject, user.Id.ToString());
+        yield return new Claim(JwtClaimConstants.Subject, user.Id.ToString());
 
         if (user.AdminUsername is not null)
         {
-            yield return new Claim(IdentityClaims.UniqueName, user.AdminUsername);
+            yield return new Claim(JwtClaimConstants.UniqueName, user.AdminUsername);
         }
 
         foreach (var role in user.UserRoles
                      .Select(x => x.Role.Name)
                      .Distinct(StringComparer.OrdinalIgnoreCase))
         {
-            yield return new Claim(IdentityClaims.Role, role);
+            yield return new Claim(JwtClaimConstants.Role, role);
         }
     }
 
