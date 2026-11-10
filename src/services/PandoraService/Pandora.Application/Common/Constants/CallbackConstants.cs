@@ -1,4 +1,4 @@
-namespace Pandora.Application.Common;
+namespace Pandora.Application.Common.Constants;
 
 public static class CallbackConstants
 {

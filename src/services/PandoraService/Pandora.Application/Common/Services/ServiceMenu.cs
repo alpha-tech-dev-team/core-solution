@@ -1,10 +1,11 @@
 using CoreSolution.Shared.Abstractions;
 using CoreSolution.Shared.Models;
+using Pandora.Application.Common.Constants;
 using Pandora.Domain.Constants.Localization;
 using Pandora.Domain.Enums;
 using Pandora.Domain.Models;
 
-namespace Pandora.Application.Common;
+namespace Pandora.Application.Common.Services;
 
 internal static class ServiceMenu
 {
