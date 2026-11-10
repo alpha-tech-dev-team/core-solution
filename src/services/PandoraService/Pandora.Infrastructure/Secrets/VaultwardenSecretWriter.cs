@@ -26,7 +26,7 @@ public sealed class VaultwardenSecretWriter : ISecretWriter
     public async Task<SecretItem?> Create(string name, string username, string password, CancellationToken cancellationToken)
     {
         var item = BuildItem(null, name, username, password);
-        var (response, _) = await SendAsync(HttpMethod.Post, ItemRoute, item, "создании", name, cancellationToken);
+        var (response, _) = await SendAsync(HttpMethod.Post, ItemRoute, item, name, cancellationToken);
 
         if (response is null)
         {
@@ -78,7 +78,7 @@ public sealed class VaultwardenSecretWriter : ISecretWriter
         }
 
         var item = BuildUpdateItem(current, data.Name, data.Username, updatedPassword);
-        var (response, status) = await SendAsync(HttpMethod.Put, $"{ItemRoute}/{itemId}", item, "обновлении", itemId, cancellationToken);
+        var (response, status) = await SendAsync(HttpMethod.Put, $"{ItemRoute}/{itemId}", item, itemId, cancellationToken);
 
         response?.Dispose();
 
@@ -92,7 +92,7 @@ public sealed class VaultwardenSecretWriter : ISecretWriter
 
     public async Task<SecretDeleteResult> Delete(string itemId, CancellationToken cancellationToken)
     {
-        var (response, status) = await SendAsync(HttpMethod.Delete, $"{ItemRoute}/{itemId}", null, "удалении", itemId, cancellationToken, treatBadRequestAsNotFound: true);
+        var (response, status) = await SendAsync(HttpMethod.Delete, $"{ItemRoute}/{itemId}", null, itemId, cancellationToken, treatBadRequestAsNotFound: true);
 
         response?.Dispose();
 
@@ -106,7 +106,7 @@ public sealed class VaultwardenSecretWriter : ISecretWriter
 
     private async Task<(VaultwardenItem? Item, GatewayStatus Status)> ReadItem(string itemId, CancellationToken cancellationToken)
     {
-        var (response, status) = await SendAsync(HttpMethod.Get, $"{ItemRoute}/{itemId}", null, "чтении", itemId, cancellationToken, treatBadRequestAsNotFound: true);
+        var (response, status) = await SendAsync(HttpMethod.Get, $"{ItemRoute}/{itemId}", null, itemId, cancellationToken, treatBadRequestAsNotFound: true);
 
         if (response is null)
         {
@@ -125,7 +125,6 @@ public sealed class VaultwardenSecretWriter : ISecretWriter
         HttpMethod method,
         string route,
         object? payload,
-        string operation,
         string target,
         CancellationToken cancellationToken,
         bool treatBadRequestAsNotFound = false)
@@ -144,7 +143,7 @@ public sealed class VaultwardenSecretWriter : ISecretWriter
             return (response, GatewayStatus.Success);
         }
 
-        _logger.LogWarning("Шлюз Vaultwarden вернул статус {StatusCode} при {Operation} секрета {Target}", (int)response.StatusCode, operation, target);
+        _logger.LogWarning("Шлюз Vaultwarden вернул статус {StatusCode} на {Method} секрета {Target}", (int)response.StatusCode, method.Method, target);
 
         var status = response.StatusCode switch
         {
