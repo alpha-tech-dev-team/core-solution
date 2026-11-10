@@ -76,7 +76,7 @@ public sealed class UpdateSecretMessageHandler : IRequestHandler<UpdateSecretMes
         {
             _logger.LogError(exception, "Не удалось сохранить изменения секрета {ItemId} в базе данных, в Vaultwarden уже применены новые значения", request.ItemId);
 
-            return Result<SecretListItem>.Failure(nameof(ErrorCode.DatabaseUnavailable));
+            throw;
         }
 
         await _auditLogger.LogActionAsync(request.AdminUserId, AuditConstants.ActionSecretUpdated, request.ItemId, cancellationToken);

@@ -54,7 +54,7 @@ public sealed class CreateSecretMessageHandler : IRequestHandler<CreateSecretMes
 
             await CompensateCreationAsync(created.Id);
 
-            return Result<SecretListItem>.Failure(nameof(ErrorCode.DatabaseUnavailable));
+            throw;
         }
 
         await _auditLogger.LogActionAsync(request.AdminUserId, AuditConstants.ActionSecretCreated, created.Id, cancellationToken);

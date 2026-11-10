@@ -55,7 +55,7 @@ public sealed class DeleteSecretMessageHandler : IRequestHandler<DeleteSecretMes
         {
             _logger.LogError(exception, "Не удалось удалить секрет {ItemId} из базы данных, в Vaultwarden он уже удалён", request.ItemId);
 
-            return Result.Failure(nameof(ErrorCode.DatabaseUnavailable));
+            throw;
         }
 
         if (isOrphaned)
