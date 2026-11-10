@@ -62,6 +62,7 @@ public class UserRepository(AppDbContext context) : BaseRepository<User>(context
     public Task<List<Roles>> GetAllRoles(CancellationToken cancellationToken = default)
     {
         return Context.Roles
+            .AsNoTracking()
             .OrderBy(x => x.Name)
             .ToListAsync(cancellationToken);
     }
