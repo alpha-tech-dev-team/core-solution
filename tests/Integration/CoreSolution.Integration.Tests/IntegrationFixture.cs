@@ -147,6 +147,15 @@ public sealed class IntegrationFixture : IAsyncLifetime
         return (user.TelegramUserId, user.Status);
     }
 
+    public async Task<Guid?> GetUserUpdatedByAsync(string phone)
+    {
+        using var scope = _identity.Services.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var user = await database.Users.SingleAsync(item => item.Phone == phone);
+
+        return user.UpdatedById;
+    }
+
     public HttpClient CreateIdentityHttpClient()
     {
         return _identity.CreateClient();

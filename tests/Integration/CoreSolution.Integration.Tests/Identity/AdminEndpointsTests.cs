@@ -404,6 +404,45 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
     }
 
     [Fact]
+    public async Task UpdateUser_SetsUpdatedByToActingAdmin()
+    {
+        var username = $"admin_{Guid.NewGuid():N}";
+        var adminId = await fixture.SeedAdminAsync(username, "admin-password-123");
+        const string phone = "+79995550230";
+        await fixture.SeedPendingUserAsync(phone);
+        using var client = fixture.CreateIdentityHttpClientWithCookies();
+        var login = await client.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+        var users = await GetUsers(client);
+        var seeded = Array.Find(users, user => user.Phone == phone)!;
+
+        var response = await client.PutAsJsonAsync(
+            $"{UsersRoute}/{seeded.Id}",
+            new UserDataRequest("Иван", "Петров", null, "Инженер", phone));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(adminId, await fixture.GetUserUpdatedByAsync(phone));
+    }
+
+    [Fact]
+    public async Task SetRoles_ShortAdminPassword_ReturnsBadRequest()
+    {
+        const string phone = "+79995550231";
+        await fixture.SeedPendingUserAsync(phone);
+        using var client = await CreateLoggedInAdminClient();
+        var users = await GetUsers(client);
+        var seeded = Array.Find(users, user => user.Phone == phone)!;
+
+        var response = await client.PutAsJsonAsync(
+            $"{UsersRoute}/{seeded.Id}/roles",
+            new SetUserRolesRequest([UserRole.AtlasAdmin], "admin-x", "short"));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ValidationErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.ValidationFailed), error!.Code);
+    }
+
+    [Fact]
     public async Task GetUsers_AtlasAdminOnly_ReturnsForbidden()
     {
         var username = $"admin_{Guid.NewGuid():N}";
