@@ -1,6 +1,6 @@
-using Atlas.Domain.Constants.AtlasDBConfiguration;
-using Atlas.Domain.Options;
-using Atlas.Infrastructure.Database;
+﻿using Atlas.Domain.Options;
+using Atlas.Infrastructure.Database.Context;
+using Atlas.Infrastructure.Database.Extensions;
 using CoreSolution.Shared.TgBot.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -20,12 +20,15 @@ public static class InfrastructureExtensions
             ?? throw new InvalidOperationException($"Missing configuration section {RedisOptions.SectionName}.");
 
         ArgumentException.ThrowIfNullOrWhiteSpace(databaseOptions.ConnectionString);
+        ArgumentException.ThrowIfNullOrWhiteSpace(redisOptions.ConnectionString);
+
+        services.Configure<DatabaseOptions>(configuration.GetSection(DatabaseOptions.SectionName));
 
         services.AddDbContext<AtlasDbContext>(options =>
             options.UseNpgsql(databaseOptions.ConnectionString, npgsql =>
             {
                 npgsql.UseVector();
-                npgsql.MigrationsHistoryTable(DBKeys.Shared.MigrationsHistoryTable, DBKeys.Shared.Schema);
+                npgsql.MapAtlasEnums();
             }));
 
         services.AddIdentityClient(configuration);
