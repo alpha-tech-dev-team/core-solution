@@ -7,8 +7,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Identity.Infrastructure.Repositories;
 
-public class UserRepository(AppDbContext context) : BaseRepository<User>(context), IUserRepository
+public class UserRepository : BaseRepository<User>, IUserRepository
 {
+    public UserRepository(AppDbContext context) : base(context)
+    {
+    }
+
     public Task<User?> GetByPhone(string phone, CancellationToken cancellationToken = default)
     {
         return Context.Users

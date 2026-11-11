@@ -8,12 +8,19 @@ namespace Identity.Api.Controllers;
 
 [ApiController]
 [Route(ApiRoutes.ClientGroup)]
-public sealed class ClientController(IIdentityService identityService) : ControllerBase
+public sealed class ClientController : ControllerBase
 {
+    private readonly IIdentityService _identityService;
+
+    public ClientController(IIdentityService identityService)
+    {
+        _identityService = identityService;
+    }
+
     [HttpPost(ApiRoutes.ActivateUser)]
     public async Task<IActionResult> ActivateUser(ActivateUserRequest request, CancellationToken cancellationToken)
     {
-        var result = await identityService.ActivateUser(request.TelegramUserId, request.Phone, cancellationToken);
+        var result = await _identityService.ActivateUser(request.TelegramUserId, request.Phone, cancellationToken);
 
         return result.ToActionResult();
     }
@@ -21,7 +28,7 @@ public sealed class ClientController(IIdentityService identityService) : Control
     [HttpPost(ApiRoutes.CheckUser)]
     public async Task<IActionResult> CheckUser(CheckUserRequest request, CancellationToken cancellationToken)
     {
-        var result = await identityService.CheckUser(request.TelegramUserId, request.Access, cancellationToken);
+        var result = await _identityService.CheckUser(request.TelegramUserId, request.Access, cancellationToken);
 
         return result.ToActionResult();
     }

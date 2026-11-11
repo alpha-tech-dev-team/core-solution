@@ -11,16 +11,23 @@ using Xunit;
 namespace CoreSolution.Integration.Tests.IdentityTests;
 
 [Collection(nameof(IntegrationCollection))]
-public sealed class AdminEndpointsTests(IntegrationFixture fixture)
+public sealed class AdminEndpointsTests
 {
     private const string LoginRoute = "/api/admin/login";
     private const string UsersRoute = "/api/admin/users";
     private const string RolesRoute = "/api/admin/roles";
 
+    private readonly IntegrationFixture _fixture;
+
+    public AdminEndpointsTests(IntegrationFixture fixture)
+    {
+        _fixture = fixture;
+    }
+
     [Fact]
     public async Task GetUsers_WithoutAuth_ReturnsUnauthorized()
     {
-        using var client = fixture.CreateIdentityHttpClient();
+        using var client = _fixture.CreateIdentityHttpClient();
 
         var response = await client.GetAsync(UsersRoute);
 
@@ -30,7 +37,7 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
     [Fact]
     public async Task Refresh_WithoutCookie_ReturnsUnauthorizedWithErrorCode()
     {
-        using var client = fixture.CreateIdentityHttpClient();
+        using var client = _fixture.CreateIdentityHttpClient();
 
         var response = await client.PostAsync("/api/admin/refresh", content: null);
 
@@ -43,7 +50,7 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
     public async Task GetUsers_AsAdmin_ReturnsSeededUserWithRoles()
     {
         const string phone = "+79995550201";
-        await fixture.SeedPendingUserAsync(phone, "Pandora");
+        await _fixture.SeedPendingUserAsync(phone, "Pandora");
         using var client = await CreateLoggedInAdminClient();
 
         var response = await client.GetAsync(UsersRoute);
@@ -84,7 +91,7 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
     [Fact]
     public async Task GetRoles_AsAdmin_ReturnsSeededRoles()
     {
-        await fixture.SeedPendingUserAsync("+79995550202", "Atlas");
+        await _fixture.SeedPendingUserAsync("+79995550202", "Atlas");
         using var client = await CreateLoggedInAdminClient();
 
         var response = await client.GetAsync(RolesRoute);
@@ -126,7 +133,7 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
     public async Task SetRoles_AdminRoleWithoutCredentials_ReturnsBadRequest()
     {
         const string phone = "+79995550214";
-        await fixture.SeedPendingUserAsync(phone);
+        await _fixture.SeedPendingUserAsync(phone);
         using var client = await CreateLoggedInAdminClient();
         var users = await GetUsers(client);
         var seeded = Array.Find(users, user => user.Phone == phone)!;
@@ -144,7 +151,7 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
     public async Task SetRoles_AdminRoleWithCredentials_SavesAdminLogin()
     {
         const string phone = "+79995550215";
-        await fixture.SeedPendingUserAsync(phone, nameof(UserRole.PandoraAdmin));
+        await _fixture.SeedPendingUserAsync(phone, nameof(UserRole.PandoraAdmin));
         using var client = await CreateLoggedInAdminClient();
         var users = await GetUsers(client);
         var seeded = Array.Find(users, user => user.Phone == phone)!;
@@ -165,7 +172,7 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
     {
         const string phone = "+79995550204";
         const long telegramUserId = 9104;
-        await fixture.SeedPendingUserAsync(phone);
+        await _fixture.SeedPendingUserAsync(phone);
         using var client = await CreateLoggedInAdminClient();
         var users = await GetUsers(client);
         var seeded = Array.Find(users!, user => user.Phone == phone)!;
@@ -174,7 +181,7 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
         var response = await client.PutAsJsonAsync($"{UsersRoute}/{seeded.Id}/status", new SetUserStatusRequest(UserStatus.Blocked));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var (_, status) = await fixture.GetUserStateAsync(phone);
+        var (_, status) = await _fixture.GetUserStateAsync(phone);
         Assert.Equal(UserStatus.Blocked, status);
 
         var check = await client.PostAsJsonAsync("/api/client/check", new CheckUserRequest(telegramUserId, "Atlas"));
@@ -185,7 +192,7 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
     public async Task SetRoles_ExistingRole_ReplacesUserRoles()
     {
         const string phone = "+79995550205";
-        await fixture.SeedPendingUserAsync(phone, "Pandora");
+        await _fixture.SeedPendingUserAsync(phone, "Pandora");
         using var client = await CreateLoggedInAdminClient();
         var users = await GetUsers(client);
         var seeded = Array.Find(users!, user => user.Phone == phone)!;
@@ -222,7 +229,7 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
     public async Task CreateUser_DuplicatePhone_ReturnsConflict()
     {
         const string phone = "+79995550207";
-        await fixture.SeedPendingUserAsync(phone);
+        await _fixture.SeedPendingUserAsync(phone);
         using var client = await CreateLoggedInAdminClient();
 
         var response = await client.PostAsJsonAsync(
@@ -263,7 +270,7 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
     public async Task SetStatus_UnblockNeverActivatedUser_RestoresPending()
     {
         const string phone = "+79995550213";
-        await fixture.SeedPendingUserAsync(phone);
+        await _fixture.SeedPendingUserAsync(phone);
         using var client = await CreateLoggedInAdminClient();
         var users = await GetUsers(client);
         var seeded = Array.Find(users!, user => user.Phone == phone)!;
@@ -272,7 +279,7 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
         var response = await client.PutAsJsonAsync($"{UsersRoute}/{seeded.Id}/status", new SetUserStatusRequest(UserStatus.Active));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var (_, status) = await fixture.GetUserStateAsync(phone);
+        var (_, status) = await _fixture.GetUserStateAsync(phone);
         Assert.Equal(UserStatus.Pending, status);
     }
 
@@ -280,7 +287,7 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
     public async Task DeleteUser_AsAdmin_RemovesUser()
     {
         const string phone = "+79995550216";
-        await fixture.SeedPendingUserAsync(phone);
+        await _fixture.SeedPendingUserAsync(phone);
         using var client = await CreateLoggedInAdminClient();
         var users = await GetUsers(client);
         var seeded = Array.Find(users, user => user.Phone == phone)!;
@@ -306,7 +313,7 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
     public async Task UpdateUser_AsAdmin_UpdatesFields()
     {
         const string phone = "+79995550209";
-        await fixture.SeedPendingUserAsync(phone);
+        await _fixture.SeedPendingUserAsync(phone);
         using var client = await CreateLoggedInAdminClient();
         var users = await GetUsers(client);
         var seeded = Array.Find(users!, user => user.Phone == phone)!;
@@ -329,8 +336,8 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
     {
         const string phone = "+79995550210";
         const string otherPhone = "+79995550211";
-        await fixture.SeedPendingUserAsync(phone);
-        await fixture.SeedPendingUserAsync(otherPhone);
+        await _fixture.SeedPendingUserAsync(phone);
+        await _fixture.SeedPendingUserAsync(otherPhone);
         using var client = await CreateLoggedInAdminClient();
         var users = await GetUsers(client);
         var seeded = Array.Find(users!, user => user.Phone == phone)!;
@@ -359,8 +366,8 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
     {
         const string firstPhone = "+79995550220";
         const string secondPhone = "+79995550221";
-        await fixture.SeedPendingUserAsync(firstPhone);
-        await fixture.SeedPendingUserAsync(secondPhone);
+        await _fixture.SeedPendingUserAsync(firstPhone);
+        await _fixture.SeedPendingUserAsync(secondPhone);
         using var client = await CreateLoggedInAdminClient();
         var users = await GetUsers(client);
         var first = Array.Find(users, user => user.Phone == firstPhone)!;
@@ -384,7 +391,7 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
     public async Task Login_AdminRoleRemoved_ReturnsForbidden()
     {
         var username = $"admin_{Guid.NewGuid():N}";
-        await fixture.SeedAdminAsync(username, "admin-password-123");
+        await _fixture.SeedAdminAsync(username, "admin-password-123");
 
         using var client = await CreateLoggedInAdminClient();
         var users = await GetUsers(client);
@@ -395,7 +402,7 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
             new SetUserRolesRequest([UserRole.Atlas], null, null));
         Assert.Equal(HttpStatusCode.OK, setRoles.StatusCode);
 
-        using var loginClient = fixture.CreateIdentityHttpClientWithCookies();
+        using var loginClient = _fixture.CreateIdentityHttpClientWithCookies();
         var response = await loginClient.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -407,10 +414,10 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
     public async Task UpdateUser_SetsUpdatedByToActingAdmin()
     {
         var username = $"admin_{Guid.NewGuid():N}";
-        var adminId = await fixture.SeedAdminAsync(username, "admin-password-123");
+        var adminId = await _fixture.SeedAdminAsync(username, "admin-password-123");
         const string phone = "+79995550230";
-        await fixture.SeedPendingUserAsync(phone);
-        using var client = fixture.CreateIdentityHttpClientWithCookies();
+        await _fixture.SeedPendingUserAsync(phone);
+        using var client = _fixture.CreateIdentityHttpClientWithCookies();
         var login = await client.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
         Assert.Equal(HttpStatusCode.OK, login.StatusCode);
         var users = await GetUsers(client);
@@ -421,14 +428,14 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
             new UserDataRequest("Иван", "Петров", null, "Инженер", phone));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal(adminId, await fixture.GetUserUpdatedByAsync(phone));
+        Assert.Equal(adminId, await _fixture.GetUserUpdatedByAsync(phone));
     }
 
     [Fact]
     public async Task SetRoles_ShortAdminPassword_ReturnsBadRequest()
     {
         const string phone = "+79995550231";
-        await fixture.SeedPendingUserAsync(phone);
+        await _fixture.SeedPendingUserAsync(phone);
         using var client = await CreateLoggedInAdminClient();
         var users = await GetUsers(client);
         var seeded = Array.Find(users, user => user.Phone == phone)!;
@@ -446,8 +453,8 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
     public async Task GetUsers_AtlasAdminOnly_ReturnsForbidden()
     {
         var username = $"admin_{Guid.NewGuid():N}";
-        await fixture.SeedAdminAsync(username, "admin-password-123", nameof(UserRole.AtlasAdmin));
-        using var client = fixture.CreateIdentityHttpClientWithCookies();
+        await _fixture.SeedAdminAsync(username, "admin-password-123", nameof(UserRole.AtlasAdmin));
+        using var client = _fixture.CreateIdentityHttpClientWithCookies();
         var login = await client.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
         Assert.Equal(HttpStatusCode.OK, login.StatusCode);
 
@@ -460,8 +467,8 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
     public async Task SetRoles_RemoveOwnAdminRole_ReturnsUnauthorized()
     {
         var username = $"admin_{Guid.NewGuid():N}";
-        await fixture.SeedAdminAsync(username, "admin-password-123");
-        using var client = fixture.CreateIdentityHttpClientWithCookies();
+        await _fixture.SeedAdminAsync(username, "admin-password-123");
+        using var client = _fixture.CreateIdentityHttpClientWithCookies();
         var login = await client.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
         Assert.Equal(HttpStatusCode.OK, login.StatusCode);
         var users = await GetUsers(client);
@@ -473,7 +480,7 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
 
-        using var loginClient = fixture.CreateIdentityHttpClientWithCookies();
+        using var loginClient = _fixture.CreateIdentityHttpClientWithCookies();
         var retry = await loginClient.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
         Assert.Equal(HttpStatusCode.Forbidden, retry.StatusCode);
     }
@@ -482,8 +489,8 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
     public async Task DeleteUser_Self_ReturnsUnauthorized()
     {
         var username = $"admin_{Guid.NewGuid():N}";
-        await fixture.SeedAdminAsync(username, "admin-password-123");
-        using var client = fixture.CreateIdentityHttpClientWithCookies();
+        await _fixture.SeedAdminAsync(username, "admin-password-123");
+        using var client = _fixture.CreateIdentityHttpClientWithCookies();
         var login = await client.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
         Assert.Equal(HttpStatusCode.OK, login.StatusCode);
         var users = await GetUsers(client);
@@ -493,7 +500,7 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
 
-        using var loginClient = fixture.CreateIdentityHttpClientWithCookies();
+        using var loginClient = _fixture.CreateIdentityHttpClientWithCookies();
         var retry = await loginClient.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
         Assert.Equal(HttpStatusCode.Unauthorized, retry.StatusCode);
         var error = await retry.Content.ReadFromJsonAsync<ErrorResponse>();
@@ -503,9 +510,9 @@ public sealed class AdminEndpointsTests(IntegrationFixture fixture)
     private async Task<HttpClient> CreateLoggedInAdminClient()
     {
         var username = $"admin_{Guid.NewGuid():N}";
-        await fixture.SeedAdminAsync(username, "admin-password-123");
+        await _fixture.SeedAdminAsync(username, "admin-password-123");
 
-        var client = fixture.CreateIdentityHttpClientWithCookies();
+        var client = _fixture.CreateIdentityHttpClientWithCookies();
         var response = await client.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 

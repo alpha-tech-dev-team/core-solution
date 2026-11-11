@@ -12,13 +12,20 @@ namespace Identity.Api.Controllers;
 
 [ApiController]
 [Route(ApiRoutes.AdminGroup)]
-public sealed class AdminAuthController(IAdminAuthService authService) : ControllerBase
+public sealed class AdminAuthController : ControllerBase
 {
+    private readonly IAdminAuthService _authService;
+
+    public AdminAuthController(IAdminAuthService authService)
+    {
+        _authService = authService;
+    }
+
     [HttpPost(ApiRoutes.Login)]
     [EnableRateLimiting(RateLimitingPolicies.Auth)]
     public async Task<IActionResult> Login(AdminLoginRequest request, CancellationToken cancellationToken)
     {
-        var result = await authService.Login(request.Username, request.Password, cancellationToken);
+        var result = await _authService.Login(request.Username, request.Password, cancellationToken);
 
         return result.ToSessionActionResult(Response, clearCookiesOnFailure: false);
     }
@@ -31,7 +38,7 @@ public sealed class AdminAuthController(IAdminAuthService authService) : Control
 
         var result = string.IsNullOrEmpty(refreshToken)
             ? Result<AuthTokens>.Failure(nameof(IdentityErrorCode.InvalidRefreshToken))
-            : await authService.Refresh(refreshToken, cancellationToken);
+            : await _authService.Refresh(refreshToken, cancellationToken);
 
         return result.ToSessionActionResult(Response, clearCookiesOnFailure: true);
     }
