@@ -17,7 +17,7 @@ services:
       retries: 10
 
   postgres:
-    image: postgres:18-alpine
+    image: pgvector/pgvector:pg18
     container_name: atlas-postgres
     restart: unless-stopped
     shm_size: 128mb
@@ -44,12 +44,16 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
     environment:
       DOTNET_ENVIRONMENT: Production
       Telegram__BotToken: ${TELEGRAM_BOT_TOKEN:?TELEGRAM_BOT_TOKEN is required}
-      Database__RedisConnection: redis:6379
+      Database__ConnectionString: "${Database__ConnectionString:?Database__ConnectionString is required}"
+      Database__SeedOnStartup: ${Database__SeedOnStartup:-false}
+      Redis__ConnectionString: redis:6379
       SessionSettings__ExpiryMinutes: ${SESSION_EXPIRY_MINUTES:-30}
-      Atlas__Identity__BaseUrl: ${IDENTITY_BASE_URL:-http://host.docker.internal:5257}
+      Identity__BaseUrl: ${IDENTITY_BASE_URL:-http://host.docker.internal:5001}
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
