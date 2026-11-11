@@ -1,4 +1,4 @@
-using Atlas.Domain.Constants;
+﻿using Atlas.Domain.Constants;
 using AppRole = CoreSolution.Shared.Enums.UserRole;
 using Atlas.TgBot.Extensions.DependencyInjection;
 using CoreSolution.Shared.Abstractions;
@@ -31,7 +31,7 @@ public sealed class IntegrationFixture : IAsyncLifetime
 
     private static long _adminPhoneSequence;
 
-    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:18-alpine").Build();
+    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("pgvector/pgvector:pg18").Build();
 
     private readonly RedisContainer _atlasRedis = new RedisBuilder("redis:7-alpine").Build();
 
@@ -175,7 +175,8 @@ public sealed class IntegrationFixture : IAsyncLifetime
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["Database:RedisConnection"] = _atlasRedis.GetConnectionString(),
+                ["Database:ConnectionString"] = _postgres.GetConnectionString(),
+                ["Redis:ConnectionString"] = _atlasRedis.GetConnectionString(),
                 ["SessionSettings:ExpiryMinutes"] = "30",
                 ["Identity:BaseUrl"] = "http://localhost"
             })
@@ -234,3 +235,4 @@ public sealed class IntegrationFixture : IAsyncLifetime
 
 [CollectionDefinition(nameof(IntegrationCollection))]
 public sealed class IntegrationCollection : ICollectionFixture<IntegrationFixture>;
+
