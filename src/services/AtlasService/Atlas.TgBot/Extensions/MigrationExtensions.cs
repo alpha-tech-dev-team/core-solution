@@ -16,7 +16,9 @@ public static class MigrationExtensions
         using var scope = host.Services.CreateScope();
         var services = scope.ServiceProvider;
 
-        await services.GetRequiredService<AtlasDbContext>().Database.MigrateAsync();
+        var dbContext = services.GetRequiredService<AtlasDbContext>();
+
+        await dbContext.Database.MigrateAsync();
 
         var options = services.GetRequiredService<IOptions<DatabaseOptions>>().Value;
 
@@ -29,6 +31,6 @@ public static class MigrationExtensions
             .CreateLogger(typeof(MigrationExtensions))
             .LogInformation("Применяется сид категорий инцидентов.");
 
-        await IncidentCategorySeed.SeedAsync(services.GetRequiredService<AtlasDbContext>());
+        await IncidentCategorySeed.SeedAsync(dbContext);
     }
 }
