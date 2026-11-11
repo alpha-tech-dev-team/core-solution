@@ -3,8 +3,8 @@ using CoreSolution.Shared.TgBot.Abstractions;
 using MediatR;
 using Pandora.Domain.Constants;
 using Pandora.Domain.Enums;
+using Pandora.TgBot.Application.Features.Activation;
 using Pandora.TgBot.ErrorHandling;
-using Pandora.TgBot.Features.Activation;
 
 namespace Pandora.TgBot.Extension.DependencyInjection;
 

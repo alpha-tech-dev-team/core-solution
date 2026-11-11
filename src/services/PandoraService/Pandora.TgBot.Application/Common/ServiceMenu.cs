@@ -4,7 +4,7 @@ using Pandora.Domain.Constants.Localization;
 using Pandora.Domain.Enums;
 using Pandora.Domain.Models;
 
-namespace Pandora.TgBot.Common;
+namespace Pandora.TgBot.Application.Common;
 
 internal static class ServiceMenu
 {

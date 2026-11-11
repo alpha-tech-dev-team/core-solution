@@ -6,9 +6,9 @@ using Pandora.Domain.Constants.Localization;
 using Pandora.Domain.Enums;
 using Pandora.Domain.Interfaces;
 using Pandora.Domain.Models;
-using Pandora.TgBot.Common;
+using Pandora.TgBot.Application.Common;
 
-namespace Pandora.TgBot.Features.Services;
+namespace Pandora.TgBot.Application.Features.Services;
 
 public sealed class ShowServicesHandler : IRequestHandler<ShowServicesMessage, Result<WorkflowResponse>>
 {

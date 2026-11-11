@@ -7,7 +7,7 @@ using Pandora.Domain.Constants.Localization;
 using Pandora.Domain.Enums;
 using Pandora.Domain.Interfaces;
 
-namespace Pandora.TgBot.Features.Credentials;
+namespace Pandora.TgBot.Application.Features.Credentials;
 
 public sealed class GetCredentialsHandler : IRequestHandler<GetCredentialsMessage, Result<WorkflowResponse>>
 {

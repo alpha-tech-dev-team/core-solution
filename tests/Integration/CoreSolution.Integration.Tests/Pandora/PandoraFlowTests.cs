@@ -4,7 +4,7 @@ using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
-using Pandora.TgBot.Features.Credentials;
+using Pandora.TgBot.Application.Features.Credentials;
 using Xunit;
 
 namespace CoreSolution.Integration.Tests.PandoraTests;
