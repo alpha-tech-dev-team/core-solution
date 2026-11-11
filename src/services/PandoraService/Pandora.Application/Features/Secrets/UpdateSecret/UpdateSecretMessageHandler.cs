@@ -30,11 +30,6 @@ public sealed class UpdateSecretMessageHandler : IRequestHandler<UpdateSecretMes
 
     public async Task<Result<SecretListItem>> Handle(UpdateSecretMessage request, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(request.ItemId))
-        {
-            return Result<SecretListItem>.Failure(nameof(ErrorCode.InvalidSecretData));
-        }
-
         var name = request.Name.Trim();
         var username = request.Username.Trim();
 

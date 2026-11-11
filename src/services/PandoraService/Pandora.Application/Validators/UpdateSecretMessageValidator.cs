@@ -1,16 +1,19 @@
 using FluentValidation;
-using Pandora.Application.Contracts;
+using Pandora.Application.Features.Secrets.UpdateSecret;
 using Pandora.Domain.Constants;
 
 namespace Pandora.Application.Validators;
 
-public class UpdateSecretRequestValidator : AbstractValidator<UpdateSecretRequest>
+public class UpdateSecretMessageValidator : AbstractValidator<UpdateSecretMessage>
 {
-    public UpdateSecretRequestValidator()
+    public UpdateSecretMessageValidator()
     {
         RuleFor(x => x.Name)
             .NotEmpty()
             .MaximumLength(SecretMetadataLimits.ResourceNameMaxLength);
+
+        RuleFor(x => x.ItemId)
+            .NotEmpty();
 
         RuleFor(x => x.Username)
             .NotEmpty()

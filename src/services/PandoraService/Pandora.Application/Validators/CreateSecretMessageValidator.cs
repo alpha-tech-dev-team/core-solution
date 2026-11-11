@@ -1,12 +1,12 @@
 using FluentValidation;
-using Pandora.Application.Contracts;
+using Pandora.Application.Features.Secrets.CreateSecret;
 using Pandora.Domain.Constants;
 
 namespace Pandora.Application.Validators;
 
-public class CreateSecretRequestValidator : AbstractValidator<CreateSecretRequest>
+public class CreateSecretMessageValidator : AbstractValidator<CreateSecretMessage>
 {
-    public CreateSecretRequestValidator()
+    public CreateSecretMessageValidator()
     {
         RuleFor(x => x.Name)
             .NotEmpty()

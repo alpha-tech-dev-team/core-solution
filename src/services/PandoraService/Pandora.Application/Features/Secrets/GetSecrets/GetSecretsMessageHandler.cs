@@ -1,5 +1,6 @@
 using CoreSolution.Shared.Results;
 using MediatR;
+using Pandora.Domain.Constants;
 using Pandora.Domain.Entities;
 using Pandora.Domain.Interfaces;
 using Pandora.Domain.Models;
@@ -18,8 +19,8 @@ public sealed class GetSecretsMessageHandler : IRequestHandler<GetSecretsMessage
     public async Task<Result<SecretListPage>> Handle(GetSecretsMessage request, CancellationToken cancellationToken)
     {
         var page = await _metadataRepository.GetPage(
-            request.Page,
-            request.PageSize,
+            request.Page ?? PaginationLimits.DefaultPage,
+            request.PageSize ?? PaginationLimits.DefaultPageSize,
             OrderByResourceName,
             cancellationToken);
 

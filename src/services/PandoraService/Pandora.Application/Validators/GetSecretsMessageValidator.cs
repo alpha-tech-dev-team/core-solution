@@ -1,12 +1,12 @@
 using FluentValidation;
-using Pandora.Application.Contracts;
+using Pandora.Application.Features.Secrets.GetSecrets;
 using Pandora.Domain.Constants;
 
 namespace Pandora.Application.Validators;
 
-public class GetSecretsRequestValidator : AbstractValidator<GetSecretsRequest>
+public class GetSecretsMessageValidator : AbstractValidator<GetSecretsMessage>
 {
-    public GetSecretsRequestValidator()
+    public GetSecretsMessageValidator()
     {
         RuleFor(x => x.Page)
             .GreaterThanOrEqualTo(PaginationLimits.DefaultPage)

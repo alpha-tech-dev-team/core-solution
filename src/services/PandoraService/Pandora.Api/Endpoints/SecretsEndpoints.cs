@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using CoreSolution.Shared.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -6,12 +5,10 @@ using Microsoft.AspNetCore.Mvc;
 using Pandora.Api.Constants;
 using Pandora.Api.Extensions;
 using Pandora.Api.Filters;
-using Pandora.Application.Contracts;
 using Pandora.Application.Features.Secrets.CreateSecret;
 using Pandora.Application.Features.Secrets.DeleteSecret;
 using Pandora.Application.Features.Secrets.GetSecrets;
 using Pandora.Application.Features.Secrets.UpdateSecret;
-using Pandora.Domain.Constants;
 
 namespace Pandora.Api.Endpoints;
 
@@ -22,64 +19,56 @@ public static class SecretsEndpoints
         var group = endpoints.MapGroup(ApiRoutes.AdminGroup).RequireAuthorization(UserRole.PandoraAdmin.ToRoleName());
 
         group.MapGet(ApiRoutes.Secrets, List)
-            .AddEndpointFilter<ValidationFilter<GetSecretsRequest>>();
+            .AddEndpointFilter<ValidationFilter<GetSecretsMessage>>();
         group.MapPost(ApiRoutes.Secrets, Create)
-            .AddEndpointFilter<ValidationFilter<CreateSecretRequest>>();
+            .AddEndpointFilter<RequestContextFilter>()
+            .AddEndpointFilter<ValidationFilter<CreateSecretMessage>>();
         group.MapPatch(ApiRoutes.SecretById, Update)
-            .AddEndpointFilter<ValidationFilter<UpdateSecretRequest>>();
-        group.MapDelete(ApiRoutes.SecretById, Delete);
+            .AddEndpointFilter<RequestContextFilter>()
+            .AddEndpointFilter<ValidationFilter<UpdateSecretMessage>>();
+        group.MapDelete(ApiRoutes.SecretById, Delete)
+            .AddEndpointFilter<RequestContextFilter>()
+            .AddEndpointFilter<ValidationFilter<DeleteSecretMessage>>();
 
         return endpoints;
     }
 
     private static async Task<IResult> List(
         [FromServices] IMediator mediator,
-        [AsParameters] GetSecretsRequest request,
+        [AsParameters] GetSecretsMessage message,
         CancellationToken cancellationToken = default)
     {
-        var result = await mediator.Send(
-            new GetSecretsMessage(
-                request.Page ?? PaginationLimits.DefaultPage,
-                request.PageSize ?? PaginationLimits.DefaultPageSize),
-            cancellationToken);
+        var result = await mediator.Send(message, cancellationToken);
 
         return result.ToHttpResult();
     }
 
     private static async Task<IResult> Create(
         [FromServices] IMediator mediator,
-        ClaimsPrincipal user,
-        CreateSecretRequest request,
+        CreateSecretMessage message,
         CancellationToken cancellationToken = default)
     {
-        var result = await mediator.Send(
-            new CreateSecretMessage(user.GetAdminUserId(), request.Name, request.Username, request.Password),
-            cancellationToken);
+        var result = await mediator.Send(message, cancellationToken);
 
         return result.ToHttpResult();
     }
 
     private static async Task<IResult> Update(
         [FromServices] IMediator mediator,
-        ClaimsPrincipal user,
-        string itemId,
-        UpdateSecretRequest request,
+        UpdateSecretMessage message,
         CancellationToken cancellationToken = default)
     {
-        var result = await mediator.Send(
-            new UpdateSecretMessage(user.GetAdminUserId(), itemId, request.Name, request.Username, request.Password),
-            cancellationToken);
+        var result = await mediator.Send(message, cancellationToken);
 
         return result.ToHttpResult();
     }
 
     private static async Task<IResult> Delete(
         [FromServices] IMediator mediator,
-        ClaimsPrincipal user,
-        string itemId,
+        [AsParameters] DeleteSecretMessage message,
         CancellationToken cancellationToken = default)
     {
-        var result = await mediator.Send(new DeleteSecretMessage(user.GetAdminUserId(), itemId), cancellationToken);
+        var result = await mediator.Send(message, cancellationToken);
 
         return result.ToHttpResult();
     }
