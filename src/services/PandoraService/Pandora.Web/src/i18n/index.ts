@@ -13,11 +13,18 @@ type ResourceMap = Record<string, string>
 
 const resources: Record<Locale, ResourceMap> = { ru, en }
 
+export type ResourceKey = keyof typeof ru
+
 let currentLocale: Locale = DEFAULT_LOCALE
 
 function interpolate(template: string, params: readonly unknown[]): string {
   if (params.length === 0) return template
   return template.replace(PLACEHOLDER_PATTERN, (_, index) => String(params[Number(index)] ?? ''))
+}
+
+function lookup(key: string, params: readonly unknown[] = []): string {
+  const template = resources[currentLocale][key] ?? key
+  return interpolate(template, params)
 }
 
 export function setLocale(locale: Locale): void {
@@ -28,15 +35,18 @@ export function getLocale(): Locale {
   return currentLocale
 }
 
-export function tr(key: string, ...params: readonly unknown[]): string {
-  const template = resources[currentLocale][key] ?? key
-  return interpolate(template, params)
+export function tr(key: ResourceKey, ...params: readonly unknown[]): string {
+  return lookup(key, params)
 }
 
-export function trRequestError(error: number | string): string {
-  return tr(`${ERROR_KEY_PREFIX}_${error}`)
+export function trRequestError(code: string): string {
+  return lookup(`${ERROR_KEY_PREFIX}_${code}`)
+}
+
+export function trStatus(status: string): string {
+  return lookup(`status_${status.toLowerCase()}`)
 }
 
 export function trValidation(rule: ValidationRule, ...params: readonly unknown[]): string {
-  return tr(`${VALIDATION_KEY_PREFIX}_${rule}`, ...params)
+  return lookup(`${VALIDATION_KEY_PREFIX}_${rule}`, params)
 }

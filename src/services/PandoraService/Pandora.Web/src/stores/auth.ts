@@ -13,6 +13,7 @@ function isExpired(expiresAt: string): boolean {
 
 export const useAuthStore = defineStore(AUTH_STORE_ID, () => {
   const accessTokenExpiresAt = ref<string | null>(null)
+  const username = ref<string | null>(null)
 
   const isAuthenticated = computed(() => {
     if (!accessTokenExpiresAt.value) return false
@@ -21,13 +22,14 @@ export const useAuthStore = defineStore(AUTH_STORE_ID, () => {
 
   function applySession(session: AuthSession): void {
     accessTokenExpiresAt.value = session.accessTokenExpiresAt
+    username.value = session.username
     saveSession(session)
   }
 
   async function login(username: string, password: string): Promise<RequestError | null> {
     try {
-      const { data } = await api.post<AuthSession>(AUTH_ENDPOINTS.LOGIN, { username, password })
-      applySession(data)
+      const { data } = await api.post<Omit<AuthSession, 'username'>>(AUTH_ENDPOINTS.LOGIN, { username, password })
+      applySession({ ...data, username })
       return null
     } catch (error) {
       return toRequestError(error)
@@ -37,8 +39,8 @@ export const useAuthStore = defineStore(AUTH_STORE_ID, () => {
   async function refreshTokens(): Promise<boolean> {
     if (!accessTokenExpiresAt.value) return false
     try {
-      const { data } = await api.post<AuthSession>(AUTH_ENDPOINTS.REFRESH)
-      applySession(data)
+      const { data } = await api.post<Omit<AuthSession, 'username'>>(AUTH_ENDPOINTS.REFRESH)
+    applySession({ ...data, username: username.value ?? '' })
       return true
     } catch {
       return false
@@ -49,10 +51,12 @@ export const useAuthStore = defineStore(AUTH_STORE_ID, () => {
     const session = loadSession()
     if (!session) return
     accessTokenExpiresAt.value = session.accessTokenExpiresAt
+    username.value = session.username
   }
 
   function clearLocalSession(): void {
     accessTokenExpiresAt.value = null
+    username.value = null
     clearSession()
   }
 
@@ -67,6 +71,7 @@ export const useAuthStore = defineStore(AUTH_STORE_ID, () => {
 
   return {
     accessTokenExpiresAt,
+    username,
     isAuthenticated,
     login,
     refreshTokens,

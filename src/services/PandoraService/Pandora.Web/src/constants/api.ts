@@ -7,11 +7,21 @@ export const AUTH_ENDPOINTS = {
   LOGOUT: '/logout'
 } as const
 
+export const EMPLOYEE_ENDPOINTS = {
+  LIST: '/users',
+  BY_ID: (id: string) => `/users/${id}`,
+  ROLES: '/roles',
+  ROLES_OF: (id: string) => `/users/${id}/roles`,
+  STATUS_OF: (id: string) => `/users/${id}/status`
+} as const
+
 export const HEADER_CONTENT_TYPE = 'Content-Type'
 export const CONTENT_TYPE_JSON = 'application/json'
 export const RETRY_FLAG = '_retry'
 
 export const REQUEST_ERROR = {
   NETWORK: 'network',
-  UNKNOWN: 'unknown'
+  UNKNOWN: 'unknown',
+  TOO_MANY_REQUESTS: 'TooManyRequests',
+  TOO_MANY_REQUESTS_STATUS: 429
 } as const

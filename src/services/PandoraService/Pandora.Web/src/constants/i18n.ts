@@ -1,3 +1,5 @@
+import type { ResourceKey } from '@/i18n'
+
 export const DEFAULT_LOCALE = 'ru'
 export const SUPPORTED_LOCALES = ['ru', 'en'] as const
 
@@ -6,15 +8,6 @@ export type Locale = (typeof SUPPORTED_LOCALES)[number]
 export const ERROR_KEY_PREFIX = 'error'
 export const VALIDATION_KEY_PREFIX = 'validation'
 export const PLACEHOLDER_PATTERN = /\{(\d+)\}/g
-
-export const RESOURCE_KEYS = {
-  APP_TITLE: 'app_title',
-  APP_PLACEHOLDER: 'app_placeholder',
-  AUTH_LOGIN: 'auth_login',
-  AUTH_LOGOUT: 'auth_logout',
-  FIELD_USERNAME: 'login_field_username',
-  FIELD_PASSWORD: 'login_field_password'
-} as const
 
 export const VALIDATION_RULES = {
   REQUIRED: 'required',
@@ -25,3 +18,11 @@ export const VALIDATION_RULES = {
 } as const
 
 export type ValidationRule = (typeof VALIDATION_RULES)[keyof typeof VALIDATION_RULES]
+
+export const EMPLOYEE_FORM_MESSAGES = {
+  NAME: 'employee_error_name',
+  SURNAME: 'employee_error_surname',
+  PATRONYMIC: 'employee_error_patronymic',
+  POSITION: 'employee_error_position',
+  PHONE: 'employee_error_phone'
+} as const satisfies Record<string, ResourceKey>

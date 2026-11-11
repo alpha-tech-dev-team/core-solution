@@ -44,10 +44,7 @@ public sealed class SessionBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
             {
                 if (!await _identityClient.CheckUser(botRequest.TelegramUserId, _options.ServiceName, cancellationToken))
                 {
-                    _logger.LogWarning(
-                        "Identity не подтвердил доступ, запрошен номер телефона, пользователь {TgUserId}, сообщение {MessageId}",
-                        botRequest.TelegramUserId,
-                        botRequest.MessageId);
+                    _logger.LogWarning("Identity не подтвердил доступ, запрошен номер телефона, пользователь {TgUserId}, сообщение {MessageId}", botRequest.TelegramUserId, botRequest.MessageId);
 
                     var activation = await _mediator.Send(
                         new SubmitPhoneMessage(botRequest.TelegramUserId, botRequest.MessageId),
@@ -59,10 +56,7 @@ public sealed class SessionBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
                 session = UserSession.Create(botRequest.TelegramUserId, _options.InitialStep);
                 await _sessionService.SaveSession(session, cancellationToken);
 
-                _logger.LogInformation(
-                    "Сессия восстановлена по identity, пользователь {TgUserId}, сообщение {MessageId}",
-                    botRequest.TelegramUserId,
-                    botRequest.MessageId);
+                _logger.LogInformation("Сессия восстановлена по identity, пользователь {TgUserId}, сообщение {MessageId}", botRequest.TelegramUserId, botRequest.MessageId);
             }
 
             _requestContext.Session = session;

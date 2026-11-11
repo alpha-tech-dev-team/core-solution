@@ -8,10 +8,15 @@ internal static class IdentityErrorStatusCodes
         new Dictionary<IdentityErrorCode, int>
         {
             [IdentityErrorCode.UserNotFound] = StatusCodes.Status404NotFound,
+            [IdentityErrorCode.RoleNotFound] = StatusCodes.Status404NotFound,
             [IdentityErrorCode.UserAlreadyActivated] = StatusCodes.Status409Conflict,
+            [IdentityErrorCode.PhoneAlreadyExists] = StatusCodes.Status409Conflict,
+            [IdentityErrorCode.AdminLoginAlreadyExists] = StatusCodes.Status409Conflict,
+            [IdentityErrorCode.AdminCredentialsRequired] = StatusCodes.Status400BadRequest,
             [IdentityErrorCode.AccessDenied] = StatusCodes.Status403Forbidden,
             [IdentityErrorCode.InvalidCredentials] = StatusCodes.Status401Unauthorized,
             [IdentityErrorCode.InvalidRefreshToken] = StatusCodes.Status401Unauthorized,
+            [IdentityErrorCode.ValidationFailed] = StatusCodes.Status400BadRequest,
             [IdentityErrorCode.InternalError] = StatusCodes.Status500InternalServerError
         };
 
