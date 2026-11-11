@@ -16,7 +16,7 @@ public static class SecretsEndpoints
 {
     public static IEndpointRouteBuilder MapSecretsEndpoints(this IEndpointRouteBuilder endpoints)
     {
-        var group = endpoints.MapGroup(ApiRoutes.AdminGroup).RequireAuthorization(UserRole.PandoraAdmin.ToRoleName());
+        var group = endpoints.MapGroup(ApiRoutes.AdminGroup).RequireAuthorization(nameof(UserRole.PandoraAdmin));
 
         group.MapGet(ApiRoutes.Secrets, List)
             .AddEndpointFilter<ValidationFilter<GetSecretsMessage>>();
