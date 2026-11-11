@@ -1,13 +1,11 @@
-using Atlas.Domain.Interfaces;
+using Atlas.Domain.Enums;
 
 namespace Atlas.Domain.Entities;
 
-public sealed class Employee : IHasUpdatedAt
+public sealed class Employee
 {
-    public Guid EmployeeId { get; set; }
-    public long? TelegramId { get; set; }
-    public string Role { get; set; } = string.Empty;
-    public bool IsActive { get; set; }
+    public long Id { get; set; }
+    public EmployeeRole Role { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 
