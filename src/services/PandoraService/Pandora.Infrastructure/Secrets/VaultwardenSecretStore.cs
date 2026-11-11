@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using CoreSolution.Shared.Results;
@@ -114,7 +115,7 @@ public sealed class VaultwardenSecretStore : ISecretStore
 
     private static bool IsMissingItem(HttpResponseMessage response, VaultwardenResponse<VaultwardenItem>? result)
     {
-        return (int)response.StatusCode < 500 && result?.Success == false;
+        return (int)response.StatusCode < (int)HttpStatusCode.InternalServerError && result?.Success == false;
     }
 
     private sealed record VaultwardenResponse<T>(bool Success, T? Data);
