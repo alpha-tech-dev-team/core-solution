@@ -1,5 +1,11 @@
-using Atlas.Infrastructure.Database;
+﻿using Atlas.Domain.Options;
+using Atlas.Infrastructure.Database.Context;
+using Atlas.Infrastructure.Database.Seeds;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Atlas.TgBot.Extensions;
 
@@ -8,6 +14,21 @@ public static class MigrationExtensions
     public static async Task ApplyMigrations(this IHost host)
     {
         using var scope = host.Services.CreateScope();
-        await scope.ServiceProvider.GetRequiredService<AtlasDbContext>().Database.MigrateAsync();
+        var services = scope.ServiceProvider;
+
+        await services.GetRequiredService<AtlasDbContext>().Database.MigrateAsync();
+
+        var options = services.GetRequiredService<IOptions<DatabaseOptions>>().Value;
+
+        if (!options.SeedOnStartup)
+        {
+            return;
+        }
+
+        services.GetRequiredService<ILoggerFactory>()
+            .CreateLogger(typeof(MigrationExtensions))
+            .LogInformation("Применяется сид категорий инцидентов.");
+
+        await IncidentCategorySeed.SeedAsync(services.GetRequiredService<AtlasDbContext>());
     }
 }
