@@ -25,7 +25,7 @@ public static class SecretsEndpoints
             .AddEndpointFilter<ValidationFilter<GetSecretsRequest>>();
         group.MapPost(ApiRoutes.Secrets, Create)
             .AddEndpointFilter<ValidationFilter<CreateSecretRequest>>();
-        group.MapPut(ApiRoutes.SecretById, Update)
+        group.MapPatch(ApiRoutes.SecretById, Update)
             .AddEndpointFilter<ValidationFilter<UpdateSecretRequest>>();
         group.MapDelete(ApiRoutes.SecretById, Delete);
 

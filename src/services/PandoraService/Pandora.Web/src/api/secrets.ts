@@ -21,7 +21,7 @@ export async function createSecret(payload: CreateSecretPayload): Promise<Secret
 }
 
 export async function updateSecret(itemId: string, payload: UpdateSecretPayload): Promise<SecretItem> {
-  const { data } = await api.put<SecretItem>(`${SECRETS_ENDPOINTS.COLLECTION}/${itemId}`, payload)
+  const { data } = await api.patch<SecretItem>(`${SECRETS_ENDPOINTS.COLLECTION}/${itemId}`, payload)
   return data
 }
 
