@@ -373,6 +373,3 @@ coverage/
 .eslintcache
 *.local
 .vscode/
-
-# PR review MCP artifacts
-.pr-review/
