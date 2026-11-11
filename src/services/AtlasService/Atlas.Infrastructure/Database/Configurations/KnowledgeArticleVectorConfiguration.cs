@@ -1,10 +1,9 @@
 ﻿using Atlas.Infrastructure.Database.Constants;
 using Atlas.Domain.Entities;
+using Atlas.Infrastructure.Database.ValueComparers;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Pgvector;
-using Pgvector.EntityFrameworkCore;
 
 namespace Atlas.Infrastructure.Database.Configurations;
 
@@ -25,13 +24,7 @@ public sealed class KnowledgeArticleVectorConfiguration : IEntityTypeConfigurati
             .HasColumnType(DatabaseConstants.KnowledgeArticleVector.EmbeddingColumnType)
             .IsRequired();
 
-        embedding.Metadata.SetValueComparer(new ValueComparer<float[]>(
-            (left, right) => ReferenceEquals(left, right)
-                || (left != null && right != null && left.SequenceEqual(right)),
-            values => values == null
-                ? 0
-                : values.Aggregate(0, (hash, value) => HashCode.Combine(hash, value.GetHashCode())),
-            values => values == null ? null! : values.ToArray()));
+        embedding.Metadata.SetValueComparer(FloatArrayValueComparer.Instance);
 
         builder.Property(x => x.EmbeddingModel)
             .HasColumnName(DatabaseConstants.KnowledgeArticleVector.EmbeddingModel)
