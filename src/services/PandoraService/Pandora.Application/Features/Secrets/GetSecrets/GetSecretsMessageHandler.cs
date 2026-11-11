@@ -3,7 +3,7 @@ using MediatR;
 using Pandora.Domain.Interfaces;
 using Pandora.Domain.Models;
 
-namespace Pandora.Application.Features.Secrets;
+namespace Pandora.Application.Features.Secrets.GetSecrets;
 
 public sealed class GetSecretsMessageHandler : IRequestHandler<GetSecretsMessage, Result<SecretListPage>>
 {

@@ -1,6 +1,6 @@
 using CoreSolution.Shared.Results;
 using MediatR;
 
-namespace Pandora.Application.Features.Secrets;
+namespace Pandora.Application.Features.Secrets.DeleteSecret;
 
 public sealed record DeleteSecretMessage(Guid AdminUserId, string ItemId) : IRequest<Result>;

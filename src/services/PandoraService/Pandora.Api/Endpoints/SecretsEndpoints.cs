@@ -6,7 +6,10 @@ using Pandora.Api.Constants;
 using Pandora.Api.Extensions;
 using Pandora.Api.Filters;
 using Pandora.Application.Contracts;
-using Pandora.Application.Features.Secrets;
+using Pandora.Application.Features.Secrets.CreateSecret;
+using Pandora.Application.Features.Secrets.DeleteSecret;
+using Pandora.Application.Features.Secrets.GetSecrets;
+using Pandora.Application.Features.Secrets.UpdateSecret;
 using Pandora.Domain.Constants;
 
 namespace Pandora.Api.Endpoints;

@@ -3,7 +3,7 @@ using Pandora.Domain.Constants;
 using Pandora.Domain.Entities;
 using Pandora.Domain.Interfaces;
 
-namespace Pandora.Application.Features.Secrets;
+namespace Pandora.Application.Features.Secrets.Common;
 
 public sealed class SecretAuditLogger
 {

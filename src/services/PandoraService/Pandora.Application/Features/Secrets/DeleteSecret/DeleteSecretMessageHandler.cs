@@ -1,12 +1,13 @@
 using CoreSolution.Shared.Results;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Pandora.Application.Features.Secrets.Common;
 using Pandora.Domain.Constants;
 using Pandora.Domain.Enums;
 using Pandora.Domain.Interfaces;
 using Pandora.Domain.Models;
 
-namespace Pandora.Application.Features.Secrets;
+namespace Pandora.Application.Features.Secrets.DeleteSecret;
 
 public sealed class DeleteSecretMessageHandler : IRequestHandler<DeleteSecretMessage, Result>
 {

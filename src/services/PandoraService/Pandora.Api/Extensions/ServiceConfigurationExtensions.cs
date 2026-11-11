@@ -1,7 +1,7 @@
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Pandora.Api.Middleware;
-using Pandora.Application.Features.Secrets;
+using Pandora.Application.Features.Secrets.Common;
 using Pandora.Domain.Interfaces;
 using Pandora.Domain.Options;
 using Pandora.Infrastructure.Database;
