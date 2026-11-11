@@ -3,7 +3,7 @@ using CoreSolution.Shared.Constants;
 using Pandora.Domain.Constants.Localization;
 using Pandora.Domain.Enums;
 
-namespace Pandora.TgBot.Localization;
+namespace Pandora.Domain.Localization;
 
 public static class PandoraErrorTextKeys
 {
