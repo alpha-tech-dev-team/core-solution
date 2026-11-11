@@ -14,12 +14,6 @@ public static class HostExtensions
     private const string DevUsername = "service@pandora.local";
     private const long DevTelegramUserId = 705295858L;
 
-    public static async Task ApplyMigrations(this IHost host)
-    {
-        using var scope = host.Services.CreateScope();
-        await scope.ServiceProvider.GetRequiredService<PandoraDbContext>().Database.MigrateAsync();
-    }
-
     public static async Task SeedDevelopmentData(this IHost host)
     {
         var environmentName = host.Services.GetRequiredService<IHostEnvironment>().EnvironmentName;

@@ -24,6 +24,23 @@ public static class ServiceConfigurationExtensions
             .ReadFrom.Configuration(configuration)
             .ReadFrom.Services(serviceProvider));
 
+        services.AddDatabaseConfiguration(configuration);
+
+        services.AddSecretWriter(configuration);
+
+        services.AddScoped<SecretAuditLogger>();
+
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<ApplicationAssemblyMarker>());
+
+        services.AddValidatorsFromAssemblyContaining<ApplicationAssemblyMarker>();
+
+        services.AddJwtAuthentication(configuration);
+
+        return services;
+    }
+
+    public static IServiceCollection AddDatabaseConfiguration(this IServiceCollection services, IConfiguration configuration)
+    {
         var databaseOptions = configuration.GetSection(DatabaseOptions.SectionName).Get<DatabaseOptions>()
             ?? throw new InvalidOperationException($"Missing configuration section {DatabaseOptions.SectionName}.");
 
@@ -37,16 +54,6 @@ public static class ServiceConfigurationExtensions
             .AddInterceptors(serviceProvider.GetRequiredService<AuditSaveChangesInterceptor>()));
 
         services.AddScoped<ISecretMetadataRepository, SecretMetadataRepository>();
-
-        services.AddSecretWriter(configuration);
-
-        services.AddScoped<SecretAuditLogger>();
-
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<ApplicationAssemblyMarker>());
-
-        services.AddValidatorsFromAssemblyContaining<ApplicationAssemblyMarker>();
-
-        services.AddJwtAuthentication(configuration);
 
         return services;
     }
