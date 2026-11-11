@@ -5,7 +5,11 @@ namespace Pandora.Domain.Interfaces;
 
 public interface ISecretMetadataRepository
 {
-    Task<SecretListPage> GetPage(int page, int pageSize, CancellationToken cancellationToken);
+    Task<SecretListPage> GetPage(
+        int page,
+        int pageSize,
+        Func<IQueryable<SecretMetadata>, IOrderedQueryable<SecretMetadata>> orderBy,
+        CancellationToken cancellationToken);
     Task<SecretMetadata?> GetById(string vaultItemId, CancellationToken cancellationToken);
     Task Add(SecretMetadata metadata, CancellationToken cancellationToken);
     Task Update(SecretMetadata metadata, CancellationToken cancellationToken);

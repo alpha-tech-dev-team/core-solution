@@ -16,16 +16,18 @@ public sealed class SecretMetadataRepository : ISecretMetadataRepository
         _context = context;
     }
 
-    public async Task<SecretListPage> GetPage(int page, int pageSize, CancellationToken cancellationToken)
+    public async Task<SecretListPage> GetPage(
+        int page,
+        int pageSize,
+        Func<IQueryable<SecretMetadata>, IOrderedQueryable<SecretMetadata>> orderBy,
+        CancellationToken cancellationToken)
     {
         var query = _context.SecretMetadata.AsNoTracking();
 
         var total = await query.CountAsync(cancellationToken);
         var skip = (long)(page - PaginationLimits.FirstPage) * pageSize;
 
-        var items = await query
-            .OrderBy(metadata => metadata.ResourceName)
-            .ThenBy(metadata => metadata.VaultItemId)
+        var items = await orderBy(query)
             .Skip((int)Math.Min(skip, int.MaxValue))
             .Take(pageSize)
             .Select(metadata => new SecretListItem(metadata.VaultItemId, metadata.ResourceName, metadata.Username))
