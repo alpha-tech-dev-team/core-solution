@@ -47,6 +47,8 @@ public sealed class CreateSecretMessageHandler : IRequestHandler<CreateSecretMes
         {
             var metadata = new SecretMetadata(created.Id, name, username);
 
+            await _auditLogger.LogActionAsync(request.AdminUserId, AuditConstants.ActionSecretCreated, created.Id, cancellationToken);
+
             await _metadataRepository.Add(metadata, cancellationToken);
         }
         catch (Exception exception)
@@ -57,8 +59,6 @@ public sealed class CreateSecretMessageHandler : IRequestHandler<CreateSecretMes
 
             throw;
         }
-
-        await _auditLogger.LogActionAsync(request.AdminUserId, AuditConstants.ActionSecretCreated, created.Id, cancellationToken);
 
         return Result<SecretListItem>.Success(new SecretListItem(created.Id, name, username));
     }

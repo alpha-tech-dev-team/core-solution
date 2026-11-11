@@ -29,10 +29,14 @@ public static class ServiceConfigurationExtensions
 
         ArgumentException.ThrowIfNullOrWhiteSpace(databaseOptions.ConnectionString);
 
-        services.AddDbContext<PandoraDbContext>(options => options.UseNpgsql(databaseOptions.ConnectionString));
+        services.AddScoped<IAuditContext, AuditContext>();
+        services.AddScoped<AuditSaveChangesInterceptor>();
+
+        services.AddDbContext<PandoraDbContext>((serviceProvider, options) => options
+            .UseNpgsql(databaseOptions.ConnectionString)
+            .AddInterceptors(serviceProvider.GetRequiredService<AuditSaveChangesInterceptor>()));
 
         services.AddScoped<ISecretMetadataRepository, SecretMetadataRepository>();
-        services.AddScoped<IAuditRepository, AuditRepository>();
 
         services.AddSecretWriter(configuration);
 

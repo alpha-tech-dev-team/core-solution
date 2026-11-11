@@ -59,8 +59,16 @@ public sealed class SecretMetadataRepository : ISecretMetadataRepository
 
     public async Task Delete(string vaultItemId, CancellationToken cancellationToken)
     {
-        await _context.SecretMetadata
-            .Where(metadata => metadata.VaultItemId == vaultItemId)
-            .ExecuteDeleteAsync(cancellationToken);
+        var metadata = await _context.SecretMetadata
+            .FirstOrDefaultAsync(metadata => metadata.VaultItemId == vaultItemId, cancellationToken);
+
+        if (metadata is null)
+        {
+            return;
+        }
+
+        _context.SecretMetadata.Remove(metadata);
+
+        await _context.SaveChangesAsync(cancellationToken);
     }
 }

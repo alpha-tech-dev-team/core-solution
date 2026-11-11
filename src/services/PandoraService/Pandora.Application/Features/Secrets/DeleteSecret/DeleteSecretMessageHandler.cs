@@ -50,6 +50,8 @@ public sealed class DeleteSecretMessageHandler : IRequestHandler<DeleteSecretMes
 
         try
         {
+            await _auditLogger.LogActionAsync(request.AdminUserId, AuditConstants.ActionSecretDeleted, request.ItemId, cancellationToken);
+
             await _metadataRepository.Delete(request.ItemId, cancellationToken);
         }
         catch (Exception exception)
@@ -63,8 +65,6 @@ public sealed class DeleteSecretMessageHandler : IRequestHandler<DeleteSecretMes
         {
             _logger.LogWarning("Элемент {ItemId} уже отсутствует в Vaultwarden, устаревшая запись метаданных очищена", request.ItemId);
         }
-
-        await _auditLogger.LogActionAsync(request.AdminUserId, AuditConstants.ActionSecretDeleted, request.ItemId, cancellationToken);
 
         return Result.Success();
     }

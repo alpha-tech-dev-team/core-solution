@@ -66,6 +66,8 @@ public sealed class UpdateSecretMessageHandler : IRequestHandler<UpdateSecretMes
         {
             metadata.Rename(name, username);
 
+            await _auditLogger.LogActionAsync(request.AdminUserId, AuditConstants.ActionSecretUpdated, request.ItemId, cancellationToken);
+
             await _metadataRepository.Update(metadata, cancellationToken);
         }
         catch (Exception exception)
@@ -74,8 +76,6 @@ public sealed class UpdateSecretMessageHandler : IRequestHandler<UpdateSecretMes
 
             throw;
         }
-
-        await _auditLogger.LogActionAsync(request.AdminUserId, AuditConstants.ActionSecretUpdated, request.ItemId, cancellationToken);
 
         return Result<SecretListItem>.Success(new SecretListItem(request.ItemId, name, username));
     }
