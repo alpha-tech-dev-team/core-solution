@@ -7,5 +7,7 @@ public enum ErrorCode
     SecretNotFound,
     InvalidSecretData,
     VaultwardenUnavailable,
-    DatabaseUnavailable
+    DatabaseUnavailable,
+    MalformedRequest,
+    InternalError
 }

@@ -1,5 +1,6 @@
 using CoreSolution.Shared.Results;
 using Pandora.Api.Constants;
+using Pandora.Domain.Enums;
 
 namespace Pandora.Api.Extensions;
 
@@ -27,7 +28,7 @@ public static class ResultHttpExtensions
             statusCode: statusCode,
             extensions: new Dictionary<string, object?>
             {
-                [ProblemFields.Code] = errorCode ?? ProblemFields.InternalError
+                [ProblemFields.Code] = errorCode ?? nameof(ErrorCode.InternalError)
             });
     }
 }

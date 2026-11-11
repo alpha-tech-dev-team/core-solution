@@ -1,10 +1,7 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.EntityFrameworkCore;
-using Npgsql;
 using Pandora.Api.Constants;
-using Pandora.Domain.Enums;
 
 namespace Pandora.Api.Middleware;
 
@@ -33,7 +30,7 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
             return true;
         }
 
-        var (statusCode, code) = Map(exception);
+        var (statusCode, code) = PandoraErrorStatusCodes.Map(exception);
 
         if (statusCode >= StatusCodes.Status500InternalServerError)
         {
@@ -57,44 +54,5 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
                 Extensions = { [ProblemFields.Code] = code }
             }
         });
-    }
-
-    private static (int StatusCode, string Code) Map(Exception exception)
-    {
-        var postgresException = FindPostgresException(exception);
-
-        if (postgresException is not null)
-        {
-            return MapPostgres(postgresException);
-        }
-
-        return exception switch
-        {
-            BadHttpRequestException badRequest => (badRequest.StatusCode, ProblemFields.BadRequest),
-            HttpRequestException => (StatusCodes.Status503ServiceUnavailable, nameof(ErrorCode.VaultwardenUnavailable)),
-            TaskCanceledException => (StatusCodes.Status503ServiceUnavailable, nameof(ErrorCode.VaultwardenUnavailable)),
-            DbUpdateException => (StatusCodes.Status503ServiceUnavailable, nameof(ErrorCode.DatabaseUnavailable)),
-            _ => (StatusCodes.Status500InternalServerError, ProblemFields.InternalError)
-        };
-    }
-
-    private static (int StatusCode, string Code) MapPostgres(PostgresException exception)
-    {
-        return exception.IsTransient
-            ? (StatusCodes.Status503ServiceUnavailable, nameof(ErrorCode.DatabaseUnavailable))
-            : (StatusCodes.Status500InternalServerError, ProblemFields.InternalError);
-    }
-
-    private static PostgresException? FindPostgresException(Exception exception)
-    {
-        for (var current = exception; current is not null; current = current.InnerException)
-        {
-            if (current is PostgresException postgresException)
-            {
-                return postgresException;
-            }
-        }
-
-        return null;
     }
 }
