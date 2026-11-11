@@ -1,10 +1,10 @@
 using System.Text;
 using CoreSolution.Shared.Constants;
+using CoreSolution.Shared.Enums;
 using CoreSolution.Shared.Options;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
-using Pandora.Api.Constants;
 
 namespace Pandora.Api.Extensions;
 
@@ -54,8 +54,8 @@ public static class JwtConfigurationExtensions
 
         services.AddAuthorization(authorization =>
             authorization.AddPolicy(
-                AuthorizationPolicies.Admin,
-                policy => policy.RequireRole(AuthorizationPolicies.Admin)));
+                UserRole.PandoraAdmin.ToRoleName(),
+                policy => policy.RequireRole(UserRole.PandoraAdmin.ToRoleName())));
 
         return services;
     }

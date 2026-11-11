@@ -2,7 +2,6 @@
 using CoreSolution.Shared.Constants;
 using CoreSolution.Shared.Enums;
 using CoreSolution.Shared.Options;
-using Identity.Api.Constants;
 using Identity.Domain.Constants;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;

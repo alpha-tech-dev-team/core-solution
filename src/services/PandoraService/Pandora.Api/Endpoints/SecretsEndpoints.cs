@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using CoreSolution.Shared.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,7 +19,7 @@ public static class SecretsEndpoints
 {
     public static IEndpointRouteBuilder MapSecretsEndpoints(this IEndpointRouteBuilder endpoints)
     {
-        var group = endpoints.MapGroup(ApiRoutes.AdminGroup).RequireAuthorization(AuthorizationPolicies.Admin);
+        var group = endpoints.MapGroup(ApiRoutes.AdminGroup).RequireAuthorization(UserRole.PandoraAdmin.ToRoleName());
 
         group.MapGet(ApiRoutes.Secrets, List)
             .AddEndpointFilter<ValidationFilter<GetSecretsRequest>>();
