@@ -13,11 +13,8 @@ public sealed class UpdateSecretMessage : IRequest<Result<SecretListItem>>, IAdm
 
     [JsonIgnore]
     public string ItemId { get; set; } = string.Empty;
-
     public string Name { get; set; } = string.Empty;
-
     public string Username { get; set; } = string.Empty;
-
     public string? Password { get; set; }
 
     Guid IAdminUserRequest.AdminUserId
