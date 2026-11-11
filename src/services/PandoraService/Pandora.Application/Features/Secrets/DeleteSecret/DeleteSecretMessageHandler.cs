@@ -37,31 +37,24 @@ public sealed class DeleteSecretMessageHandler : IRequestHandler<DeleteSecretMes
             return Result.Failure(nameof(ErrorCode.SecretNotFound));
         }
 
-        var deleteResult = await _secretWriter.Delete(request.ItemId, cancellationToken);
+        metadata.MarkPending(SecretSyncOperation.Delete);
 
-        var isOrphaned = deleteResult is SecretDeleteResult.NotFound;
+        await _auditLogger.LogActionAsync(request.AdminUserId, AuditConstants.ActionSecretDeleted, request.ItemId, cancellationToken);
+
+        await _metadataRepository.Update(metadata, cancellationToken);
+
+        var deleteResult = await _secretWriter.Delete(request.ItemId, cancellationToken);
 
         if (deleteResult is SecretDeleteResult.GatewayError)
         {
-            _logger.LogWarning("Шлюз Vaultwarden отклонил удаление секрета {ItemId}", request.ItemId);
+            _logger.LogWarning("Шлюз Vaultwarden отклонил удаление секрета {ItemId}, ожидает повторной синхронизации", request.ItemId);
 
             return Result.Failure(nameof(ErrorCode.VaultwardenUnavailable));
         }
 
-        try
-        {
-            await _auditLogger.LogActionAsync(request.AdminUserId, AuditConstants.ActionSecretDeleted, request.ItemId, cancellationToken);
+        await _metadataRepository.Delete(request.ItemId, cancellationToken);
 
-            await _metadataRepository.Delete(request.ItemId, cancellationToken);
-        }
-        catch (Exception exception)
-        {
-            _logger.LogError(exception, "Не удалось удалить секрет {ItemId} из базы данных, в Vaultwarden он уже удалён", request.ItemId);
-
-            throw;
-        }
-
-        if (isOrphaned)
+        if (deleteResult is SecretDeleteResult.NotFound)
         {
             _logger.LogWarning("Элемент {ItemId} уже отсутствует в Vaultwarden, устаревшая запись метаданных очищена", request.ItemId);
         }

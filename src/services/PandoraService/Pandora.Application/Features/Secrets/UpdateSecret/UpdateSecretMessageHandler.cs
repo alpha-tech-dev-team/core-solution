@@ -40,43 +40,40 @@ public sealed class UpdateSecretMessageHandler : IRequestHandler<UpdateSecretMes
             return Result<SecretListItem>.Failure(nameof(ErrorCode.SecretNotFound));
         }
 
+        metadata.Rename(name, username);
+        metadata.MarkPending(SecretSyncOperation.Update);
+
+        await _auditLogger.LogActionAsync(request.AdminUserId, AuditConstants.ActionSecretUpdated, request.ItemId, cancellationToken);
+
+        await _metadataRepository.Update(metadata, cancellationToken);
+
         var updateResult = await _secretWriter.Update(
             request.ItemId,
             new SecretUpdateData(name, username, request.Password),
             cancellationToken);
 
-        if (updateResult is SecretUpdateResult.NotFound)
+        if (updateResult is not SecretUpdateResult.Success)
         {
-            return Result<SecretListItem>.Failure(nameof(ErrorCode.SecretNotFound));
+            return FailureFor(updateResult, request.ItemId);
         }
 
-        if (updateResult is SecretUpdateResult.GatewayError)
-        {
-            _logger.LogWarning("Шлюз Vaultwarden отклонил обновление секрета {ItemId}", request.ItemId);
-
-            return Result<SecretListItem>.Failure(nameof(ErrorCode.VaultwardenUnavailable));
-        }
-
-        if (updateResult is SecretUpdateResult.NoPassword)
-        {
-            return Result<SecretListItem>.Failure(nameof(ErrorCode.InvalidSecretData));
-        }
-
-        try
-        {
-            metadata.Rename(name, username);
-
-            await _auditLogger.LogActionAsync(request.AdminUserId, AuditConstants.ActionSecretUpdated, request.ItemId, cancellationToken);
-
-            await _metadataRepository.Update(metadata, cancellationToken);
-        }
-        catch (Exception exception)
-        {
-            _logger.LogError(exception, "Не удалось сохранить изменения секрета {ItemId} в базе данных, в Vaultwarden уже применены новые значения", request.ItemId);
-
-            throw;
-        }
+        await _metadataRepository.ClearSyncStateIfUnchanged(request.ItemId, name, username, cancellationToken);
 
         return Result<SecretListItem>.Success(new SecretListItem(request.ItemId, name, username));
+    }
+
+    private Result<SecretListItem> FailureFor(SecretUpdateResult updateResult, string itemId)
+    {
+        switch (updateResult)
+        {
+            case SecretUpdateResult.NotFound:
+                return Result<SecretListItem>.Failure(nameof(ErrorCode.SecretNotFound));
+            case SecretUpdateResult.NoPassword:
+                return Result<SecretListItem>.Failure(nameof(ErrorCode.InvalidSecretData));
+            default:
+                _logger.LogWarning("Шлюз Vaultwarden отклонил обновление секрета {ItemId}, ожидает повторной синхронизации", itemId);
+
+                return Result<SecretListItem>.Failure(nameof(ErrorCode.VaultwardenUnavailable));
+        }
     }
 }

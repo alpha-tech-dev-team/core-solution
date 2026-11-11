@@ -6,6 +6,7 @@ using Pandora.Domain.Interfaces;
 using Pandora.Domain.Options;
 using Pandora.Infrastructure.Database;
 using Pandora.Infrastructure.Repositories;
+using Pandora.Infrastructure.Secrets.Synchronization;
 using Serilog;
 using ApplicationAssemblyMarker = Pandora.Application.AssemblyMarker;
 
@@ -29,6 +30,9 @@ public static class ServiceConfigurationExtensions
         services.AddSecretWriter(configuration);
 
         services.AddScoped<SecretAuditLogger>();
+
+        services.AddOptions<SecretSyncOptions>().Bind(configuration.GetSection(SecretSyncOptions.SectionName));
+        services.AddHostedService<SecretSyncWorker>();
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<ApplicationAssemblyMarker>());
 
