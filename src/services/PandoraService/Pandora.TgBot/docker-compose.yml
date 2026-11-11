@@ -125,6 +125,8 @@ services:
         condition: service_started
     expose:
       - "8080"
+    ports:
+      - "5008:8080"
     environment:
       - Database__ConnectionString=Host=pandora-postgres;Port=5432;Database=${POSTGRES_DB:-alphadev_pandora};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
       - Jwt__Secret=${JWT__SECRET:?JWT__SECRET is required}
