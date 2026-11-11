@@ -1,7 +1,9 @@
-using Atlas.Domain.Constants.AtlasDBConfiguration;
+﻿using Atlas.Infrastructure.Database.Constants;
 using Atlas.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Pgvector;
 using Pgvector.EntityFrameworkCore;
 
 namespace Atlas.Infrastructure.Database.Configurations;
@@ -10,40 +12,40 @@ public sealed class KnowledgeArticleVectorConfiguration : IEntityTypeConfigurati
 {
     public void Configure(EntityTypeBuilder<KnowledgeArticleVector> builder)
     {
-        builder.ToTable(DBKeys.KnowledgeArticleVector.Table, DBKeys.Shared.Schema);
+        builder.ToTable(DatabaseConstants.KnowledgeArticleVector.Table);
 
-        builder.HasKey(x => x.ArticleId).HasName(DBKeys.KnowledgeArticleVector.PrimaryKey);
+        builder.HasKey(x => x.ArticleId);
+
         builder.Property(x => x.ArticleId)
-            .HasColumnName(DBKeys.KnowledgeArticleVector.ArticleId);
+            .HasColumnName(DatabaseConstants.KnowledgeArticleVector.ArticleId);
 
-        builder.Property(x => x.Embedding)
-            .HasColumnName(DBKeys.KnowledgeArticleVector.Embedding)
-            .HasColumnType(DBKeys.KnowledgeArticleVector.EmbeddingColumnType)
+        var embedding = builder.Property(x => x.Embedding)
+            .HasColumnName(DatabaseConstants.KnowledgeArticleVector.Embedding)
+            .HasConversion(value => new Vector(value), vector => vector.ToArray())
+            .HasColumnType(DatabaseConstants.KnowledgeArticleVector.EmbeddingColumnType)
             .IsRequired();
 
+        embedding.Metadata.SetValueComparer(new ValueComparer<float[]>(
+            (left, right) => left != null && right != null && left.SequenceEqual(right),
+            values => values.Aggregate(0, (hash, value) => HashCode.Combine(hash, value.GetHashCode())),
+            values => values.ToArray()));
+
         builder.Property(x => x.EmbeddingModel)
-            .HasColumnName(DBKeys.KnowledgeArticleVector.EmbeddingModel)
-            .HasMaxLength(DBKeys.Shared.MaxLength100)
+            .HasColumnName(DatabaseConstants.KnowledgeArticleVector.EmbeddingModel)
+            .HasMaxLength(DatabaseConstants.KnowledgeArticleVector.EmbeddingModelMaxLength)
             .IsRequired();
 
         builder.Property(x => x.EmbeddedText)
-            .HasColumnName(DBKeys.KnowledgeArticleVector.EmbeddedText)
+            .HasColumnName(DatabaseConstants.KnowledgeArticleVector.EmbeddedText)
             .IsRequired();
 
-        builder.Property(x => x.UpdatedAt)
-            .HasColumnName(DBKeys.Shared.UpdatedAt)
-            .HasColumnType(DBKeys.Shared.TimestampWithTimeZone)
-            .HasDefaultValueSql(DBKeys.Shared.NowSql);
-
         builder.HasIndex(x => x.Embedding)
-            .HasMethod(DBKeys.KnowledgeArticleVector.EmbeddingIndexMethod)
-            .HasOperators(DBKeys.KnowledgeArticleVector.EmbeddingIndexOperators)
-            .HasDatabaseName(DBKeys.KnowledgeArticleVector.EmbeddingIndex);
+            .HasMethod(DatabaseConstants.KnowledgeArticleVector.EmbeddingIndexMethod)
+            .HasOperators([DatabaseConstants.KnowledgeArticleVector.EmbeddingIndexOperator]);
 
         builder.HasOne(x => x.Article)
             .WithOne(x => x.Vector)
             .HasForeignKey<KnowledgeArticleVector>(x => x.ArticleId)
-            .HasConstraintName(DBKeys.KnowledgeArticleVector.ArticleForeignKey)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -1,7 +1,6 @@
-using Atlas.Domain.Constants.AtlasDBConfiguration;
+﻿using Atlas.Infrastructure.Database.Constants;
 using Atlas.Domain.Entities;
 using Atlas.Domain.Enums;
-using Atlas.Infrastructure.Database.Converters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -11,150 +10,108 @@ public sealed class IncidentConfiguration : IEntityTypeConfiguration<Incident>
 {
     public void Configure(EntityTypeBuilder<Incident> builder)
     {
-        builder.ToTable(DBKeys.Incident.Table, DBKeys.Shared.Schema, table =>
-        {
-            table.HasCheckConstraint(
-                DBKeys.Incident.StatusCheckConstraint,
-                DBKeys.Incident.StatusCheckSql);
-            table.HasCheckConstraint(
-                DBKeys.Incident.PriorityCheckConstraint,
-                DBKeys.Incident.PriorityCheckSql);
-            table.HasCheckConstraint(
-                DBKeys.Incident.DescriptionCheckConstraint,
-                DBKeys.Incident.DescriptionCheckSql);
-            table.HasCheckConstraint(
-                DBKeys.Incident.ResolutionCheckConstraint,
-                DBKeys.Incident.ResolutionCheckSql);
-            table.HasCheckConstraint(
-                DBKeys.Incident.AssigneeCheckConstraint,
-                DBKeys.Incident.AssigneeCheckSql);
-            table.HasCheckConstraint(
-                DBKeys.Incident.AssetCheckConstraint,
-                DBKeys.Incident.AssetCheckSql);
-        });
+        builder.ToTable(DatabaseConstants.Incident.Table);
 
-        builder.HasKey(x => x.Id).HasName(DBKeys.Incident.PrimaryKey);
         builder.Property(x => x.Id)
-            .HasColumnName(DBKeys.Shared.Id)
-            .HasDefaultValueSql(DBKeys.Shared.GenRandomUuidSql);
+            .HasColumnName(DatabaseConstants.Incident.Id)
+            .HasDefaultValueSql(DatabaseConstants.Defaults.GenRandomUuidSql);
 
         builder.Property(x => x.TicketNumber)
-            .HasColumnName(DBKeys.Incident.TicketNumber)
+            .HasColumnName(DatabaseConstants.Incident.TicketNumber)
             .ValueGeneratedOnAdd()
             .UseIdentityAlwaysColumn();
 
         builder.Property(x => x.EmployeeId)
-            .HasColumnName(DBKeys.Incident.EmployeeId)
+            .HasColumnName(DatabaseConstants.Incident.EmployeeId)
             .IsRequired();
 
         builder.Property(x => x.CategoryId)
-            .HasColumnName(DBKeys.Incident.CategoryId)
+            .HasColumnName(DatabaseConstants.Incident.CategoryId)
             .IsRequired();
 
-        builder.Property(x => x.CabinetId)
-            .HasColumnName(DBKeys.Incident.CabinetId);
+        builder.Property(x => x.RoomId)
+            .HasColumnName(DatabaseConstants.Incident.RoomId);
 
         builder.Property(x => x.HardwareId)
-            .HasColumnName(DBKeys.Incident.HardwareId);
+            .HasColumnName(DatabaseConstants.Incident.HardwareId);
 
         builder.Property(x => x.SoftwareId)
-            .HasColumnName(DBKeys.Incident.SoftwareId);
+            .HasColumnName(DatabaseConstants.Incident.SoftwareId);
 
         builder.Property(x => x.UserDescription)
-            .HasColumnName(DBKeys.Incident.UserDescription)
+            .HasColumnName(DatabaseConstants.Incident.UserDescription)
             .IsRequired();
 
         builder.Property(x => x.Status)
-            .HasColumnName(DBKeys.Incident.Status)
-            .HasConversion<IncidentStatusConverter>()
-            .HasMaxLength(DBKeys.Shared.MaxLength30)
+            .HasColumnName(DatabaseConstants.Incident.Status)
             .HasDefaultValue(IncidentStatus.Created)
             .IsRequired();
 
         builder.Property(x => x.Priority)
-            .HasColumnName(DBKeys.Incident.Priority)
-            .HasMaxLength(DBKeys.Shared.MaxLength20)
-            .HasDefaultValue(DBKeys.Incident.PriorityDefaultValue)
+            .HasColumnName(DatabaseConstants.Incident.Priority)
+            .HasDefaultValue(IncidentPriority.Medium)
+            .HasSentinel(IncidentPriority.Medium)
             .IsRequired();
 
         builder.Property(x => x.AssignedEngineerId)
-            .HasColumnName(DBKeys.Incident.AssignedEngineerId);
+            .HasColumnName(DatabaseConstants.Incident.AssignedEngineerId);
 
         builder.Property(x => x.ArticleId)
-            .HasColumnName(DBKeys.Incident.ArticleId);
+            .HasColumnName(DatabaseConstants.Incident.ArticleId);
 
         builder.Property(x => x.Resolution)
-            .HasColumnName(DBKeys.Incident.Resolution);
+            .HasColumnName(DatabaseConstants.Incident.Resolution);
 
         builder.Property(x => x.ResolvedAt)
-            .HasColumnName(DBKeys.Incident.ResolvedAt)
-            .HasColumnType(DBKeys.Shared.TimestampWithTimeZone);
+            .HasColumnName(DatabaseConstants.Incident.ResolvedAt);
 
         builder.Property(x => x.CreatedAt)
-            .HasColumnName(DBKeys.Shared.CreatedAt)
-            .HasColumnType(DBKeys.Shared.TimestampWithTimeZone)
-            .HasDefaultValueSql(DBKeys.Shared.NowSql);
+            .HasColumnName(DatabaseConstants.Incident.CreatedAt)
+            .HasDefaultValueSql(DatabaseConstants.Defaults.NowSql);
 
         builder.Property(x => x.UpdatedAt)
-            .HasColumnName(DBKeys.Shared.UpdatedAt)
-            .HasColumnType(DBKeys.Shared.TimestampWithTimeZone)
-            .HasDefaultValueSql(DBKeys.Shared.NowSql);
+            .HasColumnName(DatabaseConstants.Incident.UpdatedAt)
+            .HasDefaultValueSql(DatabaseConstants.Defaults.NowSql);
 
-        builder.HasIndex(x => x.AssignedEngineerId)
-            .HasDatabaseName(DBKeys.Incident.AssignedEngineerIndex);
-
-        builder.HasIndex(x => x.CategoryId)
-            .HasDatabaseName(DBKeys.Incident.CategoryIndex);
-
-        builder.HasIndex(x => x.CreatedAt)
-            .HasDatabaseName(DBKeys.Incident.CreatedAtIndex);
-
-        builder.HasIndex(x => x.EmployeeId)
-            .HasDatabaseName(DBKeys.Incident.EmployeeIndex);
-
-        builder.HasIndex(x => new { x.Status, x.Priority })
-            .HasDatabaseName(DBKeys.Incident.StatusPriorityIndex);
+        builder.HasIndex(x => x.AssignedEngineerId);
+        builder.HasIndex(x => x.CategoryId);
+        builder.HasIndex(x => x.CreatedAt);
+        builder.HasIndex(x => x.EmployeeId);
+        builder.HasIndex(x => new { x.Status, x.Priority });
 
         builder.HasOne(x => x.Employee)
             .WithMany(x => x.EmployeeIncidents)
             .HasForeignKey(x => x.EmployeeId)
-            .HasConstraintName(DBKeys.Incident.EmployeeForeignKey)
             .OnDelete(DeleteBehavior.NoAction);
 
         builder.HasOne(x => x.AssignedEngineer)
             .WithMany(x => x.AssignedIncidents)
             .HasForeignKey(x => x.AssignedEngineerId)
-            .HasConstraintName(DBKeys.Incident.AssignedEngineerForeignKey)
             .OnDelete(DeleteBehavior.NoAction);
 
         builder.HasOne(x => x.Category)
             .WithMany(x => x.Incidents)
             .HasForeignKey(x => x.CategoryId)
-            .HasConstraintName(DBKeys.Incident.CategoryForeignKey)
             .OnDelete(DeleteBehavior.NoAction);
 
-        builder.HasOne(x => x.Cabinet)
+        builder.HasOne(x => x.Room)
             .WithMany(x => x.Incidents)
-            .HasForeignKey(x => x.CabinetId)
-            .HasConstraintName(DBKeys.Incident.CabinetForeignKey)
+            .HasForeignKey(x => x.RoomId)
             .OnDelete(DeleteBehavior.NoAction);
 
         builder.HasOne(x => x.Hardware)
             .WithMany(x => x.Incidents)
             .HasForeignKey(x => x.HardwareId)
-            .HasConstraintName(DBKeys.Incident.HardwareForeignKey)
             .OnDelete(DeleteBehavior.NoAction);
 
         builder.HasOne(x => x.Software)
             .WithMany(x => x.Incidents)
             .HasForeignKey(x => x.SoftwareId)
-            .HasConstraintName(DBKeys.Incident.SoftwareForeignKey)
             .OnDelete(DeleteBehavior.NoAction);
 
         builder.HasOne(x => x.Article)
             .WithMany()
             .HasForeignKey(x => x.ArticleId)
-            .HasConstraintName(DBKeys.Incident.ArticleForeignKey)
             .OnDelete(DeleteBehavior.SetNull);
     }
 }
