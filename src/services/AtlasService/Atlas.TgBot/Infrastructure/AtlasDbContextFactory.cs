@@ -14,21 +14,25 @@ public sealed class AtlasDbContextFactory : IDesignTimeDbContextFactory<AtlasDbC
     {
         var configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json", optional: true)
-            .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")}.json", optional: true)
+            .AddJsonFile(DesignTimeConfigurationConstants.AppSettingsFile, optional: true)
+            .AddJsonFile(BuildEnvironmentAppSettingsFile(), optional: true)
             .AddEnvironmentVariables()
             .Build();
 
-        var connectionString = configuration
+        var databaseOptions = configuration
             .GetSection(DatabaseOptions.SectionName)
-            .Get<DatabaseOptions>()?.ConnectionString;
+            .Get<DatabaseOptions>();
+
+        ArgumentNullException.ThrowIfNull(
+            databaseOptions,
+            DatabaseOptions.SectionName);
 
         ArgumentException.ThrowIfNullOrWhiteSpace(
-            connectionString,
-            $"{DatabaseOptions.SectionName}:{nameof(DatabaseOptions.ConnectionString)}");
+            databaseOptions.ConnectionString,
+            BuildConnectionStringParameterName());
 
         var options = new DbContextOptionsBuilder<AtlasDbContext>()
-            .UseNpgsql(connectionString, npgsql =>
+            .UseNpgsql(databaseOptions.ConnectionString, npgsql =>
             {
                 npgsql.UseVector();
                 npgsql.MapAtlasEnums();
@@ -36,5 +40,20 @@ public sealed class AtlasDbContextFactory : IDesignTimeDbContextFactory<AtlasDbC
             .Options;
 
         return new AtlasDbContext(options);
+    }
+
+    private static string BuildEnvironmentAppSettingsFile()
+    {
+        var environmentName = Environment.GetEnvironmentVariable(
+            DesignTimeConfigurationConstants.EnvironmentVariableName);
+
+        return string.Format(
+            DesignTimeConfigurationConstants.EnvironmentAppSettingsFilePattern,
+            environmentName);
+    }
+
+    private static string BuildConnectionStringParameterName()
+    {
+        return $"{DatabaseOptions.SectionName}:{nameof(DatabaseOptions.ConnectionString)}";
     }
 }
