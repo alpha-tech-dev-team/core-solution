@@ -17,20 +17,22 @@ public static class MigrationExtensions
         var services = scope.ServiceProvider;
 
         var dbContext = services.GetRequiredService<AtlasDbContext>();
+        var options = services.GetRequiredService<IOptions<DatabaseOptions>>().Value;
 
         await dbContext.Database.MigrateAsync();
-
-        var options = services.GetRequiredService<IOptions<DatabaseOptions>>().Value;
 
         if (!options.SeedOnStartup)
         {
             return;
         }
 
-        services.GetRequiredService<ILoggerFactory>()
-            .CreateLogger(typeof(MigrationExtensions))
+        services.GetRequiredService<ILogger<MigrationLog>>()
             .LogInformation("Применяется сид категорий инцидентов.");
 
         await IncidentCategorySeed.SeedAsync(dbContext);
+    }
+
+    private sealed class MigrationLog
+    {
     }
 }
