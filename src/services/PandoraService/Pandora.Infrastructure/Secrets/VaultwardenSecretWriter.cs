@@ -4,14 +4,13 @@ using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Pandora.Domain.Interfaces;
 using Pandora.Domain.Models;
+using Pandora.Infrastructure.Secrets.Vaultwarden;
 
 namespace Pandora.Infrastructure.Secrets;
 
 public sealed class VaultwardenSecretWriter : ISecretWriter
 {
     private const string ItemRoute = "object/item";
-    private const int LoginItemType = 1;
-    private const int DefaultReprompt = 0;
     private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
 
     private readonly HttpClient _httpClient;
@@ -25,7 +24,7 @@ public sealed class VaultwardenSecretWriter : ISecretWriter
 
     public async Task<SecretItem?> Create(string name, string username, string password, CancellationToken cancellationToken)
     {
-        var item = BuildItem(null, name, username, password);
+        var item = VaultwardenItem.Empty.ToItemRequest(name, username, password);
         var (response, _) = await SendAsync(HttpMethod.Post, ItemRoute, item, name, cancellationToken);
 
         if (response is null)
@@ -77,7 +76,7 @@ public sealed class VaultwardenSecretWriter : ISecretWriter
             }
         }
 
-        var item = BuildUpdateItem(current, data.Name, data.Username, updatedPassword);
+        var item = current.ToItemRequest(data.Name, data.Username, updatedPassword);
         var (response, status) = await SendAsync(HttpMethod.Put, $"{ItemRoute}/{itemId}", item, itemId, cancellationToken);
 
         response?.Dispose();
@@ -155,94 +154,5 @@ public sealed class VaultwardenSecretWriter : ISecretWriter
         response.Dispose();
 
         return (null, status);
-    }
-
-    private static VaultwardenItemRequest BuildItem(string? itemId, string name, string username, string password)
-    {
-        return new VaultwardenItemRequest
-        {
-            Id = itemId,
-            OrganizationId = null,
-            Type = LoginItemType,
-            Name = name,
-            Notes = null,
-            Favorite = false,
-            Reprompt = DefaultReprompt,
-            Login = new VaultwardenLoginRequest
-            {
-                Username = username,
-                Password = password,
-                SecurityAnswers = new(),
-                Uris = new()
-            },
-            CollectionIds = new()
-        };
-    }
-
-    private static VaultwardenItemRequest BuildUpdateItem(VaultwardenItem current, string name, string username, string password)
-    {
-        return new VaultwardenItemRequest
-        {
-            Id = current.Id,
-            OrganizationId = current.OrganizationId,
-            Type = LoginItemType,
-            Name = name,
-            Notes = current.Notes,
-            Favorite = current.Favorite,
-            Reprompt = current.Reprompt,
-            Login = new VaultwardenLoginRequest
-            {
-                Username = username,
-                Password = password,
-                SecurityAnswers = current.Login?.SecurityAnswers ?? new(),
-                Uris = current.Login?.Uris ?? new()
-            },
-            CollectionIds = current.CollectionIds ?? new()
-        };
-    }
-
-    private enum GatewayStatus
-    {
-        Success,
-        NotFound,
-        Failure
-    }
-
-    private sealed record VaultwardenResponse<T>(T? Data);
-
-    private sealed record VaultwardenItem(
-        string? Id,
-        string? Name,
-        string? OrganizationId,
-        VaultwardenLogin? Login,
-        List<string>? CollectionIds,
-        bool Favorite,
-        int Reprompt,
-        string? Notes,
-        DateTime? DeletedDate);
-
-    private sealed record VaultwardenLogin(string? Username, string? Password, List<VaultwardenUri>? SecurityAnswers, List<VaultwardenUri>? Uris);
-
-    private sealed record VaultwardenUri(string? Uri, int Match);
-
-    private sealed class VaultwardenItemRequest
-    {
-        public string? Id { get; init; }
-        public string? OrganizationId { get; init; }
-        public int Type { get; init; }
-        public string Name { get; init; } = string.Empty;
-        public string? Notes { get; init; }
-        public bool Favorite { get; init; }
-        public int Reprompt { get; init; }
-        public VaultwardenLoginRequest? Login { get; init; }
-        public List<string> CollectionIds { get; init; } = new();
-    }
-
-    private sealed class VaultwardenLoginRequest
-    {
-        public string? Username { get; init; }
-        public string? Password { get; init; }
-        public List<VaultwardenUri> SecurityAnswers { get; init; } = new();
-        public List<VaultwardenUri> Uris { get; init; } = new();
     }
 }
