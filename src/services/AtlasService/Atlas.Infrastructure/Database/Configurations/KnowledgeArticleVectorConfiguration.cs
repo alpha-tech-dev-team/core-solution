@@ -26,9 +26,12 @@ public sealed class KnowledgeArticleVectorConfiguration : IEntityTypeConfigurati
             .IsRequired();
 
         embedding.Metadata.SetValueComparer(new ValueComparer<float[]>(
-            (left, right) => left != null && right != null && left.SequenceEqual(right),
-            values => values.Aggregate(0, (hash, value) => HashCode.Combine(hash, value.GetHashCode())),
-            values => values.ToArray()));
+            (left, right) => ReferenceEquals(left, right)
+                || (left != null && right != null && left.SequenceEqual(right)),
+            values => values == null
+                ? 0
+                : values.Aggregate(0, (hash, value) => HashCode.Combine(hash, value.GetHashCode())),
+            values => values == null ? null! : values.ToArray()));
 
         builder.Property(x => x.EmbeddingModel)
             .HasColumnName(DatabaseConstants.KnowledgeArticleVector.EmbeddingModel)
