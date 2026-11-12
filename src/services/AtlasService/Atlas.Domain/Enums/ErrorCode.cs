@@ -6,5 +6,6 @@ public enum ErrorCode
     AccessNotConfirmed,
     SessionNotFound,
     IncidentCategoriesNotFound,
-    IncidentCategoryNotFound
+    IncidentCategoryNotFound,
+    ValidationFailed
 }

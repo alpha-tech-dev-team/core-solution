@@ -8,6 +8,7 @@ public static class LocalizationKeysConstants
         public const string AccessNotConfirmed = "AccessNotConfirmed";
         public const string SessionNotFound = "SessionNotFound";
         public const string UnexpectedError = "UnexpectedError";
+        public const string ValidationFailed = "ValidationFailed";
     }
 
     public static class ProblemCategorySelection

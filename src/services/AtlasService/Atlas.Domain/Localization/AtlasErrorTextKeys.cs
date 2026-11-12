@@ -13,6 +13,7 @@ public static class AtlasErrorTextKeys
     {
         [ErrorCodes.AccessNotConfirmed] = (LocalizationConstants.IdleStateName, LocalizationConstants.Idle.AccessNotConfirmed),
         [nameof(ErrorCode.IncidentCategoriesNotFound)] = (nameof(WorkflowStep.ProblemCategorySelection), LocalizationKeysConstants.ProblemCategorySelection.CategoriesNotFound),
-        [nameof(ErrorCode.IncidentCategoryNotFound)] = (nameof(WorkflowStep.ProblemCategorySelection), LocalizationKeysConstants.ProblemCategorySelection.CategoryNotFound)
+        [nameof(ErrorCode.IncidentCategoryNotFound)] = (nameof(WorkflowStep.ProblemCategorySelection), LocalizationKeysConstants.ProblemCategorySelection.CategoryNotFound),
+        [nameof(ErrorCode.ValidationFailed)] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.ValidationFailed)
     }.ToFrozenDictionary();
 }

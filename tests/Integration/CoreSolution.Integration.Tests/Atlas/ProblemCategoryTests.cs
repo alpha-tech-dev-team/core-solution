@@ -84,5 +84,20 @@ public sealed class ProblemCategoryTests(IntegrationFixture fixture)
         Assert.False(result.IsSuccess);
         Assert.Equal(nameof(ErrorCode.IncidentCategoryNotFound), result.ErrorCode);
     }
+
+    [Fact]
+    public async Task SelectProblemCategory_InvalidRequest_IsRejectedByValidationBehavior()
+    {
+        await using var atlas = await fixture.CreateAtlasServiceProviderAsync();
+        using var scope = atlas.CreateScope();
+
+        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+        var result = await mediator.Send(
+            new SelectProblemCategoryMessage(0, 4, IncidentCategoryConstants.Hardware.Id));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(nameof(ErrorCode.ValidationFailed), result.ErrorCode);
+    }
 }
 

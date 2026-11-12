@@ -4,7 +4,8 @@
     "BtnShareContact": "Отправить номер телефона",
     "AccessNotConfirmed": "Доступ не подтверждён. Обратитесь к администратору.",
     "SessionNotFound": "Доступ не подтверждён. Отправьте /start.",
-    "UnexpectedError": "Произошла ошибка. Попробуйте позже."
+    "UnexpectedError": "Произошла ошибка. Попробуйте позже.",
+    "ValidationFailed": "Запрос заполнен неверно. Попробуйте ещё раз."
   },
   "ProblemCategorySelection": {
     "Text": "Выберите категорию проблемы:",
