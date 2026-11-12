@@ -52,7 +52,7 @@ public sealed class SecretMetadataRepository : ISecretMetadataRepository
     public async Task<IReadOnlyList<SecretMetadata>> GetPendingSync(CancellationToken cancellationToken)
     {
         return await _context.SecretMetadata
-            .Where(metadata => metadata.SyncPending)
+            .Where(metadata => metadata.SyncOperation != SecretSyncOperation.None)
             .ToListAsync(cancellationToken);
     }
 
@@ -64,12 +64,10 @@ public sealed class SecretMetadataRepository : ISecretMetadataRepository
     {
         var updated = await _context.SecretMetadata
             .Where(metadata => metadata.VaultItemId == vaultItemId
-                && metadata.SyncPending
                 && metadata.SyncOperation == SecretSyncOperation.Update
                 && metadata.ResourceName == resourceName
                 && metadata.Username == username)
             .ExecuteUpdateAsync(update => update
-                .SetProperty(metadata => metadata.SyncPending, false)
                 .SetProperty(metadata => metadata.SyncOperation, SecretSyncOperation.None),
                 cancellationToken);
 

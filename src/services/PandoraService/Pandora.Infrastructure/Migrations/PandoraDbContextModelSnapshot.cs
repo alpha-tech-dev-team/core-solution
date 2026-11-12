@@ -104,10 +104,6 @@ namespace Pandora.Infrastructure.Migrations
                         .HasColumnType("character varying(20)")
                         .HasColumnName("sync_operation");
 
-                    b.Property<bool>("SyncPending")
-                        .HasColumnType("boolean")
-                        .HasColumnName("sync_pending");
-
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasMaxLength(100)

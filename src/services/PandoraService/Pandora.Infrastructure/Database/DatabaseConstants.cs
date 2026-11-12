@@ -8,7 +8,6 @@ public static class DatabaseConstants
         public const string VaultItemId = "vault_item_id";
         public const string ResourceName = "resource_name";
         public const string Username = "username";
-        public const string SyncPending = "sync_pending";
         public const string SyncOperation = "sync_operation";
         public const int VaultItemIdMaxLength = 36;
         public const int ResourceNameMaxLength = 100;
