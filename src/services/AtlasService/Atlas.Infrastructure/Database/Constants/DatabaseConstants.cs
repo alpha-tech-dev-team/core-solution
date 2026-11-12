@@ -25,14 +25,13 @@ public static class DatabaseConstants
         public const string Table = "hardware";
         public const string Id = "id";
         public const string Name = "name";
-        public const string Type = "type";
+        public const string EquipmentTypeId = "equipment_type_id";
         public const string InventoryNumber = "inventory_number";
         public const string SerialNumber = "serial_number";
         public const string RoomId = "room_id";
         public const string CreatedAt = "created_at";
         public const string UpdatedAt = "updated_at";
         public const int NameMaxLength = 255;
-        public const int TypeMaxLength = 100;
         public const int InventoryNumberMaxLength = 100;
         public const int SerialNumberMaxLength = 255;
     }
@@ -52,8 +51,23 @@ public static class DatabaseConstants
         public const string Table = "employees";
         public const string Id = "id";
         public const string Role = "role";
+        public const string Name = "name";
+        public const string Surname = "surname";
+        public const string Patronymic = "patronymic";
         public const string CreatedAt = "created_at";
         public const string UpdatedAt = "updated_at";
+        public const int NameMaxLength = 100;
+        public const int SurnameMaxLength = 100;
+        public const int PatronymicMaxLength = 100;
+    }
+
+    public static class EquipmentType
+    {
+        public const string Table = "equipment_types";
+        public const string Id = "id";
+        public const string Name = "name";
+        public const string Description = "description";
+        public const int NameMaxLength = 100;
     }
 
     public static class IncidentCategory

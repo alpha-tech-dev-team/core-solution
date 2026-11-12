@@ -4,4 +4,4 @@ using MediatR;
 
 namespace Atlas.Application.Features.Menu;
 
-public record ShowMenuMessage(long TelegramUserId, int MessageId) : IRequest<Result<WorkflowResponse>>;
+public record ShowMenuMessage(long TelegramUserId, int MessageId, int Page = 1) : IRequest<Result<WorkflowResponse>>;
