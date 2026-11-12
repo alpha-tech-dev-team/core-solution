@@ -4,7 +4,7 @@ using CoreSolution.Shared.Infrastructure.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
-((IConfigurationBuilder)builder.Configuration).AddSharedConfiguration();
+builder.AddSharedConfiguration();
 
 if (args.Contains(HostArguments.MigrateOnly))
 {
