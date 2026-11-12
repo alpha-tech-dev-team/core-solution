@@ -1,9 +1,7 @@
-﻿using Atlas.Domain.Interfaces;
-using Atlas.Domain.Interfaces.Repositories;
+﻿using Atlas.Domain.Interfaces.Repositories;
 using Atlas.Infrastructure.Database.Context;
 using Atlas.Infrastructure.Database.Extensions;
 using Atlas.Infrastructure.Repositories;
-using Atlas.Infrastructure.Sessions;
 using Atlas.Domain.Options;
 using CoreSolution.Shared.TgBot.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
@@ -36,7 +34,6 @@ public static class InfrastructureExtensions
             }));
 
         services.AddScoped<IIncidentCategoryRepository, IncidentCategoryRepository>();
-        services.AddScoped<IDraftStore, RedisDraftStore>();
 
         services.AddIdentityClient(configuration);
         services.AddSessionInfrastructure(configuration, redisOptions.ConnectionString);

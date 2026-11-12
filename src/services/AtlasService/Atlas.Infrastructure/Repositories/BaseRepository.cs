@@ -1,5 +1,3 @@
-using System.Linq.Expressions;
-using Atlas.Domain.Constants;
 using Atlas.Domain.Interfaces;
 using Atlas.Domain.Interfaces.Repositories;
 using Atlas.Domain.Models;
@@ -11,14 +9,14 @@ namespace Atlas.Infrastructure.Repositories;
 public abstract class BaseRepository<TEntity> : IRepository<TEntity>
     where TEntity : class, IEntity
 {
+    protected AtlasDbContext Context { get; }
+
+    protected DbSet<TEntity> Entities => Context.Set<TEntity>();
+
     protected BaseRepository(AtlasDbContext context)
     {
         Context = context;
     }
-
-    protected AtlasDbContext Context { get; }
-
-    protected DbSet<TEntity> Entities => Context.Set<TEntity>();
 
     public Task<TEntity?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
@@ -28,16 +26,10 @@ public abstract class BaseRepository<TEntity> : IRepository<TEntity>
     }
 
     public async Task<PagedResult<TEntity>> GetPageAsync(
-        int page,
-        int pageSize,
+        PageRequest page,
         Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null,
         CancellationToken cancellationToken = default)
     {
-        var normalizedPage = page < 1 ? 1 : page;
-        var normalizedPageSize = pageSize < 1
-            ? PaginationConstants.DefaultPageSize
-            : Math.Min(pageSize, PaginationConstants.MaxPageSize);
-
         var query = Entities.AsNoTracking();
 
         if (orderBy is not null)
@@ -47,11 +39,11 @@ public abstract class BaseRepository<TEntity> : IRepository<TEntity>
 
         var total = await query.CountAsync(cancellationToken);
         var items = await query
-            .Skip((normalizedPage - 1) * normalizedPageSize)
-            .Take(normalizedPageSize)
+            .Skip(page.Skip)
+            .Take(page.PageSize)
             .ToListAsync(cancellationToken);
 
-        return new PagedResult<TEntity>(items, total, normalizedPage, normalizedPageSize);
+        return new PagedResult<TEntity>(items, page.Page, page.PageSize, total);
     }
 
     public void Add(TEntity entity)

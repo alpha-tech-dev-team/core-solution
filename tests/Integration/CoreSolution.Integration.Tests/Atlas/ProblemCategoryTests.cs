@@ -1,4 +1,4 @@
-using Atlas.Application.Common;
+﻿using Atlas.Application.Common;
 using Atlas.Application.Features.IncidentCategories;
 using Atlas.Application.Features.Menu;
 using Atlas.Domain.Constants;
@@ -21,7 +21,7 @@ public sealed class ProblemCategoryTests(IntegrationFixture fixture)
         using var scope = atlas.CreateScope();
         var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-        var result = await mediator.Send(new ShowMenuMessage(8301, 1));
+        var result = await mediator.Send(new ShowMenuMessage(8301, 1, PaginationLimits.FirstPage));
 
         Assert.True(result.IsSuccess);
 
@@ -44,24 +44,26 @@ public sealed class ProblemCategoryTests(IntegrationFixture fixture)
         await using var atlas = await fixture.CreateAtlasServiceProviderAsync();
         using var scope = atlas.CreateScope();
 
-        await scope.ServiceProvider.GetRequiredService<ISessionService>()
-            .SaveSession(UserSession.Create(telegramUserId, nameof(WorkflowStep.ProblemCategorySelection)), CancellationToken.None);
+        var sessionService = scope.ServiceProvider.GetRequiredService<ISessionService>();
+
+        await sessionService.SaveSession(
+            UserSession.Create(telegramUserId, nameof(WorkflowStep.ProblemCategorySelection)),
+            CancellationToken.None);
 
         var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-        var draftStore = scope.ServiceProvider.GetRequiredService<Atlas.Domain.Interfaces.IDraftStore>();
-
         var categoryId = IncidentCategoryConstants.Hardware.Id;
 
         var result = await mediator.Send(new SelectProblemCategoryMessage(telegramUserId, 2, categoryId));
 
         Assert.True(result.IsSuccess);
         Assert.Contains(IncidentCategoryConstants.Hardware.Name, result.Value!.Text);
+        Assert.NotEmpty(result.Value.ButtonRows!);
 
-        var draft = await draftStore.GetAsync(telegramUserId);
+        var session = await sessionService.GetSession(telegramUserId, CancellationToken.None);
 
-        Assert.NotNull(draft);
-        Assert.Equal(categoryId, draft!.CategoryId);
-        Assert.Equal(WorkflowStep.CategorySelected, draft.Step);
+        Assert.NotNull(session);
+        Assert.Equal(categoryId, session!.IncidentCategoryId);
+        Assert.Equal(nameof(WorkflowStep.CategorySelected), session.State);
     }
 
     [Fact]
@@ -83,3 +85,4 @@ public sealed class ProblemCategoryTests(IntegrationFixture fixture)
         Assert.Equal(nameof(ErrorCode.IncidentCategoryNotFound), result.ErrorCode);
     }
 }
+

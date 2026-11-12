@@ -21,5 +21,6 @@ public static class LocalizationKeysConstants
     public static class CategorySelected
     {
         public const string Text = "Text";
+        public const string Button = "Button";
     }
 }

@@ -1,8 +1,8 @@
+using Atlas.Application.Common;
+using Atlas.Domain.Constants;
 using Atlas.Domain.Constants.Localization;
 using Atlas.Domain.Enums;
-using Atlas.Domain.Interfaces;
 using Atlas.Domain.Interfaces.Repositories;
-using Atlas.Domain.Models;
 using CoreSolution.Shared.Abstractions;
 using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
@@ -13,16 +13,19 @@ namespace Atlas.Application.Features.IncidentCategories;
 public sealed class SelectProblemCategoryHandler : IRequestHandler<SelectProblemCategoryMessage, Result<WorkflowResponse>>
 {
     private readonly IIncidentCategoryRepository _categoryRepository;
-    private readonly IDraftStore _draftStore;
+    private readonly IRequestContext _requestContext;
+    private readonly ISessionService _sessionService;
     private readonly ILocalizer _localizer;
 
     public SelectProblemCategoryHandler(
         IIncidentCategoryRepository categoryRepository,
-        IDraftStore draftStore,
+        IRequestContext requestContext,
+        ISessionService sessionService,
         ILocalizer localizer)
     {
         _categoryRepository = categoryRepository;
-        _draftStore = draftStore;
+        _requestContext = requestContext;
+        _sessionService = sessionService;
         _localizer = localizer;
     }
 
@@ -35,14 +38,12 @@ public sealed class SelectProblemCategoryHandler : IRequestHandler<SelectProblem
             return Result<WorkflowResponse>.Failure(nameof(ErrorCode.IncidentCategoryNotFound));
         }
 
-        var draft = await _draftStore.GetAsync(request.TelegramUserId, cancellationToken)
-            ?? new IncidentDraft();
+        var session = _requestContext.Session;
+        session.IncidentCategoryId = category.Id;
+        session.State = nameof(WorkflowStep.CategorySelected);
+        session.LastUpdate = DateTime.UtcNow;
 
-        draft.Step = WorkflowStep.CategorySelected;
-        draft.CategoryId = category.Id;
-        draft.UpdatedAt = DateTime.UtcNow;
-
-        await _draftStore.SaveAsync(request.TelegramUserId, draft, cancellationToken);
+        await _sessionService.SaveSession(session, cancellationToken);
 
         return Result<WorkflowResponse>.Success(new WorkflowResponse
         {
@@ -50,7 +51,15 @@ public sealed class SelectProblemCategoryHandler : IRequestHandler<SelectProblem
                 _localizer.GetPhrase(
                     nameof(WorkflowStep.CategorySelected),
                     LocalizationKeysConstants.CategorySelected.Text),
-                category.Name)
+                category.Name),
+            ButtonRows = new List<WorkflowButtonRow>
+            {
+                new(new WorkflowButton(
+                    _localizer.GetPhrase(
+                        nameof(WorkflowStep.CategorySelected),
+                        LocalizationKeysConstants.CategorySelected.Button),
+                    CallbackConstants.CategoryPagePrefix + PaginationLimits.FirstPage))
+            }
         });
     }
 }

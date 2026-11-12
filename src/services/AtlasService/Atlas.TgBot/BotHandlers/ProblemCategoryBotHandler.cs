@@ -1,6 +1,7 @@
 using Atlas.Application.Common;
 using Atlas.Application.Features.IncidentCategories;
 using Atlas.Application.Features.Menu;
+using Atlas.Domain.Constants;
 using Atlas.Domain.Enums;
 using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
@@ -52,7 +53,7 @@ public sealed class ProblemCategoryBotHandler : IBotHandler
                 cancellationToken)
             : await SelectCategoryAsync(telegramUserId, messageId, data, cancellationToken);
 
-        var markup = result.Value?.ButtonRows.ToInlineKeyboardMarkup() ?? EmptyMarkup;
+        var markup = result.ToTelegramMarkup() as InlineKeyboardMarkup ?? EmptyMarkup;
 
         await _telegramNotificationService.SendOrEditAsync(
             telegramUserId,
@@ -84,7 +85,7 @@ public sealed class ProblemCategoryBotHandler : IBotHandler
     {
         var value = data[CallbackConstants.CategoryPagePrefix.Length..];
 
-        return int.TryParse(value, out var page) ? page : 1;
+        return int.TryParse(value, out var page) ? page : PaginationLimits.FirstPage;
     }
 
     private static Guid ParseCategoryId(string data)

@@ -1,4 +1,5 @@
-using Atlas.Application.Features.Menu;
+﻿using Atlas.Application.Features.Menu;
+using Atlas.Domain.Constants;
 using Atlas.Domain.Enums;
 using CoreSolution.Shared.Abstractions;
 using CoreSolution.Shared.Application.Features.Activation;
@@ -18,6 +19,6 @@ public sealed class SubmitPhoneHandler : SubmitPhoneHandlerBase
 
     protected override IRequest<Result<WorkflowResponse>> CreateNextMessage(SubmitPhoneMessage request)
     {
-        return new ShowMenuMessage(request.TelegramUserId, request.MessageId);
+        return new ShowMenuMessage(request.TelegramUserId, request.MessageId, PaginationLimits.FirstPage);
     }
 }
