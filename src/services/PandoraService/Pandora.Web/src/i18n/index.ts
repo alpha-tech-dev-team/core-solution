@@ -44,10 +44,11 @@ export function tr(key: ResourceKey, ...params: readonly unknown[]): string {
 export function trRequestError(error: string): string {
   const serverKey = SERVER_ERROR_KEYS[error]
   if (serverKey) return lookup(serverKey)
-  if (error !== REQUEST_ERROR.NETWORK && error !== REQUEST_ERROR.UNKNOWN) {
-    return lookup(`${ERROR_KEY_PREFIX}_${REQUEST_ERROR.UNKNOWN}`)
-  }
-  return lookup(`${ERROR_KEY_PREFIX}_${error}`)
+
+  const errorKey = `${ERROR_KEY_PREFIX}_${error}`
+  if (resources[currentLocale][errorKey] !== undefined) return lookup(errorKey)
+
+  return lookup(`${ERROR_KEY_PREFIX}_${REQUEST_ERROR.UNKNOWN}`)
 }
 
 export function trStatus(status: string): string {
