@@ -91,10 +91,17 @@ public sealed class SecretMetadataRepository : ISecretMetadataRepository
             .ExecuteUpdateAsync(update => update
                 .SetProperty(metadata => metadata.AttemptCount, metadata => metadata.AttemptCount + 1)
                 .SetProperty(metadata => metadata.NextAttemptAt, nextAttemptAt)
-                .SetProperty(metadata => metadata.LastError, error),
+                .SetProperty(metadata => metadata.LastError, TruncateError(error)),
                 cancellationToken);
 
         return updated > 0;
+    }
+
+    private static string TruncateError(string error)
+    {
+        return error.Length <= DatabaseConstants.SecretMetadata.LastErrorMaxLength
+            ? error
+            : error[..DatabaseConstants.SecretMetadata.LastErrorMaxLength];
     }
 
     public async Task<bool> DeleteIfPending(string vaultItemId, CancellationToken cancellationToken)
