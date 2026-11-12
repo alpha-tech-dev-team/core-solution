@@ -52,7 +52,8 @@ public sealed class SecretMetadataRepository : ISecretMetadataRepository
             .Where(metadata => metadata.SyncOperation != SecretSyncOperation.None
                 && metadata.AttemptCount < query.MaxAttempts
                 && (metadata.NextAttemptAt == null || metadata.NextAttemptAt <= query.UtcNow))
-            .OrderBy(metadata => metadata.NextAttemptAt)
+            .OrderBy(metadata => metadata.AttemptCount == 0 ? 0 : 1)
+            .ThenBy(metadata => metadata.NextAttemptAt)
             .Take(query.BatchSize)
             .ToListAsync(cancellationToken);
     }
