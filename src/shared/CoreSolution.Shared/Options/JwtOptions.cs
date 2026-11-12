@@ -4,6 +4,7 @@ public class JwtOptions
 {
     public const string SectionName = "Jwt";
     public const int MinimumSecretLength = 32;
+    public const string InvalidOptionsMessage = "JWT options are invalid";
 
     public string Secret { get; set; } = string.Empty;
     public string Issuer { get; set; } = string.Empty;
