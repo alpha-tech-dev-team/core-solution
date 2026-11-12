@@ -55,7 +55,9 @@ public static class JwtConfigurationExtensions
         services.AddAuthorization(authorization =>
             authorization.AddPolicy(
                 nameof(UserRole.PandoraAdmin),
-                policy => policy.RequireRole(nameof(UserRole.PandoraAdmin))));
+                policy => policy
+                    .RequireRole(nameof(UserRole.PandoraAdmin))
+                    .RequireClaim(JwtClaimConstants.Subject)));
 
         return services;
     }
