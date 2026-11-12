@@ -30,8 +30,7 @@ public sealed class UpdateSecretMessageHandler : IRequestHandler<UpdateSecretMes
 
     public async Task<Result<SecretListItem>> Handle(UpdateSecretMessage request, CancellationToken cancellationToken)
     {
-        var name = request.Name.Trim();
-        var username = request.Username.Trim();
+        var secretName = request.Normalize();
 
         var metadata = await _metadataRepository.GetById(request.ItemId, cancellationToken);
 
@@ -40,7 +39,7 @@ public sealed class UpdateSecretMessageHandler : IRequestHandler<UpdateSecretMes
             return Result<SecretListItem>.Failure(nameof(ErrorCode.SecretNotFound));
         }
 
-        metadata.Rename(name, username);
+        metadata.Rename(secretName.Name, secretName.Username);
         metadata.MarkPending(SecretSyncOperation.Update);
 
         await _auditLogger.LogActionAsync(request.AdminUserId, AuditConstants.ActionSecretUpdated, request.ItemId, cancellationToken);
@@ -49,7 +48,7 @@ public sealed class UpdateSecretMessageHandler : IRequestHandler<UpdateSecretMes
 
         var updateResult = await _secretWriter.Update(
             request.ItemId,
-            new SecretUpdateData(name, username, request.Password),
+            new SecretUpdateData(secretName.Name, secretName.Username, request.Password),
             cancellationToken);
 
         if (updateResult is not SecretUpdateResult.Success)
@@ -57,9 +56,9 @@ public sealed class UpdateSecretMessageHandler : IRequestHandler<UpdateSecretMes
             return FailureFor(updateResult, request.ItemId);
         }
 
-        await _metadataRepository.ClearSyncStateIfUnchanged(request.ItemId, name, username, cancellationToken);
+        await _metadataRepository.ClearSyncStateIfUnchanged(request.ItemId, secretName.Name, secretName.Username, cancellationToken);
 
-        return Result<SecretListItem>.Success(new SecretListItem(request.ItemId, name, username));
+        return Result<SecretListItem>.Success(new SecretListItem(request.ItemId, secretName.Name, secretName.Username));
     }
 
     private Result<SecretListItem> FailureFor(SecretUpdateResult updateResult, string itemId)
