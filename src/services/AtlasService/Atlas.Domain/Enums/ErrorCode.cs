@@ -4,5 +4,7 @@ public enum ErrorCode
 {
     AccessDenied,
     AccessNotConfirmed,
-    SessionNotFound
+    SessionNotFound,
+    IncidentCategoriesNotFound,
+    IncidentCategoryNotFound
 }

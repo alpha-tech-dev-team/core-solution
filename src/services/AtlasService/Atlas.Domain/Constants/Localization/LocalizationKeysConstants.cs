@@ -13,8 +13,13 @@ public static class LocalizationKeysConstants
     public static class ProblemCategorySelection
     {
         public const string Text = "Text";
-        public const string Problems = "Problems";
-        public const string Profile = "Profile";
-        public const string AccessDenied = "AccessDenied";
+        public const string CategoriesNotFound = "CategoriesNotFound";
+        public const string CategoryNotFound = "CategoryNotFound";
+        public const string NextPage = "NextPage";
+    }
+
+    public static class CategorySelected
+    {
+        public const string Text = "Text";
     }
 }
