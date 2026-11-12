@@ -8,10 +8,7 @@ builder.AddSharedConfiguration();
 
 if (args.Contains(HostArguments.MigrateOnly))
 {
-    builder.Services.AddDatabaseConfiguration(builder.Configuration);
-
-    var migrator = builder.Build();
-    await migrator.ApplyMigrations();
+    await builder.ApplyMigrations();
 
     return;
 }
