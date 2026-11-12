@@ -11,6 +11,7 @@ public static class RouteConfigurationExtensions
             app.MapOpenApi();
         }
 
+        app.MapSecretsEndpoints();
         app.MapAuditEndpoints();
 
         return app;

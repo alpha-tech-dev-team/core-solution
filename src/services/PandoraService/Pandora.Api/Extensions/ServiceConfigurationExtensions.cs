@@ -1,16 +1,14 @@
-using CoreSolution.Shared.Results;
 using FluentValidation;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Pandora.Api;
-using Pandora.Application.Contracts;
-using Pandora.Application.Features.Audit;
-using Pandora.Application.Validators;
+using Pandora.Api.Middleware;
+using Pandora.Application.Features.Secrets.Common;
 using Pandora.Domain.Interfaces;
-using Pandora.Domain.Models;
 using Pandora.Domain.Options;
 using Pandora.Infrastructure.Database;
 using Pandora.Infrastructure.Repositories;
+using Pandora.Infrastructure.Secrets.Synchronization;
+using Serilog;
+using ApplicationAssemblyMarker = Pandora.Application.AssemblyMarker;
 
 namespace Pandora.Api.Extensions;
 
@@ -19,21 +17,48 @@ public static class ServiceConfigurationExtensions
     public static IServiceCollection AddServiceConfiguration(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
         services.AddOpenApi();
-        services.AddProblemDetails();
 
+        services.AddProblemDetails();
+        services.AddExceptionHandler<GlobalExceptionHandler>();
+
+        services.AddSerilog((serviceProvider, loggerConfiguration) => loggerConfiguration
+            .ReadFrom.Configuration(configuration)
+            .ReadFrom.Services(serviceProvider));
+
+        services.AddDatabaseConfiguration(configuration);
+
+        services.AddSecretWriter(configuration);
+
+        services.AddScoped<SecretAuditLogger>();
+
+        services.AddOptions<SecretSyncOptions>().Bind(configuration.GetSection(SecretSyncOptions.SectionName));
+        services.AddHostedService<SecretSyncWorker>();
+
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<ApplicationAssemblyMarker>());
+
+        services.AddValidatorsFromAssemblyContaining<ApplicationAssemblyMarker>();
+
+        services.AddJwtAuthentication(configuration, environment);
+
+        return services;
+    }
+
+    public static IServiceCollection AddDatabaseConfiguration(this IServiceCollection services, IConfiguration configuration)
+    {
         var databaseOptions = configuration.GetSection(DatabaseOptions.SectionName).Get<DatabaseOptions>()
             ?? throw new InvalidOperationException($"Missing configuration section {DatabaseOptions.SectionName}.");
 
         ArgumentException.ThrowIfNullOrWhiteSpace(databaseOptions.ConnectionString);
 
-        services.AddDbContext<PandoraDbContext>(options => options.UseNpgsql(databaseOptions.ConnectionString));
+        services.AddScoped<IAuditContext, AuditContext>();
+        services.AddScoped<AuditSaveChangesInterceptor>();
+
+        services.AddDbContext<PandoraDbContext>((serviceProvider, options) => options
+            .UseNpgsql(databaseOptions.ConnectionString)
+            .AddInterceptors(serviceProvider.GetRequiredService<AuditSaveChangesInterceptor>()));
+
+        services.AddScoped<ISecretMetadataRepository, SecretMetadataRepository>();
         services.AddScoped<IAuditRepository, AuditRepository>();
-
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<AssemblyMarker>());
-        services.AddTransient<IRequestHandler<GetAuditEntriesMessage, Result<AuditEntryPage>>, GetAuditEntriesMessageHandler>();
-        services.AddTransient<IValidator<GetAuditEntriesRequest>, GetAuditEntriesRequestValidator>();
-
-        services.AddJwtAuthentication(configuration, environment);
 
         return services;
     }
