@@ -2,10 +2,12 @@ import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '@/views/LoginView.vue'
 import HomeView from '@/views/HomeView.vue'
 import AuditView from '@/views/AuditView.vue'
+import EmployeesView from '@/views/employees/EmployeesView.vue'
+import SecretsView from '@/views/SecretsView.vue'
 import { useAuthStore } from '@/stores/auth'
 import { CATCH_ALL_PATTERN, ROUTE_NAMES, ROUTES } from '@/constants/routes'
 
-async function requireSession(): Promise<boolean | string> {
+async function requireAuth() {
   const authStore = useAuthStore()
   if (authStore.isAuthenticated) return true
   const refreshed = await authStore.refreshTokens()
@@ -24,13 +26,25 @@ const router = createRouter({
       path: ROUTES.HOME,
       name: ROUTE_NAMES.HOME,
       component: HomeView,
-      beforeEnter: requireSession
+      beforeEnter: requireAuth
     },
     {
       path: ROUTES.AUDIT,
       name: ROUTE_NAMES.AUDIT,
       component: AuditView,
-      beforeEnter: requireSession
+      beforeEnter: requireAuth
+    },
+    {
+      path: ROUTES.EMPLOYEES,
+      name: ROUTE_NAMES.EMPLOYEES,
+      component: EmployeesView,
+      beforeEnter: requireAuth
+    },
+    {
+      path: ROUTES.SECRETS,
+      name: ROUTE_NAMES.SECRETS,
+      component: SecretsView,
+      beforeEnter: requireAuth
     },
     {
       path: CATCH_ALL_PATTERN,

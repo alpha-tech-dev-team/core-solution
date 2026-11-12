@@ -82,7 +82,7 @@ onMounted(loadEntries)
         <tbody>
           <tr v-for="entry in entries" :key="entry.id">
             <td>{{ new Date(entry.timestamp).toLocaleString() }}</td>
-            <td>{{ entry.telegramUserId }}</td>
+            <td>{{ entry.telegramUserId ?? entry.userId ?? '' }}</td>
             <td>{{ trAuditAction(entry.action) }}</td>
             <td>{{ entry.targetItemId ?? '' }}</td>
             <td>{{ trAuditSource(entry.requestSource) }}</td>

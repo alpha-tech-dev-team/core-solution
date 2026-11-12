@@ -1,7 +1,8 @@
 export interface AuditEntry {
   id: string
   timestamp: string
-  telegramUserId: number
+  userId: string | null
+  telegramUserId: number | null
   action: string
   targetItemId: string | null
   requestSource: string

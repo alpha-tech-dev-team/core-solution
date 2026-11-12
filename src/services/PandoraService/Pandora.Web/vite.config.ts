@@ -6,6 +6,7 @@ const IDENTITY_SERVICE_URL = 'http://localhost:5257'
 const PANDORA_API_SERVICE_URL = 'http://localhost:5008'
 const API_PREFIX = '/api'
 const AUDIT_PREFIX = '/api/admin/audit'
+const SECRETS_PREFIX = '/api/admin/secrets'
 
 export default defineConfig({
   plugins: [vue()],
@@ -18,6 +19,7 @@ export default defineConfig({
     port: DEV_SERVER_PORT,
     proxy: {
       [AUDIT_PREFIX]: PANDORA_API_SERVICE_URL,
+      [SECRETS_PREFIX]: PANDORA_API_SERVICE_URL,
       [API_PREFIX]: IDENTITY_SERVICE_URL
     }
   }

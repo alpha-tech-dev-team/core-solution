@@ -3,7 +3,6 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { tr, trRequestError } from '@/i18n'
-import { RESOURCE_KEYS } from '@/constants/i18n'
 import { ROUTES } from '@/constants/routes'
 import { validateCredentials } from './login/validate-credentials'
 import { LOADING_PLACEHOLDER } from '@/constants/ui'
@@ -43,18 +42,18 @@ async function submit() {
 <template>
   <div class="login">
     <form class="login__card" @submit.prevent="submit">
-      <h1>{{ tr(RESOURCE_KEYS.APP_TITLE) }}</h1>
+      <h1>{{ tr('app_title') }}</h1>
       <label class="login__field">
-        <span>{{ tr(RESOURCE_KEYS.FIELD_USERNAME) }}</span>
+        <span>{{ tr('login_field_username') }}</span>
         <input v-model="username" type="text" autocomplete="username" />
       </label>
       <label class="login__field">
-        <span>{{ tr(RESOURCE_KEYS.FIELD_PASSWORD) }}</span>
+        <span>{{ tr('login_field_password') }}</span>
         <input v-model="password" type="password" autocomplete="current-password" />
       </label>
       <p v-if="errorMessage" class="login__error">{{ errorMessage }}</p>
       <button type="submit" :disabled="isSubmitting">
-        {{ isSubmitting ? LOADING_PLACEHOLDER : tr(RESOURCE_KEYS.AUTH_LOGIN) }}
+        {{ isSubmitting ? LOADING_PLACEHOLDER : tr('auth_login') }}
       </button>
     </form>
   </div>
