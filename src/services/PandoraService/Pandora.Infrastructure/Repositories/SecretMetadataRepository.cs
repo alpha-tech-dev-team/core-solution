@@ -48,6 +48,7 @@ public sealed class SecretMetadataRepository : ISecretMetadataRepository
     public async Task<IReadOnlyList<SecretMetadata>> GetPendingSync(CancellationToken cancellationToken)
     {
         return await _context.SecretMetadata
+            .AsNoTracking()
             .Where(metadata => metadata.SyncOperation != SecretSyncOperation.None)
             .ToListAsync(cancellationToken);
     }
