@@ -6,10 +6,10 @@ using CoreSolution.Shared.Results;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using PandoraApplicationExtensions = Pandora.TgBot.Extension.DependencyInjection.ApplicationExtensions;
-using PandoraHandler = Pandora.Application.Features.Activation.SubmitPhoneHandler;
+using PandoraHandler = Pandora.TgBot.Application.Features.Activation.SubmitPhoneHandler;
 using Xunit;
 
-namespace CoreSolution.Integration.Tests;
+namespace CoreSolution.Integration.Tests.Shared;
 
 public sealed class MediatRHandlerRegistrationTests
 {

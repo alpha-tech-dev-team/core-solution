@@ -5,7 +5,7 @@ using Pandora.Infrastructure.Database;
 using Pandora.Infrastructure.Repositories;
 using Xunit;
 
-namespace CoreSolution.Integration.Tests;
+namespace CoreSolution.Integration.Tests.PandoraTests;
 
 [Collection(nameof(IntegrationCollection))]
 public sealed class AuditRepositoryTests(IntegrationFixture fixture)

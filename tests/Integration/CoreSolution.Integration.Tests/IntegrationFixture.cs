@@ -1,4 +1,5 @@
-using Atlas.Domain.Constants;
+﻿using Atlas.Domain.Constants;
+using AppRole = CoreSolution.Shared.Enums.UserRole;
 using Atlas.TgBot.Extensions.DependencyInjection;
 using CoreSolution.Shared.Abstractions;
 using CoreSolution.Shared.Infrastructure.Identity;
@@ -6,6 +7,7 @@ using CoreSolution.Shared.TgBot.DependencyInjection;
 using Identity.Api;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
+using Identity.Domain.Interfaces.Security;
 using Identity.Infrastructure.Database;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -30,7 +32,9 @@ public sealed class IntegrationFixture : IAsyncLifetime
     private const string AtlasTestToken = "123456:integration-test-token";
     private const string PandoraTestItemId = "TestService";
 
-    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:18-alpine").Build();
+    private static long _adminPhoneSequence;
+
+    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("pgvector/pgvector:pg18").Build();
 
     private readonly RedisContainer _atlasRedis = new RedisBuilder("redis:7-alpine").Build();
 
@@ -60,7 +64,9 @@ public sealed class IntegrationFixture : IAsyncLifetime
                     ["Database:ConnectionString"] = _postgres.GetConnectionString(),
                     ["Jwt:Secret"] = "integration-test-secret-key-at-least-32-chars",
                     ["Jwt:Issuer"] = "integration-tests",
-                    ["Jwt:Audience"] = "integration-tests"
+                    ["Jwt:Audience"] = "integration-tests",
+                    ["RateLimiting:TokenLimit"] = "1000",
+                    ["RateLimiting:TokensPerPeriod"] = "1000"
                 });
             });
         });
@@ -74,6 +80,38 @@ public sealed class IntegrationFixture : IAsyncLifetime
         await _atlasRedis.DisposeAsync();
         await _pandoraRedis.DisposeAsync();
         await _postgres.DisposeAsync();
+    }
+
+    public async Task<Guid> SeedAdminAsync(string username, string password, string roleName = nameof(AppRole.PandoraAdmin))
+    {
+        using var scope = _identity.Services.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+
+        var role = await database.Roles.SingleOrDefaultAsync(item => item.Name == roleName)
+            ?? database.Roles.Add(new Roles { Id = Guid.NewGuid(), Name = roleName }).Entity;
+
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Name = "Admin",
+            Surname = username,
+            Position = "Admin",
+            Phone = $"+79{Interlocked.Increment(ref _adminPhoneSequence):D9}",
+            Status = UserStatus.Active,
+            AdminUsername = username,
+            AdminPasswordHash = hasher.HashPassword(password),
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        user.UpdatedById = user.Id;
+
+        database.Users.Add(user);
+        database.UserRoles.Add(new UserRole { UserId = user.Id, RoleId = role.Id });
+
+        await database.SaveChangesAsync();
+
+        return user.Id;
     }
 
     public async Task SeedPendingUserAsync(string phone, string roleName = AtlasConstants.ServiceName)
@@ -103,6 +141,28 @@ public sealed class IntegrationFixture : IAsyncLifetime
         await database.SaveChangesAsync();
     }
 
+    public async Task SeedPandoraPermissionAsync(long telegramUserId, string itemId)
+    {
+        await using var connection = new NpgsqlConnection(
+            _postgres.GetConnectionString().Replace("Database=postgres", "Database=pandora_integration"));
+        await connection.OpenAsync();
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            insert into secret_metadata (vault_item_id, resource_name, username)
+            values (@itemId, @itemId, 'test-login')
+            on conflict (vault_item_id) do nothing;
+
+            insert into permissions (telegram_user_id, vault_item_id, is_active)
+            values (@telegramUserId, @itemId, true)
+            on conflict (telegram_user_id, vault_item_id) do nothing;
+            """;
+        command.Parameters.AddWithValue("itemId", itemId);
+        command.Parameters.AddWithValue("telegramUserId", telegramUserId);
+
+        await command.ExecuteNonQueryAsync();
+    }
+
     public async Task<(long? TelegramUserId, UserStatus Status)> GetUserStateAsync(string phone)
     {
         using var scope = _identity.Services.CreateScope();
@@ -112,45 +172,38 @@ public sealed class IntegrationFixture : IAsyncLifetime
         return (user.TelegramUserId, user.Status);
     }
 
+    public async Task<Guid?> GetUserUpdatedByAsync(string phone)
+    {
+        using var scope = _identity.Services.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var user = await database.Users.SingleAsync(item => item.Phone == phone);
+
+        return user.UpdatedById;
+    }
+
     public HttpClient CreateIdentityHttpClient()
     {
         return _identity.CreateClient();
     }
 
-    public async Task SeedPandoraAccessAsync(IServiceProvider pandoraProvider, long telegramUserId)
-    {
-        using var scope = pandoraProvider.CreateScope();
-        var database = scope.ServiceProvider.GetRequiredService<PandoraDbContext>();
-
-        if (!await database.SecretMetadata.AnyAsync(item => item.VaultItemId == PandoraTestItemId))
-        {
-            database.SecretMetadata.Add(new SecretMetadata
-            {
-                VaultItemId = PandoraTestItemId,
-                ResourceName = PandoraTestItemId,
-                Username = "test-login"
-            });
-        }
-
-        database.Permission.Add(new Permission
-        {
-            TelegramUserId = telegramUserId,
-            VaultItemId = PandoraTestItemId,
-            IsActive = true
-        });
-
-        await database.SaveChangesAsync();
-    }
-
     public string PandoraConnectionString =>
         _postgres.GetConnectionString().Replace("Database=postgres", "Database=pandora_integration");
 
+    public HttpClient CreateIdentityHttpClientWithCookies()
+    {
+        return _identity.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost"),
+            HandleCookies = true
+        });
+    }
     public ServiceProvider CreateAtlasServiceProvider()
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["Database:RedisConnection"] = _atlasRedis.GetConnectionString(),
+                ["Database:ConnectionString"] = _postgres.GetConnectionString(),
+                ["Redis:ConnectionString"] = _atlasRedis.GetConnectionString(),
                 ["SessionSettings:ExpiryMinutes"] = "30",
                 ["Identity:BaseUrl"] = "http://localhost"
             })
@@ -191,6 +244,7 @@ public sealed class IntegrationFixture : IAsyncLifetime
         services.AddSingleton<IConfiguration>(configuration);
         PandoraOptionsExtensions.AddPandoraOptions(services, configuration);
         PandoraInfrastructureExtensions.AddBotInfrastructure(services, configuration);
+        PandoraSecretStoreExtensions.AddSecretStore(services, configuration);
         PandoraApplicationExtensions.AddApplication(services);
         PandoraSecretStoreExtensions.AddSecretStore(services, configuration);
         services.AddHttpClient<IIdentityClient, IdentityClient>()
@@ -211,3 +265,4 @@ public sealed class IntegrationFixture : IAsyncLifetime
 
 [CollectionDefinition(nameof(IntegrationCollection))]
 public sealed class IntegrationCollection : ICollectionFixture<IntegrationFixture>;
+

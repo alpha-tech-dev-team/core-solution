@@ -5,17 +5,17 @@ using CoreSolution.Shared.Results;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
-using Pandora.Application.Behaviors;
-using Pandora.Application.Common.Services;
-using Pandora.Application.Features.Credentials;
-using Pandora.Application.Features.Services;
+using Pandora.TgBot.Application.Behaviors;
+using Pandora.TgBot.Application.Common.Services;
+using Pandora.TgBot.Application.Features.Credentials;
+using Pandora.TgBot.Application.Features.Services;
 using Pandora.Domain.Constants;
 using Pandora.Domain.Entities;
 using Pandora.Domain.Interfaces;
 using Pandora.Domain.Models;
 using Xunit;
 
-namespace CoreSolution.Integration.Tests;
+namespace CoreSolution.Integration.Tests.PandoraTests;
 
 public sealed class UserActivityBehaviorTests
 {

@@ -5,14 +5,14 @@ using CoreSolution.Shared.Results;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Pandora.Application.Features.Credentials;
-using Pandora.Application.Features.Services;
+using Pandora.TgBot.Application.Features.Credentials;
+using Pandora.TgBot.Application.Features.Services;
 using Pandora.Domain.Constants;
 using Pandora.Domain.Entities;
 using Pandora.Infrastructure.Database;
 using Xunit;
 
-namespace CoreSolution.Integration.Tests;
+namespace CoreSolution.Integration.Tests.PandoraTests;
 
 [Collection(nameof(IntegrationCollection))]
 public sealed class UserActivityAuditTests(IntegrationFixture fixture)
@@ -28,7 +28,7 @@ public sealed class UserActivityAuditTests(IntegrationFixture fixture)
 
         await fixture.SeedPendingUserAsync(phone, "Pandora");
         await using var provider = await fixture.CreatePandoraServiceProviderAsync();
-        await fixture.SeedPandoraAccessAsync(provider, telegramUserId);
+        await fixture.SeedPandoraPermissionAsync(telegramUserId, ServiceName);
         _ = await SendAsync(provider, new SubmitPhoneMessage(telegramUserId, MessageId, phone));
 
         var result = await SendAsync(provider, new GetCredentialsMessage(telegramUserId, MessageId, ServiceName));
@@ -88,7 +88,7 @@ public sealed class UserActivityAuditTests(IntegrationFixture fixture)
 
         await fixture.SeedPendingUserAsync(phone, "Pandora");
         await using var provider = await fixture.CreatePandoraServiceProviderAsync();
-        await fixture.SeedPandoraAccessAsync(provider, telegramUserId);
+        await fixture.SeedPandoraPermissionAsync(telegramUserId, ServiceName);
 
         var result = await SendAsync(provider, new SubmitPhoneMessage(telegramUserId, MessageId, phone));
 

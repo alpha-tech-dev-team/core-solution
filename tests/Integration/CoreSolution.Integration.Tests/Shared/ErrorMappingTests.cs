@@ -6,7 +6,7 @@ using CoreSolution.Shared.TgBot.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
-namespace CoreSolution.Integration.Tests;
+namespace CoreSolution.Integration.Tests.Shared;
 
 [Collection(nameof(IntegrationCollection))]
 public sealed class ErrorMappingTests(IntegrationFixture fixture)

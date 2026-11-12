@@ -10,7 +10,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using Xunit;
 
-namespace CoreSolution.Integration.Tests;
+namespace CoreSolution.Integration.Tests.PandoraTests;
 
 [Collection(nameof(IntegrationCollection))]
 public sealed class ContactSharingTests(IntegrationFixture fixture)

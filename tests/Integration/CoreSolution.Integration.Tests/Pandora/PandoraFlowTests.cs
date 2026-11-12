@@ -4,10 +4,10 @@ using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
-using Pandora.Application.Features.Credentials;
+using Pandora.TgBot.Application.Features.Credentials;
 using Xunit;
 
-namespace CoreSolution.Integration.Tests;
+namespace CoreSolution.Integration.Tests.PandoraTests;
 
 [Collection(nameof(IntegrationCollection))]
 public sealed class PandoraFlowTests(IntegrationFixture fixture)
@@ -22,7 +22,7 @@ public sealed class PandoraFlowTests(IntegrationFixture fixture)
 
         await fixture.SeedPendingUserAsync(phone, "Pandora");
         await using var provider = await fixture.CreatePandoraServiceProviderAsync();
-        await fixture.SeedPandoraAccessAsync(provider, telegramUserId);
+        await fixture.SeedPandoraPermissionAsync(telegramUserId, "TestService");
 
         var result = await SendSubmitPhoneAsync(provider, telegramUserId, "+7 (999) 555-01-01");
 
@@ -46,7 +46,7 @@ public sealed class PandoraFlowTests(IntegrationFixture fixture)
 
         await fixture.SeedPendingUserAsync(phone, "Pandora");
         await using var provider = await fixture.CreatePandoraServiceProviderAsync();
-        await fixture.SeedPandoraAccessAsync(provider, telegramUserId);
+        await fixture.SeedPandoraPermissionAsync(telegramUserId, "TestService");
         _ = await SendSubmitPhoneAsync(provider, telegramUserId, "+7 (999) 555-01-02");
 
         using (var scope = provider.CreateScope())
