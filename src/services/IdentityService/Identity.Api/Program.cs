@@ -1,8 +1,9 @@
-using Identity.Api.Extensions;
+using Identity.Api.Extensions.Configuration;
+using Identity.Api.Extensions.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddServiceConfiguration(builder.Configuration);
+builder.Services.AddServiceConfiguration(builder.Configuration, builder.Environment);
 
 var app = builder.Build();
 

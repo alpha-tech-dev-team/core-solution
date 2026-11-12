@@ -29,6 +29,10 @@ public static class DatabaseConstants
         public const int PhoneMaxLength = 20;
         public const int StatusMaxLength = 20;
         public const int AdminLoginMaxLength = 50;
+
+        public const string PhoneIndex = "IX_users_phone_number";
+        public const string AdminLoginIndex = "IX_users_admin_login";
+        public const string TelegramUserIdIndex = "IX_users_telegram_user_id";
     }
 
     public static class Roles

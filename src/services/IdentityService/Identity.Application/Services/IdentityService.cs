@@ -43,7 +43,6 @@ public class IdentityService : IIdentityService
 
         user.TelegramUserId = telegramUserId;
         user.Status = UserStatus.Active;
-        user.UpdatedAt = DateTime.UtcNow;
 
         await _users.SaveChanges(cancellationToken);
 
