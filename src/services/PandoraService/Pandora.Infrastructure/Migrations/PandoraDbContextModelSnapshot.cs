@@ -92,6 +92,19 @@ namespace Pandora.Infrastructure.Migrations
                         .HasColumnType("character varying(36)")
                         .HasColumnName("vault_item_id");
 
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("attempt_count");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("last_error");
+
+                    b.Property<DateTime?>("NextAttemptAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("next_attempt_at");
+
                     b.Property<string>("ResourceName")
                         .IsRequired()
                         .HasMaxLength(100)

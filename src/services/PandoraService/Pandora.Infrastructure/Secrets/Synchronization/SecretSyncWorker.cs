@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Pandora.Domain.Constants;
 using Pandora.Domain.Entities;
 using Pandora.Domain.Enums;
 using Pandora.Domain.Interfaces;
@@ -32,18 +33,18 @@ public sealed class SecretSyncWorker : BackgroundService
 
         if (!options.Enabled)
         {
-            _logger.LogInformation("Фоновая синхронизация секретов отключена в конфигурации");
+            _logger.LogInformation("Синхронизация секретов отключена в конфигурации");
 
             return;
         }
 
-        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(options.IntervalSeconds));
-
-        while (await timer.WaitForNextTickAsync(stoppingToken))
+        while (!stoppingToken.IsCancellationRequested)
         {
+            var started = DateTime.UtcNow;
+
             try
             {
-                await SynchronizeAsync(stoppingToken);
+                await SynchronizeBatchAsync(options, stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
@@ -51,57 +52,91 @@ public sealed class SecretSyncWorker : BackgroundService
             }
             catch (Exception exception)
             {
-                _logger.LogError(exception, "Сбой фоновой синхронизации секретов");
+                _logger.LogError(exception, "Сбой цикла синхронизации секретов");
+            }
+
+            var elapsed = DateTime.UtcNow - started;
+            var remaining = TimeSpan.FromSeconds(options.IntervalSeconds) - elapsed;
+
+            if (remaining <= TimeSpan.Zero)
+            {
+                continue;
+            }
+
+            try
+            {
+                await Task.Delay(remaining, stoppingToken);
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                return;
             }
         }
     }
 
-    private async Task SynchronizeAsync(CancellationToken cancellationToken)
+    private async Task SynchronizeBatchAsync(SecretSyncOptions options, CancellationToken cancellationToken)
     {
-        using var scope = _scopeFactory.CreateScope();
-        var metadataRepository = scope.ServiceProvider.GetRequiredService<ISecretMetadataRepository>();
-        var secretWriter = scope.ServiceProvider.GetRequiredService<ISecretWriter>();
+        var query = new SecretSyncBatchQuery(options.BatchSize, options.MaxAttempts, DateTime.UtcNow);
 
-        var pending = await metadataRepository.GetPendingSync(cancellationToken);
+        IReadOnlyList<SecretMetadata> pending;
+
+        using (var scope = _scopeFactory.CreateScope())
+        {
+            var metadataRepository = scope.ServiceProvider.GetRequiredService<ISecretMetadataRepository>();
+
+            pending = await metadataRepository.GetPendingSync(query, cancellationToken);
+        }
 
         if (pending.Count == 0)
         {
             return;
         }
 
-        _logger.LogInformation("Найдено записей для синхронизации: {Count}", pending.Count);
+        _logger.LogInformation("Найдено секретов для синхронизации: {Count}", pending.Count);
 
-        foreach (var metadata in pending)
-        {
-            if (cancellationToken.IsCancellationRequested)
-            {
-                return;
-            }
+        using var throttler = new SemaphoreSlim(options.MaxParallelism);
 
-            await SynchronizeItemAsync(metadata, secretWriter, metadataRepository, cancellationToken);
-        }
+        var tasks = pending.Select(metadata => SynchronizeItemAsync(metadata, options, throttler, cancellationToken));
+
+        await Task.WhenAll(tasks);
     }
 
     private async Task SynchronizeItemAsync(
         SecretMetadata metadata,
-        ISecretWriter secretWriter,
-        ISecretMetadataRepository metadataRepository,
+        SecretSyncOptions options,
+        SemaphoreSlim throttler,
         CancellationToken cancellationToken)
     {
+        await throttler.WaitAsync(cancellationToken);
+
         try
         {
+            using var scope = _scopeFactory.CreateScope();
+            var metadataRepository = scope.ServiceProvider.GetRequiredService<ISecretMetadataRepository>();
+            var secretWriter = scope.ServiceProvider.GetRequiredService<ISecretWriter>();
+
             if (metadata.SyncOperation is SecretSyncOperation.Delete)
             {
-                await SynchronizeDeleteAsync(metadata, secretWriter, metadataRepository, cancellationToken);
+                await SynchronizeDeleteAsync(metadata, secretWriter, metadataRepository, options, cancellationToken);
 
                 return;
             }
 
-            await SynchronizeUpdateAsync(metadata, secretWriter, metadataRepository, cancellationToken);
+            await SynchronizeUpdateAsync(metadata, secretWriter, metadataRepository, options, cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception exception)
         {
             _logger.LogError(exception, "Не удалось синхронизировать секрет {ItemId}", metadata.VaultItemId);
+
+            await TryMarkFailedAsync(metadata, exception.Message, options, cancellationToken);
+        }
+        finally
+        {
+            throttler.Release();
         }
     }
 
@@ -109,13 +144,16 @@ public sealed class SecretSyncWorker : BackgroundService
         SecretMetadata metadata,
         ISecretWriter secretWriter,
         ISecretMetadataRepository metadataRepository,
+        SecretSyncOptions options,
         CancellationToken cancellationToken)
     {
         var result = await secretWriter.Delete(metadata.VaultItemId, cancellationToken);
 
         if (result is SecretDeleteResult.GatewayError)
         {
-            _logger.LogWarning("Повторное удаление секрета {ItemId} отклонено шлюзом", metadata.VaultItemId);
+            _logger.LogWarning("Шлюз Vaultwarden отклонил удаление секрета {ItemId}, будет повторная попытка", metadata.VaultItemId);
+
+            await MarkFailedAsync(metadata, nameof(SecretDeleteResult.GatewayError), metadataRepository, options, cancellationToken);
 
             return;
         }
@@ -129,6 +167,7 @@ public sealed class SecretSyncWorker : BackgroundService
         SecretMetadata metadata,
         ISecretWriter secretWriter,
         ISecretMetadataRepository metadataRepository,
+        SecretSyncOptions options,
         CancellationToken cancellationToken)
     {
         var result = await secretWriter.Update(
@@ -147,7 +186,9 @@ public sealed class SecretSyncWorker : BackgroundService
 
         if (result is SecretUpdateResult.GatewayError)
         {
-            _logger.LogWarning("Повторное обновление секрета {ItemId} отклонено шлюзом", metadata.VaultItemId);
+            _logger.LogWarning("Шлюз Vaultwarden отклонил обновление секрета {ItemId}, будет повторная попытка", metadata.VaultItemId);
+
+            await MarkFailedAsync(metadata, nameof(SecretUpdateResult.GatewayError), metadataRepository, options, cancellationToken);
 
             return;
         }
@@ -155,7 +196,7 @@ public sealed class SecretSyncWorker : BackgroundService
         if (result is SecretUpdateResult.NoPassword)
         {
             _logger.LogWarning(
-                "Секрет {ItemId} синхронизирован без пароля: в Vaultwarden пароль отсутствует и не может быть восстановлен",
+                "Секрет {ItemId} синхронизирован без пароля: в Vaultwarden пароль отсутствует и не был передан",
                 metadata.VaultItemId);
         }
 
@@ -173,5 +214,60 @@ public sealed class SecretSyncWorker : BackgroundService
         }
 
         _logger.LogInformation("Обновление секрета {ItemId} синхронизировано", metadata.VaultItemId);
+    }
+
+    private async Task MarkFailedAsync(
+        SecretMetadata metadata,
+        string error,
+        ISecretMetadataRepository metadataRepository,
+        SecretSyncOptions options,
+        CancellationToken cancellationToken)
+    {
+        var attempt = metadata.AttemptCount + 1;
+        var nextAttemptAt = DateTime.UtcNow.Add(CalculateDelay(attempt, options));
+
+        await metadataRepository.MarkSyncAttemptFailed(metadata.VaultItemId, error, nextAttemptAt, cancellationToken);
+
+        if (attempt >= options.MaxAttempts)
+        {
+            _logger.LogError(
+                "Секрет {ItemId} исчерпал {Attempts} попыток синхронизации и больше не будет опрашиваться",
+                metadata.VaultItemId,
+                options.MaxAttempts);
+
+            return;
+        }
+
+        _logger.LogWarning(
+            "Секрет {ItemId} будет повторно синхронизирован после {NextAttemptAt:u}",
+            metadata.VaultItemId,
+            nextAttemptAt);
+    }
+
+    private async Task TryMarkFailedAsync(
+        SecretMetadata metadata,
+        string error,
+        SecretSyncOptions options,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var metadataRepository = scope.ServiceProvider.GetRequiredService<ISecretMetadataRepository>();
+
+            await MarkFailedAsync(metadata, error, metadataRepository, options, cancellationToken);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Не удалось зафиксировать ошибку синхронизации секрета {ItemId}", metadata.VaultItemId);
+        }
+    }
+
+    private static TimeSpan CalculateDelay(int attempt, SecretSyncOptions options)
+    {
+        var exponent = Math.Min(attempt - 1, SecretSyncLimits.MaxBackoffExponent);
+        var seconds = (long)options.IntervalSeconds << exponent;
+
+        return TimeSpan.FromSeconds(Math.Min(seconds, options.MaxRetryDelaySeconds));
     }
 }

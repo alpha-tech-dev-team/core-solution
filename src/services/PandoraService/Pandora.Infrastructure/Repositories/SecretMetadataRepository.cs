@@ -45,11 +45,15 @@ public sealed class SecretMetadataRepository : ISecretMetadataRepository
                 cancellationToken);
     }
 
-    public async Task<IReadOnlyList<SecretMetadata>> GetPendingSync(CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<SecretMetadata>> GetPendingSync(SecretSyncBatchQuery query, CancellationToken cancellationToken)
     {
         return await _context.SecretMetadata
             .AsNoTracking()
-            .Where(metadata => metadata.SyncOperation != SecretSyncOperation.None)
+            .Where(metadata => metadata.SyncOperation != SecretSyncOperation.None
+                && metadata.AttemptCount < query.MaxAttempts
+                && (metadata.NextAttemptAt == null || metadata.NextAttemptAt <= query.UtcNow))
+            .OrderBy(metadata => metadata.NextAttemptAt)
+            .Take(query.BatchSize)
             .ToListAsync(cancellationToken);
     }
 
@@ -65,7 +69,28 @@ public sealed class SecretMetadataRepository : ISecretMetadataRepository
                 && metadata.ResourceName == resourceName
                 && metadata.Username == username)
             .ExecuteUpdateAsync(update => update
-                .SetProperty(metadata => metadata.SyncOperation, SecretSyncOperation.None),
+                .SetProperty(metadata => metadata.SyncOperation, SecretSyncOperation.None)
+                .SetProperty(metadata => metadata.AttemptCount, 0)
+                .SetProperty(metadata => metadata.NextAttemptAt, (DateTime?)null)
+                .SetProperty(metadata => metadata.LastError, (string?)null),
+                cancellationToken);
+
+        return updated > 0;
+    }
+
+    public async Task<bool> MarkSyncAttemptFailed(
+        string vaultItemId,
+        string error,
+        DateTime nextAttemptAt,
+        CancellationToken cancellationToken)
+    {
+        var updated = await _context.SecretMetadata
+            .Where(metadata => metadata.VaultItemId == vaultItemId
+                && metadata.SyncOperation != SecretSyncOperation.None)
+            .ExecuteUpdateAsync(update => update
+                .SetProperty(metadata => metadata.AttemptCount, metadata => metadata.AttemptCount + 1)
+                .SetProperty(metadata => metadata.NextAttemptAt, nextAttemptAt)
+                .SetProperty(metadata => metadata.LastError, error),
                 cancellationToken);
 
         return updated > 0;

@@ -7,8 +7,9 @@ public interface ISecretMetadataRepository
 {
     Task<SecretListPage> GetPage(SecretPageQuery query, CancellationToken cancellationToken);
     Task<SecretMetadata?> GetById(string vaultItemId, CancellationToken cancellationToken);
-    Task<IReadOnlyList<SecretMetadata>> GetPendingSync(CancellationToken cancellationToken);
+    Task<IReadOnlyList<SecretMetadata>> GetPendingSync(SecretSyncBatchQuery query, CancellationToken cancellationToken);
     Task<bool> ClearSyncStateIfUnchanged(string vaultItemId, string resourceName, string username, CancellationToken cancellationToken);
+    Task<bool> MarkSyncAttemptFailed(string vaultItemId, string error, DateTime nextAttemptAt, CancellationToken cancellationToken);
     Task<bool> DeleteIfPending(string vaultItemId, CancellationToken cancellationToken);
     Task Add(SecretMetadata metadata, CancellationToken cancellationToken);
     Task Update(SecretMetadata metadata, CancellationToken cancellationToken);

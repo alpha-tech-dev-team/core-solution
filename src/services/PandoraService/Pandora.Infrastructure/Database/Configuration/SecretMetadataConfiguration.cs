@@ -17,5 +17,10 @@ public sealed class SecretMetadataConfiguration : IEntityTypeConfiguration<Secre
             .HasColumnName(DatabaseConstants.SecretMetadata.SyncOperation)
             .HasMaxLength(DatabaseConstants.SecretMetadata.SyncOperationMaxLength)
             .HasConversion<string>();
+        builder.Property(e => e.AttemptCount).HasColumnName(DatabaseConstants.SecretMetadata.AttemptCount);
+        builder.Property(e => e.NextAttemptAt).HasColumnName(DatabaseConstants.SecretMetadata.NextAttemptAt);
+        builder.Property(e => e.LastError)
+            .HasColumnName(DatabaseConstants.SecretMetadata.LastError)
+            .HasMaxLength(DatabaseConstants.SecretMetadata.LastErrorMaxLength);
     }
 }
