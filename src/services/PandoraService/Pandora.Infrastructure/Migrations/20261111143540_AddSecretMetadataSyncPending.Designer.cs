@@ -12,15 +12,15 @@ using Pandora.Infrastructure.Database;
 namespace Pandora.Infrastructure.Migrations
 {
     [DbContext(typeof(PandoraDbContext))]
-    [Migration("20261110141445_AddAuditTelegramUserId")]
-    partial class AddAuditTelegramUserId
+    [Migration("20261111143540_AddSecretMetadataSyncPending")]
+    partial class AddSecretMetadataSyncPending
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.13")
+                .HasAnnotation("ProductVersion", "10.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -49,17 +49,17 @@ namespace Pandora.Infrastructure.Migrations
                         .HasColumnType("character varying(36)")
                         .HasColumnName("target_item_id");
 
-                    b.Property<long>("TelegramUserId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("telegram_user_id");
-
                     b.Property<DateTime>("Timestamp")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("timestamp");
 
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("TelegramUserId");
+                    b.HasIndex("UserId");
 
                     b.ToTable("audit", (string)null);
                 });
@@ -100,6 +100,16 @@ namespace Pandora.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("resource_name");
+
+                    b.Property<string>("SyncOperation")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("sync_operation");
+
+                    b.Property<bool>("SyncPending")
+                        .HasColumnType("boolean")
+                        .HasColumnName("sync_pending");
 
                     b.Property<string>("Username")
                         .IsRequired()
