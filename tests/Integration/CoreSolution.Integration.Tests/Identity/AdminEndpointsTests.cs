@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using Identity.Api.Models;
+using Identity.Application.Constants;
 using Identity.Application.Contracts.Admin;
 using Identity.Application.Contracts.Client;
 using CoreSolution.Shared.Enums;
@@ -53,11 +54,9 @@ public sealed class AdminEndpointsTests
         await _fixture.SeedPendingUserAsync(phone, "Pandora");
         using var client = await CreateLoggedInAdminClient();
 
-        var response = await client.GetAsync(UsersRoute);
+        var users = await GetUsers(client);
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var users = (await response.Content.ReadFromJsonAsync<EmployeesPageDto>())!.Items;
-        var seeded = Assert.Single(users!, user => user.Phone == phone);
+        var seeded = Assert.Single(users, user => user.Phone == phone);
         Assert.Equal(nameof(UserStatus.Pending), seeded.Status);
         Assert.Contains("Pandora", seeded.Roles);
     }
@@ -521,9 +520,23 @@ public sealed class AdminEndpointsTests
 
     private static async Task<EmployeeInfoDto[]> GetUsers(HttpClient client)
     {
-        var page = await client.GetFromJsonAsync<EmployeesPageDto>($"{UsersRoute}?pageSize=50");
+        var items = new List<EmployeeInfoDto>();
 
-        return page!.Items;
+        for (var page = ValidationConstants.PageMin; ; page++)
+        {
+            var response = await client.GetAsync(
+                $"{UsersRoute}?page={page}&pageSize={ValidationConstants.PageSizeMax}");
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            var body = (await response.Content.ReadFromJsonAsync<EmployeesPageDto>())!;
+
+            items.AddRange(body.Items);
+
+            if (items.Count >= body.Total || body.Items.Length == 0)
+            {
+                return [.. items];
+            }
+        }
     }
 
     private sealed record EmployeesPageDto(EmployeeInfoDto[] Items, int Total);
