@@ -1,7 +1,8 @@
 using CoreSolution.Shared.Abstractions;
 using CoreSolution.Shared.TgBot.Abstractions;
+using Pandora.Domain.Localization;
 
-namespace Pandora.TgBot.Localization;
+namespace Pandora.TgBot.ErrorHandling;
 
 public sealed class PandoraUserErrorMapper : IUserErrorMapper
 {
