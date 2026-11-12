@@ -10,7 +10,7 @@ using Pandora.Infrastructure.Secrets.Synchronization;
 using Serilog;
 using ApplicationAssemblyMarker = Pandora.Application.AssemblyMarker;
 
-namespace Pandora.Api.Extensions;
+namespace Pandora.Api.Extensions.Configuration;
 
 public static class ServiceConfigurationExtensions
 {

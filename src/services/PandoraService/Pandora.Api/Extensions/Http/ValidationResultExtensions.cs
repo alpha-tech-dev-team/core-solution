@@ -1,6 +1,6 @@
 using FluentValidation.Results;
 
-namespace Pandora.Api.Extensions;
+namespace Pandora.Api.Extensions.Http;
 
 public static class ValidationResultExtensions
 {

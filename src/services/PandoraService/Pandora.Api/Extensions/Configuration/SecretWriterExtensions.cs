@@ -3,7 +3,7 @@ using Pandora.Domain.Interfaces;
 using Pandora.Domain.Options;
 using Pandora.Infrastructure.Secrets;
 
-namespace Pandora.Api.Extensions;
+namespace Pandora.Api.Extensions.Configuration;
 
 public static class SecretWriterExtensions
 {

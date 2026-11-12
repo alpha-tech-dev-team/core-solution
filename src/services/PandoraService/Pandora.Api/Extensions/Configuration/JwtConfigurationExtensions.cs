@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Pandora.Api.Extensions;
+namespace Pandora.Api.Extensions.Configuration;
 
 public static class JwtConfigurationExtensions
 {

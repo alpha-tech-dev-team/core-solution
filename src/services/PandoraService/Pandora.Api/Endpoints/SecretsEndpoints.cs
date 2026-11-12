@@ -3,7 +3,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Pandora.Api.Constants;
-using Pandora.Api.Extensions;
+using Pandora.Api.Extensions.Http;
 using Pandora.Api.Filters;
 using Pandora.Application.Features.Secrets.CreateSecret;
 using Pandora.Application.Features.Secrets.DeleteSecret;

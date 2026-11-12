@@ -1,6 +1,6 @@
 using Serilog;
 
-namespace Pandora.Api.Extensions;
+namespace Pandora.Api.Extensions.Middleware;
 
 public static class MiddlewareConfigurationExtensions
 {

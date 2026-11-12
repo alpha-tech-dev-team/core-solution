@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using CoreSolution.Shared.Constants;
 
-namespace Pandora.Api.Extensions;
+namespace Pandora.Api.Extensions.Http;
 
 public static class ClaimsPrincipalExtensions
 {

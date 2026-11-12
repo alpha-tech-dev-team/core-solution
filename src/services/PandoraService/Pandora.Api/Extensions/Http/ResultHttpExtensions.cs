@@ -2,7 +2,7 @@ using CoreSolution.Shared.Results;
 using Pandora.Api.Constants;
 using Pandora.Domain.Enums;
 
-namespace Pandora.Api.Extensions;
+namespace Pandora.Api.Extensions.Http;
 
 public static class ResultHttpExtensions
 {

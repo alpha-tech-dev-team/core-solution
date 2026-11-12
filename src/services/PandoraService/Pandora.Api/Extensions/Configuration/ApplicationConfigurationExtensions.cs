@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Pandora.Infrastructure.Database;
 
-namespace Pandora.Api.Extensions;
+namespace Pandora.Api.Extensions.Configuration;
 
 public static class ApplicationConfigurationExtensions
 {

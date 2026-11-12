@@ -1,6 +1,6 @@
 using Pandora.Api.Endpoints;
 
-namespace Pandora.Api.Extensions;
+namespace Pandora.Api.Extensions.Middleware;
 
 public static class RouteConfigurationExtensions
 {
