@@ -13,5 +13,5 @@ public interface IAdminUserService
     Task<Result> UpdateUser(Guid userId, EmployeeData data, Guid actorId, CancellationToken cancellationToken = default);
     Task<Result> AssignRoles(Guid userId, UserRolesData data, Guid actorId, CancellationToken cancellationToken = default);
     Task<Result> SetStatus(Guid userId, UserStatus status, Guid actorId, CancellationToken cancellationToken = default);
-    Task<Result> DeleteUser(Guid userId, CancellationToken cancellationToken = default);
+    Task<Result> DeleteUser(Guid userId, Guid actorId, CancellationToken cancellationToken = default);
 }

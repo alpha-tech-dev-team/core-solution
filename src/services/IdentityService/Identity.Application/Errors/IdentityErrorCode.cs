@@ -12,5 +12,6 @@ public enum IdentityErrorCode
     InvalidCredentials,
     InvalidRefreshToken,
     ValidationFailed,
+    SelfActionForbidden,
     InternalError
 }

@@ -17,6 +17,7 @@ internal static class IdentityErrorStatusCodes
             [IdentityErrorCode.InvalidCredentials] = StatusCodes.Status401Unauthorized,
             [IdentityErrorCode.InvalidRefreshToken] = StatusCodes.Status401Unauthorized,
             [IdentityErrorCode.ValidationFailed] = StatusCodes.Status400BadRequest,
+            [IdentityErrorCode.SelfActionForbidden] = StatusCodes.Status403Forbidden,
             [IdentityErrorCode.InternalError] = StatusCodes.Status500InternalServerError
         };
 

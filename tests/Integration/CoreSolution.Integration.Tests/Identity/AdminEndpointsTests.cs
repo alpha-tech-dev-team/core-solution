@@ -464,7 +464,7 @@ public sealed class AdminEndpointsTests
     }
 
     [Fact]
-    public async Task SetRoles_RemoveOwnAdminRole_ReturnsUnauthorized()
+    public async Task SetRoles_RemoveOwnPandoraAdminRole_ReturnsForbidden()
     {
         var username = $"admin_{Guid.NewGuid():N}";
         await _fixture.SeedAdminAsync(username, "admin-password-123");
@@ -478,15 +478,41 @@ public sealed class AdminEndpointsTests
             $"{UsersRoute}/{self.Id}/roles",
             new SetUserRolesRequest([UserRole.Atlas], null, null));
 
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.SelfActionForbidden), error!.Code);
 
         using var loginClient = _fixture.CreateIdentityHttpClientWithCookies();
         var retry = await loginClient.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
-        Assert.Equal(HttpStatusCode.Forbidden, retry.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, retry.StatusCode);
     }
 
     [Fact]
-    public async Task DeleteUser_Self_ReturnsUnauthorized()
+    public async Task SetStatus_BlockSelf_ReturnsForbidden()
+    {
+        var username = $"admin_{Guid.NewGuid():N}";
+        await _fixture.SeedAdminAsync(username, "admin-password-123");
+        using var client = _fixture.CreateIdentityHttpClientWithCookies();
+        var login = await client.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+        var users = await GetUsers(client);
+        var self = Array.Find(users, user => user.AdminUsername == username)!;
+
+        var response = await client.PutAsJsonAsync(
+            $"{UsersRoute}/{self.Id}/status",
+            new SetUserStatusRequest(UserStatus.Blocked));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.SelfActionForbidden), error!.Code);
+
+        using var loginClient = _fixture.CreateIdentityHttpClientWithCookies();
+        var retry = await loginClient.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
+        Assert.Equal(HttpStatusCode.OK, retry.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeleteUser_Self_ReturnsForbidden()
     {
         var username = $"admin_{Guid.NewGuid():N}";
         await _fixture.SeedAdminAsync(username, "admin-password-123");
@@ -498,13 +524,13 @@ public sealed class AdminEndpointsTests
 
         var response = await client.DeleteAsync($"{UsersRoute}/{self.Id}");
 
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.SelfActionForbidden), error!.Code);
 
         using var loginClient = _fixture.CreateIdentityHttpClientWithCookies();
         var retry = await loginClient.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
-        Assert.Equal(HttpStatusCode.Unauthorized, retry.StatusCode);
-        var error = await retry.Content.ReadFromJsonAsync<ErrorResponse>();
-        Assert.Equal(nameof(IdentityErrorCode.InvalidCredentials), error!.Code);
+        Assert.Equal(HttpStatusCode.OK, retry.StatusCode);
     }
 
     private async Task<HttpClient> CreateLoggedInAdminClient()
@@ -521,9 +547,18 @@ public sealed class AdminEndpointsTests
 
     private static async Task<EmployeeInfoDto[]> GetUsers(HttpClient client)
     {
-        var page = await client.GetFromJsonAsync<EmployeesPageDto>($"{UsersRoute}?pageSize=50");
+        const int pageSize = 50;
+        var first = await client.GetFromJsonAsync<EmployeesPageDto>($"{UsersRoute}?pageSize={pageSize}");
+        var items = new List<EmployeeInfoDto>(first!.Items);
+        var totalPages = (int)Math.Ceiling(first.Total / (double)pageSize);
 
-        return page!.Items;
+        for (var page = 2; page <= totalPages; page++)
+        {
+            var next = await client.GetFromJsonAsync<EmployeesPageDto>($"{UsersRoute}?page={page}&pageSize={pageSize}");
+            items.AddRange(next!.Items);
+        }
+
+        return items.ToArray();
     }
 
     private sealed record EmployeesPageDto(EmployeeInfoDto[] Items, int Total);

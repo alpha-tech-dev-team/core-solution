@@ -58,7 +58,7 @@ const {
           </button>
           <button
             class="employees-page__nav-link"
-            :disabled="selectedEmployee === null"
+            :disabled="selectedEmployee === null || page.isSelf(selectedEmployee)"
             @click="page.toggleBlock()"
           >
             {{ selectedEmployee?.status === EMPLOYEE_STATUS.BLOCKED
@@ -67,7 +67,7 @@ const {
           </button>
           <button
             class="employees-page__nav-link employees-page__nav-link--danger"
-            :disabled="selectedEmployee === null"
+            :disabled="selectedEmployee === null || page.isSelf(selectedEmployee)"
             @click="page.openDelete()"
           >
             {{ tr('employee_delete') }}

@@ -8,6 +8,7 @@ using Identity.Domain.Interfaces.Services;
 using Identity.Domain.Models;
 using Mapster;
 using Microsoft.Extensions.Logging;
+using RoleType = CoreSolution.Shared.Enums.UserRole;
 using UserRoleEntity = Identity.Domain.Entities.UserRole;
 
 namespace Identity.Application.Services;
@@ -92,6 +93,12 @@ public class AdminUserService : IAdminUserService
 
     public async Task<Result> AssignRoles(Guid userId, UserRolesData data, Guid actorId, CancellationToken cancellationToken = default)
     {
+        if (userId == actorId && !data.Roles.Contains(RoleType.PandoraAdmin))
+        {
+            _logger.LogWarning("Назначение ролей отклонено: администратор пытается снять с себя роль PandoraAdmin");
+            return Result.Failure(nameof(IdentityErrorCode.SelfActionForbidden));
+        }
+
         var user = await _users.GetById(userId, includeRoles: true, cancellationToken);
         if (user is null)
         {
@@ -136,8 +143,14 @@ public class AdminUserService : IAdminUserService
         return Result.Success();
     }
 
-    public async Task<Result> DeleteUser(Guid userId, CancellationToken cancellationToken = default)
+    public async Task<Result> DeleteUser(Guid userId, Guid actorId, CancellationToken cancellationToken = default)
     {
+        if (userId == actorId)
+        {
+            _logger.LogWarning("Удаление сотрудника отклонено: администратор пытается удалить самого себя");
+            return Result.Failure(nameof(IdentityErrorCode.SelfActionForbidden));
+        }
+
         var user = await _users.GetById(userId, cancellationToken: cancellationToken);
         if (user is null)
         {
@@ -155,6 +168,12 @@ public class AdminUserService : IAdminUserService
 
     public async Task<Result> SetStatus(Guid userId, UserStatus status, Guid actorId, CancellationToken cancellationToken = default)
     {
+        if (userId == actorId && status == UserStatus.Blocked)
+        {
+            _logger.LogWarning("Смена статуса отклонена: администратор пытается заблокировать самого себя");
+            return Result.Failure(nameof(IdentityErrorCode.SelfActionForbidden));
+        }
+
         var user = await _users.GetById(userId, cancellationToken: cancellationToken);
         if (user is null)
         {

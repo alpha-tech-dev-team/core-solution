@@ -24,26 +24,6 @@ public static class ResultActionResultExtensions
             : ToErrorResult(result.ErrorCode);
     }
 
-    public static IActionResult ToActionResultOrInvalidateSession(
-        this Result result,
-        HttpResponse response,
-        bool isSessionAffected)
-    {
-        return result.IsSuccess && isSessionAffected
-            ? response.InvalidateCurrentSession()
-            : result.ToActionResult();
-    }
-
-    public static IActionResult InvalidateCurrentSession(this HttpResponse response)
-    {
-        response.ClearAuthCookies();
-
-        return new ObjectResult(new ErrorResponse(nameof(IdentityErrorCode.AccessDenied)))
-        {
-            StatusCode = StatusCodes.Status401Unauthorized
-        };
-    }
-
     public static IActionResult ToSessionActionResult(
         this Result<AuthTokens> result,
         HttpResponse response,
