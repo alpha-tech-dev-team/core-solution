@@ -156,11 +156,26 @@ export function useEmployeesPage() {
     const employee = selectedEmployee.value
     if (employee === null) return
 
+    const wasSelf = isSelf(employee)
+
     errorMessage.value = ''
     const error = await employeesStore.assignRoles(employee, roleNames, adminLogin, adminPassword)
     if (error !== null) {
       showError(error)
       return
+    }
+
+    if (wasSelf) {
+      const refreshed = await authStore.refreshTokens()
+      if (!refreshed) {
+        await authStore.logout()
+        await router.push(ROUTES.LOGIN)
+        return
+      }
+
+      if (adminLogin !== null && adminPassword !== null) {
+        authStore.username = adminLogin
+      }
     }
 
     isRolesOpen.value = false
