@@ -35,6 +35,61 @@ public sealed class AdminEndpointsTests
     }
 
     [Fact]
+    public async Task GetUsers_BlockedAdminWithValidToken_ReturnsUnauthorized()
+    {
+        var username = $"admin_{Guid.NewGuid():N}";
+        var adminId = await _fixture.SeedAdminAsync(username, "admin-password-123");
+        using var adminClient = _fixture.CreateIdentityHttpClientWithCookies();
+        var login = await adminClient.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+        using var editor = await CreateLoggedInAdminClient();
+        var block = await editor.PutAsJsonAsync(
+            $"{UsersRoute}/{adminId}/status",
+            new SetUserStatusRequest(UserStatus.Blocked));
+        Assert.Equal(HttpStatusCode.OK, block.StatusCode);
+
+        var response = await adminClient.GetAsync(UsersRoute);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetUsers_ArchivedAdminWithValidToken_ReturnsUnauthorized()
+    {
+        var username = $"admin_{Guid.NewGuid():N}";
+        var adminId = await _fixture.SeedAdminAsync(username, "admin-password-123");
+        using var adminClient = _fixture.CreateIdentityHttpClientWithCookies();
+        var login = await adminClient.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+        using var editor = await CreateLoggedInAdminClient();
+        var archive = await editor.DeleteAsync($"{UsersRoute}/{adminId}");
+        Assert.Equal(HttpStatusCode.OK, archive.StatusCode);
+
+        var response = await adminClient.GetAsync(UsersRoute);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetUsers_AdminRoleRemovedWithValidToken_ReturnsForbidden()
+    {
+        var username = $"admin_{Guid.NewGuid():N}";
+        var adminId = await _fixture.SeedAdminAsync(username, "admin-password-123");
+        using var adminClient = _fixture.CreateIdentityHttpClientWithCookies();
+        var login = await adminClient.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+        using var editor = await CreateLoggedInAdminClient();
+        var roles = await editor.PutAsJsonAsync(
+            $"{UsersRoute}/{adminId}/roles",
+            new SetUserRolesRequest([UserRole.Atlas]));
+        Assert.Equal(HttpStatusCode.OK, roles.StatusCode);
+
+        var response = await adminClient.GetAsync(UsersRoute);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Refresh_WithoutCookie_ReturnsUnauthorizedWithErrorCode()
     {
         using var client = _fixture.CreateIdentityHttpClient();
