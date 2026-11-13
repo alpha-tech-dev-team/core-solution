@@ -97,7 +97,7 @@ public sealed class ProblemCategoryTests(IntegrationFixture fixture)
             new SelectProblemCategoryMessage(0, 4, IncidentCategoryConstants.Hardware.Id));
 
         Assert.False(result.IsSuccess);
-        Assert.Equal(nameof(ErrorCode.ValidationFailed), result.ErrorCode);
+        Assert.Equal(nameof(ErrorCode.InvalidTelegramUserId), result.ErrorCode);
     }
 }
 

@@ -5,5 +5,4 @@ public sealed class SessionOptions
     public const string SectionName = "SessionSettings";
 
     public int ExpiryMinutes { get; set; }
-    public bool SkipPhoneConfirmation { get; set; }
 }

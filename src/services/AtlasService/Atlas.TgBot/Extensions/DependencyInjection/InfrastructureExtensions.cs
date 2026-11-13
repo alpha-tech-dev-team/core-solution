@@ -3,6 +3,7 @@ using Atlas.Infrastructure.Database.Context;
 using Atlas.Infrastructure.Database.Extensions;
 using Atlas.Infrastructure.Repositories;
 using Atlas.Domain.Options;
+using Atlas.TgBot.Options;
 using CoreSolution.Shared.TgBot.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -36,9 +37,14 @@ public static class InfrastructureExtensions
         services.AddScoped<IIncidentCategoryRepository, IncidentCategoryRepository>();
 
         services.AddIdentityClient(configuration);
-        services.AddSessionInfrastructure(configuration, redisOptions.ConnectionString);
+        services.AddSessionInfrastructure(configuration, redisOptions.ConnectionString, ResolvePhoneConfirmation(configuration));
         services.AddLocalization(typeof(Atlas.Infrastructure.AssemblyMarker).Assembly);
 
         return services;
+    }
+
+    private static bool ResolvePhoneConfirmation(IConfiguration configuration)
+    {
+        return configuration.GetSection(PhoneConfirmationOptions.SectionName).Get<PhoneConfirmationOptions>()?.Enabled ?? true;
     }
 }
