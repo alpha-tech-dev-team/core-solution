@@ -50,7 +50,7 @@ public class AdminAuthService : IAdminAuthService
         if (user.Status == UserStatus.Blocked)
         {
             _logger.LogWarning("Вход администратора отклонен: пользователь заблокирован");
-            return Result<AuthTokens>.Failure(nameof(IdentityErrorCode.AccessDenied));
+            return Result<AuthTokens>.Failure(nameof(IdentityErrorCode.UserBlocked));
         }
 
         if (!HasAdminRole(user))

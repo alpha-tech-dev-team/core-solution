@@ -467,6 +467,27 @@ public sealed class AdminEndpointsTests
         var response = await loginClient.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.InvalidCredentials), error!.Code);
+    }
+
+    [Fact]
+    public async Task Login_BlockedAdmin_ReturnsForbiddenWithUserBlocked()
+    {
+        var username = $"admin_{Guid.NewGuid():N}";
+        var blockedAdminId = await _fixture.SeedAdminAsync(username, "admin-password-123");
+        using var client = await CreateLoggedInAdminClient();
+        var block = await client.PutAsJsonAsync(
+            $"{UsersRoute}/{blockedAdminId}/status",
+            new SetUserStatusRequest(UserStatus.Blocked));
+        Assert.Equal(HttpStatusCode.OK, block.StatusCode);
+
+        using var loginClient = _fixture.CreateIdentityHttpClientWithCookies();
+        var response = await loginClient.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.UserBlocked), error!.Code);
     }
 
     [Fact]
