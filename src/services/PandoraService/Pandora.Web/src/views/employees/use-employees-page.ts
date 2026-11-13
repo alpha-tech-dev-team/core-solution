@@ -181,6 +181,23 @@ export function useEmployeesPage() {
     showError(error)
   }
 
+  async function toggleArchived(): Promise<void> {
+    employeesStore.includeArchived = !employeesStore.includeArchived
+    selectedEmployeeId.value = null
+    await load(1)
+  }
+
+  async function restore(): Promise<void> {
+    const employee = selectedEmployee.value
+    if (employee === null) return
+
+    errorMessage.value = ''
+    const error = await employeesStore.setStatus(employee, EMPLOYEE_STATUS.ACTIVE)
+    if (error === null) return
+
+    showError(error)
+  }
+
   onMounted(load)
 
   return {
@@ -208,6 +225,8 @@ export function useEmployeesPage() {
     closeDelete,
     confirmDelete,
     saveRoles,
-    toggleBlock
+    toggleBlock,
+    toggleArchived,
+    restore
   }
 }

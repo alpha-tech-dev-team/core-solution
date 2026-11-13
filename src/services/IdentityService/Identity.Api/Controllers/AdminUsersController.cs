@@ -30,7 +30,7 @@ public sealed class AdminUsersController : ControllerBase
     [HttpGet(ApiRoutes.Users)]
     public async Task<IActionResult> GetUsers([FromQuery] GetUsersRequest request, CancellationToken cancellationToken)
     {
-        var result = await _adminUserService.GetUsers(request.Page, request.PageSize, cancellationToken);
+        var result = await _adminUserService.GetUsers(request.Page, request.PageSize, request.IncludeArchived, cancellationToken);
 
         return result.ToActionResult();
     }

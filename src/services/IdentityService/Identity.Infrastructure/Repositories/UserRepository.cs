@@ -17,18 +17,26 @@ public class UserRepository : BaseRepository<User>, IUserRepository
 
     public Task<User?> GetByPhone(string phone, CancellationToken cancellationToken = default)
     {
-        var digits = PhoneNumbers.GetDigits(phone);
-
-        return Context.Users
-            .FirstOrDefaultAsync(x => x.Status != UserStatus.Archived && x.Phone.Replace("+", string.Empty) == digits, cancellationToken);
+        return FindByPhone(phone, includeArchived: false, cancellationToken);
     }
 
     public Task<User?> GetByPhoneIncludingArchived(string phone, CancellationToken cancellationToken = default)
     {
-        var digits = PhoneNumbers.GetDigits(phone);
+        return FindByPhone(phone, includeArchived: true, cancellationToken);
+    }
 
-        return Context.Users
-            .FirstOrDefaultAsync(x => x.Phone.Replace("+", string.Empty) == digits, cancellationToken);
+    private Task<User?> FindByPhone(string phone, bool includeArchived, CancellationToken cancellationToken)
+    {
+        var query = Context.Users.AsQueryable();
+
+        if (!includeArchived)
+        {
+            query = query.Where(x => x.Status != UserStatus.Archived);
+        }
+
+        var normalized = PhoneNumbers.Normalize(phone);
+
+        return query.FirstOrDefaultAsync(x => x.Phone == normalized, cancellationToken);
     }
 
     public Task<User?> GetById(Guid id, bool includeRoles = false, CancellationToken cancellationToken = default)
@@ -59,9 +67,14 @@ public class UserRepository : BaseRepository<User>, IUserRepository
             .FirstOrDefaultAsync(x => x.TelegramUserId == telegramUserId, cancellationToken);
     }
 
-    public async Task<EmployeesPage> GetEmployees(int page, int pageSize, CancellationToken cancellationToken = default)
+    public async Task<EmployeesPage> GetEmployees(int page, int pageSize, bool includeArchived = false, CancellationToken cancellationToken = default)
     {
-        var query = Context.Users.Where(x => x.Status != UserStatus.Archived);
+        var query = Context.Users.AsNoTracking();
+
+        if (!includeArchived)
+        {
+            query = query.Where(x => x.Status != UserStatus.Archived);
+        }
 
         var items = await query
             .OrderBy(x => x.Surname)

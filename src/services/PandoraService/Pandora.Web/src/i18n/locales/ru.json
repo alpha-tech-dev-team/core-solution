@@ -37,6 +37,8 @@
   "employee_delete_title": "Перенос сотрудника в архив",
   "employee_delete_question": "Перенести сотрудника {0} в архив?",
   "employee_delete_self_warning": "Это ваша учётная запись: перенести её в архив нельзя.",
+  "employee_restore": "Восстановить",
+  "employees_include_archived": "Показать архив",
   "employee_add": "Добавить сотрудника",
   "employee_edit": "Изменить",
   "employee_edit_title": "Редактирование сотрудника",
@@ -61,5 +63,6 @@
   "employees_page_of": "Страница {0} из {1}",
   "status_pending": "Не активирован",
   "status_active": "Активен",
-  "status_blocked": "Заблокирован"
+  "status_blocked": "Заблокирован",
+  "status_archived": "В архиве"
 }

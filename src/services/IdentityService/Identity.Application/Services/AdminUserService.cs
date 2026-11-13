@@ -27,9 +27,9 @@ public class AdminUserService : IAdminUserService
         _logger = logger;
     }
 
-    public async Task<Result<EmployeesPage>> GetUsers(int page, int pageSize, CancellationToken cancellationToken = default)
+    public async Task<Result<EmployeesPage>> GetUsers(int page, int pageSize, bool includeArchived, CancellationToken cancellationToken = default)
     {
-        var employees = await _users.GetEmployees(page, pageSize, cancellationToken);
+        var employees = await _users.GetEmployees(page, pageSize, includeArchived, cancellationToken);
 
         return Result<EmployeesPage>.Success(employees);
     }

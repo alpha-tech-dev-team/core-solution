@@ -325,6 +325,31 @@ public sealed class AdminEndpointsTests
     }
 
     [Fact]
+    public async Task ArchivedUser_IsHiddenByDefaultAndRestorable()
+    {
+        const string phone = "+79995550243";
+        await _fixture.SeedPendingUserAsync(phone);
+        using var client = await CreateLoggedInAdminClient();
+        var users = await GetUsers(client);
+        var seeded = Array.Find(users, user => user.Phone == phone)!;
+        var deletion = await client.DeleteAsync($"{UsersRoute}/{seeded.Id}");
+        Assert.Equal(HttpStatusCode.OK, deletion.StatusCode);
+
+        var defaultUsers = await GetUsers(client);
+        Assert.DoesNotContain(defaultUsers, user => user.Id == seeded.Id);
+        var archived = await client.GetFromJsonAsync<EmployeesPageDto>($"{UsersRoute}?includeArchived=true&pageSize=50");
+        Assert.Contains(archived!.Items, user => user.Id == seeded.Id && user.Status == nameof(UserStatus.Archived));
+
+        var restore = await client.PutAsJsonAsync(
+            $"{UsersRoute}/{seeded.Id}/status",
+            new SetUserStatusRequest(UserStatus.Active));
+
+        Assert.Equal(HttpStatusCode.OK, restore.StatusCode);
+        var restored = await GetUsers(client);
+        Assert.Contains(restored, user => user.Id == seeded.Id);
+    }
+
+    [Fact]
     public async Task CreateUser_PhoneOfArchivedUser_ReturnsConflict()
     {
         const string phone = "+79995550241";

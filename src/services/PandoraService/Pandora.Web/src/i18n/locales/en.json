@@ -37,6 +37,8 @@
   "employee_delete_title": "Archive employee",
   "employee_delete_question": "Archive employee {0}?",
   "employee_delete_self_warning": "This is your own account: it cannot be archived.",
+  "employee_restore": "Restore",
+  "employees_include_archived": "Show archived",
   "employee_add": "Add employee",
   "employee_edit": "Edit",
   "employee_edit_title": "Edit employee",
@@ -61,5 +63,6 @@
   "employees_page_of": "Page {0} of {1}",
   "status_pending": "Pending",
   "status_active": "Active",
-  "status_blocked": "Blocked"
+  "status_blocked": "Blocked",
+  "status_archived": "Archived"
 }
