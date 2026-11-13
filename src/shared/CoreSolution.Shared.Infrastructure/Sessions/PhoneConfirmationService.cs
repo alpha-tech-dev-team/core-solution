@@ -1,4 +1,5 @@
 using CoreSolution.Shared.Abstractions;
+using CoreSolution.Shared.Enums;
 using CoreSolution.Shared.Models;
 
 namespace CoreSolution.Shared.Infrastructure.Sessions;
@@ -10,30 +11,29 @@ public sealed class PhoneConfirmationService : IPhoneConfirmationService
     private readonly IIdentityClient _identityClient;
     private readonly ISessionService _sessionService;
 
-    public PhoneConfirmationService(IIdentityClient identityClient, ISessionService sessionService, bool requiresPhone)
+    public PhoneConfirmationService(IIdentityClient identityClient, ISessionService sessionService)
     {
         _identityClient = identityClient;
         _sessionService = sessionService;
-        RequiresPhone = requiresPhone;
     }
 
-    public bool RequiresPhone { get; }
-
-    public async Task<bool> ConfirmAsync(long telegramUserId, string? phone, string initialStep, CancellationToken cancellationToken)
+    public async Task<PhoneConfirmationResult> ConfirmAsync(long telegramUserId, string? phone, string initialStep, CancellationToken cancellationToken)
     {
-        if (RequiresPhone && phone is not null)
+        if (phone is null)
         {
-            var approved = await _identityClient.ActivateUser(telegramUserId, NormalizePhone(phone), cancellationToken);
+            return PhoneConfirmationResult.PhoneRequired;
+        }
 
-            if (!approved)
-            {
-                return false;
-            }
+        var approved = await _identityClient.ActivateUser(telegramUserId, NormalizePhone(phone), cancellationToken);
+
+        if (!approved)
+        {
+            return PhoneConfirmationResult.AccessDenied;
         }
 
         await _sessionService.SaveSession(UserSession.Create(telegramUserId, initialStep), cancellationToken);
 
-        return true;
+        return PhoneConfirmationResult.Confirmed;
     }
 
     private static string NormalizePhone(string phone)

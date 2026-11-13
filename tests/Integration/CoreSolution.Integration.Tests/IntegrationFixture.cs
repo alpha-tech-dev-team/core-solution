@@ -15,8 +15,10 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Npgsql;
 using Pandora.Infrastructure.Database;
+using Pandora.Domain.Entities;
 using StackExchange.Redis;
 using Testcontainers.PostgreSql;
 using Testcontainers.Redis;
@@ -141,6 +143,40 @@ public sealed class IntegrationFixture : IAsyncLifetime
         await database.SaveChangesAsync();
     }
 
+    /// <summary>
+    /// Grants a telegram user access to a secret item.
+    ///
+    /// The mock secret store uses the item name as its id, so the permission
+    /// row carries the same name.
+    /// </summary>
+    public async Task SeedPermissionAsync(IServiceProvider provider, long telegramUserId, string vaultItemId)
+    {
+        using var scope = provider.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<PandoraDbContext>();
+
+        // The permission points at a stored secret item, so the item has to
+        // exist before the permission can reference it.
+        var metadata = await database.SecretMetadata.FindAsync(vaultItemId);
+        if (metadata is null)
+        {
+            database.SecretMetadata.Add(new SecretMetadata
+            {
+                VaultItemId = vaultItemId,
+                ResourceName = vaultItemId,
+                Username = "test-login"
+            });
+        }
+
+        database.Permission.Add(new Permission
+        {
+            TelegramUserId = telegramUserId,
+            VaultItemId = vaultItemId,
+            IsActive = true
+        });
+
+        await database.SaveChangesAsync();
+    }
+
     public async Task<(long? TelegramUserId, UserStatus Status)> GetUserStateAsync(string phone)
     {
         using var scope = _identity.Services.CreateScope();
@@ -190,7 +226,7 @@ public sealed class IntegrationFixture : IAsyncLifetime
         services.AddLogging();
         services.AddSingleton<IConfiguration>(configuration);
         services.AddTelegramBot(AtlasTestToken);
-        services.AddBotInfrastructure(configuration);
+        services.AddBotInfrastructure(configuration, new TestHostEnvironment(Environments.Development));
         services.AddApplication();
         services.AddHttpClient<IIdentityClient, IdentityClient>()
             .ConfigurePrimaryHttpMessageHandler(() => _identity.Server.CreateHandler());
@@ -227,6 +263,7 @@ public sealed class IntegrationFixture : IAsyncLifetime
                 ["Database:RedisConnection"] = _pandoraRedis.GetConnectionString(),
                 ["SessionSettings:ExpiryMinutes"] = "30",
                 ["Identity:BaseUrl"] = "http://localhost",
+                ["Pandora:Secrets:UseMock"] = "true",
                 ["Pandora:Secrets:Items:0:Name"] = "TestService",
                 ["Pandora:Secrets:Items:0:Login"] = "test-login",
                 ["Pandora:Secrets:Items:0:Password"] = "test-password"
@@ -239,6 +276,9 @@ public sealed class IntegrationFixture : IAsyncLifetime
         services.AddSingleton<IConfiguration>(configuration);
         PandoraOptionsExtensions.AddPandoraOptions(services, configuration);
         PandoraInfrastructureExtensions.AddBotInfrastructure(services, configuration);
+        // ShowServicesHandler depends on the secret catalog, so the store has to
+        // be part of the test container as well.
+        Pandora.TgBot.Extension.DependencyInjection.SecretStoreExtensions.AddSecretStore(services, configuration);
         PandoraApplicationExtensions.AddApplication(services);
         services.AddHttpClient<IIdentityClient, IdentityClient>()
             .ConfigurePrimaryHttpMessageHandler(() => _identity.Server.CreateHandler());

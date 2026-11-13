@@ -7,7 +7,7 @@ var builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.AddTelegramBot(builder.Configuration);
 builder.Services.AddAtlasLogging(builder.Configuration);
-builder.Services.AddBotInfrastructure(builder.Configuration);
+builder.Services.AddBotInfrastructure(builder.Configuration, builder.Environment);
 builder.Services.AddApplication();
 builder.Services.AddBotHandlers<AssemblyMarker>();
 
