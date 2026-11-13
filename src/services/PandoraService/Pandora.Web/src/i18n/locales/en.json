@@ -53,7 +53,7 @@
   "employee_error_surname": "Last name: 2–50 characters, letters, space and hyphen only",
   "employee_error_patronymic": "Middle name: 2–50 characters, letters, space and hyphen only",
   "employee_error_position": "Position: 2–50 characters, letters, digits, space and hyphen",
-  "employee_error_phone": "Phone: 10–15 digits, optional leading plus",
+  "employee_error_phone": "Phone: leading plus and 10–15 digits",
   "employees_empty": "No employees yet",
   "employees_page_prev": "Previous",
   "employees_page_next": "Next",

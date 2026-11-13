@@ -53,7 +53,7 @@
   "employee_error_surname": "Фамилия: 2–50 символов, только буквы, пробел и дефис",
   "employee_error_patronymic": "Отчество: 2–50 символов, только буквы, пробел и дефис",
   "employee_error_position": "Должность: 2–50 символов, буквы, цифры, пробел и дефис",
-  "employee_error_phone": "Телефон: 10–15 цифр, допустим ведущий плюс",
+  "employee_error_phone": "Телефон: ведущий плюс и 10–15 цифр",
   "employees_empty": "Сотрудников пока нет",
   "employees_page_prev": "Назад",
   "employees_page_next": "Далее",
