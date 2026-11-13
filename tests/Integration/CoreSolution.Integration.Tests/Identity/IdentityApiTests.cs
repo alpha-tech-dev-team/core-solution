@@ -73,6 +73,24 @@ public sealed class IdentityApiTests(IntegrationFixture fixture)
     }
 
     [Fact]
+    public async Task Activate_ArchivedUser_IsRejectedAndStaysArchived()
+    {
+        const string phone = "+79995550007";
+        const long telegramUserId = 9007;
+
+        await fixture.SeedPendingUserAsync(phone);
+        await fixture.SetUserStatusAsync(phone, UserStatus.Archived);
+        using var client = fixture.CreateIdentityHttpClient();
+
+        var response = await client.PostAsJsonAsync(ActivateRoute, new ActivateUserRequest(telegramUserId, phone));
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        var state = await fixture.GetUserStateAsync(phone);
+        Assert.Equal(UserStatus.Archived, state.Status);
+        Assert.Null(state.TelegramUserId);
+    }
+
+    [Fact]
     public async Task Check_BlockedUser_ReturnsUserBlocked()
     {
         const string phone = "+79995550006";

@@ -1,12 +1,11 @@
 using CoreSolution.Shared.Abstractions;
+using CoreSolution.Shared.Constants;
 using CoreSolution.Shared.Models;
 
 namespace CoreSolution.Shared.Infrastructure.Sessions;
 
 public sealed class PhoneConfirmationService : IPhoneConfirmationService
 {
-    private const string InternationalPrefix = "+";
-
     private readonly IIdentityClient _identityClient;
     private readonly ISessionService _sessionService;
 
@@ -20,7 +19,7 @@ public sealed class PhoneConfirmationService : IPhoneConfirmationService
     {
         if (phone is not null)
         {
-            var error = await _identityClient.ActivateUser(telegramUserId, NormalizePhone(phone), cancellationToken);
+            var error = await _identityClient.ActivateUser(telegramUserId, PhoneNumbers.Normalize(phone), cancellationToken);
 
             if (error is not null)
             {
@@ -31,12 +30,5 @@ public sealed class PhoneConfirmationService : IPhoneConfirmationService
         await _sessionService.SaveSession(UserSession.Create(telegramUserId, initialStep), cancellationToken);
 
         return null;
-    }
-
-    private static string NormalizePhone(string phone)
-    {
-        var digits = new string(phone.Where(char.IsDigit).ToArray());
-
-        return $"{InternationalPrefix}{digits}";
     }
 }

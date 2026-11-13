@@ -16,7 +16,6 @@ public static class DatabaseConstants
         public const string PhoneNumber = "phone_number";
         public const string TelegramUserId = "telegram_user_id";
         public const string Status = "status";
-        public const string IsDeleted = "is_deleted";
         public const string AdminLogin = "admin_login";
         public const string AdminPasswordHash = "admin_password_hash";
         public const string CreatedAt = "created_at";

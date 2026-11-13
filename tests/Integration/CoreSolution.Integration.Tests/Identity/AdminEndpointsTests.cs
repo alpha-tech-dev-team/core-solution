@@ -307,7 +307,7 @@ public sealed class AdminEndpointsTests
     }
 
     [Fact]
-    public async Task DeleteUser_AsAdmin_SoftDeletesAndKeepsRecord()
+    public async Task DeleteUser_AsAdmin_ArchivesAndKeepsRecord()
     {
         const string phone = "+79995550240";
         await _fixture.SeedPendingUserAsync(phone);
@@ -318,13 +318,14 @@ public sealed class AdminEndpointsTests
         var response = await client.DeleteAsync($"{UsersRoute}/{seeded.Id}");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.True(await _fixture.GetUserIsDeletedAsync(phone));
+        var (_, status) = await _fixture.GetUserStateAsync(phone);
+        Assert.Equal(UserStatus.Archived, status);
         var refreshed = await GetUsers(client);
         Assert.DoesNotContain(refreshed, user => user.Id == seeded.Id);
     }
 
     [Fact]
-    public async Task CreateUser_PhoneOfDeletedUser_ReturnsConflict()
+    public async Task CreateUser_PhoneOfArchivedUser_ReturnsConflict()
     {
         const string phone = "+79995550241";
         await _fixture.SeedPendingUserAsync(phone);
@@ -344,7 +345,7 @@ public sealed class AdminEndpointsTests
     }
 
     [Fact]
-    public async Task SetRoles_AdminLoginOfDeletedUser_ReturnsConflict()
+    public async Task SetRoles_AdminLoginOfArchivedUser_ReturnsConflict()
     {
         const string phone = "+79995550242";
         var username = $"admin_{Guid.NewGuid():N}";
@@ -366,7 +367,7 @@ public sealed class AdminEndpointsTests
     }
 
     [Fact]
-    public async Task Login_DeletedAdmin_ReturnsUnauthorized()
+    public async Task Login_ArchivedAdmin_ReturnsUnauthorized()
     {
         var username = $"admin_{Guid.NewGuid():N}";
         var deletedAdminId = await _fixture.SeedAdminAsync(username, "admin-password-123");

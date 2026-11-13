@@ -1,3 +1,4 @@
+using CoreSolution.Shared.Constants;
 using CoreSolution.Shared.Results;
 using Identity.Application.Errors;
 using Identity.Domain.Entities;
@@ -42,14 +43,15 @@ public class AdminUserService : IAdminUserService
 
     public async Task<Result> CreateUser(EmployeeData data, Guid actorId, CancellationToken cancellationToken = default)
     {
-        var existing = await _users.GetByPhoneIncludingDeleted(data.Phone, cancellationToken);
+        var employee = Normalize(data);
+        var existing = await _users.GetByPhoneIncludingArchived(employee.Phone, cancellationToken);
         if (existing is not null)
         {
             _logger.LogWarning("Добавление сотрудника отклонено: телефон уже занят");
             return Result.Failure(nameof(IdentityErrorCode.PhoneAlreadyExists));
         }
 
-        var user = new User(data)
+        var user = new User(employee)
         {
             UpdatedById = actorId
         };
@@ -71,17 +73,19 @@ public class AdminUserService : IAdminUserService
             return Result.Failure(nameof(IdentityErrorCode.UserNotFound));
         }
 
-        if (!string.Equals(user.Phone, data.Phone, StringComparison.Ordinal))
+        var employee = Normalize(data);
+
+        if (!string.Equals(user.Phone, employee.Phone, StringComparison.Ordinal))
         {
-            var existing = await _users.GetByPhoneIncludingDeleted(data.Phone, cancellationToken);
-            if (existing is not null)
+            var existing = await _users.GetByPhoneIncludingArchived(employee.Phone, cancellationToken);
+            if (existing is not null && existing.Id != userId)
             {
                 _logger.LogWarning("Изменение сотрудника отклонено: телефон уже занят");
                 return Result.Failure(nameof(IdentityErrorCode.PhoneAlreadyExists));
             }
         }
 
-        data.Adapt(user);
+        employee.Adapt(user);
         user.UpdatedById = actorId;
 
         await _users.SaveChanges(cancellationToken);
@@ -89,6 +93,11 @@ public class AdminUserService : IAdminUserService
         _logger.LogInformation("Администратор изменил данные сотрудника");
 
         return Result.Success();
+    }
+
+    private static EmployeeData Normalize(EmployeeData data)
+    {
+        return data with { Phone = PhoneNumbers.Normalize(data.Phone) };
     }
 
     public async Task<Result> AssignRoles(Guid userId, UserRolesData data, Guid actorId, CancellationToken cancellationToken = default)
@@ -158,21 +167,21 @@ public class AdminUserService : IAdminUserService
             return Result.Failure(nameof(IdentityErrorCode.UserNotFound));
         }
 
-        user.IsDeleted = true;
+        user.Status = UserStatus.Archived;
         user.UpdatedById = actorId;
 
         await _users.SaveChanges(cancellationToken);
 
-        _logger.LogInformation("Администратор удалил сотрудника");
+        _logger.LogInformation("Администратор перенес сотрудника в архив");
 
         return Result.Success();
     }
 
     public async Task<Result> SetStatus(Guid userId, UserStatus status, Guid actorId, CancellationToken cancellationToken = default)
     {
-        if (userId == actorId && status == UserStatus.Blocked)
+        if (userId == actorId && status is UserStatus.Blocked or UserStatus.Archived)
         {
-            _logger.LogWarning("Смена статуса отклонена: администратор пытается заблокировать самого себя");
+            _logger.LogWarning("Смена статуса отклонена: администратор пытается заблокировать или архивировать самого себя");
             return Result.Failure(nameof(IdentityErrorCode.SelfActionForbidden));
         }
 

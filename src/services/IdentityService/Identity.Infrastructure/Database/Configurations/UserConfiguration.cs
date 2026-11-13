@@ -49,11 +49,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasDefaultValue(UserStatus.Pending)
             .IsRequired();
 
-        builder.Property(x => x.IsDeleted)
-            .HasColumnName(DatabaseConstants.Users.IsDeleted)
-            .HasDefaultValue(false)
-            .IsRequired();
-
         builder.Property(x => x.AdminUsername)
             .HasColumnName(DatabaseConstants.Users.AdminLogin)
             .HasMaxLength(DatabaseConstants.Users.AdminLoginMaxLength);
@@ -91,7 +86,5 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .WithMany()
             .HasForeignKey(x => x.UpdatedById)
             .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasQueryFilter(x => !x.IsDeleted);
     }
 }
