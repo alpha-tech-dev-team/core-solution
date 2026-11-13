@@ -8,9 +8,15 @@ public static class DatabaseConstants
         public const string VaultItemId = "vault_item_id";
         public const string ResourceName = "resource_name";
         public const string Username = "username";
+        public const string SyncOperation = "sync_operation";
+        public const string AttemptCount = "attempt_count";
+        public const string NextAttemptAt = "next_attempt_at";
+        public const string LastError = "last_error";
         public const int VaultItemIdMaxLength = 36;
         public const int ResourceNameMaxLength = 100;
         public const int UsernameMaxLength = 100;
+        public const int SyncOperationMaxLength = 20;
+        public const int LastErrorMaxLength = 500;
     }
 
     public static class Permissions

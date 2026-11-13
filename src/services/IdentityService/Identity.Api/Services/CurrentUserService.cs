@@ -1,5 +1,5 @@
+﻿using CoreSolution.Shared.Constants;
 using Identity.Api.Interfaces;
-using Identity.Domain.Constants;
 
 namespace Identity.Api.Services;
 
@@ -16,7 +16,7 @@ public sealed class CurrentUserService : ICurrentUserService
     {
         get
         {
-            var subject = _httpContextAccessor.HttpContext?.User.FindFirst(IdentityClaims.Subject)?.Value;
+            var subject = _httpContextAccessor.HttpContext?.User.FindFirst(JwtClaimConstants.Subject)?.Value;
 
             return Guid.TryParse(subject, out var userId)
                 ? userId

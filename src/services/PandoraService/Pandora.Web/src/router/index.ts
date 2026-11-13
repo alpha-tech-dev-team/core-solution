@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '@/views/LoginView.vue'
 import HomeView from '@/views/HomeView.vue'
 import EmployeesView from '@/views/employees/EmployeesView.vue'
+import SecretsView from '@/views/SecretsView.vue'
 import { useAuthStore } from '@/stores/auth'
 import { CATCH_ALL_PATTERN, ROUTE_NAMES, ROUTES } from '@/constants/routes'
 
@@ -30,6 +31,12 @@ const router = createRouter({
       path: ROUTES.EMPLOYEES,
       name: ROUTE_NAMES.EMPLOYEES,
       component: EmployeesView,
+      beforeEnter: requireAuth
+    },
+    {
+      path: ROUTES.SECRETS,
+      name: ROUTE_NAMES.SECRETS,
+      component: SecretsView,
       beforeEnter: requireAuth
     },
     {

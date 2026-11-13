@@ -95,11 +95,56 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  pandora-migrate:
+    build:
+      context: ../../../..
+      dockerfile: src/services/PandoraService/Pandora.Api/Dockerfile
+    command: ["--migrate-only"]
+    depends_on:
+      pandora-postgres:
+        condition: service_healthy
+    environment:
+      - Database__ConnectionString=Host=pandora-postgres;Port=5432;Database=${POSTGRES_DB:-alphadev_pandora};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
+    restart: "no"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  pandora-api:
+    build:
+      context: ../../../..
+      dockerfile: src/services/PandoraService/Pandora.Api/Dockerfile
+    depends_on:
+      pandora-migrate:
+        condition: service_completed_successfully
+      pandora-postgres:
+        condition: service_healthy
+      bw-gateway:
+        condition: service_started
+    expose:
+      - "8080"
+    ports:
+      - "5008:8080"
+    environment:
+      - Database__ConnectionString=Host=pandora-postgres;Port=5432;Database=${POSTGRES_DB:-alphadev_pandora};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
+      - Jwt__Secret=${JWT__SECRET:?JWT__SECRET is required}
+      - Pandora__Vaultwarden__BaseUrl=http://bw-gateway:8087
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   pandoratgbot:
     build:
       context: ../../../..
       dockerfile: src/services/PandoraService/Pandora.TgBot/Dockerfile
     depends_on:
+      pandora-migrate:
+        condition: service_completed_successfully
       pandora-postgres:
         condition: service_healthy
       pandora-redis:

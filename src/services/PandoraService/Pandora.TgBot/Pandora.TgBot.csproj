@@ -16,8 +16,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\shared\CoreSolution.Shared.TgBot\CoreSolution.Shared.TgBot.csproj" />
-    <ProjectReference Include="..\Pandora.Application\Pandora.Application.csproj" />
     <ProjectReference Include="..\Pandora.Infrastructure\Pandora.Infrastructure.csproj" />
+    <ProjectReference Include="..\Pandora.TgBot.Application\Pandora.TgBot.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\appsettings.shared.json" Link="appsettings.shared.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

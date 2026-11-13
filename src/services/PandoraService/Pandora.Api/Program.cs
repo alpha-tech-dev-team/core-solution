@@ -1,23 +1,24 @@
+using Pandora.Api.Constants;
+using Pandora.Api.Extensions.Configuration;
+using Pandora.Api.Extensions.Middleware;
+using CoreSolution.Shared.Infrastructure.Configuration;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.AddSharedConfiguration();
 
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+if (args.Contains(HostArguments.MigrateOnly))
+{
+    await builder.ApplyMigrations();
+
+    return;
+}
+
+builder.Services.AddServiceConfiguration(builder.Configuration);
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
-
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
-app.MapControllers();
+app.UseMiddlewareConfiguration();
+app.MapRouteConfiguration();
 
 app.Run();

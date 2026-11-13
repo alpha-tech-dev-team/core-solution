@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using CoreSolution.Shared.Results;
@@ -55,8 +56,7 @@ public sealed class VaultwardenSecretStore : ISecretStore
         {
             _logger.LogWarning("Шлюз Vaultwarden вернул статус {StatusCode} для элемента {ItemId}", (int)response.StatusCode, itemId);
 
-            // 4xx с семантическим ответом шлюза (success: false) — элемента нет в хранилище, остальное — сбой шлюза
-            return (int)response.StatusCode < 500 && result?.Success == false
+            return IsMissingItem(response, result)
                 ? Result<Secret>.Failure(ErrorCode.SecretNotFound.ToString())
                 : Result<Secret>.Failure(ErrorCode.VaultwardenUnavailable.ToString());
         }
@@ -111,6 +111,11 @@ public sealed class VaultwardenSecretStore : ISecretStore
 
             return null;
         }
+    }
+
+    private static bool IsMissingItem(HttpResponseMessage response, VaultwardenResponse<VaultwardenItem>? result)
+    {
+        return (int)response.StatusCode < (int)HttpStatusCode.InternalServerError && result?.Success == false;
     }
 
     private sealed record VaultwardenResponse<T>(bool Success, T? Data);
