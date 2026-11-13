@@ -143,19 +143,11 @@ public sealed class IntegrationFixture : IAsyncLifetime
         await database.SaveChangesAsync();
     }
 
-    /// <summary>
-    /// Grants a telegram user access to a secret item.
-    ///
-    /// The mock secret store uses the item name as its id, so the permission
-    /// row carries the same name.
-    /// </summary>
     public async Task SeedPermissionAsync(IServiceProvider provider, long telegramUserId, string vaultItemId)
     {
         using var scope = provider.CreateScope();
         var database = scope.ServiceProvider.GetRequiredService<PandoraDbContext>();
 
-        // The permission points at a stored secret item, so the item has to
-        // exist before the permission can reference it.
         var metadata = await database.SecretMetadata.FindAsync(vaultItemId);
         if (metadata is null)
         {
@@ -276,8 +268,6 @@ public sealed class IntegrationFixture : IAsyncLifetime
         services.AddSingleton<IConfiguration>(configuration);
         PandoraOptionsExtensions.AddPandoraOptions(services, configuration);
         PandoraInfrastructureExtensions.AddBotInfrastructure(services, configuration);
-        // ShowServicesHandler depends on the secret catalog, so the store has to
-        // be part of the test container as well.
         Pandora.TgBot.Extension.DependencyInjection.SecretStoreExtensions.AddSecretStore(services, configuration);
         PandoraApplicationExtensions.AddApplication(services);
         services.AddHttpClient<IIdentityClient, IdentityClient>()
