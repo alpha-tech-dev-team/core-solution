@@ -6,12 +6,6 @@ using MediatR;
 
 namespace Atlas.Application.Behaviors;
 
-/// <summary>
-/// Validates every request that has a registered validator before the handler runs.
-/// A request that fails validation never reaches the handler: the pipeline returns
-/// a failed result with the validation error code, so the bot answers the user
-/// instead of crashing inside the handler.
-/// </summary>
 public sealed class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : notnull
     where TResponse : Result

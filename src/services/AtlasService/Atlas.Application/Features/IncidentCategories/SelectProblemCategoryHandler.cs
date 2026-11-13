@@ -40,10 +40,8 @@ public sealed class SelectProblemCategoryHandler : IRequestHandler<SelectProblem
 
         var session = _requestContext.Session;
         session.IncidentCategoryId = category.Id;
-        session.State = nameof(WorkflowStep.CategorySelected);
-        session.LastUpdate = DateTime.UtcNow;
 
-        await _sessionService.SaveSession(session, cancellationToken);
+        await _sessionService.UpdateState(session, nameof(WorkflowStep.CategorySelected), cancellationToken);
 
         return Result<WorkflowResponse>.Success(new WorkflowResponse
         {
