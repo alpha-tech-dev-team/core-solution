@@ -1,6 +1,6 @@
-﻿using Atlas.Infrastructure.Database.Context;
-using Atlas.Domain.Constants;
+﻿using Atlas.Domain.Constants;
 using Atlas.Domain.Entities;
+using Atlas.Infrastructure.Database.Context;
 using Microsoft.EntityFrameworkCore;
 
 namespace Atlas.Infrastructure.Database.Seeds;
@@ -31,20 +31,33 @@ public static class IncidentCategorySeed
 
     public static async Task SeedAsync(AtlasDbContext dbContext, CancellationToken cancellationToken = default)
     {
-        var existingNames = await dbContext.IncidentCategories
-            .Select(category => category.Name)
-            .ToListAsync(cancellationToken);
+        var existing = await dbContext.IncidentCategories.ToDictionaryAsync(
+            category => category.Id,
+            cancellationToken);
 
-        var missing = Categories
-            .Where(category => !existingNames.Contains(category.Name, StringComparer.OrdinalIgnoreCase))
+        var changed = Categories
+            .Where(category => !existing.TryGetValue(category.Id, out var current)
+                || current.Name != category.Name
+                || current.Description != category.Description)
             .ToList();
 
-        if (missing.Count == 0)
+        if (changed.Count == 0)
         {
             return;
         }
 
-        dbContext.IncidentCategories.AddRange(missing);
+        foreach (var category in changed)
+        {
+            if (existing.TryGetValue(category.Id, out var current))
+            {
+                dbContext.Entry(current).CurrentValues.SetValues(category);
+            }
+            else
+            {
+                dbContext.IncidentCategories.Add(category);
+            }
+        }
+
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 }

@@ -21,6 +21,20 @@ public sealed class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
             .HasSentinel(EmployeeRole.Employee)
             .IsRequired();
 
+        builder.Property(x => x.Name)
+            .HasColumnName(DatabaseConstants.Employee.Name)
+            .HasMaxLength(DatabaseConstants.Employee.NameMaxLength)
+            .IsRequired();
+
+        builder.Property(x => x.Surname)
+            .HasColumnName(DatabaseConstants.Employee.Surname)
+            .HasMaxLength(DatabaseConstants.Employee.SurnameMaxLength)
+            .IsRequired();
+
+        builder.Property(x => x.Patronymic)
+            .HasColumnName(DatabaseConstants.Employee.Patronymic)
+            .HasMaxLength(DatabaseConstants.Employee.PatronymicMaxLength);
+
         builder.Property(x => x.CreatedAt)
             .HasColumnName(DatabaseConstants.Employee.CreatedAt)
             .HasDefaultValueSql(DatabaseConstants.Defaults.NowSql);

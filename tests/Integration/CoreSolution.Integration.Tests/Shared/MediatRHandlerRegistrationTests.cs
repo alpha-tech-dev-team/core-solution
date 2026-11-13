@@ -4,7 +4,9 @@ using CoreSolution.Shared.Application.Messages;
 using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
 using MediatR;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using PandoraApplicationExtensions = Pandora.TgBot.Extension.DependencyInjection.ApplicationExtensions;
 using PandoraHandler = Pandora.TgBot.Application.Features.Activation.SubmitPhoneHandler;
 using Xunit;
@@ -28,7 +30,10 @@ public sealed class MediatRHandlerRegistrationTests
     {
         var services = new ServiceCollection();
 
-        AtlasApplicationExtensions.AddApplication(services);
+        AtlasApplicationExtensions.AddApplication(
+            services,
+            new ConfigurationBuilder().Build(),
+            new TestHostEnvironment(Environments.Production));
 
         Assert.Equal(typeof(AtlasHandler), ResolveSubmitPhoneHandlerImplementation(services));
     }

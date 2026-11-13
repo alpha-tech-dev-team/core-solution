@@ -3,6 +3,7 @@ using CoreSolution.Shared.Infrastructure.Sessions;
 using CoreSolution.Shared.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using StackExchange.Redis;
 
 namespace CoreSolution.Shared.TgBot.DependencyInjection;
@@ -24,6 +25,7 @@ public static class SessionServiceCollectionExtensions
 
         services.Configure<SessionOptions>(section);
         services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConnection));
+        services.TryAddScoped<ISessionFactory, UserSessionFactory>();
         services.AddScoped<ISessionRepository, RedisSessionRepository>();
         services.AddScoped<ISessionService, SessionService>();
         services.AddScoped<IPhoneConfirmationService, PhoneConfirmationService>();

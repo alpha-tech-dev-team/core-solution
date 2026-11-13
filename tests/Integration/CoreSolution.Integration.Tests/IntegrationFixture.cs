@@ -1,4 +1,6 @@
 ﻿using Atlas.Domain.Constants;
+using Atlas.Infrastructure.Database.Context;
+using Atlas.Infrastructure.Database.Seeds;
 using AppRole = CoreSolution.Shared.Enums.UserRole;
 using Atlas.TgBot.Extensions.DependencyInjection;
 using CoreSolution.Shared.Abstractions;
@@ -13,6 +15,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Npgsql;
 using Pandora.Infrastructure.Database;
 using StackExchange.Redis;
@@ -40,6 +43,7 @@ public sealed class IntegrationFixture : IAsyncLifetime
 
     private WebApplicationFactory<AssemblyMarker> _identity = default!;
     private bool _pandoraMigrated;
+    private bool _atlasMigrated;
 
     public async Task InitializeAsync()
     {
@@ -211,11 +215,31 @@ public sealed class IntegrationFixture : IAsyncLifetime
         services.AddSingleton<IConfiguration>(configuration);
         services.AddTelegramBot(AtlasTestToken);
         services.AddBotInfrastructure(configuration);
-        services.AddApplication();
+        services.AddApplication(configuration, new TestHostEnvironment(Environments.Development));
         services.AddHttpClient<IIdentityClient, IdentityClient>()
             .ConfigurePrimaryHttpMessageHandler(() => _identity.Server.CreateHandler());
 
         return services.BuildServiceProvider();
+    }
+
+    public async Task<ServiceProvider> CreateAtlasServiceProviderAsync()
+    {
+        var provider = CreateAtlasServiceProvider();
+
+        if (!_atlasMigrated)
+        {
+            using var scope = provider.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<AtlasDbContext>();
+
+            await dbContext.Database.MigrateAsync();
+            await IncidentCategorySeed.SeedAsync(dbContext);
+            await EquipmentTypeSeed.SeedAsync(dbContext);
+            await RoomSeed.SeedAsync(dbContext);
+
+            _atlasMigrated = true;
+        }
+
+        return provider;
     }
 
     public async Task<ServiceProvider> CreatePandoraServiceProviderAsync()

@@ -28,12 +28,28 @@ namespace Atlas.Infrastructure.Database.Migrations
                     id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     role = table.Column<EmployeeRole>(type: "employee_role", nullable: false, defaultValue: EmployeeRole.Employee),
+                    name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    surname = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    patronymic = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
                     updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_employees", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "equipment_types",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
+                    name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    description = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_equipment_types", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
@@ -82,7 +98,7 @@ namespace Atlas.Infrastructure.Database.Migrations
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     name = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    type = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    equipment_type_id = table.Column<Guid>(type: "uuid", nullable: false),
                     inventory_number = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     serial_number = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
                     room_id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -92,6 +108,11 @@ namespace Atlas.Infrastructure.Database.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_hardware", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_hardware_equipment_types_equipment_type_id",
+                        column: x => x.equipment_type_id,
+                        principalTable: "equipment_types",
+                        principalColumn: "id");
                     table.ForeignKey(
                         name: "FK_hardware_rooms_room_id",
                         column: x => x.room_id,
@@ -249,15 +270,26 @@ namespace Atlas.Infrastructure.Database.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_equipment_types_name",
+                table: "equipment_types",
+                column: "name",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_hardware_equipment_type_id",
+                table: "hardware",
+                column: "equipment_type_id");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_hardware_inventory_number",
                 table: "hardware",
                 column: "inventory_number",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_hardware_room_id_type",
+                name: "IX_hardware_room_id_equipment_type_id",
                 table: "hardware",
-                columns: new[] { "room_id", "type" });
+                columns: new[] { "room_id", "equipment_type_id" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_incident_categories_name",
@@ -409,6 +441,10 @@ namespace Atlas.Infrastructure.Database.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
+                name: "FK_hardware_equipment_types_equipment_type_id",
+                table: "hardware");
+
+            migrationBuilder.DropForeignKey(
                 name: "FK_hardware_rooms_room_id",
                 table: "hardware");
 
@@ -428,6 +464,9 @@ namespace Atlas.Infrastructure.Database.Migrations
 
             migrationBuilder.DropTable(
                 name: "knowledge_article_vectors");
+
+            migrationBuilder.DropTable(
+                name: "equipment_types");
 
             migrationBuilder.DropTable(
                 name: "rooms");
