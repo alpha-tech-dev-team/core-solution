@@ -20,7 +20,7 @@ public class IdentityService : IIdentityService
 
     public async Task<Result> ActivateUser(long telegramUserId, string phone, CancellationToken cancellationToken = default)
     {
-        var user = await _users.GetByPhone(phone, cancellationToken);
+        var user = await _users.GetByPhone(phone, cancellationToken: cancellationToken);
         if (user is null)
         {
             _logger.LogWarning("Активация пропущена: пользователь не найден но номеру");

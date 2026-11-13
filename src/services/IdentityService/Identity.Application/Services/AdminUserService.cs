@@ -44,7 +44,7 @@ public class AdminUserService : IAdminUserService
     public async Task<Result> CreateUser(EmployeeData data, Guid actorId, CancellationToken cancellationToken = default)
     {
         var employee = Normalize(data);
-        var existing = await _users.GetByPhoneIncludingArchived(employee.Phone, cancellationToken);
+        var existing = await _users.GetByPhone(employee.Phone, includeArchived: true, cancellationToken);
         if (existing is not null)
         {
             _logger.LogWarning("Добавление сотрудника отклонено: телефон уже занят");
@@ -77,7 +77,7 @@ public class AdminUserService : IAdminUserService
 
         if (!string.Equals(user.Phone, employee.Phone, StringComparison.Ordinal))
         {
-            var existing = await _users.GetByPhoneIncludingArchived(employee.Phone, cancellationToken);
+            var existing = await _users.GetByPhone(employee.Phone, includeArchived: true, cancellationToken);
             if (existing is not null && existing.Id != userId)
             {
                 _logger.LogWarning("Изменение сотрудника отклонено: телефон уже занят");

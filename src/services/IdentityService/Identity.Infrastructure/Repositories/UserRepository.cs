@@ -15,17 +15,7 @@ public class UserRepository : BaseRepository<User>, IUserRepository
     {
     }
 
-    public Task<User?> GetByPhone(string phone, CancellationToken cancellationToken = default)
-    {
-        return FindByPhone(phone, includeArchived: false, cancellationToken);
-    }
-
-    public Task<User?> GetByPhoneIncludingArchived(string phone, CancellationToken cancellationToken = default)
-    {
-        return FindByPhone(phone, includeArchived: true, cancellationToken);
-    }
-
-    private Task<User?> FindByPhone(string phone, bool includeArchived, CancellationToken cancellationToken)
+    public Task<User?> GetByPhone(string phone, bool includeArchived = false, CancellationToken cancellationToken = default)
     {
         var query = Context.Users.AsQueryable();
 
