@@ -218,8 +218,8 @@ public sealed class IntegrationFixture : IAsyncLifetime
         services.AddLogging();
         services.AddSingleton<IConfiguration>(configuration);
         services.AddTelegramBot(AtlasTestToken);
-        services.AddBotInfrastructure(configuration, new TestHostEnvironment(Environments.Development));
-        services.AddApplication();
+        services.AddBotInfrastructure(configuration);
+        services.AddApplication(configuration, new TestHostEnvironment(Environments.Development));
         services.AddHttpClient<IIdentityClient, IdentityClient>()
             .ConfigurePrimaryHttpMessageHandler(() => _identity.Server.CreateHandler());
 
