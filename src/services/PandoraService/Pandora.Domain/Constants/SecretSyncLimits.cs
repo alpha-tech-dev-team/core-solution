@@ -10,4 +10,5 @@ public static class SecretSyncLimits
     public const int MinParallelism = 1;
     public const int MaxParallelismLimit = 16;
     public const int MinIntervalSeconds = 1;
+    public const int MinRetryDelaySeconds = 1;
 }

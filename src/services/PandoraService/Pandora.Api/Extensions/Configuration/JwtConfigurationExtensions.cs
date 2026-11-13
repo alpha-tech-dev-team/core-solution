@@ -4,29 +4,30 @@ using CoreSolution.Shared.Enums;
 using CoreSolution.Shared.Options;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Pandora.Api.Extensions.Configuration;
 
 public static class JwtConfigurationExtensions
 {
-    public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddJwtAuthentication(this IServiceCollection services)
     {
-        var section = configuration.GetSection(JwtOptions.SectionName);
-        var options = section.Get<JwtOptions>() ?? new JwtOptions();
-        var secret = options.Secret;
-
-        ArgumentException.ThrowIfNullOrWhiteSpace(secret);
-        ArgumentException.ThrowIfNullOrWhiteSpace(options.Issuer);
-        ArgumentException.ThrowIfNullOrWhiteSpace(options.Audience);
-        ArgumentOutOfRangeException.ThrowIfLessThan(
-            Encoding.UTF8.GetByteCount(secret),
-            JwtOptions.MinimumSecretLength);
-
         services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(jwt =>
+            .AddJwtBearer();
+
+        services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+            .Configure<IOptions<JwtOptions>>((jwt, jwtOptionsAccessor) =>
             {
+                var options = jwtOptionsAccessor.Value;
+                var secret = options.Secret;
+
+                ArgumentException.ThrowIfNullOrWhiteSpace(secret);
+                ArgumentOutOfRangeException.ThrowIfLessThan(
+                    Encoding.UTF8.GetByteCount(secret),
+                    JwtOptions.MinimumSecretLength);
+
                 jwt.MapInboundClaims = JwtValidationConstants.MapInboundClaims;
                 jwt.TokenValidationParameters = new TokenValidationParameters
                 {
@@ -44,9 +45,9 @@ public static class JwtConfigurationExtensions
                 };
                 jwt.Events = new JwtBearerEvents
                 {
-                    OnMessageReceived = ctx =>
+                    OnMessageReceived = context =>
                     {
-                        ctx.Token ??= ctx.Request.Cookies[AuthCookieConstants.AccessTokenName];
+                        context.Token ??= context.Request.Cookies[AuthCookieConstants.AccessTokenName];
                         return Task.CompletedTask;
                     }
                 };

@@ -7,7 +7,8 @@ public static class ApplicationConfigurationExtensions
 {
     public static async Task ApplyMigrations(this WebApplicationBuilder builder)
     {
-        builder.Services.AddDatabaseConfiguration(builder.Configuration);
+        builder.Services.AddOptionsConfiguration(builder.Configuration);
+        builder.Services.AddDatabaseConfiguration();
 
         await using var app = builder.Build();
 
