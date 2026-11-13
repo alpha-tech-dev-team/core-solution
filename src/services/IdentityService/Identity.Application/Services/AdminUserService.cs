@@ -42,7 +42,7 @@ public class AdminUserService : IAdminUserService
 
     public async Task<Result> CreateUser(EmployeeData data, Guid actorId, CancellationToken cancellationToken = default)
     {
-        var existing = await _users.GetByPhone(data.Phone, cancellationToken);
+        var existing = await _users.GetByPhoneIncludingDeleted(data.Phone, cancellationToken);
         if (existing is not null)
         {
             _logger.LogWarning("Добавление сотрудника отклонено: телефон уже занят");
@@ -73,7 +73,7 @@ public class AdminUserService : IAdminUserService
 
         if (!string.Equals(user.Phone, data.Phone, StringComparison.Ordinal))
         {
-            var existing = await _users.GetByPhone(data.Phone, cancellationToken);
+            var existing = await _users.GetByPhoneIncludingDeleted(data.Phone, cancellationToken);
             if (existing is not null)
             {
                 _logger.LogWarning("Изменение сотрудника отклонено: телефон уже занят");
@@ -158,7 +158,9 @@ public class AdminUserService : IAdminUserService
             return Result.Failure(nameof(IdentityErrorCode.UserNotFound));
         }
 
-        _users.Remove(user);
+        user.IsDeleted = true;
+        user.UpdatedById = actorId;
+
         await _users.SaveChanges(cancellationToken);
 
         _logger.LogInformation("Администратор удалил сотрудника");

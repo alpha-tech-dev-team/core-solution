@@ -53,11 +53,8 @@ public sealed class AdminEndpointsTests
         await _fixture.SeedPendingUserAsync(phone, "Pandora");
         using var client = await CreateLoggedInAdminClient();
 
-        var response = await client.GetAsync(UsersRoute);
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var users = (await response.Content.ReadFromJsonAsync<EmployeesPageDto>())!.Items;
-        var seeded = Assert.Single(users!, user => user.Phone == phone);
+        var users = await GetUsers(client);
+        var seeded = Assert.Single(users, user => user.Phone == phone);
         Assert.Equal(nameof(UserStatus.Pending), seeded.Status);
         Assert.Contains("Pandora", seeded.Roles);
     }
@@ -307,6 +304,80 @@ public sealed class AdminEndpointsTests
         var response = await client.DeleteAsync($"{UsersRoute}/{Guid.NewGuid()}");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeleteUser_AsAdmin_SoftDeletesAndKeepsRecord()
+    {
+        const string phone = "+79995550240";
+        await _fixture.SeedPendingUserAsync(phone);
+        using var client = await CreateLoggedInAdminClient();
+        var users = await GetUsers(client);
+        var seeded = Array.Find(users, user => user.Phone == phone)!;
+
+        var response = await client.DeleteAsync($"{UsersRoute}/{seeded.Id}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.True(await _fixture.GetUserIsDeletedAsync(phone));
+        var refreshed = await GetUsers(client);
+        Assert.DoesNotContain(refreshed, user => user.Id == seeded.Id);
+    }
+
+    [Fact]
+    public async Task CreateUser_PhoneOfDeletedUser_ReturnsConflict()
+    {
+        const string phone = "+79995550241";
+        await _fixture.SeedPendingUserAsync(phone);
+        using var client = await CreateLoggedInAdminClient();
+        var users = await GetUsers(client);
+        var seeded = Array.Find(users, user => user.Phone == phone)!;
+        var deletion = await client.DeleteAsync($"{UsersRoute}/{seeded.Id}");
+        Assert.Equal(HttpStatusCode.OK, deletion.StatusCode);
+
+        var response = await client.PostAsJsonAsync(
+            UsersRoute,
+            new UserDataRequest("Иван", "Иванов", null, "Инженер", phone));
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.PhoneAlreadyExists), error!.Code);
+    }
+
+    [Fact]
+    public async Task SetRoles_AdminLoginOfDeletedUser_ReturnsConflict()
+    {
+        const string phone = "+79995550242";
+        var username = $"admin_{Guid.NewGuid():N}";
+        var deletedAdminId = await _fixture.SeedAdminAsync(username, "admin-password-123");
+        await _fixture.SeedPendingUserAsync(phone);
+        using var client = await CreateLoggedInAdminClient();
+        var deletion = await client.DeleteAsync($"{UsersRoute}/{deletedAdminId}");
+        Assert.Equal(HttpStatusCode.OK, deletion.StatusCode);
+        var users = await GetUsers(client);
+        var target = Array.Find(users, user => user.Phone == phone)!;
+
+        var response = await client.PutAsJsonAsync(
+            $"{UsersRoute}/{target.Id}/roles",
+            new SetUserRolesRequest([UserRole.PandoraAdmin], username, "admin-password-123"));
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.AdminLoginAlreadyExists), error!.Code);
+    }
+
+    [Fact]
+    public async Task Login_DeletedAdmin_ReturnsUnauthorized()
+    {
+        var username = $"admin_{Guid.NewGuid():N}";
+        var deletedAdminId = await _fixture.SeedAdminAsync(username, "admin-password-123");
+        using var client = await CreateLoggedInAdminClient();
+        var deletion = await client.DeleteAsync($"{UsersRoute}/{deletedAdminId}");
+        Assert.Equal(HttpStatusCode.OK, deletion.StatusCode);
+
+        using var loginClient = _fixture.CreateIdentityHttpClientWithCookies();
+        var response = await loginClient.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
     [Fact]

@@ -19,6 +19,13 @@ public class UserRepository : BaseRepository<User>, IUserRepository
             .FirstOrDefaultAsync(x => x.Phone == phone, cancellationToken);
     }
 
+    public Task<User?> GetByPhoneIncludingDeleted(string phone, CancellationToken cancellationToken = default)
+    {
+        return Context.Users
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(x => x.Phone == phone, cancellationToken);
+    }
+
     public Task<User?> GetById(Guid id, bool includeRoles = false, CancellationToken cancellationToken = default)
     {
         var query = Context.Users.AsQueryable();

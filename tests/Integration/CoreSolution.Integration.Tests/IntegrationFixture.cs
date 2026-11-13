@@ -156,6 +156,15 @@ public sealed class IntegrationFixture : IAsyncLifetime
         return user.UpdatedById;
     }
 
+    public async Task<bool> GetUserIsDeletedAsync(string phone)
+    {
+        using var scope = _identity.Services.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var user = await database.Users.IgnoreQueryFilters().SingleAsync(item => item.Phone == phone);
+
+        return user.IsDeleted;
+    }
+
     public HttpClient CreateIdentityHttpClient()
     {
         return _identity.CreateClient();
