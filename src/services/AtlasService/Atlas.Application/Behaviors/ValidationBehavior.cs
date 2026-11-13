@@ -1,4 +1,3 @@
-using Atlas.Domain.Constants;
 using Atlas.Domain.Enums;
 using CoreSolution.Shared.Results;
 using FluentValidation;
@@ -30,9 +29,16 @@ public sealed class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<
 
         var results = await Task.WhenAll(validators.Select(validator => validator.ValidateAsync(context, cancellationToken)));
 
-        if (results.Any(result => !result.IsValid))
+        var errors = results.SelectMany(result => result.Errors).ToList();
+
+        if (errors.Count > 0)
         {
-            return ResultFactory.Failure<TResponse>(nameof(ErrorCode.ValidationFailed));
+            var errorCode = errors
+                .Select(error => error.ErrorCode)
+                .FirstOrDefault(code => !string.IsNullOrWhiteSpace(code))
+                ?? nameof(ErrorCode.ValidationFailed);
+
+            return ResultFactory.Failure<TResponse>(errorCode);
         }
 
         return await next(cancellationToken);

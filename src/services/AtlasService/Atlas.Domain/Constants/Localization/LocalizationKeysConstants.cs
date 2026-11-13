@@ -9,6 +9,10 @@ public static class LocalizationKeysConstants
         public const string SessionNotFound = "SessionNotFound";
         public const string UnexpectedError = "UnexpectedError";
         public const string ValidationFailed = "ValidationFailed";
+        public const string InvalidTelegramUserId = "InvalidTelegramUserId";
+        public const string InvalidMessageId = "InvalidMessageId";
+        public const string InvalidPageNumber = "InvalidPageNumber";
+        public const string InvalidCategoryId = "InvalidCategoryId";
     }
 
     public static class ProblemCategorySelection

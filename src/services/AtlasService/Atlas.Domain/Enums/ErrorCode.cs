@@ -7,5 +7,9 @@ public enum ErrorCode
     SessionNotFound,
     IncidentCategoriesNotFound,
     IncidentCategoryNotFound,
-    ValidationFailed
+    ValidationFailed,
+    InvalidTelegramUserId,
+    InvalidMessageId,
+    InvalidPageNumber,
+    InvalidCategoryId
 }

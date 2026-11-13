@@ -1,5 +1,7 @@
 using CoreSolution.Shared.Abstractions;
 using CoreSolution.Shared.Models;
+using CoreSolution.Shared.Options;
+using Microsoft.Extensions.Options;
 
 namespace CoreSolution.Shared.Infrastructure.Sessions;
 
@@ -9,16 +11,23 @@ public sealed class PhoneConfirmationService : IPhoneConfirmationService
 
     private readonly IIdentityClient _identityClient;
     private readonly ISessionService _sessionService;
+    private readonly SessionOptions _options;
 
-    public PhoneConfirmationService(IIdentityClient identityClient, ISessionService sessionService)
+    public PhoneConfirmationService(
+        IIdentityClient identityClient,
+        ISessionService sessionService,
+        IOptions<SessionOptions> options)
     {
         _identityClient = identityClient;
         _sessionService = sessionService;
+        _options = options.Value;
     }
+
+    public bool RequiresPhone => !_options.SkipPhoneConfirmation;
 
     public async Task<bool> ConfirmAsync(long telegramUserId, string? phone, string initialStep, CancellationToken cancellationToken)
     {
-        if (phone is not null)
+        if (!_options.SkipPhoneConfirmation && phone is not null)
         {
             var approved = await _identityClient.ActivateUser(telegramUserId, NormalizePhone(phone), cancellationToken);
 

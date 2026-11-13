@@ -14,6 +14,10 @@ public static class AtlasErrorTextKeys
         [ErrorCodes.AccessNotConfirmed] = (LocalizationConstants.IdleStateName, LocalizationConstants.Idle.AccessNotConfirmed),
         [nameof(ErrorCode.IncidentCategoriesNotFound)] = (nameof(WorkflowStep.ProblemCategorySelection), LocalizationKeysConstants.ProblemCategorySelection.CategoriesNotFound),
         [nameof(ErrorCode.IncidentCategoryNotFound)] = (nameof(WorkflowStep.ProblemCategorySelection), LocalizationKeysConstants.ProblemCategorySelection.CategoryNotFound),
-        [nameof(ErrorCode.ValidationFailed)] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.ValidationFailed)
+        [nameof(ErrorCode.ValidationFailed)] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.ValidationFailed),
+        [nameof(ErrorCode.InvalidTelegramUserId)] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.InvalidTelegramUserId),
+        [nameof(ErrorCode.InvalidMessageId)] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.InvalidMessageId),
+        [nameof(ErrorCode.InvalidPageNumber)] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.InvalidPageNumber),
+        [nameof(ErrorCode.InvalidCategoryId)] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.InvalidCategoryId)
     }.ToFrozenDictionary();
 }

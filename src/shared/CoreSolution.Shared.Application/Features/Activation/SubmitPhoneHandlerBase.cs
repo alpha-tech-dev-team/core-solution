@@ -30,7 +30,7 @@ public abstract class SubmitPhoneHandlerBase : IRequestHandler<SubmitPhoneMessag
 
     public async Task<Result<WorkflowResponse>> Handle(SubmitPhoneMessage request, CancellationToken cancellationToken)
     {
-        if (request.Phone is null)
+        if (request.Phone is null && _phoneConfirmationService.RequiresPhone)
         {
             return Result<WorkflowResponse>.Success(new WorkflowResponse
             {
