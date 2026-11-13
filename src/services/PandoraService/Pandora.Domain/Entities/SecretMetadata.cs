@@ -4,6 +4,8 @@ namespace Pandora.Domain.Entities;
 
 public sealed class SecretMetadata
 {
+    public const int DefaultAttemptCount = 0;
+
     public string VaultItemId { get; }
     public string ResourceName { get; private set; }
     public string Username { get; private set; }
@@ -28,7 +30,7 @@ public sealed class SecretMetadata
     public void MarkPending(SecretSyncOperation operation)
     {
         SyncOperation = operation;
-        AttemptCount = 0;
+        AttemptCount = DefaultAttemptCount;
         NextAttemptAt = null;
         LastError = null;
     }
