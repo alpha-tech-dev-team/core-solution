@@ -23,9 +23,4 @@ public sealed class CurrentUserService : ICurrentUserService
                 : throw new InvalidOperationException("В токене отсутствует идентификатор пользователя");
         }
     }
-
-    public bool IsCurrentUser(Guid userId)
-    {
-        return UserId == userId;
-    }
 }

@@ -38,7 +38,7 @@ const needsCredentials = computed(() => selectedRoles.value.some(isAdminRole))
 const losesOwnAccess = computed(() => props.isSelf && !selectedRoles.value.includes(PANDORA_ADMIN_ROLE))
 
 const canSave = computed(
-  () => !needsCredentials.value || (adminLogin.value.trim() !== '' && adminPassword.value !== '')
+  () => !losesOwnAccess.value && (!needsCredentials.value || (adminLogin.value.trim() !== '' && adminPassword.value !== ''))
 )
 
 function toggle(role: string, checked: boolean): void {

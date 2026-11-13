@@ -4,4 +4,5 @@ namespace Identity.Application.Contracts.Admin;
 
 public record GetUsersRequest(
     int Page = ValidationConstants.PageMin,
-    int PageSize = ValidationConstants.PageSizeDefault);
+    int PageSize = ValidationConstants.PageSizeDefault,
+    bool IncludeArchived = false);

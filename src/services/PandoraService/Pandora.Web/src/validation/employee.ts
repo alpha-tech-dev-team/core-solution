@@ -29,7 +29,11 @@ export const employeeFormSchema = z.object({
     .min(INPUT_LIMITS.POSITION_MIN, EMPLOYEE_FORM_MESSAGES.POSITION)
     .max(INPUT_LIMITS.POSITION_MAX, EMPLOYEE_FORM_MESSAGES.POSITION)
     .regex(INPUT_PATTERNS.POSITION, EMPLOYEE_FORM_MESSAGES.POSITION),
-  phone: z.string().trim().regex(INPUT_PATTERNS.PHONE, EMPLOYEE_FORM_MESSAGES.PHONE)
+  phone: z
+    .string()
+    .trim()
+    .max(INPUT_LIMITS.PHONE_MAX_LENGTH, EMPLOYEE_FORM_MESSAGES.PHONE)
+    .regex(INPUT_PATTERNS.PHONE, EMPLOYEE_FORM_MESSAGES.PHONE)
 })
 
 export type EmployeeFormField = keyof z.infer<typeof employeeFormSchema>

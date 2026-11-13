@@ -25,13 +25,76 @@ public sealed class AdminEndpointsTests
     }
 
     [Fact]
-    public async Task GetUsers_WithoutAuth_ReturnsUnauthorized()
+    public async Task GetUsers_WithoutAuth_ReturnsUnauthorizedWithErrorCode()
     {
         using var client = _fixture.CreateIdentityHttpClient();
 
         var response = await client.GetAsync(UsersRoute);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.InvalidCredentials), error!.Code);
+    }
+
+    [Fact]
+    public async Task GetUsers_BlockedAdminWithValidToken_ReturnsUnauthorized()
+    {
+        var username = $"admin_{Guid.NewGuid():N}";
+        var adminId = await _fixture.SeedAdminAsync(username, "admin-password-123");
+        using var adminClient = _fixture.CreateIdentityHttpClientWithCookies();
+        var login = await adminClient.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+        using var editor = await CreateLoggedInAdminClient();
+        var block = await editor.PutAsJsonAsync(
+            $"{UsersRoute}/{adminId}/status",
+            new SetUserStatusRequest(UserStatus.Blocked));
+        Assert.Equal(HttpStatusCode.OK, block.StatusCode);
+
+        var response = await adminClient.GetAsync(UsersRoute);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.UserBlocked), error!.Code);
+    }
+
+    [Fact]
+    public async Task GetUsers_ArchivedAdminWithValidToken_ReturnsUnauthorized()
+    {
+        var username = $"admin_{Guid.NewGuid():N}";
+        var adminId = await _fixture.SeedAdminAsync(username, "admin-password-123");
+        using var adminClient = _fixture.CreateIdentityHttpClientWithCookies();
+        var login = await adminClient.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+        using var editor = await CreateLoggedInAdminClient();
+        var archive = await editor.DeleteAsync($"{UsersRoute}/{adminId}");
+        Assert.Equal(HttpStatusCode.OK, archive.StatusCode);
+
+        var response = await adminClient.GetAsync(UsersRoute);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.AccessDenied), error!.Code);
+    }
+
+    [Fact]
+    public async Task GetUsers_AdminRoleRemovedWithValidToken_ReturnsForbidden()
+    {
+        var username = $"admin_{Guid.NewGuid():N}";
+        var adminId = await _fixture.SeedAdminAsync(username, "admin-password-123");
+        using var adminClient = _fixture.CreateIdentityHttpClientWithCookies();
+        var login = await adminClient.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+        using var editor = await CreateLoggedInAdminClient();
+        var roles = await editor.PutAsJsonAsync(
+            $"{UsersRoute}/{adminId}/roles",
+            new SetUserRolesRequest([UserRole.Atlas]));
+        Assert.Equal(HttpStatusCode.OK, roles.StatusCode);
+
+        var response = await adminClient.GetAsync(UsersRoute);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.AccessDenied), error!.Code);
     }
 
     [Fact]
@@ -53,11 +116,8 @@ public sealed class AdminEndpointsTests
         await _fixture.SeedPendingUserAsync(phone, "Pandora");
         using var client = await CreateLoggedInAdminClient();
 
-        var response = await client.GetAsync(UsersRoute);
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var users = (await response.Content.ReadFromJsonAsync<EmployeesPageDto>())!.Items;
-        var seeded = Assert.Single(users!, user => user.Phone == phone);
+        var users = await GetUsers(client);
+        var seeded = Assert.Single(users, user => user.Phone == phone);
         Assert.Equal(nameof(UserStatus.Pending), seeded.Status);
         Assert.Contains("Pandora", seeded.Roles);
     }
@@ -310,6 +370,127 @@ public sealed class AdminEndpointsTests
     }
 
     [Fact]
+    public async Task DeleteUser_AsAdmin_ArchivesAndKeepsRecord()
+    {
+        const string phone = "+79995550240";
+        await _fixture.SeedPendingUserAsync(phone);
+        using var client = await CreateLoggedInAdminClient();
+        var users = await GetUsers(client);
+        var seeded = Array.Find(users, user => user.Phone == phone)!;
+
+        var response = await client.DeleteAsync($"{UsersRoute}/{seeded.Id}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var (_, status) = await _fixture.GetUserStateAsync(phone);
+        Assert.Equal(UserStatus.Archived, status);
+        var refreshed = await GetUsers(client);
+        Assert.DoesNotContain(refreshed, user => user.Id == seeded.Id);
+    }
+
+    [Fact]
+    public async Task ArchivedUser_IsHiddenByDefaultAndRestorable()
+    {
+        const string phone = "+79995550243";
+        await _fixture.SeedPendingUserAsync(phone);
+        using var client = await CreateLoggedInAdminClient();
+        var users = await GetUsers(client);
+        var seeded = Array.Find(users, user => user.Phone == phone)!;
+        var deletion = await client.DeleteAsync($"{UsersRoute}/{seeded.Id}");
+        Assert.Equal(HttpStatusCode.OK, deletion.StatusCode);
+
+        var defaultUsers = await GetUsers(client);
+        Assert.DoesNotContain(defaultUsers, user => user.Id == seeded.Id);
+        var archived = await client.GetFromJsonAsync<EmployeesPageDto>($"{UsersRoute}?includeArchived=true&pageSize=50");
+        Assert.Contains(archived!.Items, user => user.Id == seeded.Id && user.Status == nameof(UserStatus.Archived));
+
+        var restore = await client.PutAsJsonAsync(
+            $"{UsersRoute}/{seeded.Id}/status",
+            new SetUserStatusRequest(UserStatus.Active));
+
+        Assert.Equal(HttpStatusCode.OK, restore.StatusCode);
+        var restored = await GetUsers(client);
+        Assert.Contains(restored, user => user.Id == seeded.Id);
+    }
+
+    [Fact]
+    public async Task CreateUser_PhoneOfArchivedUser_ReturnsConflict()
+    {
+        const string phone = "+79995550241";
+        await _fixture.SeedPendingUserAsync(phone);
+        using var client = await CreateLoggedInAdminClient();
+        var users = await GetUsers(client);
+        var seeded = Array.Find(users, user => user.Phone == phone)!;
+        var deletion = await client.DeleteAsync($"{UsersRoute}/{seeded.Id}");
+        Assert.Equal(HttpStatusCode.OK, deletion.StatusCode);
+
+        var response = await client.PostAsJsonAsync(
+            UsersRoute,
+            new UserDataRequest("Иван", "Иванов", null, "Инженер", phone));
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.PhoneAlreadyExists), error!.Code);
+    }
+
+    [Fact]
+    public async Task SetRoles_AdminLoginOfArchivedUser_ReturnsConflict()
+    {
+        const string phone = "+79995550242";
+        var username = $"admin_{Guid.NewGuid():N}";
+        var deletedAdminId = await _fixture.SeedAdminAsync(username, "admin-password-123");
+        await _fixture.SeedPendingUserAsync(phone);
+        using var client = await CreateLoggedInAdminClient();
+        var deletion = await client.DeleteAsync($"{UsersRoute}/{deletedAdminId}");
+        Assert.Equal(HttpStatusCode.OK, deletion.StatusCode);
+        var users = await GetUsers(client);
+        var target = Array.Find(users, user => user.Phone == phone)!;
+
+        var response = await client.PutAsJsonAsync(
+            $"{UsersRoute}/{target.Id}/roles",
+            new SetUserRolesRequest([UserRole.PandoraAdmin], username, "admin-password-123"));
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.AdminLoginAlreadyExists), error!.Code);
+    }
+
+    [Fact]
+    public async Task Login_ArchivedAdmin_ReturnsUnauthorized()
+    {
+        var username = $"admin_{Guid.NewGuid():N}";
+        var deletedAdminId = await _fixture.SeedAdminAsync(username, "admin-password-123");
+        using var client = await CreateLoggedInAdminClient();
+        var deletion = await client.DeleteAsync($"{UsersRoute}/{deletedAdminId}");
+        Assert.Equal(HttpStatusCode.OK, deletion.StatusCode);
+
+        using var loginClient = _fixture.CreateIdentityHttpClientWithCookies();
+        var response = await loginClient.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.InvalidCredentials), error!.Code);
+    }
+
+    [Fact]
+    public async Task Login_BlockedAdmin_ReturnsForbiddenWithUserBlocked()
+    {
+        var username = $"admin_{Guid.NewGuid():N}";
+        var blockedAdminId = await _fixture.SeedAdminAsync(username, "admin-password-123");
+        using var client = await CreateLoggedInAdminClient();
+        var block = await client.PutAsJsonAsync(
+            $"{UsersRoute}/{blockedAdminId}/status",
+            new SetUserStatusRequest(UserStatus.Blocked));
+        Assert.Equal(HttpStatusCode.OK, block.StatusCode);
+
+        using var loginClient = _fixture.CreateIdentityHttpClientWithCookies();
+        var response = await loginClient.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.UserBlocked), error!.Code);
+    }
+
+    [Fact]
     public async Task UpdateUser_AsAdmin_UpdatesFields()
     {
         const string phone = "+79995550209";
@@ -464,7 +645,7 @@ public sealed class AdminEndpointsTests
     }
 
     [Fact]
-    public async Task SetRoles_RemoveOwnAdminRole_ReturnsUnauthorized()
+    public async Task SetRoles_RemoveOwnPandoraAdminRole_ReturnsForbidden()
     {
         var username = $"admin_{Guid.NewGuid():N}";
         await _fixture.SeedAdminAsync(username, "admin-password-123");
@@ -478,15 +659,41 @@ public sealed class AdminEndpointsTests
             $"{UsersRoute}/{self.Id}/roles",
             new SetUserRolesRequest([UserRole.Atlas], null, null));
 
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.SelfActionForbidden), error!.Code);
 
         using var loginClient = _fixture.CreateIdentityHttpClientWithCookies();
         var retry = await loginClient.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
-        Assert.Equal(HttpStatusCode.Forbidden, retry.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, retry.StatusCode);
     }
 
     [Fact]
-    public async Task DeleteUser_Self_ReturnsUnauthorized()
+    public async Task SetStatus_BlockSelf_ReturnsForbidden()
+    {
+        var username = $"admin_{Guid.NewGuid():N}";
+        await _fixture.SeedAdminAsync(username, "admin-password-123");
+        using var client = _fixture.CreateIdentityHttpClientWithCookies();
+        var login = await client.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+        var users = await GetUsers(client);
+        var self = Array.Find(users, user => user.AdminUsername == username)!;
+
+        var response = await client.PutAsJsonAsync(
+            $"{UsersRoute}/{self.Id}/status",
+            new SetUserStatusRequest(UserStatus.Blocked));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.SelfActionForbidden), error!.Code);
+
+        using var loginClient = _fixture.CreateIdentityHttpClientWithCookies();
+        var retry = await loginClient.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
+        Assert.Equal(HttpStatusCode.OK, retry.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeleteUser_Self_ReturnsForbidden()
     {
         var username = $"admin_{Guid.NewGuid():N}";
         await _fixture.SeedAdminAsync(username, "admin-password-123");
@@ -498,13 +705,13 @@ public sealed class AdminEndpointsTests
 
         var response = await client.DeleteAsync($"{UsersRoute}/{self.Id}");
 
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.SelfActionForbidden), error!.Code);
 
         using var loginClient = _fixture.CreateIdentityHttpClientWithCookies();
         var retry = await loginClient.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
-        Assert.Equal(HttpStatusCode.Unauthorized, retry.StatusCode);
-        var error = await retry.Content.ReadFromJsonAsync<ErrorResponse>();
-        Assert.Equal(nameof(IdentityErrorCode.InvalidCredentials), error!.Code);
+        Assert.Equal(HttpStatusCode.OK, retry.StatusCode);
     }
 
     private async Task<HttpClient> CreateLoggedInAdminClient()
@@ -521,9 +728,18 @@ public sealed class AdminEndpointsTests
 
     private static async Task<EmployeeInfoDto[]> GetUsers(HttpClient client)
     {
-        var page = await client.GetFromJsonAsync<EmployeesPageDto>($"{UsersRoute}?pageSize=50");
+        const int pageSize = 50;
+        var first = await client.GetFromJsonAsync<EmployeesPageDto>($"{UsersRoute}?pageSize={pageSize}");
+        var items = new List<EmployeeInfoDto>(first!.Items);
+        var totalPages = (int)Math.Ceiling(first.Total / (double)pageSize);
 
-        return page!.Items;
+        for (var page = 2; page <= totalPages; page++)
+        {
+            var next = await client.GetFromJsonAsync<EmployeesPageDto>($"{UsersRoute}?page={page}&pageSize={pageSize}");
+            items.AddRange(next!.Items);
+        }
+
+        return items.ToArray();
     }
 
     private sealed record EmployeesPageDto(EmployeeInfoDto[] Items, int Total);

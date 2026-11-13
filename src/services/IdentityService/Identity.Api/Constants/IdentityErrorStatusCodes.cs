@@ -10,6 +10,7 @@ internal static class IdentityErrorStatusCodes
             [IdentityErrorCode.UserNotFound] = StatusCodes.Status404NotFound,
             [IdentityErrorCode.RoleNotFound] = StatusCodes.Status404NotFound,
             [IdentityErrorCode.UserAlreadyActivated] = StatusCodes.Status409Conflict,
+            [IdentityErrorCode.UserBlocked] = StatusCodes.Status403Forbidden,
             [IdentityErrorCode.PhoneAlreadyExists] = StatusCodes.Status409Conflict,
             [IdentityErrorCode.AdminLoginAlreadyExists] = StatusCodes.Status409Conflict,
             [IdentityErrorCode.AdminCredentialsRequired] = StatusCodes.Status400BadRequest,
@@ -17,6 +18,7 @@ internal static class IdentityErrorStatusCodes
             [IdentityErrorCode.InvalidCredentials] = StatusCodes.Status401Unauthorized,
             [IdentityErrorCode.InvalidRefreshToken] = StatusCodes.Status401Unauthorized,
             [IdentityErrorCode.ValidationFailed] = StatusCodes.Status400BadRequest,
+            [IdentityErrorCode.SelfActionForbidden] = StatusCodes.Status403Forbidden,
             [IdentityErrorCode.InternalError] = StatusCodes.Status500InternalServerError
         };
 

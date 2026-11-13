@@ -8,6 +8,7 @@ using Identity.Domain.Interfaces.Services;
 using Identity.Domain.Models;
 using Mapster;
 using Microsoft.Extensions.Logging;
+using RoleType = CoreSolution.Shared.Enums.UserRole;
 using UserRoleEntity = Identity.Domain.Entities.UserRole;
 
 namespace Identity.Application.Services;
@@ -25,9 +26,9 @@ public class AdminUserService : IAdminUserService
         _logger = logger;
     }
 
-    public async Task<Result<EmployeesPage>> GetUsers(int page, int pageSize, CancellationToken cancellationToken = default)
+    public async Task<Result<EmployeesPage>> GetUsers(int page, int pageSize, bool includeArchived, CancellationToken cancellationToken = default)
     {
-        var employees = await _users.GetEmployees(page, pageSize, cancellationToken);
+        var employees = await _users.GetEmployees(page, pageSize, includeArchived, cancellationToken);
 
         return Result<EmployeesPage>.Success(employees);
     }
@@ -41,7 +42,7 @@ public class AdminUserService : IAdminUserService
 
     public async Task<Result> CreateUser(EmployeeData data, Guid actorId, CancellationToken cancellationToken = default)
     {
-        var existing = await _users.GetByPhone(data.Phone, cancellationToken);
+        var existing = await _users.GetByPhone(data.Phone, includeArchived: true, cancellationToken);
         if (existing is not null)
         {
             _logger.LogWarning("Добавление сотрудника отклонено: телефон уже занят");
@@ -72,8 +73,8 @@ public class AdminUserService : IAdminUserService
 
         if (!string.Equals(user.Phone, data.Phone, StringComparison.Ordinal))
         {
-            var existing = await _users.GetByPhone(data.Phone, cancellationToken);
-            if (existing is not null)
+            var existing = await _users.GetByPhone(data.Phone, includeArchived: true, cancellationToken);
+            if (existing is not null && existing.Id != userId)
             {
                 _logger.LogWarning("Изменение сотрудника отклонено: телефон уже занят");
                 return Result.Failure(nameof(IdentityErrorCode.PhoneAlreadyExists));
@@ -92,6 +93,12 @@ public class AdminUserService : IAdminUserService
 
     public async Task<Result> AssignRoles(Guid userId, UserRolesData data, Guid actorId, CancellationToken cancellationToken = default)
     {
+        if (userId == actorId && !data.Roles.Contains(RoleType.PandoraAdmin))
+        {
+            _logger.LogWarning("Назначение ролей отклонено: администратор пытается снять с себя роль PandoraAdmin");
+            return Result.Failure(nameof(IdentityErrorCode.SelfActionForbidden));
+        }
+
         var user = await _users.GetById(userId, includeRoles: true, cancellationToken);
         if (user is null)
         {
@@ -136,8 +143,14 @@ public class AdminUserService : IAdminUserService
         return Result.Success();
     }
 
-    public async Task<Result> DeleteUser(Guid userId, CancellationToken cancellationToken = default)
+    public async Task<Result> DeleteUser(Guid userId, Guid actorId, CancellationToken cancellationToken = default)
     {
+        if (userId == actorId)
+        {
+            _logger.LogWarning("Удаление сотрудника отклонено: администратор пытается удалить самого себя");
+            return Result.Failure(nameof(IdentityErrorCode.SelfActionForbidden));
+        }
+
         var user = await _users.GetById(userId, cancellationToken: cancellationToken);
         if (user is null)
         {
@@ -145,16 +158,24 @@ public class AdminUserService : IAdminUserService
             return Result.Failure(nameof(IdentityErrorCode.UserNotFound));
         }
 
-        _users.Remove(user);
+        user.Status = UserStatus.Archived;
+        user.UpdatedById = actorId;
+
         await _users.SaveChanges(cancellationToken);
 
-        _logger.LogInformation("Администратор удалил сотрудника");
+        _logger.LogInformation("Администратор перенес сотрудника в архив");
 
         return Result.Success();
     }
 
     public async Task<Result> SetStatus(Guid userId, UserStatus status, Guid actorId, CancellationToken cancellationToken = default)
     {
+        if (userId == actorId && status is UserStatus.Blocked or UserStatus.Archived)
+        {
+            _logger.LogWarning("Смена статуса отклонена: администратор пытается заблокировать или архивировать самого себя");
+            return Result.Failure(nameof(IdentityErrorCode.SelfActionForbidden));
+        }
+
         var user = await _users.GetById(userId, cancellationToken: cancellationToken);
         if (user is null)
         {

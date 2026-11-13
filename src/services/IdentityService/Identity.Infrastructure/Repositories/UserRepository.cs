@@ -1,3 +1,5 @@
+using CoreSolution.Shared.Constants;
+using Identity.Domain.Enums;
 using Identity.Domain.Entities;
 using Identity.Domain.Interfaces.Repositories;
 using Identity.Domain.Models;
@@ -13,10 +15,18 @@ public class UserRepository : BaseRepository<User>, IUserRepository
     {
     }
 
-    public Task<User?> GetByPhone(string phone, CancellationToken cancellationToken = default)
+    public Task<User?> GetByPhone(string phone, bool includeArchived = false, CancellationToken cancellationToken = default)
     {
-        return Context.Users
-            .FirstOrDefaultAsync(x => x.Phone == phone, cancellationToken);
+        var query = Context.Users.AsQueryable();
+
+        if (!includeArchived)
+        {
+            query = query.Where(x => x.Status != UserStatus.Archived);
+        }
+
+        var normalized = PhoneNumbers.Normalize(phone);
+
+        return query.FirstOrDefaultAsync(x => x.Phone == normalized, cancellationToken);
     }
 
     public Task<User?> GetById(Guid id, bool includeRoles = false, CancellationToken cancellationToken = default)
@@ -47,9 +57,16 @@ public class UserRepository : BaseRepository<User>, IUserRepository
             .FirstOrDefaultAsync(x => x.TelegramUserId == telegramUserId, cancellationToken);
     }
 
-    public async Task<EmployeesPage> GetEmployees(int page, int pageSize, CancellationToken cancellationToken = default)
+    public async Task<EmployeesPage> GetEmployees(int page, int pageSize, bool includeArchived = false, CancellationToken cancellationToken = default)
     {
-        var items = await Context.Users
+        var query = Context.Users.AsNoTracking();
+
+        if (!includeArchived)
+        {
+            query = query.Where(x => x.Status != UserStatus.Archived);
+        }
+
+        var items = await query
             .OrderBy(x => x.Surname)
             .ThenBy(x => x.Name)
             .ThenBy(x => x.Id)
@@ -58,7 +75,7 @@ public class UserRepository : BaseRepository<User>, IUserRepository
             .ProjectToType<EmployeeInfo>()
             .ToListAsync(cancellationToken);
 
-        var total = await Context.Users.CountAsync(cancellationToken);
+        var total = await query.CountAsync(cancellationToken);
 
         return new EmployeesPage(items, total, page, pageSize);
     }

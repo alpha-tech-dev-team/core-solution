@@ -39,7 +39,7 @@ public sealed class ContactBotHandler : IBotHandler
             return;
         }
 
-        var phone = message.Contact?.PhoneNumber ?? (IsPhoneText(message.Text) ? message.Text : null);
+        var phone = ExtractOwnedPhone(message);
 
         var result = await _mediator.Send(new SubmitPhoneMessage(tgUserId, messageId, phone), cancellationToken);
 
@@ -48,6 +48,15 @@ public sealed class ContactBotHandler : IBotHandler
             result.GetUserText(_userErrorMapper),
             result.ToTelegramMarkup(),
             cancellationToken);
+    }
+
+    private static string? ExtractOwnedPhone(Message message)
+    {
+        return message.Contact is { } contact
+            && contact.UserId is not null
+            && contact.UserId == message.From?.Id
+                ? contact.PhoneNumber
+                : null;
     }
 
     private static bool IsPhoneText(string? text)
