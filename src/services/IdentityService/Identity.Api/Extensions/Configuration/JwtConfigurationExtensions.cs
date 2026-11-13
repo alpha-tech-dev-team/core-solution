@@ -1,21 +1,21 @@
-﻿using System.Security.Claims;
-using System.Text;
+﻿using System.Text;
 using CoreSolution.Shared.Enums;
 using CoreSolution.Shared.Options;
 using Identity.Api.Constants;
+using Identity.Api.Models;
+using Identity.Api.Services;
+using Identity.Application.Errors;
 using Identity.Domain.Constants;
-using Identity.Domain.Enums;
-using Identity.Domain.Interfaces.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using UserEntity = Identity.Domain.Entities.User;
 
 namespace Identity.Api.Extensions.Configuration;
 
 public static class JwtConfigurationExtensions
 {
     private const string SecretEnvironmentVariable = "Jwt__Secret";
+    private const string AuthenticationErrorItemKey = "AuthenticationErrorCode";
 
     public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IHostEnvironment environment)
     {
@@ -59,27 +59,31 @@ public static class JwtConfigurationExtensions
                     },
                     OnTokenValidated = async ctx =>
                     {
-                        var users = ctx.HttpContext.RequestServices.GetRequiredService<IUserRepository>();
-                        var subject = ctx.Principal?.FindFirst(IdentityClaims.Subject)?.Value;
+                        var validator = ctx.HttpContext.RequestServices.GetRequiredService<AdminSessionValidator>();
+                        var errorCode = await validator.ValidateAsync(ctx.Principal!, ctx.HttpContext.RequestAborted);
 
-                        if (!Guid.TryParse(subject, out var userId))
+                        if (errorCode is null)
                         {
-                            ctx.Fail("В токене отсутствует идентификатор пользователя");
                             return;
                         }
 
-                        var user = await users.GetById(
-                            userId,
-                            includeRoles: true,
-                            cancellationToken: ctx.HttpContext.RequestAborted);
+                        ctx.HttpContext.Items[AuthenticationErrorItemKey] = errorCode;
+                        ctx.Fail(errorCode);
+                    },
+                    OnChallenge = async ctx =>
+                    {
+                        var errorCode = ctx.HttpContext.Items[AuthenticationErrorItemKey] as string
+                            ?? nameof(IdentityErrorCode.InvalidCredentials);
 
-                        if (user is null || user.Status is UserStatus.Blocked or UserStatus.Archived)
-                        {
-                            ctx.Fail("Пользователь заблокирован или перенесен в архив");
-                            return;
-                        }
-
-                        SyncClaims(ctx.Principal!, user);
+                        ctx.HandleResponse();
+                        await WriteErrorAsync(ctx.Response, StatusCodes.Status401Unauthorized, errorCode);
+                    },
+                    OnForbidden = ctx =>
+                    {
+                        return WriteErrorAsync(
+                            ctx.Response,
+                            StatusCodes.Status403Forbidden,
+                            nameof(IdentityErrorCode.AccessDenied));
                     }
                 };
             });
@@ -92,32 +96,10 @@ public static class JwtConfigurationExtensions
         return services;
     }
 
-    private static void SyncClaims(ClaimsPrincipal principal, UserEntity user)
+    private static Task WriteErrorAsync(HttpResponse response, int statusCode, string errorCode)
     {
-        if (principal.Identity is not ClaimsIdentity identity)
-        {
-            return;
-        }
+        response.StatusCode = statusCode;
 
-        foreach (var claim in identity.FindAll(IdentityClaims.Role).ToList())
-        {
-            identity.RemoveClaim(claim);
-        }
-
-        foreach (var role in user.UserRoles.Select(x => x.Role.Name).Distinct(StringComparer.OrdinalIgnoreCase))
-        {
-            identity.AddClaim(new Claim(IdentityClaims.Role, role));
-        }
-
-        var login = identity.FindFirst(IdentityClaims.UniqueName);
-        if (login is not null)
-        {
-            identity.RemoveClaim(login);
-        }
-
-        if (user.AdminUsername is not null)
-        {
-            identity.AddClaim(new Claim(IdentityClaims.UniqueName, user.AdminUsername));
-        }
+        return response.WriteAsJsonAsync(new ErrorResponse(errorCode));
     }
 }

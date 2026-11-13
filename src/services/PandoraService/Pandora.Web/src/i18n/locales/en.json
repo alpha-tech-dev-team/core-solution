@@ -1,6 +1,7 @@
 {
   "error_InvalidCredentials": "Invalid login or password",
   "error_AccessDenied": "Access denied",
+  "error_UserBlocked": "Account blocked. Contact the administrator.",
   "error_UserNotFound": "User not found",
   "error_RoleNotFound": "Role not found",
   "error_UserAlreadyActivated": "User already activated",

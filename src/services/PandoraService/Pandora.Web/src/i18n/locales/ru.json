@@ -1,6 +1,7 @@
 {
   "error_InvalidCredentials": "Неверный логин или пароль",
   "error_AccessDenied": "Доступ запрещён",
+  "error_UserBlocked": "Аккаунт заблокирован. Обратитесь к администратору.",
   "error_UserNotFound": "Пользователь не найден",
   "error_RoleNotFound": "Роль не найдена",
   "error_UserAlreadyActivated": "Пользователь уже активирован",

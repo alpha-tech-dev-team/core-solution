@@ -41,6 +41,7 @@ public static class ServiceConfigurationExtensions
         services.ConfigureDbContext();
 
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<AdminSessionValidator>();
         services.AddScoped<IIdentityService, IdentityService>();
         services.AddScoped<IAdminAuthService, AdminAuthService>();
         services.AddScoped<IAdminUserService, AdminUserService>();

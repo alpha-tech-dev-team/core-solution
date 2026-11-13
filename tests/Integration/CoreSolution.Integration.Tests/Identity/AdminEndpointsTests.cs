@@ -25,13 +25,15 @@ public sealed class AdminEndpointsTests
     }
 
     [Fact]
-    public async Task GetUsers_WithoutAuth_ReturnsUnauthorized()
+    public async Task GetUsers_WithoutAuth_ReturnsUnauthorizedWithErrorCode()
     {
         using var client = _fixture.CreateIdentityHttpClient();
 
         var response = await client.GetAsync(UsersRoute);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.InvalidCredentials), error!.Code);
     }
 
     [Fact]
@@ -51,6 +53,8 @@ public sealed class AdminEndpointsTests
         var response = await adminClient.GetAsync(UsersRoute);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.UserBlocked), error!.Code);
     }
 
     [Fact]
@@ -68,6 +72,8 @@ public sealed class AdminEndpointsTests
         var response = await adminClient.GetAsync(UsersRoute);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.AccessDenied), error!.Code);
     }
 
     [Fact]
@@ -87,6 +93,8 @@ public sealed class AdminEndpointsTests
         var response = await adminClient.GetAsync(UsersRoute);
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.AccessDenied), error!.Code);
     }
 
     [Fact]
