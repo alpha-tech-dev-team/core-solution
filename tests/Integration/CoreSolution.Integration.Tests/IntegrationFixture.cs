@@ -18,7 +18,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Npgsql;
 using Pandora.Infrastructure.Database;
-using Pandora.Domain.Entities;
 using StackExchange.Redis;
 using Testcontainers.PostgreSql;
 using Testcontainers.Redis;
@@ -143,32 +142,6 @@ public sealed class IntegrationFixture : IAsyncLifetime
         await database.SaveChangesAsync();
     }
 
-    public async Task SeedPermissionAsync(IServiceProvider provider, long telegramUserId, string vaultItemId)
-    {
-        using var scope = provider.CreateScope();
-        var database = scope.ServiceProvider.GetRequiredService<PandoraDbContext>();
-
-        var metadata = await database.SecretMetadata.FindAsync(vaultItemId);
-        if (metadata is null)
-        {
-            database.SecretMetadata.Add(new SecretMetadata
-            {
-                VaultItemId = vaultItemId,
-                ResourceName = vaultItemId,
-                Username = "test-login"
-            });
-        }
-
-        database.Permission.Add(new Permission
-        {
-            TelegramUserId = telegramUserId,
-            VaultItemId = vaultItemId,
-            IsActive = true
-        });
-
-        await database.SaveChangesAsync();
-    }
-
     public async Task<(long? TelegramUserId, UserStatus Status)> GetUserStateAsync(string phone)
     {
         using var scope = _identity.Services.CreateScope();
@@ -255,7 +228,6 @@ public sealed class IntegrationFixture : IAsyncLifetime
                 ["Database:RedisConnection"] = _pandoraRedis.GetConnectionString(),
                 ["SessionSettings:ExpiryMinutes"] = "30",
                 ["Identity:BaseUrl"] = "http://localhost",
-                ["Pandora:Secrets:UseMock"] = "true",
                 ["Pandora:Secrets:Items:0:Name"] = "TestService",
                 ["Pandora:Secrets:Items:0:Login"] = "test-login",
                 ["Pandora:Secrets:Items:0:Password"] = "test-password"
@@ -268,7 +240,6 @@ public sealed class IntegrationFixture : IAsyncLifetime
         services.AddSingleton<IConfiguration>(configuration);
         PandoraOptionsExtensions.AddPandoraOptions(services, configuration);
         PandoraInfrastructureExtensions.AddBotInfrastructure(services, configuration);
-        Pandora.TgBot.Extension.DependencyInjection.SecretStoreExtensions.AddSecretStore(services, configuration);
         PandoraApplicationExtensions.AddApplication(services);
         services.AddHttpClient<IIdentityClient, IdentityClient>()
             .ConfigurePrimaryHttpMessageHandler(() => _identity.Server.CreateHandler());

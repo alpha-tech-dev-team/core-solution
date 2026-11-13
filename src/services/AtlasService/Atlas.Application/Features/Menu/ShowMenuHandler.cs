@@ -26,7 +26,7 @@ public sealed class ShowMenuHandler : IRequestHandler<ShowMenuMessage, Result<Wo
     {
         var page = await _categoryRepository.GetPageAsync(
             new PageRequest(request.Page, PaginationLimits.DefaultPageSize),
-            null,
+            IncidentCategorySorting.Apply,
             cancellationToken);
 
         if (page.Items.Count == 0)

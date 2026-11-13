@@ -3,8 +3,8 @@ using Atlas.Application.Features.IncidentCategories;
 using Atlas.Application.Features.Menu;
 using Atlas.Domain.Constants;
 using Atlas.Domain.Enums;
+using Atlas.Domain.Models;
 using CoreSolution.Shared.Abstractions;
-using CoreSolution.Shared.Models;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -47,7 +47,7 @@ public sealed class ProblemCategoryTests(IntegrationFixture fixture)
         var sessionService = scope.ServiceProvider.GetRequiredService<ISessionService>();
 
         await sessionService.SaveSession(
-            UserSession.Create(telegramUserId, nameof(WorkflowStep.ProblemCategorySelection)),
+            AtlasUserSession.Create(telegramUserId, nameof(WorkflowStep.ProblemCategorySelection)),
             CancellationToken.None);
 
         var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
@@ -61,9 +61,9 @@ public sealed class ProblemCategoryTests(IntegrationFixture fixture)
 
         var session = await sessionService.GetSession(telegramUserId, CancellationToken.None);
 
-        Assert.NotNull(session);
-        Assert.Equal(categoryId, session!.IncidentCategoryId);
-        Assert.Equal(nameof(WorkflowStep.CategorySelected), session.State);
+        var atlasSession = Assert.IsType<AtlasUserSession>(session);
+        Assert.Equal(categoryId, atlasSession.IncidentCategoryId);
+        Assert.Equal(nameof(WorkflowStep.CategorySelected), atlasSession.State);
     }
 
     [Fact]
@@ -75,7 +75,7 @@ public sealed class ProblemCategoryTests(IntegrationFixture fixture)
         using var scope = atlas.CreateScope();
 
         await scope.ServiceProvider.GetRequiredService<ISessionService>()
-            .SaveSession(UserSession.Create(telegramUserId, nameof(WorkflowStep.ProblemCategorySelection)), CancellationToken.None);
+            .SaveSession(AtlasUserSession.Create(telegramUserId, nameof(WorkflowStep.ProblemCategorySelection)), CancellationToken.None);
 
         var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
@@ -100,4 +100,5 @@ public sealed class ProblemCategoryTests(IntegrationFixture fixture)
         Assert.Equal(nameof(ErrorCode.InvalidTelegramUserId), result.ErrorCode);
     }
 }
+
 

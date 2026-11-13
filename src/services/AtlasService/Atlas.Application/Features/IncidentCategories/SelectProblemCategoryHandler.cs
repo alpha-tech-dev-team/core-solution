@@ -3,6 +3,7 @@ using Atlas.Domain.Constants;
 using Atlas.Domain.Constants.Localization;
 using Atlas.Domain.Enums;
 using Atlas.Domain.Interfaces.Repositories;
+using Atlas.Domain.Models;
 using CoreSolution.Shared.Abstractions;
 using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
@@ -38,9 +39,10 @@ public sealed class SelectProblemCategoryHandler : IRequestHandler<SelectProblem
             return Result<WorkflowResponse>.Failure(nameof(ErrorCode.IncidentCategoryNotFound));
         }
 
-        var session = _requestContext.Session;
+        var session = (AtlasUserSession)_requestContext.Session;
+        session.IncidentCategoryId = category.Id;
 
-        await _sessionService.UpdateState(session, nameof(WorkflowStep.CategorySelected), category.Id, cancellationToken);
+        await _sessionService.UpdateState(session, nameof(WorkflowStep.CategorySelected), cancellationToken);
 
         return Result<WorkflowResponse>.Success(new WorkflowResponse
         {

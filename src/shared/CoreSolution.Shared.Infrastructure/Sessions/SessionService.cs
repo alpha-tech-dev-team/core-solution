@@ -29,10 +29,9 @@ public sealed class SessionService : ISessionService
         await _repository.AddToIndex(session.TgUserId, DateTimeOffset.UtcNow, cancellationToken);
     }
 
-    public async Task UpdateState(UserSession session, string state, Guid? incidentCategoryId, CancellationToken cancellationToken)
+    public async Task UpdateState(UserSession session, string state, CancellationToken cancellationToken)
     {
         session.State = state;
-        session.IncidentCategoryId = incidentCategoryId;
         session.LastUpdate = DateTime.UtcNow;
 
         await SaveSession(session, cancellationToken);

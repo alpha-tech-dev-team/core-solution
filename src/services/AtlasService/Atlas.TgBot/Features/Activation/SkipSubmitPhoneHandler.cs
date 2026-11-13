@@ -1,6 +1,7 @@
 using Atlas.Application.Features.Menu;
 using Atlas.Domain.Constants;
 using Atlas.Domain.Enums;
+using Atlas.Domain.Models;
 using CoreSolution.Shared.Abstractions;
 using CoreSolution.Shared.Application.Messages;
 using CoreSolution.Shared.Models;
@@ -23,7 +24,7 @@ public sealed class SkipSubmitPhoneHandler : IRequestHandler<SubmitPhoneMessage,
     public async Task<Result<WorkflowResponse>> Handle(SubmitPhoneMessage request, CancellationToken cancellationToken)
     {
         await _sessionService.SaveSession(
-            UserSession.Create(request.TelegramUserId, nameof(WorkflowStep.ProblemCategorySelection)),
+            AtlasUserSession.Create(request.TelegramUserId, nameof(WorkflowStep.ProblemCategorySelection)),
             cancellationToken);
 
         return await _mediator.Send(

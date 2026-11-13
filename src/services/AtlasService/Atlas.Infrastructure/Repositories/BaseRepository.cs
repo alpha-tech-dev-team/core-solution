@@ -32,13 +32,12 @@ public abstract class BaseRepository<TEntity> : IRepository<TEntity>
     {
         var query = Entities.AsNoTracking();
 
-        if (orderBy is not null)
-        {
-            query = orderBy(query);
-        }
+        var ordered = orderBy is not null
+            ? orderBy(query)
+            : query.OrderBy(entity => entity.Id);
 
-        var total = await query.CountAsync(cancellationToken);
-        var items = await query
+        var total = await ordered.CountAsync(cancellationToken);
+        var items = await ordered
             .Skip(page.Skip)
             .Take(page.PageSize)
             .ToListAsync(cancellationToken);
