@@ -52,14 +52,11 @@ public sealed class ContactBotHandler : IBotHandler
 
     private static string? ExtractOwnedPhone(Message message)
     {
-        if (message.Contact is { } contact)
-        {
-            return contact.UserId is not null && contact.UserId == message.From?.Id
+        return message.Contact is { } contact
+            && contact.UserId is not null
+            && contact.UserId == message.From?.Id
                 ? contact.PhoneNumber
                 : null;
-        }
-
-        return IsPhoneText(message.Text) ? message.Text : null;
     }
 
     private static bool IsPhoneText(string? text)

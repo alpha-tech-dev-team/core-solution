@@ -61,12 +61,24 @@ public sealed class ContactSharingTests(IntegrationFixture fixture)
         Assert.True(handler.CanHandle(CreateMessageUpdate("/start")));
         Assert.False(handler.CanHandle(CreateMessageUpdate("привет")));
     }
-
     private static Update CreateMessageUpdate(string text)
     {
         return new Update
         {
             Message = new Message { Text = text, Chat = new Chat { Id = 123 } }
+        };
+    }
+
+    private static Update CreateMessageUpdate(long senderId, string text)
+    {
+        return new Update
+        {
+            Message = new Message
+            {
+                Text = text,
+                Chat = new Chat { Id = senderId },
+                From = new User { Id = senderId }
+            }
         };
     }
 
@@ -101,6 +113,25 @@ public sealed class ContactSharingTests(IntegrationFixture fixture)
         var handler = CreateHandler(scope, notifications);
 
         await handler.HandleAsync(CreateContactUpdate(senderId, senderId + 1, phone), CancellationToken.None);
+
+        var state = await fixture.GetUserStateAsync(phone);
+        Assert.Null(state.TelegramUserId);
+        Assert.Equal(UserStatus.Pending, state.Status);
+        Assert.True(notifications.LastMessageRequestedContact);
+    }
+
+    [Fact]
+    public async Task ContactBotHandler_TypedPhone_DoesNotActivateAndRequestsOwnContact()
+    {
+        const long senderId = 8303;
+        const string phone = "+79995550303";
+        await fixture.SeedPendingUserAsync(phone);
+        await using var atlas = fixture.CreateAtlasServiceProvider();
+        using var scope = atlas.CreateScope();
+        var notifications = new RecordingNotificationService();
+        var handler = CreateHandler(scope, notifications);
+
+        await handler.HandleAsync(CreateMessageUpdate(senderId, phone), CancellationToken.None);
 
         var state = await fixture.GetUserStateAsync(phone);
         Assert.Null(state.TelegramUserId);
