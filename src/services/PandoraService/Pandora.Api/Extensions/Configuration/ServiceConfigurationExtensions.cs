@@ -34,6 +34,8 @@ public static class ServiceConfigurationExtensions
 
         services.AddScoped<SecretAuditLogger>();
 
+        services.AddScoped<SecretSyncService>();
+
         services.AddHostedService<SecretSyncWorker>();
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<ApplicationAssemblyMarker>());
