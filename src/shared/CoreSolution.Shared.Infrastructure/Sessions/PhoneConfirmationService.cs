@@ -16,21 +16,21 @@ public sealed class PhoneConfirmationService : IPhoneConfirmationService
         _sessionService = sessionService;
     }
 
-    public async Task<bool> ConfirmAsync(long telegramUserId, string? phone, string initialStep, CancellationToken cancellationToken)
+    public async Task<string?> ConfirmAsync(long telegramUserId, string? phone, string initialStep, CancellationToken cancellationToken)
     {
         if (phone is not null)
         {
-            var approved = await _identityClient.ActivateUser(telegramUserId, NormalizePhone(phone), cancellationToken);
+            var error = await _identityClient.ActivateUser(telegramUserId, NormalizePhone(phone), cancellationToken);
 
-            if (!approved)
+            if (error is not null)
             {
-                return false;
+                return error;
             }
         }
 
         await _sessionService.SaveSession(UserSession.Create(telegramUserId, initialStep), cancellationToken);
 
-        return true;
+        return null;
     }
 
     private static string NormalizePhone(string phone)

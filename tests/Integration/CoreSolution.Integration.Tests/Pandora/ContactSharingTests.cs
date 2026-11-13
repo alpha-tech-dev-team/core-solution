@@ -1,3 +1,4 @@
+using CoreSolution.Shared.Abstractions;
 using CoreSolution.Shared.Application.Messages;
 using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
@@ -7,6 +8,7 @@ using CoreSolution.Shared.TgBot.Extensions;
 using Identity.Domain.Enums;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using Pandora.Application.Features.Credentials;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using Xunit;
@@ -61,6 +63,7 @@ public sealed class ContactSharingTests(IntegrationFixture fixture)
         Assert.True(handler.CanHandle(CreateMessageUpdate("/start")));
         Assert.False(handler.CanHandle(CreateMessageUpdate("привет")));
     }
+
     private static Update CreateMessageUpdate(string text)
     {
         return new Update
@@ -121,6 +124,44 @@ public sealed class ContactSharingTests(IntegrationFixture fixture)
     }
 
     [Fact]
+    public async Task ContactBotHandler_BlockedUserResharingContact_StaysBlockedAndToldSo()
+    {
+        const long senderId = 8304;
+        const string phone = "+79995550304";
+        await fixture.SeedPendingUserAsync(phone);
+        await using var atlas = fixture.CreateAtlasServiceProvider();
+        using var scope = atlas.CreateScope();
+        var notifications = new RecordingNotificationService();
+        var handler = CreateHandler(scope, notifications);
+        await handler.HandleAsync(CreateContactUpdate(senderId, senderId, phone), CancellationToken.None);
+        await fixture.SetUserStatusAsync(phone, UserStatus.Blocked);
+
+        await handler.HandleAsync(CreateContactUpdate(senderId, senderId, phone), CancellationToken.None);
+
+        var state = await fixture.GetUserStateAsync(phone);
+        Assert.Equal(UserStatus.Blocked, state.Status);
+        Assert.Equal("Ваш аккаунт заблокирован. Обратитесь к администратору.", notifications.LastMessageText);
+    }
+    [Fact]
+    public async Task BlockedUserWithoutSession_GetsBlockedMessageInsteadOfPhoneRequest()
+    {
+        const long telegramUserId = 8305;
+        const string phone = "+79995550305";
+
+        await fixture.SeedPendingUserAsync(phone, "Pandora");
+        await fixture.SetTelegramUserAsync(phone, telegramUserId, UserStatus.Blocked);
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+        using var scope = provider.CreateScope();
+        await scope.ServiceProvider.GetRequiredService<ISessionService>()
+            .DeleteSession(telegramUserId, CancellationToken.None);
+
+        var result = await scope.ServiceProvider.GetRequiredService<IMediator>()
+            .Send(new GetCredentialsMessage(telegramUserId, MessageId: 1, ItemId: "TestService"), CancellationToken.None);
+
+        Assert.Equal("UserBlocked", result.ErrorCode);
+    }
+
+    [Fact]
     public async Task ContactBotHandler_TypedPhone_DoesNotActivateAndRequestsOwnContact()
     {
         const long senderId = 8303;
@@ -164,8 +205,11 @@ public sealed class ContactSharingTests(IntegrationFixture fixture)
     {
         public bool LastMessageRequestedContact { get; private set; }
 
+        public string? LastMessageText { get; private set; }
+
         public Task<Message> SendMessageAsync(long chatId, string text, ReplyMarkup? replyMarkup = null, CancellationToken cancellationToken = default)
         {
+            LastMessageText = text;
             LastMessageRequestedContact = replyMarkup is ReplyKeyboardMarkup keyboard
                 && keyboard.Keyboard.SelectMany(row => row).Any(button => button.RequestContact);
 

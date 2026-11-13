@@ -1,5 +1,6 @@
 using CoreSolution.Shared.Abstractions;
 using CoreSolution.Shared.Application.Messages;
+using CoreSolution.Shared.Constants;
 using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
 using MediatR;
@@ -42,7 +43,16 @@ public sealed class SessionBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
 
             if (session is null)
             {
-                if (!await _identityClient.CheckUser(botRequest.TelegramUserId, _options.ServiceName, cancellationToken))
+                var accessError = await _identityClient.CheckUser(botRequest.TelegramUserId, _options.ServiceName, cancellationToken);
+
+                if (accessError == ErrorCodes.UserBlocked)
+                {
+                    _logger.LogWarning("Доступ запрещен, пользователь {TgUserId} заблокирован, сообщение {MessageId}", botRequest.TelegramUserId, botRequest.MessageId);
+
+                    return ResultFactory.Failure<TResponse>(ErrorCodes.UserBlocked);
+                }
+
+                if (accessError is not null)
                 {
                     _logger.LogWarning("Identity не подтвердил доступ, запрошен номер телефона, пользователь {TgUserId}, сообщение {MessageId}", botRequest.TelegramUserId, botRequest.MessageId);
 
