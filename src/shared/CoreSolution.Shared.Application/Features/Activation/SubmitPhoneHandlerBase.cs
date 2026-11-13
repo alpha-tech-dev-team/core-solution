@@ -1,7 +1,6 @@
 using CoreSolution.Shared.Abstractions;
 using CoreSolution.Shared.Application.Messages;
 using CoreSolution.Shared.Constants;
-using CoreSolution.Shared.Enums;
 using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
 using MediatR;
@@ -31,13 +30,7 @@ public abstract class SubmitPhoneHandlerBase : IRequestHandler<SubmitPhoneMessag
 
     public async Task<Result<WorkflowResponse>> Handle(SubmitPhoneMessage request, CancellationToken cancellationToken)
     {
-        var confirmation = await _phoneConfirmationService.ConfirmAsync(
-            request.TelegramUserId,
-            request.Phone,
-            _initialStep,
-            cancellationToken);
-
-        if (confirmation is PhoneConfirmationResult.PhoneRequired)
+        if (request.Phone is null)
         {
             return Result<WorkflowResponse>.Success(new WorkflowResponse
             {
@@ -47,7 +40,13 @@ public abstract class SubmitPhoneHandlerBase : IRequestHandler<SubmitPhoneMessag
             });
         }
 
-        if (confirmation is PhoneConfirmationResult.AccessDenied)
+        var confirmed = await _phoneConfirmationService.ConfirmAsync(
+            request.TelegramUserId,
+            request.Phone,
+            _initialStep,
+            cancellationToken);
+
+        if (!confirmed)
         {
             return Result<WorkflowResponse>.Failure(ErrorCodes.AccessNotConfirmed);
         }

@@ -1,11 +1,12 @@
 ﻿using Atlas.Domain.Interfaces.Repositories;
+using Atlas.Domain.Options;
 using Atlas.Infrastructure.Database.Context;
 using Atlas.Infrastructure.Database.Extensions;
 using Atlas.Infrastructure.Repositories;
-using Atlas.Infrastructure.Sessions;
-using Atlas.Domain.Options;
+using Atlas.TgBot.BotHandlers;
 using Atlas.TgBot.Options;
-using CoreSolution.Shared.Abstractions;
+using CoreSolution.Shared.TgBot.Abstractions;
+using CoreSolution.Shared.TgBot.BotHandlers;
 using CoreSolution.Shared.TgBot.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -44,12 +45,14 @@ public static class InfrastructureExtensions
         services.AddSessionInfrastructure(configuration, redisOptions.ConnectionString);
         services.AddLocalization(typeof(Atlas.Infrastructure.AssemblyMarker).Assembly);
 
-        RegisterPhoneConfirmation(services, configuration, environment);
+        services.Configure<PhoneConfirmationOptions>(configuration.GetSection(PhoneConfirmationOptions.SectionName));
+
+        RegisterStartHandler(services, configuration, environment);
 
         return services;
     }
 
-    private static void RegisterPhoneConfirmation(IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
+    private static void RegisterStartHandler(IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
         var options = configuration.GetSection(PhoneConfirmationOptions.SectionName).Get<PhoneConfirmationOptions>()
             ?? new PhoneConfirmationOptions();
@@ -59,6 +62,6 @@ public static class InfrastructureExtensions
             return;
         }
 
-        services.Replace(ServiceDescriptor.Scoped<IPhoneConfirmationService, SkipPhoneConfirmationService>());
+        services.Remove(ServiceDescriptor.Scoped<IBotHandler, ContactBotHandler>());
     }
 }

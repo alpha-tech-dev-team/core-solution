@@ -1,5 +1,4 @@
 using CoreSolution.Shared.Abstractions;
-using CoreSolution.Shared.Enums;
 using CoreSolution.Shared.Models;
 
 namespace CoreSolution.Shared.Infrastructure.Sessions;
@@ -17,23 +16,21 @@ public sealed class PhoneConfirmationService : IPhoneConfirmationService
         _sessionService = sessionService;
     }
 
-    public async Task<PhoneConfirmationResult> ConfirmAsync(long telegramUserId, string? phone, string initialStep, CancellationToken cancellationToken)
+    public async Task<bool> ConfirmAsync(long telegramUserId, string? phone, string initialStep, CancellationToken cancellationToken)
     {
-        if (phone is null)
+        if (phone is not null)
         {
-            return PhoneConfirmationResult.PhoneRequired;
-        }
+            var approved = await _identityClient.ActivateUser(telegramUserId, NormalizePhone(phone), cancellationToken);
 
-        var approved = await _identityClient.ActivateUser(telegramUserId, NormalizePhone(phone), cancellationToken);
-
-        if (!approved)
-        {
-            return PhoneConfirmationResult.AccessDenied;
+            if (!approved)
+            {
+                return false;
+            }
         }
 
         await _sessionService.SaveSession(UserSession.Create(telegramUserId, initialStep), cancellationToken);
 
-        return PhoneConfirmationResult.Confirmed;
+        return true;
     }
 
     private static string NormalizePhone(string phone)
