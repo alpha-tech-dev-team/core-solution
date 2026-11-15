@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { identityClient } from '@/api/identity-client'
-import type { LoginRequest } from '@/api/contracts/login-request'
+import type { LoginRequest } from '@/models/login-request'
 import { useAuthStore } from '@/stores/auth'
 import { ROUTE_NAME } from '@/constants/router'
 import { ru } from '@/i18n'

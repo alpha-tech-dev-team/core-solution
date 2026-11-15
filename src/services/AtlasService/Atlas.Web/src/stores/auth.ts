@@ -6,7 +6,7 @@ import { readJson, removeJson, writeJson } from '@shared/storage/local-storage'
 import { STORAGE_KEY, STORE_ID, TOKEN_REFRESH } from '@/constants/auth'
 import { identityClient } from '@/api/identity-client'
 import { ApiError } from '@/api/api-error'
-import type { SessionResponse } from '@/api/contracts/session-response'
+import type { SessionResponse } from '@/models/session-response'
 
 export const useAuthStore = defineStore(STORE_ID.AUTH, () => {
   const accessTokenExpiresAt = ref<number | null>(

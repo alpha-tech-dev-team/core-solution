@@ -2,9 +2,9 @@ import config from '../../appsettings.json'
 import { HTTP_HEADER, HTTP_METHOD, HTTP_STATUS, MIME_TYPE } from '@shared/api/http'
 import { ru } from '@/i18n'
 import { ApiError } from '@/api/api-error'
-import type { ApiErrorResponse } from '@/api/contracts/api-error-response'
-import type { LoginRequest } from '@/api/contracts/login-request'
-import type { SessionResponse } from '@/api/contracts/session-response'
+import type { ApiErrorResponse } from '@/models/api-error-response'
+import type { LoginRequest } from '@/models/login-request'
+import type { SessionResponse } from '@/models/session-response'
 
 async function send(
   url: string,

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ru } from '@/i18n'
-import { useLoginView } from '@/composables/use-login-view'
+import { useLoginView } from './use-login-view'
 
 const { username, password, loading, errorMessage, submit } = useLoginView()
 </script>
