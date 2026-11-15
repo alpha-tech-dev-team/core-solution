@@ -125,11 +125,8 @@ export const useAuthStore = defineStore(STORE_ID.AUTH, () => {
     clearRefreshTimer()
     stopClock()
 
-    try {
-      await identityClient.logout()
-    } finally {
-      clearSessionState()
-    }
+    await identityClient.logout().catch(() => undefined)
+    clearSessionState()
   }
 
   async function restoreSession(): Promise<void> {
