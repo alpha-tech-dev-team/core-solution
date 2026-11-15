@@ -1,0 +1,4 @@
+export const CREDENTIALS_LIMITS = {
+  USERNAME_MAX_LENGTH: 50,
+  PASSWORD_MAX_LENGTH: 128,
+} as const
