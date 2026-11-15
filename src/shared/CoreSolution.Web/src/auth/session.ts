@@ -20,8 +20,6 @@ export interface SessionOptions {
   gateway: SessionGateway
   loginRouteName: string
   authenticatedRouteName: string
-  storeId?: string
-  storageKey?: string
 }
 
 export interface SessionContext {
@@ -38,10 +36,8 @@ export interface Session extends SessionContext {
 const SESSION_KEY: InjectionKey<SessionContext> = Symbol('session')
 
 function defineAuthStore(options: SessionOptions) {
-  const storageKey = options.storageKey ?? AUTH_STORAGE_KEY
-
-  return defineStore(options.storeId ?? AUTH_STORE_ID, () => {
-    const session = ref<AuthSession | null>(readJson<AuthSession>(storageKey))
+  return defineStore(AUTH_STORE_ID, () => {
+    const session = ref<AuthSession | null>(readJson<AuthSession>(AUTH_STORAGE_KEY))
     const nowMs = ref(Date.now())
 
     const username = computed<string | null>(() => session.value?.username ?? null)
@@ -98,11 +94,11 @@ function defineAuthStore(options: SessionOptions) {
 
     function persist(): void {
       if (session.value === null) {
-        removeJson(storageKey)
+        removeJson(AUTH_STORAGE_KEY)
         return
       }
 
-      writeJson(storageKey, session.value)
+      writeJson(AUTH_STORAGE_KEY, session.value)
     }
 
     function applySession(apiSession: ApiSession, sessionUsername: string): void {
