@@ -26,10 +26,17 @@ public sealed class AuditRepository : IAuditRepository
         var query = _context.AuditEntry.AsNoTracking();
 
         var total = await query.CountAsync(cancellationToken);
+        var offset = (long)(page - 1) * pageSize;
+
+        if (offset >= total)
+        {
+            return new AuditEntryPage([], page, pageSize, total);
+        }
 
         var items = await query
             .OrderByDescending(entry => entry.Timestamp)
-            .Skip((page - 1) * pageSize)
+            .ThenBy(entry => entry.Id)
+            .Skip((int)offset)
             .Take(pageSize)
             .ToListAsync(cancellationToken);
 

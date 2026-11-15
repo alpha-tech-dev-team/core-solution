@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Pandora.Domain.Constants;
 using Pandora.Domain.Entities;
 using Pandora.Infrastructure.Database;
 using Pandora.Infrastructure.Repositories;
@@ -79,6 +80,53 @@ public sealed class AuditRepositoryTests(IntegrationFixture fixture)
 
         Assert.Equal(8201, stored.TelegramUserId);
         Assert.Null(stored.UserId);
+    }
+
+    [Fact]
+    public async Task GetPage_PageBeyondLast_ReturnsEmptyItemsWithTotal()
+    {
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+        using var scope = provider.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<PandoraDbContext>();
+        var repository = new AuditRepository(database);
+
+        await database.AuditEntry.ExecuteDeleteAsync();
+        await database.SaveChangesAsync();
+
+        database.AuditEntry.Add(CreateEntry(DateTime.UtcNow, "show_services"));
+        await database.SaveChangesAsync();
+
+        var page = await repository.GetPage(int.MaxValue, PaginationLimits.MaxPageSize, CancellationToken.None);
+
+        Assert.Equal(1, page.Total);
+        Assert.Empty(page.Items);
+    }
+
+    [Fact]
+    public async Task GetPage_SameTimestampOrdering_DoesNotRepeatOrSkipRows()
+    {
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+        using var scope = provider.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<PandoraDbContext>();
+        var repository = new AuditRepository(database);
+
+        await database.AuditEntry.ExecuteDeleteAsync();
+        await database.SaveChangesAsync();
+
+        var timestamp = new DateTime(2026, 2, 1, 0, 0, 0, DateTimeKind.Utc);
+        database.AuditEntry.AddRange(
+            CreateEntry(timestamp, "first"),
+            CreateEntry(timestamp, "second"),
+            CreateEntry(timestamp, "third"));
+        await database.SaveChangesAsync();
+
+        var firstPage = await repository.GetPage(1, 2, CancellationToken.None);
+        var secondPage = await repository.GetPage(2, 2, CancellationToken.None);
+
+        var seen = firstPage.Items.Concat(secondPage.Items).Select(entry => entry.Id).ToList();
+
+        Assert.Equal(3, seen.Count);
+        Assert.Equal(3, seen.Distinct().Count());
     }
 
     private static AuditEntry CreateEntry(DateTime timestamp, string action) =>
