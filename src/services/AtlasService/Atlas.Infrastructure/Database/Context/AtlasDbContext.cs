@@ -10,6 +10,7 @@ public sealed class AtlasDbContext : DbContext
 {
     public DbSet<Room> Rooms { get; set; } = default!;
     public DbSet<Hardware> Hardware { get; set; } = default!;
+    public DbSet<EquipmentType> EquipmentTypes { get; set; } = default!;
     public DbSet<Software> Software { get; set; } = default!;
     public DbSet<Employee> Employees { get; set; } = default!;
     public DbSet<IncidentCategory> IncidentCategories { get; set; } = default!;

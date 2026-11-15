@@ -3,5 +3,6 @@ namespace Atlas.Domain.Enums;
 public enum WorkflowStep
 {
     Idle,
-    ProblemCategorySelection
+    ProblemCategorySelection,
+    CategorySelected
 }

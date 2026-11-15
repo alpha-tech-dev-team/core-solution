@@ -1,4 +1,6 @@
 ﻿using Atlas.Domain.Constants;
+using Atlas.Infrastructure.Database.Context;
+using Atlas.Infrastructure.Database.Seeds;
 using AppRole = CoreSolution.Shared.Enums.UserRole;
 using Atlas.TgBot.Extensions.DependencyInjection;
 using CoreSolution.Shared.Abstractions;
@@ -13,8 +15,8 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Npgsql;
-using Pandora.Domain.Entities;
 using Pandora.Infrastructure.Database;
 using StackExchange.Redis;
 using Testcontainers.PostgreSql;
@@ -30,7 +32,6 @@ namespace CoreSolution.Integration.Tests;
 public sealed class IntegrationFixture : IAsyncLifetime
 {
     private const string AtlasTestToken = "123456:integration-test-token";
-    private const string PandoraTestItemId = "TestService";
 
     private static long _adminPhoneSequence;
 
@@ -42,6 +43,7 @@ public sealed class IntegrationFixture : IAsyncLifetime
 
     private WebApplicationFactory<AssemblyMarker> _identity = default!;
     private bool _pandoraMigrated;
+    private bool _atlasMigrated;
 
     public async Task InitializeAsync()
     {
@@ -197,6 +199,7 @@ public sealed class IntegrationFixture : IAsyncLifetime
             HandleCookies = true
         });
     }
+
     public ServiceProvider CreateAtlasServiceProvider()
     {
         var configuration = new ConfigurationBuilder()
@@ -215,11 +218,31 @@ public sealed class IntegrationFixture : IAsyncLifetime
         services.AddSingleton<IConfiguration>(configuration);
         services.AddTelegramBot(AtlasTestToken);
         services.AddBotInfrastructure(configuration);
-        services.AddApplication();
+        services.AddApplication(configuration, new TestHostEnvironment(Environments.Development));
         services.AddHttpClient<IIdentityClient, IdentityClient>()
             .ConfigurePrimaryHttpMessageHandler(() => _identity.Server.CreateHandler());
 
         return services.BuildServiceProvider();
+    }
+
+    public async Task<ServiceProvider> CreateAtlasServiceProviderAsync()
+    {
+        var provider = CreateAtlasServiceProvider();
+
+        if (!_atlasMigrated)
+        {
+            using var scope = provider.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<AtlasDbContext>();
+
+            await dbContext.Database.MigrateAsync();
+            await IncidentCategorySeed.SeedAsync(dbContext);
+            await EquipmentTypeSeed.SeedAsync(dbContext);
+            await RoomSeed.SeedAsync(dbContext);
+
+            _atlasMigrated = true;
+        }
+
+        return provider;
     }
 
     public async Task<ServiceProvider> CreatePandoraServiceProviderAsync()
@@ -227,7 +250,7 @@ public sealed class IntegrationFixture : IAsyncLifetime
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["Database:ConnectionString"] = PandoraConnectionString,
+                ["Database:ConnectionString"] = _postgres.GetConnectionString().Replace("Database=postgres", "Database=pandora_integration"),
                 ["Database:RedisConnection"] = _pandoraRedis.GetConnectionString(),
                 ["SessionSettings:ExpiryMinutes"] = "30",
                 ["Identity:BaseUrl"] = "http://localhost",
@@ -246,7 +269,6 @@ public sealed class IntegrationFixture : IAsyncLifetime
         PandoraInfrastructureExtensions.AddBotInfrastructure(services, configuration);
         PandoraSecretStoreExtensions.AddSecretStore(services, configuration);
         PandoraApplicationExtensions.AddApplication(services);
-        PandoraSecretStoreExtensions.AddSecretStore(services, configuration);
         services.AddHttpClient<IIdentityClient, IdentityClient>()
             .ConfigurePrimaryHttpMessageHandler(() => _identity.Server.CreateHandler());
 

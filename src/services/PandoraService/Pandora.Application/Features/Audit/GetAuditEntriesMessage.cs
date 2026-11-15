@@ -4,4 +4,8 @@ using Pandora.Domain.Models;
 
 namespace Pandora.Application.Features.Audit;
 
-public sealed record GetAuditEntriesMessage(int Page, int PageSize) : IRequest<Result<AuditEntryPage>>;
+public sealed class GetAuditEntriesMessage : IRequest<Result<AuditEntryPage>>
+{
+    public int? Page { get; set; }
+    public int? PageSize { get; set; }
+}

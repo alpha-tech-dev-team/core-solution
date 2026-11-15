@@ -2,6 +2,6 @@ namespace Atlas.Application.Common;
 
 public static class CallbackConstants
 {
-    public const string MenuProblems = "menu:problems";
-    public const string MenuProfile = "menu:profile";
+    public const string CategoryPrefix = "category:";
+    public const string CategoryPagePrefix = "category-page:";
 }

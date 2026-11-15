@@ -29,6 +29,14 @@ public sealed class SessionService : ISessionService
         await _repository.AddToIndex(session.TgUserId, DateTimeOffset.UtcNow, cancellationToken);
     }
 
+    public async Task UpdateState(UserSession session, string state, CancellationToken cancellationToken)
+    {
+        session.State = state;
+        session.LastUpdate = DateTime.UtcNow;
+
+        await SaveSession(session, cancellationToken);
+    }
+
     public async Task DeleteSession(long telegramUserId, CancellationToken cancellationToken)
     {
         await _repository.DeleteSession(telegramUserId, cancellationToken);

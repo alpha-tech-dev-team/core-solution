@@ -1,17 +1,15 @@
 using Pandora.Api.Constants;
-using Pandora.Api.Extensions;
+using Pandora.Api.Extensions.Configuration;
+using Pandora.Api.Extensions.Middleware;
 using CoreSolution.Shared.Infrastructure.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
-((IConfigurationBuilder)builder.Configuration).AddSharedConfiguration();
+builder.AddSharedConfiguration();
 
 if (args.Contains(HostArguments.MigrateOnly))
 {
-    builder.Services.AddDatabaseConfiguration(builder.Configuration);
-
-    var migrator = builder.Build();
-    await migrator.ApplyMigrations();
+    await builder.ApplyMigrations();
 
     return;
 }

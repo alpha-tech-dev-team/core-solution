@@ -4,11 +4,15 @@ namespace Pandora.Domain.Entities;
 
 public sealed class SecretMetadata
 {
+    public const int DefaultAttemptCount = 0;
+
     public string VaultItemId { get; }
     public string ResourceName { get; private set; }
     public string Username { get; private set; }
-    public bool SyncPending { get; private set; }
     public SecretSyncOperation SyncOperation { get; private set; }
+    public int AttemptCount { get; private set; }
+    public DateTime? NextAttemptAt { get; private set; }
+    public string? LastError { get; private set; }
 
     public SecretMetadata(string vaultItemId, string resourceName, string username)
     {
@@ -25,7 +29,9 @@ public sealed class SecretMetadata
 
     public void MarkPending(SecretSyncOperation operation)
     {
-        SyncPending = true;
         SyncOperation = operation;
+        AttemptCount = DefaultAttemptCount;
+        NextAttemptAt = null;
+        LastError = null;
     }
 }

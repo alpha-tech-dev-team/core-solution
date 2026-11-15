@@ -17,26 +17,22 @@ public sealed class SecretMetadataRepository : ISecretMetadataRepository
         _context = context;
     }
 
-    public async Task<SecretListPage> GetPage(
-        int page,
-        int pageSize,
-        Func<IQueryable<SecretMetadata>, IOrderedQueryable<SecretMetadata>> orderBy,
-        CancellationToken cancellationToken)
+    public async Task<SecretListPage> GetPage(SecretPageQuery query, CancellationToken cancellationToken)
     {
-        var query = _context.SecretMetadata
+        var source = _context.SecretMetadata
             .AsNoTracking()
             .Where(metadata => metadata.SyncOperation != SecretSyncOperation.Delete);
 
-        var total = await query.CountAsync(cancellationToken);
-        var skip = (long)(page - PaginationLimits.FirstPage) * pageSize;
+        var total = await source.CountAsync(cancellationToken);
+        var skip = (long)(query.Page - PaginationLimits.FirstPage) * query.PageSize;
 
-        var items = await orderBy(query)
+        var items = await query.OrderBy(source)
             .Skip((int)Math.Min(skip, int.MaxValue))
-            .Take(pageSize)
+            .Take(query.PageSize)
             .Select(metadata => new SecretListItem(metadata.VaultItemId, metadata.ResourceName, metadata.Username))
             .ToListAsync(cancellationToken);
 
-        return new SecretListPage(items, page, pageSize, total);
+        return new SecretListPage(items, query.Page, query.PageSize, total);
     }
 
     public async Task<SecretMetadata?> GetById(string vaultItemId, CancellationToken cancellationToken)
@@ -49,10 +45,16 @@ public sealed class SecretMetadataRepository : ISecretMetadataRepository
                 cancellationToken);
     }
 
-    public async Task<IReadOnlyList<SecretMetadata>> GetPendingSync(CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<SecretMetadata>> GetPendingSync(SecretSyncBatchQuery query, CancellationToken cancellationToken)
     {
         return await _context.SecretMetadata
-            .Where(metadata => metadata.SyncPending)
+            .AsNoTracking()
+            .Where(metadata => metadata.SyncOperation != SecretSyncOperation.None
+                && metadata.AttemptCount < query.MaxAttempts
+                && (metadata.NextAttemptAt == null || metadata.NextAttemptAt <= query.UtcNow))
+            .OrderBy(metadata => metadata.AttemptCount == 0 ? 0 : 1)
+            .ThenBy(metadata => metadata.NextAttemptAt)
+            .Take(query.BatchSize)
             .ToListAsync(cancellationToken);
     }
 
@@ -64,16 +66,42 @@ public sealed class SecretMetadataRepository : ISecretMetadataRepository
     {
         var updated = await _context.SecretMetadata
             .Where(metadata => metadata.VaultItemId == vaultItemId
-                && metadata.SyncPending
                 && metadata.SyncOperation == SecretSyncOperation.Update
                 && metadata.ResourceName == resourceName
                 && metadata.Username == username)
             .ExecuteUpdateAsync(update => update
-                .SetProperty(metadata => metadata.SyncPending, false)
-                .SetProperty(metadata => metadata.SyncOperation, SecretSyncOperation.None),
+                .SetProperty(metadata => metadata.SyncOperation, SecretSyncOperation.None)
+                .SetProperty(metadata => metadata.AttemptCount, 0)
+                .SetProperty(metadata => metadata.NextAttemptAt, (DateTime?)null)
+                .SetProperty(metadata => metadata.LastError, (string?)null),
                 cancellationToken);
 
         return updated > 0;
+    }
+
+    public async Task<bool> MarkSyncAttemptFailed(
+        string vaultItemId,
+        string error,
+        DateTime nextAttemptAt,
+        CancellationToken cancellationToken)
+    {
+        var updated = await _context.SecretMetadata
+            .Where(metadata => metadata.VaultItemId == vaultItemId
+                && metadata.SyncOperation != SecretSyncOperation.None)
+            .ExecuteUpdateAsync(update => update
+                .SetProperty(metadata => metadata.AttemptCount, metadata => metadata.AttemptCount + 1)
+                .SetProperty(metadata => metadata.NextAttemptAt, nextAttemptAt)
+                .SetProperty(metadata => metadata.LastError, TruncateError(error)),
+                cancellationToken);
+
+        return updated > 0;
+    }
+
+    private static string TruncateError(string error)
+    {
+        return error.Length <= DatabaseConstants.SecretMetadata.LastErrorMaxLength
+            ? error
+            : error[..DatabaseConstants.SecretMetadata.LastErrorMaxLength];
     }
 
     public async Task<bool> DeleteIfPending(string vaultItemId, CancellationToken cancellationToken)

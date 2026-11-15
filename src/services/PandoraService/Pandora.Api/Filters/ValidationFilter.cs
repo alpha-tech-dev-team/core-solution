@@ -1,5 +1,5 @@
 using FluentValidation;
-using Pandora.Api.Extensions;
+using Pandora.Api.Extensions.Http;
 
 namespace Pandora.Api.Filters;
 

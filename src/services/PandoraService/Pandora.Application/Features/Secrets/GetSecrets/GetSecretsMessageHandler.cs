@@ -19,9 +19,10 @@ public sealed class GetSecretsMessageHandler : IRequestHandler<GetSecretsMessage
     public async Task<Result<SecretListPage>> Handle(GetSecretsMessage request, CancellationToken cancellationToken)
     {
         var page = await _metadataRepository.GetPage(
-            request.Page ?? PaginationLimits.DefaultPage,
-            request.PageSize ?? PaginationLimits.DefaultPageSize,
-            OrderByResourceName,
+            new SecretPageQuery(
+                request.Page ?? PaginationLimits.DefaultPage,
+                request.PageSize ?? PaginationLimits.DefaultPageSize,
+                OrderByResourceName),
             cancellationToken);
 
         return Result<SecretListPage>.Success(page);

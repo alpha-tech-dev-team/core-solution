@@ -1,6 +1,9 @@
 using Atlas.Application.Common;
+using Atlas.Domain.Constants;
 using Atlas.Domain.Constants.Localization;
 using Atlas.Domain.Enums;
+using Atlas.Domain.Interfaces.Repositories;
+using Atlas.Domain.Models;
 using CoreSolution.Shared.Abstractions;
 using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
@@ -10,39 +13,50 @@ namespace Atlas.Application.Features.Menu;
 
 public sealed class ShowMenuHandler : IRequestHandler<ShowMenuMessage, Result<WorkflowResponse>>
 {
+    private readonly IIncidentCategoryRepository _categoryRepository;
     private readonly ILocalizer _localizer;
 
-    public ShowMenuHandler(ILocalizer localizer)
+    public ShowMenuHandler(IIncidentCategoryRepository categoryRepository, ILocalizer localizer)
     {
+        _categoryRepository = categoryRepository;
         _localizer = localizer;
     }
 
-    public Task<Result<WorkflowResponse>> Handle(ShowMenuMessage request, CancellationToken cancellationToken)
+    public async Task<Result<WorkflowResponse>> Handle(ShowMenuMessage request, CancellationToken cancellationToken)
     {
-        return Task.FromResult(Result<WorkflowResponse>.Success(CreateMenu()));
-    }
+        var page = await _categoryRepository.GetPageAsync(
+            new PageRequest(request.Page, PaginationLimits.DefaultPageSize),
+            IncidentCategorySorting.Apply,
+            cancellationToken);
 
-    private WorkflowResponse CreateMenu()
-    {
-        return new WorkflowResponse
+        if (page.Items.Count == 0)
+        {
+            return Result<WorkflowResponse>.Failure(nameof(ErrorCode.IncidentCategoriesNotFound));
+        }
+
+        var buttonRows = page.Items
+            .Select(category => new WorkflowButtonRow(
+                new WorkflowButton(category.Name, CallbackConstants.CategoryPrefix + category.Id)))
+            .ToList();
+
+        var hasNextPage = page.Page * page.PageSize < page.Total;
+
+        if (hasNextPage)
+        {
+            buttonRows.Add(new WorkflowButtonRow(
+                new WorkflowButton(
+                    _localizer.GetPhrase(
+                        nameof(WorkflowStep.ProblemCategorySelection),
+                        LocalizationKeysConstants.ProblemCategorySelection.NextPage),
+                    CallbackConstants.CategoryPagePrefix + (page.Page + 1))));
+        }
+
+        return Result<WorkflowResponse>.Success(new WorkflowResponse
         {
             Text = _localizer.GetPhrase(
                 nameof(WorkflowStep.ProblemCategorySelection),
                 LocalizationKeysConstants.ProblemCategorySelection.Text),
-            ButtonRows =
-            [
-                new WorkflowButtonRow(
-                    new WorkflowButton(
-                        _localizer.GetPhrase(
-                            nameof(WorkflowStep.ProblemCategorySelection),
-                            LocalizationKeysConstants.ProblemCategorySelection.Problems),
-                        CallbackConstants.MenuProblems),
-                    new WorkflowButton(
-                        _localizer.GetPhrase(
-                            nameof(WorkflowStep.ProblemCategorySelection),
-                            LocalizationKeysConstants.ProblemCategorySelection.Profile),
-                        CallbackConstants.MenuProfile))
-            ]
-        };
+            ButtonRows = buttonRows
+        });
     }
 }

@@ -1,3 +1,4 @@
+using Atlas.Domain.Localization;
 using CoreSolution.Shared.Abstractions;
 using CoreSolution.Shared.TgBot.Abstractions;
 

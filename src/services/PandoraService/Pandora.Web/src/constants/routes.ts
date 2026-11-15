@@ -1,17 +1,17 @@
 export const ROUTES = {
   LOGIN: '/login',
   HOME: '/',
-  AUDIT: '/audit',
   EMPLOYEES: '/employees',
-  SECRETS: '/secrets'
+  SECRETS: '/secrets',
+  AUDIT: '/audit'
 } as const
 
 export const ROUTE_NAMES = {
   LOGIN: 'login',
   HOME: 'home',
-  AUDIT: 'audit',
   EMPLOYEES: 'employees',
-  SECRETS: 'secrets'
+  SECRETS: 'secrets',
+  AUDIT: 'audit'
 } as const
 
 export const CATCH_ALL_PATTERN = '/:pathMatch(.*)*'

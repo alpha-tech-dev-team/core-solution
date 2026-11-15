@@ -67,13 +67,13 @@ public static class DevelopmentDataSeeder
             {
                 TelegramUserId = DevelopmentSeedData.TelegramUserId,
                 VaultItemId = DevelopmentSeedData.ClickUpItemId,
-                IsActive = true
+                IsActive = DevelopmentSeedData.PermissionIsActive
             },
             new Permission
             {
                 TelegramUserId = DevelopmentSeedData.TelegramUserId,
                 VaultItemId = DevelopmentSeedData.GitHubItemId,
-                IsActive = true
+                IsActive = DevelopmentSeedData.PermissionIsActive
             });
 
         await db.SaveChangesAsync(cancellationToken);

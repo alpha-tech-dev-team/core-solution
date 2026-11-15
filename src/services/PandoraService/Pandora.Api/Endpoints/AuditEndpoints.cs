@@ -1,12 +1,10 @@
+using CoreSolution.Shared.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using CoreSolution.Shared.Enums;
 using Pandora.Api.Constants;
-using Pandora.Api.Extensions;
+using Pandora.Api.Extensions.Http;
 using Pandora.Api.Filters;
-using Pandora.Application.Contracts;
 using Pandora.Application.Features.Audit;
-using Pandora.Domain.Constants;
 
 namespace Pandora.Api.Endpoints;
 
@@ -17,21 +15,17 @@ public static class AuditEndpoints
         var group = endpoints.MapGroup(ApiRoutes.AdminGroup).RequireAuthorization(nameof(UserRole.PandoraAdmin));
 
         group.MapGet(ApiRoutes.Audit, List)
-            .AddEndpointFilter<ValidationFilter<GetAuditEntriesRequest>>();
+            .AddEndpointFilter<ValidationFilter<GetAuditEntriesMessage>>();
 
         return endpoints;
     }
 
     private static async Task<IResult> List(
         [FromServices] IMediator mediator,
-        [AsParameters] GetAuditEntriesRequest request,
+        [AsParameters] GetAuditEntriesMessage message,
         CancellationToken cancellationToken = default)
     {
-        var result = await mediator.Send(
-            new GetAuditEntriesMessage(
-                request.Page ?? PaginationLimits.DefaultPage,
-                request.PageSize ?? PaginationLimits.DefaultPageSize),
-            cancellationToken);
+        var result = await mediator.Send(message, cancellationToken);
 
         return result.ToHttpResult();
     }

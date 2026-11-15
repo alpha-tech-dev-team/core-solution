@@ -31,21 +31,20 @@ public sealed class CreateSecretMessageHandler : IRequestHandler<CreateSecretMes
 
     public async Task<Result<SecretListItem>> Handle(CreateSecretMessage request, CancellationToken cancellationToken)
     {
-        var name = request.Name.Trim();
-        var username = request.Username.Trim();
+        var secretName = request.Normalize();
 
-        var created = await _secretWriter.Create(name, username, request.Password, cancellationToken);
+        var created = await _secretWriter.Create(secretName.Name, secretName.Username, request.Password, cancellationToken);
 
         if (created is null)
         {
-            _logger.LogWarning("Шлюз Vaultwarden отклонил создание секрета {Name}", name);
+            _logger.LogWarning("Шлюз Vaultwarden отклонил создание секрета {Name}", secretName.Name);
 
             return Result<SecretListItem>.Failure(nameof(ErrorCode.VaultwardenUnavailable));
         }
 
         try
         {
-            var metadata = new SecretMetadata(created.Id, name, username);
+            var metadata = new SecretMetadata(created.Id, secretName.Name, secretName.Username);
 
             await _auditLogger.LogActionAsync(request.AdminUserId, AuditConstants.ActionSecretCreated, created.Id, cancellationToken);
 
@@ -60,7 +59,7 @@ public sealed class CreateSecretMessageHandler : IRequestHandler<CreateSecretMes
             throw;
         }
 
-        return Result<SecretListItem>.Success(new SecretListItem(created.Id, name, username));
+        return Result<SecretListItem>.Success(new SecretListItem(created.Id, secretName.Name, secretName.Username));
     }
 
     private async Task CompensateCreationAsync(string itemId)

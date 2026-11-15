@@ -1,5 +1,6 @@
 using CoreSolution.Shared.Results;
 using MediatR;
+using Pandora.Domain.Constants;
 using Pandora.Domain.Interfaces;
 using Pandora.Domain.Models;
 
@@ -16,7 +17,10 @@ public sealed class GetAuditEntriesMessageHandler : IRequestHandler<GetAuditEntr
 
     public async Task<Result<AuditEntryPage>> Handle(GetAuditEntriesMessage request, CancellationToken cancellationToken)
     {
-        var page = await _auditRepository.GetPage(request.Page, request.PageSize, cancellationToken);
+        var page = await _auditRepository.GetPage(
+            request.Page ?? PaginationLimits.DefaultPage,
+            request.PageSize ?? PaginationLimits.DefaultPageSize,
+            cancellationToken);
 
         return Result<AuditEntryPage>.Success(page);
     }

@@ -1,9 +1,8 @@
-using CoreSolution.Shared.Abstractions;
 using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
 using MediatR;
-using Pandora.TgBot.Application.Common.Interfaces;
 using Pandora.Domain.Constants;
+using Pandora.TgBot.Application.Common.Interfaces;
 
 namespace Pandora.TgBot.Application.Features.Services;
 

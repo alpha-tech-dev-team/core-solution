@@ -8,4 +8,5 @@ internal static class DevelopmentSeedData
     public const string GitHubResourceName = "GitHub";
     public const string Username = "service@pandora.local";
     public const long TelegramUserId = 705295858L;
+    public const bool PermissionIsActive = true;
 }

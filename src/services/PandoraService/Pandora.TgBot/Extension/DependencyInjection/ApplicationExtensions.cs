@@ -1,10 +1,10 @@
 using CoreSolution.Shared.Application.Behaviors;
 using CoreSolution.Shared.TgBot.Abstractions;
 using MediatR;
-using Pandora.TgBot.Application.Behaviors;
-using Pandora.TgBot.Application.Common.Services;
 using Pandora.Domain.Constants;
 using Pandora.Domain.Enums;
+using Pandora.TgBot.Application.Behaviors;
+using Pandora.TgBot.Application.Common.Services;
 using Pandora.TgBot.Application.Features.Activation;
 using Pandora.TgBot.ErrorHandling;
 

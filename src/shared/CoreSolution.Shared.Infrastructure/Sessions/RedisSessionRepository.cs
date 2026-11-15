@@ -11,19 +11,26 @@ public sealed class RedisSessionRepository : ISessionRepository
     private const string SessionKeyPrefix = "session:";
     private const string AllSessionsIndexKey = "sessions:index";
 
+    private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
+
     private readonly IDatabase _database;
+    private readonly ISessionFactory _sessionFactory;
     private readonly ILogger<RedisSessionRepository> _logger;
 
-    public RedisSessionRepository(IConnectionMultiplexer redis, ILogger<RedisSessionRepository> logger)
+    public RedisSessionRepository(
+        IConnectionMultiplexer redis,
+        ISessionFactory sessionFactory,
+        ILogger<RedisSessionRepository> logger)
     {
         _database = redis.GetDatabase();
+        _sessionFactory = sessionFactory;
         _logger = logger;
     }
 
     public async Task SaveSession(UserSession session, TimeSpan expiry, CancellationToken cancellationToken)
     {
         var key = GetKey(session.TgUserId);
-        var data = JsonSerializer.Serialize(session);
+        var data = JsonSerializer.Serialize(session, session.GetType(), SerializerOptions);
 
         await _database.StringSetAsync(key, data, expiry);
     }
@@ -40,7 +47,7 @@ public sealed class RedisSessionRepository : ISessionRepository
 
         try
         {
-            return JsonSerializer.Deserialize<UserSession>(data.ToString());
+            return (UserSession?)JsonSerializer.Deserialize(data.ToString(), _sessionFactory.SessionType, SerializerOptions);
         }
         catch (JsonException exception)
         {

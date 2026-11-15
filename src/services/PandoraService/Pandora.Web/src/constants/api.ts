@@ -7,10 +7,6 @@ export const AUTH_ENDPOINTS = {
   LOGOUT: '/logout'
 } as const
 
-export const AUDIT_ENDPOINTS = {
-  COLLECTION: '/audit'
-} as const
-
 export const EMPLOYEE_ENDPOINTS = {
   LIST: '/users',
   BY_ID: (id: string) => `/users/${id}`,
@@ -21,6 +17,10 @@ export const EMPLOYEE_ENDPOINTS = {
 
 export const SECRETS_ENDPOINTS = {
   COLLECTION: '/secrets'
+} as const
+
+export const AUDIT_ENDPOINTS = {
+  COLLECTION: '/audit'
 } as const
 
 export const PAGINATION_QUERY = {

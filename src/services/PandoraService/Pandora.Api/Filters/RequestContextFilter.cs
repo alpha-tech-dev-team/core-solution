@@ -1,4 +1,4 @@
-using Pandora.Api.Extensions;
+using Pandora.Api.Extensions.Http;
 using Pandora.Application.Contracts;
 
 namespace Pandora.Api.Filters;

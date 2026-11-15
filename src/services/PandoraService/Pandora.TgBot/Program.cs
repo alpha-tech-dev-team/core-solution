@@ -7,7 +7,7 @@ using Pandora.TgBot.Extension.DependencyInjection;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-((IConfigurationBuilder)builder.Configuration).AddSharedConfiguration();
+builder.AddSharedConfiguration();
 
 builder.Services.AddTelegramBot(builder.Configuration);
 builder.Services.AddPandoraOptions(builder.Configuration);
