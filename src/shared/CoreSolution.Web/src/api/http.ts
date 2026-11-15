@@ -11,6 +11,7 @@ export const HTTP_HEADER = {
 } as const
 
 export const HTTP_STATUS = {
+  NO_CONTENT: 204,
   UNAUTHORIZED: 401,
 } as const
 
