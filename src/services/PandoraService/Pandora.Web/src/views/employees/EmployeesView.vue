@@ -1,16 +1,17 @@
 <script setup lang="ts">
+import { useTranslations } from '@shared/i18n/create-i18n'
 import { EMPLOYEE_STATUS } from '@/constants/employee-status'
-import { RESOURCE_KEYS } from '@/constants/i18n'
 import { FIRST_PAGE } from '@/constants/pagination'
+import { RESOURCE_KEYS } from '@/constants/resource-keys'
 import { ROUTE_NAMES } from '@/constants/routes'
-import { LOADING_PLACEHOLDER } from '@/constants/ui'
-import { tr, trStatus } from '@/i18n'
+import { LOADING_PLACEHOLDER } from '@shared/constants/ui'
 import { useEmployeesView } from './use-employees-view'
 import EmployeeDeleteDialog from './EmployeeDeleteDialog.vue'
 import EmployeeFormDialog from './EmployeeFormDialog.vue'
 import EmployeeRolesDialog from './EmployeeRolesDialog.vue'
 
 const page = useEmployeesView()
+const { tr, trStatus } = useTranslations()
 
 const {
   employeesStore,
@@ -28,42 +29,42 @@ const {
 </script>
 
 <template>
-  <div class="employees-page">
-    <header class="employees-page__header">
+  <div class="page">
+    <header class="page__header">
       <h1>{{ tr(RESOURCE_KEYS.EMPLOYEES_TITLE) }}</h1>
-      <nav class="employees-page__nav">
-        <RouterLink class="employees-page__nav-link" :to="{ name: ROUTE_NAMES.HOME }">
+      <nav class="page__nav">
+        <RouterLink class="btn btn--ghost btn--sm" :to="{ name: ROUTE_NAMES.HOME }">
           {{ tr(RESOURCE_KEYS.NAV_HOME) }}
         </RouterLink>
-        <button class="employees-page__nav-link" @click="logout">
+        <button class="btn btn--ghost btn--sm" @click="logout">
           {{ tr(RESOURCE_KEYS.AUTH_LOGOUT) }}
         </button>
       </nav>
     </header>
 
-    <main class="employees-page__body">
-      <p v-if="errorMessage && !isFormOpen && !isRolesOpen" class="employees-page__error">
+    <main class="page__body">
+      <p v-if="errorMessage && !isFormOpen && !isRolesOpen" class="alert alert--error">
         {{ errorMessage }}
       </p>
 
-      <div class="employees-toolbar">
-        <div class="employees-toolbar__group">
+      <div class="toolbar">
+        <div class="toolbar__group">
           <button
-            class="employees-page__nav-link"
+            class="btn btn--ghost"
             :disabled="selectedEmployee === null"
             @click="page.openRoles()"
           >
             {{ tr(RESOURCE_KEYS.EMPLOYEE_ROLES) }}
           </button>
           <button
-            class="employees-page__nav-link"
+            class="btn btn--ghost"
             :disabled="selectedEmployee === null"
             @click="page.openEditForm()"
           >
             {{ tr(RESOURCE_KEYS.EMPLOYEE_EDIT) }}
           </button>
           <button
-            class="employees-page__nav-link"
+            class="btn btn--ghost"
             :disabled="selectedEmployee === null"
             @click="page.toggleBlock()"
           >
@@ -74,7 +75,7 @@ const {
             }}
           </button>
           <button
-            class="employees-page__nav-link employees-page__nav-link--danger"
+            class="btn btn--danger"
             :disabled="selectedEmployee === null"
             @click="page.openDelete()"
           >
@@ -82,17 +83,17 @@ const {
           </button>
         </div>
 
-        <button class="employees-page__nav-link" @click="page.openCreateForm()">
+        <button class="btn btn--primary" @click="page.openCreateForm()">
           {{ tr(RESOURCE_KEYS.EMPLOYEE_ADD) }}
         </button>
       </div>
 
-      <p v-if="employeesStore.isLoading">{{ LOADING_PLACEHOLDER }}</p>
-      <p v-else-if="employeesStore.employees.length === 0">
+      <p v-if="employeesStore.isLoading" class="text-muted">{{ LOADING_PLACEHOLDER }}</p>
+      <p v-else-if="employeesStore.employees.length === 0" class="text-muted">
         {{ tr(RESOURCE_KEYS.EMPLOYEES_EMPTY) }}
       </p>
 
-      <table v-else class="employees">
+      <table v-else class="table">
         <thead>
           <tr>
             <th>{{ tr(RESOURCE_KEYS.EMPLOYEE_NAME) }}</th>
@@ -108,37 +109,35 @@ const {
             :key="employee.id"
             tabindex="0"
             :aria-current="employee.id === selectedEmployeeId ? 'true' : undefined"
-            :class="{ 'employees__row--selected': employee.id === selectedEmployeeId }"
+            :class="{ 'table__row--selected': employee.id === selectedEmployeeId }"
             @click="page.select(employee.id)"
             @keydown.enter.prevent="page.select(employee.id)"
             @keydown.space.prevent="page.select(employee.id)"
           >
             <td>{{ formatEmployeeFullName(employee) }}</td>
             <td>{{ employee.position }}</td>
-            <td>{{ employee.phone }}</td>
+            <td class="numeric">{{ employee.phone }}</td>
             <td>{{ trStatus(employee.status) }}</td>
             <td>
-              <span v-for="role in employee.roles" :key="role" class="employees__role">
-                {{ role }}
-              </span>
+              <span v-for="role in employee.roles" :key="role" class="badge">{{ role }}</span>
             </td>
           </tr>
         </tbody>
       </table>
 
-      <nav v-if="employeesStore.totalPages > 1" class="employees-pager">
+      <nav v-if="employeesStore.totalPages > 1" class="pager">
         <button
-          class="employees-page__nav-link"
+          class="btn btn--ghost btn--sm"
           :disabled="employeesStore.page <= FIRST_PAGE"
           @click="page.goToPage(employeesStore.page - 1)"
         >
           {{ tr(RESOURCE_KEYS.EMPLOYEES_PAGE_PREV) }}
         </button>
-        <span class="employees-pager__label">
+        <span class="pager__label">
           {{ tr(RESOURCE_KEYS.EMPLOYEES_PAGE_OF, employeesStore.page, employeesStore.totalPages) }}
         </span>
         <button
-          class="employees-page__nav-link"
+          class="btn btn--ghost btn--sm"
           :disabled="employeesStore.page >= employeesStore.totalPages"
           @click="page.goToPage(employeesStore.page + 1)"
         >
@@ -176,5 +175,3 @@ const {
     </main>
   </div>
 </template>
-
-<style scoped src="./employees-view.css"></style>

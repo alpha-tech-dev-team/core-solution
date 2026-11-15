@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { RESOURCE_KEYS } from '@/constants/i18n'
-import { tr } from '@/i18n'
+import { useTranslations } from '@shared/i18n/create-i18n'
+import { RESOURCE_KEYS } from '@/constants/resource-keys'
 import { formatEmployeeFullName } from '@/models/employee'
 import type { Employee } from '@/models/employee'
-import ModalDialog from '@/components/ModalDialog.vue'
+import ModalDialog from '@shared/components/ModalDialog.vue'
 
 defineProps<{
   open: boolean
@@ -16,28 +16,28 @@ const emit = defineEmits<{
   confirm: []
   close: []
 }>()
+
+const { tr } = useTranslations()
 </script>
 
 <template>
   <ModalDialog :open="open" :title="tr(RESOURCE_KEYS.EMPLOYEE_DELETE_TITLE)" @close="emit('close')">
-    <p v-if="employee" class="dialog__question">
+    <p v-if="employee">
       {{ tr(RESOURCE_KEYS.EMPLOYEE_DELETE_QUESTION, formatEmployeeFullName(employee)) }}
     </p>
-    <p v-if="isSelf" class="dialog__warning">
+    <p v-if="isSelf" class="alert alert--error">
       {{ tr(RESOURCE_KEYS.EMPLOYEE_DELETE_SELF_WARNING) }}
     </p>
 
-    <p v-if="error" class="dialog__error">{{ error }}</p>
+    <p v-if="error" class="field__error">{{ error }}</p>
 
-    <div class="dialog__actions">
-      <button type="button" class="dialog__button dialog__button--danger" @click="emit('confirm')">
+    <div class="form__actions">
+      <button type="button" class="btn btn--danger" @click="emit('confirm')">
         {{ tr(RESOURCE_KEYS.EMPLOYEE_DELETE) }}
       </button>
-      <button type="button" class="dialog__button" @click="emit('close')">
+      <button type="button" class="btn btn--ghost" @click="emit('close')">
         {{ tr(RESOURCE_KEYS.EMPLOYEE_CANCEL) }}
       </button>
     </div>
   </ModalDialog>
 </template>
-
-<style scoped src="./employee-delete-dialog.css"></style>

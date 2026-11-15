@@ -1,28 +1,30 @@
 <script setup lang="ts">
-import { RESOURCE_KEYS } from '@/constants/i18n'
+import { useTranslations } from '@shared/i18n/create-i18n'
+import { RESOURCE_KEYS } from '@/constants/resource-keys'
 import { ROUTE_NAMES } from '@/constants/routes'
-import { tr } from '@/i18n'
 import { useHomeView } from './use-home-view'
 
 const { logout } = useHomeView()
+const { tr } = useTranslations()
 </script>
 
 <template>
-  <div class="home">
-    <header class="home__header">
+  <div class="page">
+    <header class="page__header">
       <h1>{{ tr(RESOURCE_KEYS.APP_TITLE) }}</h1>
-      <nav class="home__nav">
-        <RouterLink class="home__link" :to="{ name: ROUTE_NAMES.EMPLOYEES }">
+      <nav class="page__nav">
+        <RouterLink class="btn btn--ghost btn--sm" :to="{ name: ROUTE_NAMES.EMPLOYEES }">
           {{ tr(RESOURCE_KEYS.EMPLOYEES_TITLE) }}
         </RouterLink>
-        <RouterLink class="home__link" :to="{ name: ROUTE_NAMES.SECRETS }">
+        <RouterLink class="btn btn--ghost btn--sm" :to="{ name: ROUTE_NAMES.SECRETS }">
           {{ tr(RESOURCE_KEYS.NAV_SECRETS) }}
         </RouterLink>
-        <button class="home__logout" @click="logout">{{ tr(RESOURCE_KEYS.AUTH_LOGOUT) }}</button>
+        <button class="btn btn--ghost btn--sm" @click="logout">
+          {{ tr(RESOURCE_KEYS.AUTH_LOGOUT) }}
+        </button>
       </nav>
     </header>
-    <main class="home__body"></main>
+
+    <main class="page__body"></main>
   </div>
 </template>
-
-<style scoped src="./home-view.css"></style>

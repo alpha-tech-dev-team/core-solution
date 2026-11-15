@@ -1,7 +1,6 @@
 import { z } from 'zod'
-import { tr, type ResourceKey } from '@/i18n'
-import { EMPLOYEE_FORM_MESSAGES } from '@/constants/i18n'
 import { INPUT_LIMITS, INPUT_PATTERNS } from '@/constants/validation'
+import { RESOURCE_KEYS } from '@/constants/resource-keys'
 import type { EmployeeInput } from '@/models/employee-input'
 
 const personName = (message: string) =>
@@ -13,23 +12,23 @@ const personName = (message: string) =>
     .regex(INPUT_PATTERNS.PERSON_NAME, message)
 
 export const employeeFormSchema = z.object({
-  surname: personName(EMPLOYEE_FORM_MESSAGES.SURNAME),
-  name: personName(EMPLOYEE_FORM_MESSAGES.NAME),
+  surname: personName(RESOURCE_KEYS.EMPLOYEE_ERROR_SURNAME),
+  name: personName(RESOURCE_KEYS.EMPLOYEE_ERROR_NAME),
   patronymic: z
     .string()
     .trim()
-    .max(INPUT_LIMITS.PERSON_NAME_MAX, EMPLOYEE_FORM_MESSAGES.PATRONYMIC)
+    .max(INPUT_LIMITS.PERSON_NAME_MAX, RESOURCE_KEYS.EMPLOYEE_ERROR_PATRONYMIC)
     .refine(
       (value) => value === '' || INPUT_PATTERNS.PERSON_NAME.test(value),
-      EMPLOYEE_FORM_MESSAGES.PATRONYMIC,
+      RESOURCE_KEYS.EMPLOYEE_ERROR_PATRONYMIC,
     ),
   position: z
     .string()
     .trim()
-    .min(INPUT_LIMITS.POSITION_MIN, EMPLOYEE_FORM_MESSAGES.POSITION)
-    .max(INPUT_LIMITS.POSITION_MAX, EMPLOYEE_FORM_MESSAGES.POSITION)
-    .regex(INPUT_PATTERNS.POSITION, EMPLOYEE_FORM_MESSAGES.POSITION),
-  phone: z.string().trim().regex(INPUT_PATTERNS.PHONE, EMPLOYEE_FORM_MESSAGES.PHONE),
+    .min(INPUT_LIMITS.POSITION_MIN, RESOURCE_KEYS.EMPLOYEE_ERROR_POSITION)
+    .max(INPUT_LIMITS.POSITION_MAX, RESOURCE_KEYS.EMPLOYEE_ERROR_POSITION)
+    .regex(INPUT_PATTERNS.POSITION, RESOURCE_KEYS.EMPLOYEE_ERROR_POSITION),
+  phone: z.string().trim().regex(INPUT_PATTERNS.PHONE, RESOURCE_KEYS.EMPLOYEE_ERROR_PHONE),
 })
 
 export type EmployeeFormField = keyof z.infer<typeof employeeFormSchema>
@@ -44,7 +43,7 @@ export function validateEmployeeForm(input: EmployeeInput): EmployeeFormErrors {
   for (const issue of result.error.issues) {
     const field = issue.path[0] as EmployeeFormField | undefined
     if (field !== undefined && errors[field] === undefined) {
-      errors[field] = tr(issue.message as ResourceKey)
+      errors[field] = issue.message
     }
   }
 

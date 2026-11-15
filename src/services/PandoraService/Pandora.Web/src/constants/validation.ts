@@ -1,9 +1,16 @@
-import { CREDENTIALS_LIMITS } from '@shared/validation/input-limits'
+import {
+  CREDENTIALS_LIMITS,
+  VALIDATION_RULES as SHARED_VALIDATION_RULES,
+} from '@shared/constants/validation'
+
+export const VALIDATION_RULES = {
+  ...SHARED_VALIDATION_RULES,
+  SECRET_NAME_TOO_LONG: 'secretNameTooLong',
+  SECRET_USERNAME_TOO_LONG: 'secretUsernameTooLong',
+} as const
 
 export const INPUT_LIMITS = {
-  USERNAME_MIN: 3,
   USERNAME_MAX: CREDENTIALS_LIMITS.USERNAME_MAX_LENGTH,
-  PASSWORD_MIN: 6,
   PASSWORD_MAX: CREDENTIALS_LIMITS.PASSWORD_MAX_LENGTH,
   PERSON_NAME_MIN: 2,
   PERSON_NAME_MAX: 50,
@@ -16,14 +23,9 @@ export const INPUT_LIMITS = {
 } as const
 
 export const INPUT_PATTERNS = {
-  PERSON_NAME: /^[A-Za-zА-Яа-яЁё][A-Za-zА-Яа-яЁё \-]*$/,
-  POSITION: /^[A-Za-zА-Яа-яЁё0-9][A-Za-zА-Яа-яЁё0-9 \-().]*$/,
+  PERSON_NAME: /^[A-Za-zА-Яа-яЁё][A-Za-zА-Яа-яЁё -]*$/,
+  POSITION: /^[A-Za-zА-Яа-яЁё0-9][A-Za-zА-Яа-яЁё0-9 ().-]*$/,
   PHONE: new RegExp(
     `^\\+?[0-9]{${INPUT_LIMITS.PHONE_DIGITS_MIN},${INPUT_LIMITS.PHONE_DIGITS_MAX}}$`,
   ),
-} as const
-
-export const ZOD_ISSUE_CODE = {
-  TOO_SMALL: 'too_small',
-  TOO_BIG: 'too_big',
 } as const

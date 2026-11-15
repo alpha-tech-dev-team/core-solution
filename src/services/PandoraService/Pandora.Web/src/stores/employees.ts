@@ -1,14 +1,20 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
-import api from '@/api/client'
-import { EMPLOYEE_ENDPOINTS, PAGINATION_QUERY } from '@/constants/api'
+import {
+  assignEmployeeRoles,
+  createEmployee,
+  deleteEmployee,
+  fetchEmployeeRoles,
+  fetchEmployees,
+  updateEmployee,
+  updateEmployeeStatus,
+} from '@/api/employees'
 import { EMPLOYEE_STORE_ID } from '@/constants/stores'
 import { FIRST_PAGE } from '@/constants/pagination'
-import { toRequestError, type RequestError } from '@/api/request-error'
 import type { Employee } from '@/models/employee'
 import type { EmployeeInput } from '@/models/employee-input'
+import type { EmployeeRolesPayload } from '@/models/employee-roles-payload'
 import type { EmployeeStatus } from '@/models/employee-status'
-import type { EmployeesPage } from '@/models/employees-page'
 
 export const useEmployeesStore = defineStore(EMPLOYEE_STORE_ID, () => {
   const employees = ref<Employee[]>([])
@@ -23,94 +29,51 @@ export const useEmployeesStore = defineStore(EMPLOYEE_STORE_ID, () => {
     pageSize.value === 0 ? 0 : Math.ceil(total.value / pageSize.value),
   )
 
-  async function load(pageNumber: number = page.value): Promise<RequestError | null> {
+  async function load(pageNumber: number = page.value): Promise<void> {
     isLoading.value = true
 
     try {
-      const response = await api.get<EmployeesPage>(EMPLOYEE_ENDPOINTS.LIST, {
-        params: { [PAGINATION_QUERY.PAGE]: pageNumber },
-      })
+      const response = await fetchEmployees(pageNumber)
 
-      employees.value = response.data.items
-      page.value = response.data.page
-      pageSize.value = response.data.pageSize
-      total.value = response.data.total
-      return null
-    } catch (error) {
-      return toRequestError(error)
+      employees.value = response.items
+      page.value = response.page
+      pageSize.value = response.pageSize
+      total.value = response.total
     } finally {
       isLoading.value = false
     }
   }
 
-  async function loadRoles(): Promise<RequestError | null> {
-    if (rolesLoaded.value) return null
+  async function loadRoles(): Promise<void> {
+    if (rolesLoaded.value) return
 
-    try {
-      const response = await api.get<string[]>(EMPLOYEE_ENDPOINTS.ROLES)
-      roles.value = response.data
-      rolesLoaded.value = true
-      return null
-    } catch (error) {
-      return toRequestError(error)
-    }
+    roles.value = await fetchEmployeeRoles()
+    rolesLoaded.value = true
   }
 
-  async function create(input: EmployeeInput): Promise<RequestError | null> {
-    try {
-      await api.post(EMPLOYEE_ENDPOINTS.LIST, input)
-      return await load()
-    } catch (error) {
-      return toRequestError(error)
-    }
+  async function create(input: EmployeeInput): Promise<void> {
+    await createEmployee(input)
+    await load()
   }
 
-  async function update(employee: Employee, input: EmployeeInput): Promise<RequestError | null> {
-    try {
-      await api.put(EMPLOYEE_ENDPOINTS.BY_ID(employee.id), input)
-      return await load()
-    } catch (error) {
-      return toRequestError(error)
-    }
+  async function update(employee: Employee, input: EmployeeInput): Promise<void> {
+    await updateEmployee(employee.id, input)
+    await load()
   }
 
-  async function remove(employee: Employee): Promise<RequestError | null> {
-    try {
-      await api.delete(EMPLOYEE_ENDPOINTS.BY_ID(employee.id))
-      return await load()
-    } catch (error) {
-      return toRequestError(error)
-    }
+  async function remove(employee: Employee): Promise<void> {
+    await deleteEmployee(employee.id)
+    await load()
   }
 
-  async function assignRoles(
-    employee: Employee,
-    roleNames: string[],
-    adminLogin: string | null,
-    adminPassword: string | null,
-  ): Promise<RequestError | null> {
-    try {
-      await api.put(EMPLOYEE_ENDPOINTS.ROLES_OF(employee.id), {
-        roles: roleNames,
-        adminLogin,
-        adminPassword,
-      })
-      return await load()
-    } catch (error) {
-      return toRequestError(error)
-    }
+  async function assignRoles(employee: Employee, payload: EmployeeRolesPayload): Promise<void> {
+    await assignEmployeeRoles(employee.id, payload)
+    await load()
   }
 
-  async function setStatus(
-    employee: Employee,
-    status: EmployeeStatus,
-  ): Promise<RequestError | null> {
-    try {
-      await api.put(EMPLOYEE_ENDPOINTS.STATUS_OF(employee.id), { status })
-      return await load()
-    } catch (error) {
-      return toRequestError(error)
-    }
+  async function setStatus(employee: Employee, status: EmployeeStatus): Promise<void> {
+    await updateEmployeeStatus(employee.id, status)
+    await load()
   }
 
   return {

@@ -1,6 +1,6 @@
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
 import { ROUTE_NAMES } from '@/constants/routes'
+import { useAuthStore } from '@/session'
 
 export function useHomeView() {
   const router = useRouter()

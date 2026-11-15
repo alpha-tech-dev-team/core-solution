@@ -1,11 +1,6 @@
 export const API_BASE_URL = '/api/admin'
-export const REQUEST_TIMEOUT_MS = 10_000
 
-export const AUTH_ENDPOINTS = {
-  LOGIN: '/login',
-  REFRESH: '/refresh',
-  LOGOUT: '/logout',
-} as const
+export const REQUEST_TIMEOUT_MS = 10_000
 
 export const EMPLOYEE_ENDPOINTS = {
   LIST: '/users',
@@ -23,11 +18,4 @@ export const SECRET_ENDPOINTS = {
 export const PAGINATION_QUERY = {
   PAGE: 'page',
   PAGE_SIZE: 'pageSize',
-} as const
-
-export const RETRY_FLAG = '_retry'
-
-export const REQUEST_ERROR = {
-  NETWORK: 'network',
-  UNKNOWN: 'unknown',
 } as const

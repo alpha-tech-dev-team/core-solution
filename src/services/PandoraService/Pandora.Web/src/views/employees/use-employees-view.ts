@@ -1,12 +1,12 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
+import { useTranslations } from '@shared/i18n/create-i18n'
+import { useAuthStore } from '@/session'
 import { useEmployeesStore } from '@/stores/employees'
 import { EMPLOYEE_STATUS } from '@/constants/employee-status'
 import { FIRST_PAGE } from '@/constants/pagination'
 import { ROUTE_NAMES } from '@/constants/routes'
 import { formatEmployeeFullName } from '@/models/employee'
-import { trRequestError } from '@/i18n'
 import type { Employee } from '@/models/employee'
 import type { EmployeeInput } from '@/models/employee-input'
 
@@ -14,6 +14,7 @@ export function useEmployeesView() {
   const router = useRouter()
   const authStore = useAuthStore()
   const employeesStore = useEmployeesStore()
+  const { trError } = useTranslations()
 
   const errorMessage = ref('')
   const selectedEmployeeId = ref<string | null>(null)
@@ -24,30 +25,34 @@ export function useEmployeesView() {
   const formInitial = ref<EmployeeInput | null>(null)
   const editingEmployee = ref<Employee | null>(null)
 
-  const selectedEmployee = computed<Employee | null>(
-    () =>
-      employeesStore.employees.find((employee) => employee.id === selectedEmployeeId.value) ?? null,
-  )
+  const selectedEmployee = computed(() => findEmployee(selectedEmployeeId.value))
 
-  function showError(error: string): void {
-    if (!authStore.isAuthenticated) {
-      void router.push({ name: ROUTE_NAMES.LOGIN })
-      return
+  function findEmployee(employeeId: string | null): Employee | null {
+    if (employeeId === null) return null
+
+    return employeesStore.employees.find((employee) => employee.id === employeeId) ?? null
+  }
+
+  function showError(error: unknown): void {
+    errorMessage.value = trError(error)
+  }
+
+  async function run(action: () => Promise<void>): Promise<boolean> {
+    errorMessage.value = ''
+
+    try {
+      await action()
+      return true
+    } catch (error) {
+      showError(error)
+      return false
     }
-
-    errorMessage.value = trRequestError(error)
   }
 
   async function load(pageNumber?: number): Promise<void> {
-    errorMessage.value = ''
-
-    const [employeesError, rolesError] = await Promise.all([
-      employeesStore.load(pageNumber),
-      employeesStore.loadRoles(),
-    ])
-
-    const error = employeesError ?? rolesError
-    if (error !== null) showError(error)
+    await run(async () => {
+      await Promise.all([employeesStore.load(pageNumber), employeesStore.loadRoles()])
+    })
   }
 
   async function goToPage(pageNumber: number): Promise<void> {
@@ -102,20 +107,19 @@ export function useEmployeesView() {
     isSaving.value = true
 
     try {
-      errorMessage.value = ''
+      const isSaved = await run(async () => {
+        if (editingEmployee.value === null) {
+          await employeesStore.create(input)
+          return
+        }
 
-      const error =
-        editingEmployee.value === null
-          ? await employeesStore.create(input)
-          : await employeesStore.update(editingEmployee.value, input)
+        await employeesStore.update(editingEmployee.value, input)
+      })
 
-      if (error !== null) {
-        showError(error)
-        return
+      if (isSaved) {
+        isFormOpen.value = false
+        editingEmployee.value = null
       }
-
-      isFormOpen.value = false
-      editingEmployee.value = null
     } finally {
       isSaving.value = false
     }
@@ -147,15 +151,8 @@ export function useEmployeesView() {
     const employee = selectedEmployee.value
     if (employee === null) return
 
-    errorMessage.value = ''
-    const error = await employeesStore.remove(employee)
-
-    if (error !== null) {
-      showError(error)
-      return
-    }
-
-    isDeleteOpen.value = false
+    const isDeleted = await run(() => employeesStore.remove(employee))
+    if (isDeleted) isDeleteOpen.value = false
   }
 
   async function saveRoles(
@@ -166,15 +163,14 @@ export function useEmployeesView() {
     const employee = selectedEmployee.value
     if (employee === null) return
 
-    errorMessage.value = ''
-    const error = await employeesStore.assignRoles(employee, roleNames, adminLogin, adminPassword)
-
-    if (error !== null) {
-      showError(error)
-      return
-    }
-
-    isRolesOpen.value = false
+    const isSaved = await run(() =>
+      employeesStore.assignRoles(employee, {
+        roles: roleNames,
+        adminLogin,
+        adminPassword,
+      }),
+    )
+    if (isSaved) isRolesOpen.value = false
   }
 
   async function toggleBlock(): Promise<void> {
@@ -184,11 +180,7 @@ export function useEmployeesView() {
     const nextStatus =
       employee.status === EMPLOYEE_STATUS.BLOCKED ? EMPLOYEE_STATUS.ACTIVE : EMPLOYEE_STATUS.BLOCKED
 
-    errorMessage.value = ''
-    const error = await employeesStore.setStatus(employee, nextStatus)
-    if (error === null) return
-
-    showError(error)
+    await run(() => employeesStore.setStatus(employee, nextStatus))
   }
 
   onMounted(load)
