@@ -8,7 +8,6 @@ export const HTTP_METHOD = {
 
 export const HTTP_HEADER = {
   CONTENT_TYPE: 'Content-Type',
-  AUTHORIZATION: 'Authorization',
 } as const
 
 export const HTTP_STATUS = {
