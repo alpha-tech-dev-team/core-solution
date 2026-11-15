@@ -15,7 +15,9 @@ export function toRequestError(error: unknown): RequestError {
   if (!error.response) return REQUEST_ERROR.NETWORK
 
   const serverCode = getServerCode(error)
-  if (serverCode && Object.prototype.hasOwnProperty.call(SERVER_ERROR_KEYS, serverCode)) return serverCode
+  if (serverCode && Object.prototype.hasOwnProperty.call(SERVER_ERROR_KEYS, serverCode)) {
+    return serverCode
+  }
 
   return String(error.response.status)
 }

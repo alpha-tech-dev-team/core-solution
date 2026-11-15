@@ -1,15 +1,15 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
+import { isExpired, toEpochMs } from '@shared/auth/expiry'
+import { readJson, removeJson, writeJson } from '@shared/storage/local-storage'
 import api from '@/api/client'
 import { AUTH_ENDPOINTS } from '@/constants/api'
 import { AUTH_STORE_ID } from '@/constants/stores'
+import { SESSION_STORAGE_KEY } from '@/constants/storage'
 import { toRequestError, type RequestError } from '@/api/request-error'
-import { clearSession, loadSession, saveSession } from './auth.session'
-import type { AuthSession } from './models/auth-session'
+import type { AuthSession } from '@/models/auth-session'
 
-function isExpired(expiresAt: string): boolean {
-  return new Date(expiresAt) <= new Date()
-}
+type SessionPayload = Omit<AuthSession, 'username'>
 
 export const useAuthStore = defineStore(AUTH_STORE_ID, () => {
   const accessTokenExpiresAt = ref<string | null>(null)
@@ -17,18 +17,19 @@ export const useAuthStore = defineStore(AUTH_STORE_ID, () => {
 
   const isAuthenticated = computed(() => {
     if (!accessTokenExpiresAt.value) return false
-    return !isExpired(accessTokenExpiresAt.value)
+
+    return !isExpired(toEpochMs(accessTokenExpiresAt.value), Date.now())
   })
 
   function applySession(session: AuthSession): void {
     accessTokenExpiresAt.value = session.accessTokenExpiresAt
     username.value = session.username
-    saveSession(session)
+    writeJson(SESSION_STORAGE_KEY, session)
   }
 
   async function login(username: string, password: string): Promise<RequestError | null> {
     try {
-      const { data } = await api.post<Omit<AuthSession, 'username'>>(AUTH_ENDPOINTS.LOGIN, { username, password })
+      const { data } = await api.post<SessionPayload>(AUTH_ENDPOINTS.LOGIN, { username, password })
       applySession({ ...data, username })
       return null
     } catch (error) {
@@ -38,9 +39,10 @@ export const useAuthStore = defineStore(AUTH_STORE_ID, () => {
 
   async function refreshTokens(): Promise<boolean> {
     if (!accessTokenExpiresAt.value) return false
+
     try {
-      const { data } = await api.post<Omit<AuthSession, 'username'>>(AUTH_ENDPOINTS.REFRESH)
-    applySession({ ...data, username: username.value ?? '' })
+      const { data } = await api.post<SessionPayload>(AUTH_ENDPOINTS.REFRESH)
+      applySession({ ...data, username: username.value ?? '' })
       return true
     } catch {
       return false
@@ -48,8 +50,9 @@ export const useAuthStore = defineStore(AUTH_STORE_ID, () => {
   }
 
   function restoreSession(): void {
-    const session = loadSession()
-    if (!session) return
+    const session = readJson<AuthSession>(SESSION_STORAGE_KEY)
+    if (session === null) return
+
     accessTokenExpiresAt.value = session.accessTokenExpiresAt
     username.value = session.username
   }
@@ -57,16 +60,12 @@ export const useAuthStore = defineStore(AUTH_STORE_ID, () => {
   function clearLocalSession(): void {
     accessTokenExpiresAt.value = null
     username.value = null
-    clearSession()
+    removeJson(SESSION_STORAGE_KEY)
   }
 
   async function logout(): Promise<void> {
-    try {
-      await api.post(AUTH_ENDPOINTS.LOGOUT)
-    } catch {
-    } finally {
-      clearLocalSession()
-    }
+    await api.post(AUTH_ENDPOINTS.LOGOUT).catch(() => undefined)
+    clearLocalSession()
   }
 
   return {
@@ -77,6 +76,6 @@ export const useAuthStore = defineStore(AUTH_STORE_ID, () => {
     refreshTokens,
     restoreSession,
     clearLocalSession,
-    logout
+    logout,
   }
 })

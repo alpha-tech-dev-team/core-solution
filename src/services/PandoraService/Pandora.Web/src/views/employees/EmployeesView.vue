@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { EMPLOYEE_STATUS } from '@/stores/models/employee-status'
-import { tr, trStatus } from '@/i18n'
-import { ROUTES } from '@/constants/routes'
+import { EMPLOYEE_STATUS } from '@/constants/employee-status'
+import { RESOURCE_KEYS } from '@/constants/i18n'
+import { FIRST_PAGE } from '@/constants/pagination'
+import { ROUTE_NAMES } from '@/constants/routes'
 import { LOADING_PLACEHOLDER } from '@/constants/ui'
-import { useEmployeesPage } from './use-employees-page'
+import { tr, trStatus } from '@/i18n'
+import { useEmployeesView } from './use-employees-view'
+import EmployeeDeleteDialog from './EmployeeDeleteDialog.vue'
 import EmployeeFormDialog from './EmployeeFormDialog.vue'
 import EmployeeRolesDialog from './EmployeeRolesDialog.vue'
-import EmployeeDeleteDialog from './EmployeeDeleteDialog.vue'
 
-const page = useEmployeesPage()
+const page = useEmployeesView()
 
 const {
   employeesStore,
@@ -20,18 +22,22 @@ const {
   isSaving,
   isDeleteOpen,
   formInitial,
-  fullName,
-  logout
+  formatEmployeeFullName,
+  logout,
 } = page
 </script>
 
 <template>
   <div class="employees-page">
     <header class="employees-page__header">
-      <h1>{{ tr('employees_title') }}</h1>
+      <h1>{{ tr(RESOURCE_KEYS.EMPLOYEES_TITLE) }}</h1>
       <nav class="employees-page__nav">
-        <RouterLink class="employees-page__nav-link" :to="ROUTES.HOME">{{ tr('nav_home') }}</RouterLink>
-        <button class="employees-page__nav-link" @click="logout">{{ tr('auth_logout') }}</button>
+        <RouterLink class="employees-page__nav-link" :to="{ name: ROUTE_NAMES.HOME }">
+          {{ tr(RESOURCE_KEYS.NAV_HOME) }}
+        </RouterLink>
+        <button class="employees-page__nav-link" @click="logout">
+          {{ tr(RESOURCE_KEYS.AUTH_LOGOUT) }}
+        </button>
       </nav>
     </header>
 
@@ -47,49 +53,53 @@ const {
             :disabled="selectedEmployee === null"
             @click="page.openRoles()"
           >
-            {{ tr('employee_roles') }}
+            {{ tr(RESOURCE_KEYS.EMPLOYEE_ROLES) }}
           </button>
           <button
             class="employees-page__nav-link"
             :disabled="selectedEmployee === null"
             @click="page.openEditForm()"
           >
-            {{ tr('employee_edit') }}
+            {{ tr(RESOURCE_KEYS.EMPLOYEE_EDIT) }}
           </button>
           <button
             class="employees-page__nav-link"
             :disabled="selectedEmployee === null"
             @click="page.toggleBlock()"
           >
-            {{ selectedEmployee?.status === EMPLOYEE_STATUS.BLOCKED
-              ? tr('employee_unblock')
-              : tr('employee_block') }}
+            {{
+              selectedEmployee?.status === EMPLOYEE_STATUS.BLOCKED
+                ? tr(RESOURCE_KEYS.EMPLOYEE_UNBLOCK)
+                : tr(RESOURCE_KEYS.EMPLOYEE_BLOCK)
+            }}
           </button>
           <button
             class="employees-page__nav-link employees-page__nav-link--danger"
             :disabled="selectedEmployee === null"
             @click="page.openDelete()"
           >
-            {{ tr('employee_delete') }}
+            {{ tr(RESOURCE_KEYS.EMPLOYEE_DELETE) }}
           </button>
         </div>
 
         <button class="employees-page__nav-link" @click="page.openCreateForm()">
-          {{ tr('employee_add') }}
+          {{ tr(RESOURCE_KEYS.EMPLOYEE_ADD) }}
         </button>
       </div>
 
       <p v-if="employeesStore.isLoading">{{ LOADING_PLACEHOLDER }}</p>
-      <p v-else-if="employeesStore.employees.length === 0">{{ tr('employees_empty') }}</p>
+      <p v-else-if="employeesStore.employees.length === 0">
+        {{ tr(RESOURCE_KEYS.EMPLOYEES_EMPTY) }}
+      </p>
 
       <table v-else class="employees">
         <thead>
           <tr>
-            <th>{{ tr('employee_name') }}</th>
-            <th>{{ tr('employee_position') }}</th>
-            <th>{{ tr('employee_phone') }}</th>
-            <th>{{ tr('employee_status') }}</th>
-            <th>{{ tr('employee_roles') }}</th>
+            <th>{{ tr(RESOURCE_KEYS.EMPLOYEE_NAME) }}</th>
+            <th>{{ tr(RESOURCE_KEYS.EMPLOYEE_POSITION) }}</th>
+            <th>{{ tr(RESOURCE_KEYS.EMPLOYEE_PHONE) }}</th>
+            <th>{{ tr(RESOURCE_KEYS.EMPLOYEE_STATUS) }}</th>
+            <th>{{ tr(RESOURCE_KEYS.EMPLOYEE_ROLES) }}</th>
           </tr>
         </thead>
         <tbody>
@@ -103,12 +113,14 @@ const {
             @keydown.enter.prevent="page.select(employee.id)"
             @keydown.space.prevent="page.select(employee.id)"
           >
-            <td>{{ fullName(employee) }}</td>
+            <td>{{ formatEmployeeFullName(employee) }}</td>
             <td>{{ employee.position }}</td>
             <td>{{ employee.phone }}</td>
             <td>{{ trStatus(employee.status) }}</td>
             <td>
-              <span v-for="role in employee.roles" :key="role" class="employees__role">{{ role }}</span>
+              <span v-for="role in employee.roles" :key="role" class="employees__role">
+                {{ role }}
+              </span>
             </td>
           </tr>
         </tbody>
@@ -117,20 +129,20 @@ const {
       <nav v-if="employeesStore.totalPages > 1" class="employees-pager">
         <button
           class="employees-page__nav-link"
-          :disabled="employeesStore.page <= 1"
+          :disabled="employeesStore.page <= FIRST_PAGE"
           @click="page.goToPage(employeesStore.page - 1)"
         >
-          {{ tr('employees_page_prev') }}
+          {{ tr(RESOURCE_KEYS.EMPLOYEES_PAGE_PREV) }}
         </button>
         <span class="employees-pager__label">
-          {{ tr('employees_page_of', employeesStore.page, employeesStore.totalPages) }}
+          {{ tr(RESOURCE_KEYS.EMPLOYEES_PAGE_OF, employeesStore.page, employeesStore.totalPages) }}
         </span>
         <button
           class="employees-page__nav-link"
           :disabled="employeesStore.page >= employeesStore.totalPages"
           @click="page.goToPage(employeesStore.page + 1)"
         >
-          {{ tr('employees_page_next') }}
+          {{ tr(RESOURCE_KEYS.EMPLOYEES_PAGE_NEXT) }}
         </button>
       </nav>
 
@@ -165,138 +177,4 @@ const {
   </div>
 </template>
 
-<style scoped>
-.employees-page {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-
-.employees-page__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-3) var(--space-5);
-  background: var(--color-surface);
-  border-bottom: var(--border-width) solid var(--color-border);
-}
-
-.employees-page__header h1 {
-  font-size: var(--font-size-heading);
-}
-
-.employees-page__nav {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.employees-page__nav-link {
-  padding: var(--space-2) var(--space-3);
-  background: transparent;
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-sm);
-  color: var(--color-text);
-  font-size: var(--font-size-base);
-  text-decoration: none;
-}
-
-.employees-page__nav-link:hover:enabled {
-  background: var(--color-bg);
-}
-
-.employees-page__nav-link:disabled {
-  color: var(--color-text-muted);
-  cursor: default;
-}
-
-.employees-page__nav-link--danger {
-  color: var(--color-error);
-  border-color: var(--color-error);
-}
-
-.employees-page__body {
-  flex: 1;
-  padding: var(--space-5);
-  font-size: var(--font-size-base);
-}
-
-.employees-page__error {
-  color: var(--color-error);
-  font-size: var(--font-size-small);
-  margin-bottom: var(--space-3);
-}
-
-.employees-toolbar {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
-}
-
-.employees-toolbar__group {
-  display: flex;
-  gap: var(--space-2);
-}
-
-.employees {
-  width: 100%;
-  background: var(--color-surface);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius);
-  border-collapse: collapse;
-}
-
-.employees th,
-.employees td {
-  padding: var(--space-2) var(--space-3);
-  text-align: left;
-  border-bottom: var(--border-width) solid var(--color-border);
-}
-
-.employees th {
-  font-size: var(--font-size-small);
-  color: var(--color-text-secondary);
-}
-
-.employees tbody tr {
-  cursor: pointer;
-}
-
-.employees tbody tr:hover {
-  background: var(--color-bg);
-}
-
-.employees tbody tr:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: -2px;
-}
-
-.employees__role {
-  display: inline-block;
-  padding: var(--space-1) var(--space-2);
-  margin-right: var(--space-1);
-  background: var(--color-bg);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-small);
-  white-space: nowrap;
-}
-
-.employees__row--selected,
-.employees__row--selected:hover {
-  background: var(--color-row-selected);
-}
-
-.employees-pager {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-top: var(--space-3);
-}
-
-.employees-pager__label {
-  font-size: var(--font-size-small);
-  color: var(--color-text-secondary);
-}
-</style>
+<style scoped src="./employees-view.css"></style>

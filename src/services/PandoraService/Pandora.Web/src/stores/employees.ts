@@ -1,28 +1,36 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import api from '@/api/client'
-import { EMPLOYEE_ENDPOINTS } from '@/constants/api'
+import { EMPLOYEE_ENDPOINTS, PAGINATION_QUERY } from '@/constants/api'
 import { EMPLOYEE_STORE_ID } from '@/constants/stores'
+import { FIRST_PAGE } from '@/constants/pagination'
 import { toRequestError, type RequestError } from '@/api/request-error'
-import type { Employee } from './models/employee'
-import type { EmployeeInput } from './models/employee-input'
-import type { EmployeeStatus } from './models/employee-status'
-import type { EmployeesPage } from './models/employees-page'
+import type { Employee } from '@/models/employee'
+import type { EmployeeInput } from '@/models/employee-input'
+import type { EmployeeStatus } from '@/models/employee-status'
+import type { EmployeesPage } from '@/models/employees-page'
 
 export const useEmployeesStore = defineStore(EMPLOYEE_STORE_ID, () => {
   const employees = ref<Employee[]>([])
   const roles = ref<string[]>([])
-  const page = ref(1)
+  const page = ref(FIRST_PAGE)
   const pageSize = ref(0)
   const total = ref(0)
-  const totalPages = computed(() => pageSize.value === 0 ? 0 : Math.ceil(total.value / pageSize.value))
   const isLoading = ref(false)
   const rolesLoaded = ref(false)
 
+  const totalPages = computed(() =>
+    pageSize.value === 0 ? 0 : Math.ceil(total.value / pageSize.value),
+  )
+
   async function load(pageNumber: number = page.value): Promise<RequestError | null> {
     isLoading.value = true
+
     try {
-      const response = await api.get<EmployeesPage>(EMPLOYEE_ENDPOINTS.LIST, { params: { page: pageNumber } })
+      const response = await api.get<EmployeesPage>(EMPLOYEE_ENDPOINTS.LIST, {
+        params: { [PAGINATION_QUERY.PAGE]: pageNumber },
+      })
+
       employees.value = response.data.items
       page.value = response.data.page
       pageSize.value = response.data.pageSize
@@ -79,17 +87,24 @@ export const useEmployeesStore = defineStore(EMPLOYEE_STORE_ID, () => {
     employee: Employee,
     roleNames: string[],
     adminLogin: string | null,
-    adminPassword: string | null
+    adminPassword: string | null,
   ): Promise<RequestError | null> {
     try {
-      await api.put(EMPLOYEE_ENDPOINTS.ROLES_OF(employee.id), { roles: roleNames, adminLogin, adminPassword })
+      await api.put(EMPLOYEE_ENDPOINTS.ROLES_OF(employee.id), {
+        roles: roleNames,
+        adminLogin,
+        adminPassword,
+      })
       return await load()
     } catch (error) {
       return toRequestError(error)
     }
   }
 
-  async function setStatus(employee: Employee, status: EmployeeStatus): Promise<RequestError | null> {
+  async function setStatus(
+    employee: Employee,
+    status: EmployeeStatus,
+  ): Promise<RequestError | null> {
     try {
       await api.put(EMPLOYEE_ENDPOINTS.STATUS_OF(employee.id), { status })
       return await load()
@@ -112,6 +127,6 @@ export const useEmployeesStore = defineStore(EMPLOYEE_STORE_ID, () => {
     update,
     remove,
     assignRoles,
-    setStatus
+    setStatus,
   }
 })

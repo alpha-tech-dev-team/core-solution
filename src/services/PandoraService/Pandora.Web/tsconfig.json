@@ -14,7 +14,8 @@
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@shared/*": ["../../../../src/shared/CoreSolution.Web/src/*"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.vue"],

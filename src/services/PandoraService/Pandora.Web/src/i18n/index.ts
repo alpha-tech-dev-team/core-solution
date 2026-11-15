@@ -3,19 +3,19 @@ import {
   ERROR_KEY_PREFIX,
   PLACEHOLDER_PATTERN,
   SERVER_ERROR_KEYS,
+  STATUS_KEY_PREFIX,
   VALIDATION_KEY_PREFIX,
   type Locale,
-  type ValidationRule
+  type ValidationRule,
 } from '@/constants/i18n'
 import { REQUEST_ERROR } from '@/constants/api'
+import type { ResourceKey } from './resource-key'
 import ru from './locales/ru.json'
 import en from './locales/en.json'
 
 type ResourceMap = Record<string, string>
 
 const resources: Record<Locale, ResourceMap> = { ru, en }
-
-export type ResourceKey = keyof typeof ru
 
 let currentLocale: Locale = DEFAULT_LOCALE
 
@@ -52,9 +52,11 @@ export function trRequestError(error: string): string {
 }
 
 export function trStatus(status: string): string {
-  return lookup(`status_${status.toLowerCase()}`)
+  return lookup(`${STATUS_KEY_PREFIX}_${status.toLowerCase()}`)
 }
 
 export function trValidation(rule: ValidationRule, ...params: readonly unknown[]): string {
   return lookup(`${VALIDATION_KEY_PREFIX}_${rule}`, params)
 }
+
+export type { ResourceKey }

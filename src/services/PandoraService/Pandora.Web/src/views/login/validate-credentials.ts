@@ -1,21 +1,7 @@
-import { z } from 'zod'
 import { trValidation } from '@/i18n'
-import { VALIDATION_RULES, type ValidationRule } from '@/constants/i18n'
-import { ZOD_ISSUE_CODE } from '@/constants/validation'
+import { VALIDATION_RULES } from '@/constants/i18n'
 import { credentialsSchema, type Credentials } from '@/validation/credentials'
-
-type CredentialsIssue = z.ZodError['issues'][number]
-
-function extractLimit(issue: CredentialsIssue): unknown {
-  switch (issue.code) {
-    case ZOD_ISSUE_CODE.TOO_SMALL:
-      return issue.minimum
-    case ZOD_ISSUE_CODE.TOO_BIG:
-      return issue.maximum
-    default:
-      return undefined
-  }
-}
+import { firstValidationMessage } from '@/validation/first-validation-message'
 
 export function validateCredentials(credentials: Credentials): string | null {
   if (!credentials.username || !credentials.password) {
@@ -23,8 +9,5 @@ export function validateCredentials(credentials: Credentials): string | null {
   }
 
   const result = credentialsSchema.safeParse(credentials)
-  if (result.success) return null
-
-  const issue = result.error.issues[0]
-  return trValidation(issue.message as ValidationRule, extractLimit(issue))
+  return result.success ? null : firstValidationMessage(result.error)
 }

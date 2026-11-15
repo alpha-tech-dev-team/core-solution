@@ -10,7 +10,7 @@ export const credentialsSchema = z.object({
   password: z
     .string()
     .min(INPUT_LIMITS.PASSWORD_MIN, VALIDATION_RULES.PASSWORD_TOO_SHORT)
-    .max(INPUT_LIMITS.PASSWORD_MAX, VALIDATION_RULES.PASSWORD_TOO_LONG)
+    .max(INPUT_LIMITS.PASSWORD_MAX, VALIDATION_RULES.PASSWORD_TOO_LONG),
 })
 
 export type Credentials = z.infer<typeof credentialsSchema>
