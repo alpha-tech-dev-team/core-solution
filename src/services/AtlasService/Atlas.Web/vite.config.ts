@@ -22,6 +22,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+      '@shared': fileURLToPath(
+        new URL('../../../../src/shared/CoreSolution.Web/src', import.meta.url),
+      ),
     },
   },
   server: {

@@ -1,25 +1,16 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import { StorageKey, StoreId, TokenRefresh } from '@/constants/auth.Constants'
-import { HttpStatus } from '@/constants/http.Constants'
-import { identityClient } from '@/api/identityClient'
-import { ApiError } from '@/api/ApiError'
-import type { SessionResponse } from '@/api/contracts/SessionResponse'
-import { isExpired } from '@/utils/jwt'
+import { computed, ref } from 'vue'
+import { HTTP_STATUS } from '@shared/api/http'
+import { isExpired, toEpochMs } from '@shared/auth/expiry'
+import { readJson, removeJson, writeJson } from '@shared/storage/local-storage'
+import { STORAGE_KEY, STORE_ID, TOKEN_REFRESH } from '@/constants/auth'
+import { identityClient } from '@/api/identity-client'
+import { ApiError } from '@/api/api-error'
+import type { SessionResponse } from '@/api/contracts/session-response'
 
-function parseExpiry(value: string | null | undefined): number | null {
-  if (!value) return null
-
-  const numeric = Number(value)
-  if (!Number.isNaN(numeric)) return numeric
-
-  const parsed = Date.parse(value)
-  return Number.isNaN(parsed) ? null : parsed
-}
-
-export const useAuthStore = defineStore(StoreId.Auth, () => {
+export const useAuthStore = defineStore(STORE_ID.AUTH, () => {
   const accessTokenExpiresAt = ref<number | null>(
-    parseExpiry(localStorage.getItem(StorageKey.AccessExpiresAt)),
+    toEpochMs(readJson<string | number>(STORAGE_KEY.ACCESS_EXPIRES_AT)),
   )
   const nowMs = ref(Date.now())
 
@@ -30,51 +21,62 @@ export const useAuthStore = defineStore(StoreId.Auth, () => {
   let refreshTimer: number | undefined
   let clockTimer: number | undefined
   let refreshPromise: Promise<boolean> | null = null
+  let sessionVersion = 0
 
   function isAccessTokenExpired(): boolean {
     return isExpired(accessTokenExpiresAt.value, nowMs.value)
   }
 
   function isUnauthorized(error: unknown): boolean {
-    return error instanceof ApiError && error.status === HttpStatus.Unauthorized
+    return error instanceof ApiError && error.status === HTTP_STATUS.UNAUTHORIZED
   }
 
-  function startClock() {
+  function startClock(): void {
     if (clockTimer !== undefined) return
 
     clockTimer = window.setInterval(() => {
       nowMs.value = Date.now()
-    }, TokenRefresh.ClockTickMs)
+    }, TOKEN_REFRESH.CLOCK_TICK_MS)
   }
 
-  function stopClock() {
+  function stopClock(): void {
     if (clockTimer === undefined) return
 
     window.clearInterval(clockTimer)
     clockTimer = undefined
   }
 
-  function clearRefreshTimer() {
-    if (refreshTimer !== undefined) {
-      window.clearTimeout(refreshTimer)
-      refreshTimer = undefined
-    }
+  function clearRefreshTimer(): void {
+    if (refreshTimer === undefined) return
+
+    window.clearTimeout(refreshTimer)
+    refreshTimer = undefined
   }
 
-  function scheduleTokenRefresh() {
+  function scheduleTokenRefresh(): void {
     clearRefreshTimer()
 
     const expiresAt = accessTokenExpiresAt.value
     if (expiresAt === null) return
 
-    const delay = Math.max(expiresAt - Date.now() - TokenRefresh.MarginMs, TokenRefresh.MinDelayMs)
+    const delay = Math.max(
+      expiresAt - Date.now() - TOKEN_REFRESH.MARGIN_MS,
+      TOKEN_REFRESH.MIN_DELAY_MS,
+    )
 
     refreshTimer = window.setTimeout(() => {
       void refreshSession()
     }, delay)
   }
 
-  let sessionVersion = 0
+  function persistExpiry(): void {
+    if (accessTokenExpiresAt.value === null) {
+      removeJson(STORAGE_KEY.ACCESS_EXPIRES_AT)
+      return
+    }
+
+    writeJson(STORAGE_KEY.ACCESS_EXPIRES_AT, accessTokenExpiresAt.value)
+  }
 
   async function performRefresh(): Promise<boolean> {
     if (accessTokenExpiresAt.value === null) return false
@@ -84,12 +86,12 @@ export const useAuthStore = defineStore(StoreId.Auth, () => {
     try {
       const session = await identityClient.refresh()
       if (sessionVersion !== version) return false
+
       setSession(session)
       return true
     } catch (error) {
-      if (isUnauthorized(error)) {
-        clearSessionState()
-      }
+      if (isUnauthorized(error)) clearSessionState()
+
       return false
     }
   }
@@ -104,39 +106,33 @@ export const useAuthStore = defineStore(StoreId.Auth, () => {
     return refreshPromise
   }
 
-  function setSession(session: SessionResponse) {
+  function setSession(session: SessionResponse): void {
     sessionVersion += 1
-    accessTokenExpiresAt.value = parseExpiry(session.accessTokenExpiresAt)
-
-    if (accessTokenExpiresAt.value === null) {
-      localStorage.removeItem(StorageKey.AccessExpiresAt)
-    } else {
-      localStorage.setItem(StorageKey.AccessExpiresAt, String(accessTokenExpiresAt.value))
-    }
+    accessTokenExpiresAt.value = toEpochMs(session.accessTokenExpiresAt)
+    persistExpiry()
 
     startClock()
     scheduleTokenRefresh()
   }
 
-  function clearSessionState() {
+  function clearSessionState(): void {
     sessionVersion += 1
     accessTokenExpiresAt.value = null
-    localStorage.removeItem(StorageKey.AccessExpiresAt)
+    persistExpiry()
   }
 
-  async function logout() {
+  async function logout(): Promise<void> {
     clearRefreshTimer()
     stopClock()
+
     try {
       await identityClient.logout()
-    } catch {
+    } finally {
       clearSessionState()
-      return
     }
-    clearSessionState()
   }
 
-  async function restoreSession() {
+  async function restoreSession(): Promise<void> {
     if (accessTokenExpiresAt.value === null) {
       clearSessionState()
       return
