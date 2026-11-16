@@ -1,10 +1,9 @@
 <script setup lang="ts">
+import LogoutButton from '@shared/components/LogoutButton.vue'
 import { useTranslations } from '@shared/i18n/create-i18n'
 import { RESOURCE_KEYS } from '@/constants/resource-keys'
 import { ROUTE_NAMES } from '@/constants/routes'
-import { useHomeView } from './use-home-view'
 
-const { logout } = useHomeView()
 const { tr } = useTranslations()
 </script>
 
@@ -19,9 +18,7 @@ const { tr } = useTranslations()
         <RouterLink class="btn btn--ghost btn--sm" :to="{ name: ROUTE_NAMES.SECRETS }">
           {{ tr(RESOURCE_KEYS.NAV_SECRETS) }}
         </RouterLink>
-        <button class="btn btn--ghost btn--sm" @click="logout">
-          {{ tr(RESOURCE_KEYS.AUTH_LOGOUT) }}
-        </button>
+        <LogoutButton />
       </nav>
     </header>
 

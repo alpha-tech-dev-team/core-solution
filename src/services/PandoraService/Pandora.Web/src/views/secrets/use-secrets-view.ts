@@ -1,18 +1,18 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTranslations } from '@shared/i18n/create-i18n'
-import { useAuthStore } from '@/session'
-import { ROUTE_NAMES } from '@/constants/routes'
-import { FIRST_PAGE, SECRETS_PAGE_SIZE } from '@/constants/pagination'
+import { useViewError } from '@shared/composables/use-view-error'
+import { SHARED_ROUTE_NAMES } from '@shared/constants/routes'
 import { RESOURCE_KEYS } from '@/constants/resource-keys'
+import { FIRST_PAGE, SECRETS_PAGE_SIZE } from '@/constants/pagination'
 import { createSecret, deleteSecret, fetchSecrets, updateSecret } from '@/api/secrets'
 import type { SecretItem } from '@/models/secret-item'
 import { validateSecretForm } from './validate-secret-form'
 
 export function useSecretsView() {
   const router = useRouter()
-  const authStore = useAuthStore()
-  const { tr, trError, trValidationMessage } = useTranslations()
+  const { tr, trValidationMessage } = useTranslations()
+  const { errorMessage, run } = useViewError()
 
   const secrets = ref<SecretItem[]>([])
   const page = ref(FIRST_PAGE)
@@ -21,7 +21,6 @@ export function useSecretsView() {
   const isLoading = ref(false)
   const isSaving = ref(false)
   const isDeleting = ref(false)
-  const errorMessage = ref('')
   const isFormVisible = ref(false)
   const editingId = ref<string | null>(null)
   const formName = ref('')
@@ -33,18 +32,6 @@ export function useSecretsView() {
     () => secrets.value.find((item) => item.id === selectedId.value) ?? null,
   )
   const totalPages = computed(() => Math.max(FIRST_PAGE, Math.ceil(total.value / pageSize.value)))
-
-  async function run(action: () => Promise<void>): Promise<boolean> {
-    errorMessage.value = ''
-
-    try {
-      await action()
-      return true
-    } catch (error) {
-      errorMessage.value = trError(error)
-      return false
-    }
-  }
 
   async function loadSecrets(): Promise<void> {
     isLoading.value = true
@@ -171,13 +158,8 @@ export function useSecretsView() {
     }
   }
 
-  async function logout(): Promise<void> {
-    await authStore.logout()
-    await router.push({ name: ROUTE_NAMES.LOGIN })
-  }
-
   function goHome(): void {
-    void router.push({ name: ROUTE_NAMES.HOME })
+    void router.push({ name: SHARED_ROUTE_NAMES.HOME })
   }
 
   onMounted(loadSecrets)
@@ -198,13 +180,11 @@ export function useSecretsView() {
     errorMessage,
     changePage,
     openCreateForm,
-    openEditForm,
     closeForm,
     selectRow,
     editSelected,
     deleteSelected,
     save,
-    logout,
     goHome,
   }
 }

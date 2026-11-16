@@ -1,16 +1,16 @@
 import '@shared/styles/index.css'
 
 import App from '@/App.vue'
-import router from '@/router'
+import { routes } from '@/router/routes'
 import { i18n } from '@/i18n'
-import { session } from '@/session'
+import { appSession } from '@/session'
 import { mountWebApp } from '@shared/app/mount-web-app'
 import { APP_MOUNT_POINT } from '@shared/constants/app'
 
 mountWebApp({
   root: App,
-  router,
+  routes,
   i18n,
-  session,
+  appSession,
   mountPoint: APP_MOUNT_POINT,
 })

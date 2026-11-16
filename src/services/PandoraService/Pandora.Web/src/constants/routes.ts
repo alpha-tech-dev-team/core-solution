@@ -1,15 +1,13 @@
+import { SHARED_ROUTE_NAMES, SHARED_ROUTES } from '@shared/constants/routes'
+
 export const ROUTES = {
-  LOGIN: '/login',
-  HOME: '/',
+  ...SHARED_ROUTES,
   EMPLOYEES: '/employees',
   SECRETS: '/secrets',
 } as const
 
 export const ROUTE_NAMES = {
-  LOGIN: 'login',
-  HOME: 'home',
+  ...SHARED_ROUTE_NAMES,
   EMPLOYEES: 'employees',
   SECRETS: 'secrets',
 } as const
-
-export const CATCH_ALL_PATTERN = '/:pathMatch(.*)*'

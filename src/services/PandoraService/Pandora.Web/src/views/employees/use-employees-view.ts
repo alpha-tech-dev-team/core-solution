@@ -1,22 +1,18 @@
 import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useTranslations } from '@shared/i18n/create-i18n'
+import { useViewError } from '@shared/composables/use-view-error'
 import { useAuthStore } from '@/session'
 import { useEmployeesStore } from '@/stores/employees'
 import { EMPLOYEE_STATUS } from '@/constants/employee-status'
 import { FIRST_PAGE } from '@/constants/pagination'
-import { ROUTE_NAMES } from '@/constants/routes'
 import { formatEmployeeFullName } from '@/models/employee'
 import type { Employee } from '@/models/employee'
 import type { EmployeeInput } from '@/models/employee-input'
 
 export function useEmployeesView() {
-  const router = useRouter()
   const authStore = useAuthStore()
   const employeesStore = useEmployeesStore()
-  const { trError } = useTranslations()
+  const { errorMessage, clearError, run } = useViewError()
 
-  const errorMessage = ref('')
   const selectedEmployeeId = ref<string | null>(null)
   const isFormOpen = ref(false)
   const isRolesOpen = ref(false)
@@ -25,29 +21,10 @@ export function useEmployeesView() {
   const formInitial = ref<EmployeeInput | null>(null)
   const editingEmployee = ref<Employee | null>(null)
 
-  const selectedEmployee = computed(() => findEmployee(selectedEmployeeId.value))
-
-  function findEmployee(employeeId: string | null): Employee | null {
-    if (employeeId === null) return null
-
-    return employeesStore.employees.find((employee) => employee.id === employeeId) ?? null
-  }
-
-  function showError(error: unknown): void {
-    errorMessage.value = trError(error)
-  }
-
-  async function run(action: () => Promise<void>): Promise<boolean> {
-    errorMessage.value = ''
-
-    try {
-      await action()
-      return true
-    } catch (error) {
-      showError(error)
-      return false
-    }
-  }
+  const selectedEmployee = computed<Employee | null>(
+    () =>
+      employeesStore.employees.find((employee) => employee.id === selectedEmployeeId.value) ?? null,
+  )
 
   async function load(pageNumber?: number): Promise<void> {
     await run(async () => {
@@ -65,11 +42,6 @@ export function useEmployeesView() {
     return employee?.adminUsername != null && employee.adminUsername === authStore.username
   }
 
-  async function logout(): Promise<void> {
-    await authStore.logout()
-    await router.push({ name: ROUTE_NAMES.LOGIN })
-  }
-
   function select(employeeId: string): void {
     selectedEmployeeId.value = employeeId
   }
@@ -77,7 +49,7 @@ export function useEmployeesView() {
   function openCreateForm(): void {
     editingEmployee.value = null
     formInitial.value = null
-    errorMessage.value = ''
+    clearError()
     isFormOpen.value = true
   }
 
@@ -93,7 +65,7 @@ export function useEmployeesView() {
       position: employee.position,
       phone: employee.phone,
     }
-    errorMessage.value = ''
+    clearError()
     isFormOpen.value = true
   }
 
@@ -128,7 +100,7 @@ export function useEmployeesView() {
   function openRoles(): void {
     if (selectedEmployee.value === null) return
 
-    errorMessage.value = ''
+    clearError()
     isRolesOpen.value = true
   }
 
@@ -139,7 +111,7 @@ export function useEmployeesView() {
   function openDelete(): void {
     if (selectedEmployee.value === null) return
 
-    errorMessage.value = ''
+    clearError()
     isDeleteOpen.value = true
   }
 
@@ -164,11 +136,7 @@ export function useEmployeesView() {
     if (employee === null) return
 
     const isSaved = await run(() =>
-      employeesStore.assignRoles(employee, {
-        roles: roleNames,
-        adminLogin,
-        adminPassword,
-      }),
+      employeesStore.assignRoles(employee, { roles: roleNames, adminLogin, adminPassword }),
     )
     if (isSaved) isRolesOpen.value = false
   }
@@ -197,7 +165,6 @@ export function useEmployeesView() {
     formInitial,
     formatEmployeeFullName,
     isSelf,
-    logout,
     select,
     goToPage,
     openCreateForm,

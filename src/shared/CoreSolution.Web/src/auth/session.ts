@@ -24,12 +24,12 @@ export interface SessionOptions {
 
 export interface SessionContext {
   useAuthStore: ReturnType<typeof defineAuthStore>
+  loginRouteName: string
   authenticatedRouteName: string
 }
 
 export interface Session extends SessionContext {
   install(app: App): void
-  loginRouteName: string
   requireAuth: () => Promise<true | RouteRedirect>
 }
 
@@ -195,12 +195,12 @@ export function createSession(options: SessionOptions): Session {
   const useAuthStore = defineAuthStore(options)
   const context: SessionContext = {
     useAuthStore,
+    loginRouteName: options.loginRouteName,
     authenticatedRouteName: options.authenticatedRouteName,
   }
 
   return {
     ...context,
-    loginRouteName: options.loginRouteName,
     requireAuth: createRequireAuthGuard({
       isAuthenticated: () => useAuthStore().isAuthenticated,
       refreshSession: () => useAuthStore().refreshSession(),

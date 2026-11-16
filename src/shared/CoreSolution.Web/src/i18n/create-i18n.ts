@@ -19,6 +19,17 @@ export interface I18nOptions {
   defaultLocale?: Locale
 }
 
+export function mergeResources(
+  base: Resources,
+  overrides: Partial<Record<Locale, Record<string, string>>>,
+): Resources {
+  const locales = Object.keys(base) as Locale[]
+
+  return Object.fromEntries(
+    locales.map((locale) => [locale, { ...base[locale], ...(overrides[locale] ?? {}) }]),
+  ) as Resources
+}
+
 export interface Translations {
   locale: Ref<Locale>
   setLocale(locale: Locale): void

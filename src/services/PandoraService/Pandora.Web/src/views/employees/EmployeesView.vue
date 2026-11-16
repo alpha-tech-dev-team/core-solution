@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import LogoutButton from '@shared/components/LogoutButton.vue'
 import { useTranslations } from '@shared/i18n/create-i18n'
 import { EMPLOYEE_STATUS } from '@/constants/employee-status'
 import { FIRST_PAGE } from '@/constants/pagination'
@@ -24,7 +25,6 @@ const {
   isDeleteOpen,
   formInitial,
   formatEmployeeFullName,
-  logout,
 } = page
 </script>
 
@@ -36,9 +36,7 @@ const {
         <RouterLink class="btn btn--ghost btn--sm" :to="{ name: ROUTE_NAMES.HOME }">
           {{ tr(RESOURCE_KEYS.NAV_HOME) }}
         </RouterLink>
-        <button class="btn btn--ghost btn--sm" @click="logout">
-          {{ tr(RESOURCE_KEYS.AUTH_LOGOUT) }}
-        </button>
+        <LogoutButton />
       </nav>
     </header>
 

@@ -1,4 +1,4 @@
-import { api } from './client'
+import { api } from '@/session'
 import { EMPLOYEE_ENDPOINTS, PAGINATION_QUERY } from '@/constants/api'
 import type { EmployeeInput } from '@/models/employee-input'
 import type { EmployeeRolesPayload } from '@/models/employee-roles-payload'

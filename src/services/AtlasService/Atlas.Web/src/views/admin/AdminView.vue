@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import LogoutButton from '@shared/components/LogoutButton.vue'
 import { useTranslations } from '@shared/i18n/create-i18n'
 import { RESOURCE_KEYS } from '@/constants/resource-keys'
 import { useAdminView } from './use-admin-view'
 
-const { stats, logout } = useAdminView()
+const { stats } = useAdminView()
 const { tr } = useTranslations()
 </script>
 
@@ -18,9 +19,7 @@ const { tr } = useTranslations()
         </span>
       </div>
 
-      <button class="btn btn--ghost btn--sm" type="button" @click="logout">
-        {{ tr(RESOURCE_KEYS.AUTH_LOGOUT) }}
-      </button>
+      <LogoutButton />
     </header>
 
     <main class="page__body">

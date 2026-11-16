@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import LogoutButton from '@shared/components/LogoutButton.vue'
 import { useTranslations } from '@shared/i18n/create-i18n'
 import { LOADING_PLACEHOLDER } from '@shared/constants/ui'
 import { FIRST_PAGE } from '@/constants/pagination'
@@ -29,7 +30,6 @@ const {
   editSelected,
   deleteSelected,
   save,
-  logout,
   goHome,
 } = page
 </script>
@@ -43,9 +43,7 @@ const {
           {{ tr(RESOURCE_KEYS.NAV_HOME) }}
         </button>
       </nav>
-      <button class="btn btn--ghost btn--sm" @click="logout">
-        {{ tr(RESOURCE_KEYS.AUTH_LOGOUT) }}
-      </button>
+      <LogoutButton />
     </header>
 
     <main class="page__body">

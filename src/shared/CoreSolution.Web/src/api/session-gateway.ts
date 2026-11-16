@@ -1,5 +1,5 @@
 import { AUTH_ENDPOINTS } from '../constants/api'
-import { createHttpClient } from './http-client'
+import { createHttpClient, type HttpClient } from './http-client'
 import type { SessionGateway } from '../auth/session'
 import type { ApiSession } from '../models/api-session'
 import type { Credentials } from '../models/credentials'
@@ -20,4 +20,8 @@ export function createSessionGateway(options: SessionGatewayOptions): SessionGat
       await client.post(AUTH_ENDPOINTS.LOGOUT)
     },
   }
+}
+
+export function createAuthClient(options: SessionGatewayOptions): HttpClient {
+  return createHttpClient(options)
 }

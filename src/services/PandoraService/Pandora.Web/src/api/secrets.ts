@@ -1,4 +1,4 @@
-import { api } from './client'
+import { api } from '@/session'
 import { PAGINATION_QUERY, SECRET_ENDPOINTS } from '@/constants/api'
 import type { CreateSecretPayload } from '@/models/create-secret-payload'
 import type { SecretItem } from '@/models/secret-item'
