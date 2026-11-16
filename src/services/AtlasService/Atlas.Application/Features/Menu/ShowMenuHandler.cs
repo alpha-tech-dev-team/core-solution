@@ -46,7 +46,7 @@ public sealed class ShowMenuHandler : IRequestHandler<ShowMenuMessage, Result<Wo
                     _localizer.GetPhrase(
                         nameof(WorkflowStep.ProblemCategorySelection),
                         LocalizationKeysConstants.ProblemCategorySelection.NextPage),
-                    CallbackConstants.CategoryPagePrefix + (page.Page + 1))));
+                    CallbackConstants.CategoryPagePrefix + page.NextPage)));
         }
 
         return Result<WorkflowResponse>.Success(new WorkflowResponse

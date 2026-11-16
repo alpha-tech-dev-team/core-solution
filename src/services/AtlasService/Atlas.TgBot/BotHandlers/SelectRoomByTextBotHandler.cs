@@ -46,33 +46,33 @@ public sealed class SelectRoomByTextBotHandler : IBotHandler
 
     public async Task HandleAsync(Update update, CancellationToken cancellationToken)
     {
-        if (update.Message is not { Text: string text, Chat.Id: long telegramUserId, MessageId: int messageId })
+        if (update.Message is { Text: string text, Chat.Id: long telegramUserId, MessageId: int messageId })
         {
-            return;
+            var session = GetSession(telegramUserId);
+            var menuMessageId = session?.RoomMenuMessageId;
+
+            var result = await _mediator.Send(
+                new SelectRoomByTextMessage(telegramUserId, messageId, text, menuMessageId),
+                cancellationToken);
+
+            if (menuMessageId is null)
+            {
+                await _telegramNotificationService.SendMessageAsync(
+                    telegramUserId,
+                    result.GetUserText(_userErrorMapper),
+                    result.ToTelegramMarkup() as InlineKeyboardMarkup,
+                    cancellationToken);
+
+                return;
+            }
+
+            await _telegramNotificationService.SendOrEditAsync(
+                telegramUserId,
+                menuMessageId.Value,
+                result.GetUserText(_userErrorMapper),
+                result.ToTelegramMarkup() as InlineKeyboardMarkup,
+                cancellationToken);
         }
-
-        var session = GetSession(telegramUserId);
-        var menuMessageId = session?.RoomMenuMessageId;
-
-        var result = await _mediator.Send(
-            new SelectRoomByTextMessage(telegramUserId, messageId, text, menuMessageId),
-            cancellationToken);
-
-        var markup = result.ToTelegramMarkup() as InlineKeyboardMarkup;
-        var responseText = result.GetUserText(_userErrorMapper);
-
-        if (menuMessageId is null)
-        {
-            await _telegramNotificationService.SendMessageAsync(telegramUserId, responseText, markup, cancellationToken);
-            return;
-        }
-
-        await _telegramNotificationService.SendOrEditAsync(
-            telegramUserId,
-            menuMessageId.Value,
-            responseText,
-            markup,
-            cancellationToken);
     }
 
     private AtlasUserSession? GetSession(long telegramUserId)

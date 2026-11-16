@@ -3,6 +3,7 @@ namespace Atlas.Domain.Constants;
 public static class PaginationLimits
 {
     public const int FirstPage = 1;
+    public const int PageStep = 1;
     public const int DefaultPage = FirstPage;
     public const int DefaultPageSize = 20;
     public const int RoomsPageSize = 5;

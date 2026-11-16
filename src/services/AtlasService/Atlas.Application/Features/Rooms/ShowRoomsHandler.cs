@@ -59,7 +59,7 @@ public sealed class ShowRoomsHandler : IRequestHandler<ShowRoomsMessage, Result<
                     _localizer.GetPhrase(
                         nameof(WorkflowStep.RoomSelection),
                         LocalizationKeysConstants.RoomSelection.NextPage),
-                    CallbackConstants.RoomPagePrefix + (page.Page + 1))));
+                    CallbackConstants.RoomPagePrefix + page.NextPage)));
         }
 
         return Result<WorkflowResponse>.Success(new WorkflowResponse
