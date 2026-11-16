@@ -32,14 +32,16 @@ public sealed class AdminSessionValidator
             return nameof(IdentityErrorCode.InvalidCredentials);
         }
 
-        if (user.Status == UserStatus.Blocked)
+        var statusError = user.Status switch
         {
-            return nameof(IdentityErrorCode.UserBlocked);
-        }
+            UserStatus.Blocked => nameof(IdentityErrorCode.UserBlocked),
+            UserStatus.Archived => nameof(IdentityErrorCode.AccessDenied),
+            _ => null
+        };
 
-        if (user.Status == UserStatus.Archived)
+        if (statusError is not null)
         {
-            return nameof(IdentityErrorCode.AccessDenied);
+            return statusError;
         }
 
         SyncClaims(principal, user);

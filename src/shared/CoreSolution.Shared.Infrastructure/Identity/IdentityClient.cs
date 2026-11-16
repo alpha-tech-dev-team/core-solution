@@ -67,6 +67,4 @@ public sealed class IdentityClient : IIdentityClient
             return ErrorCodes.AccessNotConfirmed;
         }
     }
-
-    private sealed record ErrorResponse(string Code);
 }

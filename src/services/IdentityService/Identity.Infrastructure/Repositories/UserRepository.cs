@@ -11,6 +11,8 @@ namespace Identity.Infrastructure.Repositories;
 
 public class UserRepository : BaseRepository<User>, IUserRepository
 {
+    private const int FirstPage = 1;
+
     public UserRepository(AppDbContext context) : base(context)
     {
     }
@@ -70,7 +72,7 @@ public class UserRepository : BaseRepository<User>, IUserRepository
             .OrderBy(x => x.Surname)
             .ThenBy(x => x.Name)
             .ThenBy(x => x.Id)
-            .Skip((page - 1) * pageSize)
+            .Skip((page - FirstPage) * pageSize)
             .Take(pageSize)
             .ProjectToType<EmployeeInfo>()
             .ToListAsync(cancellationToken);
