@@ -1,14 +1,17 @@
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Pandora.Api.Hubs;
 using Pandora.Api.Middleware;
 using Pandora.Application.Features.Secrets.Common;
 using Pandora.Domain.Interfaces;
 using Pandora.Domain.Options;
+using Pandora.Infrastructure.Audit;
 using Pandora.Infrastructure.Database;
 using Pandora.Infrastructure.Repositories;
 using Pandora.Infrastructure.Secrets.Synchronization;
 using Serilog;
+using StackExchange.Redis;
 using ApplicationAssemblyMarker = Pandora.Application.AssemblyMarker;
 
 namespace Pandora.Api.Extensions.Configuration;
@@ -28,7 +31,7 @@ public static class ServiceConfigurationExtensions
 
         services.AddOptionsConfiguration(configuration);
 
-        services.AddDatabaseConfiguration();
+        services.AddDatabaseConfiguration(configuration);
 
         services.AddSecretWriter();
 
@@ -47,7 +50,7 @@ public static class ServiceConfigurationExtensions
         return services;
     }
 
-    public static IServiceCollection AddDatabaseConfiguration(this IServiceCollection services)
+    public static IServiceCollection AddDatabaseConfiguration(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<IAuditContext, AuditContext>();
         services.AddScoped<AuditSaveChangesInterceptor>();
@@ -58,6 +61,17 @@ public static class ServiceConfigurationExtensions
 
         services.AddScoped<ISecretMetadataRepository, SecretMetadataRepository>();
         services.AddScoped<IAuditRepository, AuditRepository>();
+
+        services.AddSignalR();
+
+        var redisConnection = configuration.GetSection(DatabaseOptions.SectionName).Get<DatabaseOptions>()?.RedisConnection;
+
+        if (!string.IsNullOrWhiteSpace(redisConnection))
+        {
+            services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConnection));
+            services.AddSingleton<IAuditNotifier, RedisAuditNotifier>();
+            services.AddHostedService<AuditNotificationSubscriber>();
+        }
 
         return services;
     }

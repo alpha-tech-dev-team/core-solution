@@ -1,19 +1,24 @@
 using Microsoft.Extensions.Logging;
-using Pandora.TgBot.Application.Common.Interfaces;
 using Pandora.Domain.Constants;
 using Pandora.Domain.Entities;
 using Pandora.Domain.Interfaces;
+using Pandora.TgBot.Application.Common.Interfaces;
 
 namespace Pandora.TgBot.Application.Common.Services;
 
 public sealed class UserActivityAuditLogger
 {
     private readonly IAuditRepository _auditRepository;
+    private readonly IAuditNotifier _auditNotifier;
     private readonly ILogger<UserActivityAuditLogger> _logger;
 
-    public UserActivityAuditLogger(IAuditRepository auditRepository, ILogger<UserActivityAuditLogger> logger)
+    public UserActivityAuditLogger(
+        IAuditRepository auditRepository,
+        IAuditNotifier auditNotifier,
+        ILogger<UserActivityAuditLogger> logger)
     {
         _auditRepository = auditRepository;
+        _auditNotifier = auditNotifier;
         _logger = logger;
     }
 
@@ -24,6 +29,7 @@ public sealed class UserActivityAuditLogger
         try
         {
             await _auditRepository.Add(entry, cancellationToken);
+            await _auditNotifier.NotifyAsync(entry);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {

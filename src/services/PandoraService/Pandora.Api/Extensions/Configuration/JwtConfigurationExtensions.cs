@@ -6,12 +6,14 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Pandora.Api.Hubs;
 
 namespace Pandora.Api.Extensions.Configuration;
 
 public static class JwtConfigurationExtensions
 {
     private const string SecretEnvironmentVariable = "Jwt__Secret";
+    private const string AccessTokenQueryParameter = "access_token";
 
     public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IHostEnvironment environment)
     {
@@ -56,6 +58,11 @@ public static class JwtConfigurationExtensions
                 {
                     OnMessageReceived = context =>
                     {
+                        if (context.Request.Path.StartsWithSegments(AuditHub.Path))
+                        {
+                            context.Token ??= context.Request.Query[AccessTokenQueryParameter];
+                        }
+
                         context.Token ??= context.Request.Cookies[AuthCookieConstants.AccessTokenName];
                         return Task.CompletedTask;
                     }

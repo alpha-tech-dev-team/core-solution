@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Pandora.Domain.Interfaces;
 using Pandora.Domain.Options;
+using Pandora.Infrastructure.Audit;
 using Pandora.Infrastructure.Database;
 using Pandora.Infrastructure.Repositories;
 using Pandora.Infrastructure.Secrets;
@@ -23,6 +24,7 @@ public static class InfrastructureExtensions
         services.AddLocalization(typeof(ConfigSecretStore).Assembly);
         services.AddDbContext<PandoraDbContext>(options => options.UseNpgsql(databaseOptions.ConnectionString));
         services.AddScoped<IAuditRepository, AuditRepository>();
+        services.AddSingleton<IAuditNotifier, RedisAuditNotifier>();
         services.AddSessionInfrastructure(configuration, databaseOptions.RedisConnection);
 
         return services;

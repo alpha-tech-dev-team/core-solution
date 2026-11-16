@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { tr, trAuditAction, trAuditSource, trRequestError } from '@/i18n'
@@ -9,6 +9,7 @@ import { AUDIT_PAGE_SIZE, FIRST_PAGE } from '@/constants/pagination'
 import { LOADING_PLACEHOLDER } from '@/constants/ui'
 import { toRequestError } from '@/api/request-error'
 import { fetchAuditEntries } from '@/api/audit'
+import { createAuditHubConnection } from '@/api/audit-hub'
 import type { AuditEntry } from '@/stores/models/audit-entry'
 
 const router = useRouter()
@@ -51,7 +52,34 @@ async function logout() {
   router.push(ROUTES.LOGIN)
 }
 
-onMounted(loadEntries)
+const auditHub = createAuditHubConnection(addLiveEntry)
+
+function addLiveEntry(entry: AuditEntry) {
+  if (entries.value.some((existing) => existing.id === entry.id)) return
+
+  total.value += 1
+
+  if (page.value === FIRST_PAGE) {
+    entries.value = [entry, ...entries.value]
+  }
+}
+
+async function startLiveUpdates() {
+  try {
+    await auditHub.start()
+  } catch (error) {
+    console.error('Не удалось подключиться к каналу аудита', error)
+  }
+}
+
+onMounted(() => {
+  void loadEntries()
+  void startLiveUpdates()
+})
+
+onUnmounted(() => {
+  void auditHub.stop()
+})
 </script>
 
 <template>
