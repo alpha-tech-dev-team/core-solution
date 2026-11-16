@@ -6,7 +6,9 @@ import { EMPLOYEE_STATUS } from '@/constants/employee-status'
 import { FIRST_PAGE } from '@/constants/pagination'
 import { formatEmployeeFullName } from '@/models/employee'
 import type { Employee } from '@/models/employee'
-import type { EmployeeInput } from '@/models/employee-input'
+import { useEmployeeDelete } from './use-employee-delete'
+import { useEmployeeForm } from './use-employee-form'
+import { useEmployeeRoles } from './use-employee-roles'
 
 export function useEmployeesView() {
   const authStore = useAuthStore()
@@ -14,17 +16,17 @@ export function useEmployeesView() {
   const { errorMessage, clearError, run } = useViewError()
 
   const selectedEmployeeId = ref<string | null>(null)
-  const isFormOpen = ref(false)
-  const isRolesOpen = ref(false)
-  const isSaving = ref(false)
-  const isDeleteOpen = ref(false)
-  const formInitial = ref<EmployeeInput | null>(null)
-  const editingEmployee = ref<Employee | null>(null)
 
   const selectedEmployee = computed<Employee | null>(
     () =>
       employeesStore.employees.find((employee) => employee.id === selectedEmployeeId.value) ?? null,
   )
+
+  const getSelected = () => selectedEmployee.value
+
+  const form = useEmployeeForm(employeesStore, run, clearError)
+  const roles = useEmployeeRoles(employeesStore, run, clearError, getSelected)
+  const deletion = useEmployeeDelete(employeesStore, run, clearError, getSelected)
 
   async function load(pageNumber?: number): Promise<void> {
     await run(async () => {
@@ -46,99 +48,8 @@ export function useEmployeesView() {
     selectedEmployeeId.value = employeeId
   }
 
-  function openCreateForm(): void {
-    editingEmployee.value = null
-    formInitial.value = null
-    clearError()
-    isFormOpen.value = true
-  }
-
   function openEditForm(): void {
-    const employee = selectedEmployee.value
-    if (employee === null) return
-
-    editingEmployee.value = employee
-    formInitial.value = {
-      name: employee.name,
-      surname: employee.surname,
-      patronymic: employee.patronymic ?? '',
-      position: employee.position,
-      phone: employee.phone,
-    }
-    clearError()
-    isFormOpen.value = true
-  }
-
-  function closeForm(): void {
-    isFormOpen.value = false
-  }
-
-  async function save(input: EmployeeInput): Promise<void> {
-    if (isSaving.value) return
-
-    isSaving.value = true
-
-    try {
-      const isSaved = await run(async () => {
-        if (editingEmployee.value === null) {
-          await employeesStore.create(input)
-          return
-        }
-
-        await employeesStore.update(editingEmployee.value, input)
-      })
-
-      if (isSaved) {
-        isFormOpen.value = false
-        editingEmployee.value = null
-      }
-    } finally {
-      isSaving.value = false
-    }
-  }
-
-  function openRoles(): void {
-    if (selectedEmployee.value === null) return
-
-    clearError()
-    isRolesOpen.value = true
-  }
-
-  function closeRoles(): void {
-    isRolesOpen.value = false
-  }
-
-  function openDelete(): void {
-    if (selectedEmployee.value === null) return
-
-    clearError()
-    isDeleteOpen.value = true
-  }
-
-  function closeDelete(): void {
-    isDeleteOpen.value = false
-  }
-
-  async function confirmDelete(): Promise<void> {
-    const employee = selectedEmployee.value
-    if (employee === null) return
-
-    const isDeleted = await run(() => employeesStore.remove(employee))
-    if (isDeleted) isDeleteOpen.value = false
-  }
-
-  async function saveRoles(
-    roleNames: string[],
-    adminLogin: string | null,
-    adminPassword: string | null,
-  ): Promise<void> {
-    const employee = selectedEmployee.value
-    if (employee === null) return
-
-    const isSaved = await run(() =>
-      employeesStore.assignRoles(employee, { roles: roleNames, adminLogin, adminPassword }),
-    )
-    if (isSaved) isRolesOpen.value = false
+    if (selectedEmployee.value !== null) form.openEdit(selectedEmployee.value)
   }
 
   async function toggleBlock(): Promise<void> {
@@ -158,25 +69,28 @@ export function useEmployeesView() {
     errorMessage,
     selectedEmployee,
     selectedEmployeeId,
-    isFormOpen,
-    isRolesOpen,
-    isSaving,
-    isDeleteOpen,
-    formInitial,
     formatEmployeeFullName,
     isSelf,
     select,
     goToPage,
-    openCreateForm,
-    openEditForm,
-    closeForm,
-    save,
-    openRoles,
-    closeRoles,
-    openDelete,
-    closeDelete,
-    confirmDelete,
-    saveRoles,
     toggleBlock,
+
+    isFormOpen: form.isOpen,
+    formInitial: form.initial,
+    isSaving: form.isSaving,
+    openCreateForm: form.openCreate,
+    openEditForm,
+    closeForm: form.close,
+    save: form.save,
+
+    isRolesOpen: roles.isOpen,
+    openRoles: roles.open,
+    closeRoles: roles.close,
+    saveRoles: roles.save,
+
+    isDeleteOpen: deletion.isOpen,
+    openDelete: deletion.open,
+    closeDelete: deletion.close,
+    confirmDelete: deletion.confirm,
   }
 }

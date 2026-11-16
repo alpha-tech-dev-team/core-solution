@@ -1,31 +1,44 @@
 <script setup lang="ts">
 import LogoutButton from '@shared/components/LogoutButton.vue'
 import { useTranslations } from '@shared/i18n/create-i18n'
+import { LOADING_PLACEHOLDER } from '@shared/constants/ui'
 import { EMPLOYEE_STATUS } from '@/constants/employee-status'
 import { RESOURCE_KEYS } from '@/constants/resource-keys'
 import { ROUTE_NAMES } from '@/constants/routes'
-import { LOADING_PLACEHOLDER } from '@shared/constants/ui'
-import { useEmployeesView } from './use-employees-view'
 import PaginationNav from '@/components/PaginationNav.vue'
+import { useEmployeesView } from './use-employees-view'
 import EmployeeDeleteDialog from './EmployeeDeleteDialog.vue'
 import EmployeeFormDialog from './EmployeeFormDialog.vue'
 import EmployeeRolesDialog from './EmployeeRolesDialog.vue'
-
-const page = useEmployeesView()
-const { tr, trStatus } = useTranslations()
 
 const {
   employeesStore,
   errorMessage,
   selectedEmployee,
   selectedEmployeeId,
-  isFormOpen,
-  isRolesOpen,
-  isSaving,
-  isDeleteOpen,
-  formInitial,
   formatEmployeeFullName,
-} = page
+  isSelf,
+  select,
+  goToPage,
+  toggleBlock,
+  isFormOpen,
+  formInitial,
+  isSaving,
+  openCreateForm,
+  openEditForm,
+  closeForm,
+  save,
+  isRolesOpen,
+  openRoles,
+  closeRoles,
+  saveRoles,
+  isDeleteOpen,
+  openDelete,
+  closeDelete,
+  confirmDelete,
+} = useEmployeesView()
+
+const { tr, trStatus } = useTranslations()
 </script>
 
 <template>
@@ -47,24 +60,20 @@ const {
 
       <div class="toolbar">
         <div class="toolbar__group">
-          <button
-            class="btn btn--ghost"
-            :disabled="selectedEmployee === null"
-            @click="page.openRoles()"
-          >
+          <button class="btn btn--ghost" :disabled="selectedEmployee === null" @click="openRoles()">
             {{ tr(RESOURCE_KEYS.EMPLOYEE_ROLES) }}
           </button>
           <button
             class="btn btn--ghost"
             :disabled="selectedEmployee === null"
-            @click="page.openEditForm()"
+            @click="openEditForm()"
           >
             {{ tr(RESOURCE_KEYS.EMPLOYEE_EDIT) }}
           </button>
           <button
             class="btn btn--ghost"
             :disabled="selectedEmployee === null"
-            @click="page.toggleBlock()"
+            @click="toggleBlock()"
           >
             {{
               selectedEmployee?.status === EMPLOYEE_STATUS.BLOCKED
@@ -75,13 +84,13 @@ const {
           <button
             class="btn btn--danger"
             :disabled="selectedEmployee === null"
-            @click="page.openDelete()"
+            @click="openDelete()"
           >
             {{ tr(RESOURCE_KEYS.EMPLOYEE_DELETE) }}
           </button>
         </div>
 
-        <button class="btn btn--primary" @click="page.openCreateForm()">
+        <button class="btn btn--primary" @click="openCreateForm()">
           {{ tr(RESOURCE_KEYS.EMPLOYEE_ADD) }}
         </button>
       </div>
@@ -108,9 +117,9 @@ const {
             tabindex="0"
             :aria-current="employee.id === selectedEmployeeId ? 'true' : undefined"
             :class="{ 'table__row--selected': employee.id === selectedEmployeeId }"
-            @click="page.select(employee.id)"
-            @keydown.enter.prevent="page.select(employee.id)"
-            @keydown.space.prevent="page.select(employee.id)"
+            @click="select(employee.id)"
+            @keydown.enter.prevent="select(employee.id)"
+            @keydown.space.prevent="select(employee.id)"
           >
             <td>{{ formatEmployeeFullName(employee) }}</td>
             <td>{{ employee.position }}</td>
@@ -131,7 +140,7 @@ const {
         :info-label="
           tr(RESOURCE_KEYS.EMPLOYEES_PAGE_OF, employeesStore.page, employeesStore.totalPages)
         "
-        @change="page.goToPage($event)"
+        @change="goToPage($event)"
       />
 
       <EmployeeFormDialog
@@ -139,27 +148,27 @@ const {
         :initial="formInitial"
         :error="isFormOpen ? errorMessage : ''"
         :saving="isSaving"
-        @submit="page.save($event)"
-        @close="page.closeForm()"
+        @submit="save($event)"
+        @close="closeForm()"
       />
 
       <EmployeeRolesDialog
         :open="isRolesOpen"
         :employee="selectedEmployee"
-        :is-self="page.isSelf(selectedEmployee)"
+        :is-self="isSelf(selectedEmployee)"
         :roles="employeesStore.roles"
         :error="isRolesOpen ? errorMessage : ''"
-        @save="page.saveRoles($event.roles, $event.adminLogin, $event.adminPassword)"
-        @close="page.closeRoles()"
+        @save="saveRoles($event.roles, $event.adminLogin, $event.adminPassword)"
+        @close="closeRoles()"
       />
 
       <EmployeeDeleteDialog
         :open="isDeleteOpen"
         :employee="selectedEmployee"
-        :is-self="page.isSelf(selectedEmployee)"
+        :is-self="isSelf(selectedEmployee)"
         :error="isDeleteOpen ? errorMessage : ''"
-        @confirm="page.confirmDelete()"
-        @close="page.closeDelete()"
+        @confirm="confirmDelete()"
+        @close="closeDelete()"
       />
     </main>
   </div>

@@ -51,7 +51,20 @@ function interpolate(template: string, params: readonly unknown[]): string {
   return template.replace(PLACEHOLDER_PATTERN, (_, index) => String(params[Number(index)] ?? ''))
 }
 
-export function createI18n(options: I18nOptions): I18n {
+function resolveErrorKey(error: ApiError, has: (key: string) => boolean): string {
+  if (error.status === null) return NETWORK_ERROR_KEY
+
+  if (error.code !== null) {
+    const codeKey = `${ERROR_CODE_KEY_PREFIX}_${error.code}`
+    if (has(codeKey)) return codeKey
+  }
+
+  const statusKey = `${ERROR_STATUS_KEY_PREFIX}_${error.status}`
+
+  return has(statusKey) ? statusKey : UNKNOWN_ERROR_KEY
+}
+
+function createTranslations(options: I18nOptions): Translations {
   const locale = ref<Locale>(options.defaultLocale ?? DEFAULT_LOCALE)
 
   function has(key: string): boolean {
@@ -59,43 +72,24 @@ export function createI18n(options: I18nOptions): I18n {
   }
 
   function tr(key: string, ...params: readonly unknown[]): string {
-    const template = options.resources[locale.value][key] ?? key
-
-    return interpolate(template, params)
+    return interpolate(options.resources[locale.value][key] ?? key, params)
   }
 
-  function trStatus(status: string): string {
-    return tr(`${STATUS_KEY_PREFIX}_${status.toLowerCase()}`)
-  }
-
-  function trValidationMessage(message: ValidationMessage): string {
-    return tr(`${VALIDATION_KEY_PREFIX}_${message.rule}`, message.limit)
-  }
-
-  function trError(error: unknown): string {
-    if (!(error instanceof ApiError)) return tr(UNKNOWN_ERROR_KEY)
-    if (error.status === null) return tr(NETWORK_ERROR_KEY)
-
-    if (error.code !== null) {
-      const codeKey = `${ERROR_CODE_KEY_PREFIX}_${error.code}`
-      if (has(codeKey)) return tr(codeKey)
-    }
-
-    const statusKey = `${ERROR_STATUS_KEY_PREFIX}_${error.status}`
-
-    return tr(has(statusKey) ? statusKey : UNKNOWN_ERROR_KEY)
-  }
-
-  const translations: Translations = {
+  return {
     locale,
     setLocale: (nextLocale) => {
       locale.value = nextLocale
     },
     tr,
-    trStatus,
-    trValidationMessage,
-    trError,
+    trStatus: (status) => tr(`${STATUS_KEY_PREFIX}_${status.toLowerCase()}`),
+    trValidationMessage: (message) => tr(`${VALIDATION_KEY_PREFIX}_${message.rule}`, message.limit),
+    trError: (error) =>
+      tr(error instanceof ApiError ? resolveErrorKey(error, has) : UNKNOWN_ERROR_KEY),
   }
+}
+
+export function createI18n(options: I18nOptions): I18n {
+  const translations = createTranslations(options)
 
   return {
     ...translations,

@@ -1,14 +1,14 @@
-import { computed, inject, ref, type App, type InjectionKey } from 'vue'
+import { computed, inject, ref, type App, type ComputedRef, type InjectionKey, type Ref } from 'vue'
 import { defineStore } from 'pinia'
-import { HTTP_STATUS } from '../api/http'
-import { ApiError } from '../api/api-error'
-import { AUTH_STORE_ID, AUTH_STORAGE_KEY, TOKEN_REFRESH } from '../constants/auth'
+import { AUTH_STORE_ID } from '../constants/auth'
 import type { ApiSession } from '../models/api-session'
 import type { AuthSession } from '../models/auth-session'
 import type { Credentials } from '../models/credentials'
-import { readJson, removeJson, writeJson } from '../storage/local-storage'
 import { createRequireAuthGuard, type RouteRedirect } from './auth-guard'
 import { isExpired, toEpochMs } from './expiry'
+import { createRefreshCoordinator } from './session-refresh'
+import { createSessionTimers } from './session-timers'
+import { persistSession, readStoredSession } from './session-storage'
 
 export interface SessionGateway {
   login(credentials: Credentials): Promise<ApiSession>
@@ -33,166 +33,134 @@ export interface Session extends SessionContext {
   requireAuth: () => Promise<true | RouteRedirect>
 }
 
+export interface SessionState {
+  session: Ref<AuthSession | null>
+  username: ComputedRef<string | null>
+  isAuthenticated: ComputedRef<boolean>
+  login(credentials: Credentials): Promise<void>
+  logout(): Promise<void>
+  refreshSession(): Promise<boolean>
+  restoreSession(): Promise<void>
+}
+
 const SESSION_KEY: InjectionKey<SessionContext> = Symbol('session')
 
-function defineAuthStore(options: SessionOptions) {
-  return defineStore(AUTH_STORE_ID, () => {
-    const session = ref<AuthSession | null>(readJson<AuthSession>(AUTH_STORAGE_KEY))
-    const nowMs = ref(Date.now())
+interface SessionLifetimeOptions {
+  session: Ref<AuthSession | null>
+  timers: ReturnType<typeof createSessionTimers>
+  scheduleRefresh: () => void
+  bumpVersion: () => void
+}
 
-    const username = computed<string | null>(() => session.value?.username ?? null)
-    const isAuthenticated = computed<boolean>(
-      () => session.value !== null && !isExpired(expiresAtMs(), nowMs.value),
-    )
-
-    let refreshTimer: number | undefined
-    let clockTimer: number | undefined
-    let refreshPromise: Promise<boolean> | null = null
-    let sessionVersion = 0
-
-    function expiresAtMs(): number | null {
-      return session.value === null ? null : toEpochMs(session.value.accessTokenExpiresAt)
+function createSessionLifetime(options: SessionLifetimeOptions) {
+  function apply(apiSession: ApiSession, sessionUsername: string): void {
+    options.bumpVersion()
+    options.session.value = {
+      accessTokenExpiresAt: apiSession.accessTokenExpiresAt,
+      username: sessionUsername,
     }
 
-    function startClock(): void {
-      if (clockTimer !== undefined) return
+    persistSession(options.session.value)
+    options.timers.start()
+    options.scheduleRefresh()
+  }
 
-      clockTimer = window.setInterval(() => {
-        nowMs.value = Date.now()
-      }, TOKEN_REFRESH.CLOCK_TICK_MS)
-    }
+  function clear(): void {
+    options.bumpVersion()
+    options.session.value = null
 
-    function stopClock(): void {
-      if (clockTimer === undefined) return
+    persistSession(null)
+    options.timers.cancelAll()
+  }
 
-      window.clearInterval(clockTimer)
-      clockTimer = undefined
-    }
+  return { apply, clear }
+}
 
-    function clearRefreshTimer(): void {
-      if (refreshTimer === undefined) return
+export function createSessionState(gateway: SessionGateway): SessionState {
+  const session = ref<AuthSession | null>(readStoredSession())
+  const nowMs = ref(Date.now())
+  const timers = createSessionTimers(nowMs)
 
-      window.clearTimeout(refreshTimer)
-      refreshTimer = undefined
-    }
+  let sessionVersion = 0
 
-    function scheduleRefresh(): void {
-      clearRefreshTimer()
+  const username = computed<string | null>(() => session.value?.username ?? null)
+  const isAuthenticated = computed<boolean>(
+    () => session.value !== null && !isExpired(expiresAtMs(), nowMs.value),
+  )
 
-      const expiresAt = expiresAtMs()
-      if (expiresAt === null) return
+  function expiresAtMs(): number | null {
+    return session.value === null ? null : toEpochMs(session.value.accessTokenExpiresAt)
+  }
 
-      const delay = Math.max(
-        expiresAt - Date.now() - TOKEN_REFRESH.MARGIN_MS,
-        TOKEN_REFRESH.MIN_DELAY_MS,
-      )
+  function scheduleRefresh(): void {
+    const expiresAt = expiresAtMs()
+    if (expiresAt !== null) timers.scheduleRefresh(() => void refreshSession(), expiresAt)
+  }
 
-      refreshTimer = window.setTimeout(() => {
-        void refreshSession()
-      }, delay)
-    }
-
-    function persist(): void {
-      if (session.value === null) {
-        removeJson(AUTH_STORAGE_KEY)
-        return
-      }
-
-      writeJson(AUTH_STORAGE_KEY, session.value)
-    }
-
-    function applySession(apiSession: ApiSession, sessionUsername: string): void {
+  const lifetime = createSessionLifetime({
+    session,
+    timers,
+    scheduleRefresh,
+    bumpVersion: () => {
       sessionVersion += 1
-      session.value = {
-        accessTokenExpiresAt: apiSession.accessTokenExpiresAt,
-        username: sessionUsername,
-      }
-
-      persist()
-      startClock()
-      scheduleRefresh()
-    }
-
-    function clearSession(): void {
-      sessionVersion += 1
-      session.value = null
-
-      persist()
-      clearRefreshTimer()
-      stopClock()
-    }
-
-    async function performRefresh(): Promise<boolean> {
-      const current = session.value
-      if (current === null) return false
-
-      const version = sessionVersion
-
-      try {
-        const refreshed = await options.gateway.refresh()
-        if (sessionVersion !== version) return false
-
-        applySession(refreshed, current.username)
-
-        return true
-      } catch (error) {
-        if (error instanceof ApiError && error.status === HTTP_STATUS.UNAUTHORIZED) clearSession()
-
-        return false
-      }
-    }
-
-    function refreshSession(): Promise<boolean> {
-      if (refreshPromise === null) {
-        refreshPromise = performRefresh().finally(() => {
-          refreshPromise = null
-        })
-      }
-
-      return refreshPromise
-    }
-
-    async function login(credentials: Credentials): Promise<void> {
-      const apiSession = await options.gateway.login(credentials)
-
-      applySession(apiSession, credentials.username)
-    }
-
-    async function logout(): Promise<void> {
-      await options.gateway.logout().catch(() => undefined)
-      clearSession()
-    }
-
-    async function restoreSession(): Promise<void> {
-      if (session.value === null) {
-        clearSession()
-        return
-      }
-
-      startClock()
-
-      if (isAuthenticated.value) {
-        scheduleRefresh()
-        return
-      }
-
-      await refreshSession()
-    }
-
-    return {
-      session,
-      username,
-      isAuthenticated,
-      login,
-      logout,
-      refreshSession,
-      restoreSession,
-    }
+    },
   })
+
+  const refreshCoordinator = createRefreshCoordinator({
+    refresh: () => gateway.refresh(),
+    currentVersion: () => sessionVersion,
+    applyRefreshed: (refreshed) => {
+      if (session.value !== null) lifetime.apply(refreshed, session.value.username)
+    },
+    clear: lifetime.clear,
+  })
+
+  function refreshSession(): Promise<boolean> {
+    return session.value === null ? Promise.resolve(false) : refreshCoordinator.refresh()
+  }
+
+  async function login(credentials: Credentials): Promise<void> {
+    lifetime.apply(await gateway.login(credentials), credentials.username)
+  }
+
+  async function logout(): Promise<void> {
+    await gateway.logout().catch(() => undefined)
+    lifetime.clear()
+  }
+
+  async function restoreSession(): Promise<void> {
+    if (session.value === null) {
+      lifetime.clear()
+      return
+    }
+
+    timers.start()
+
+    if (isAuthenticated.value) {
+      scheduleRefresh()
+      return
+    }
+
+    await refreshSession()
+  }
+
+  return {
+    session,
+    username,
+    isAuthenticated,
+    login,
+    logout,
+    refreshSession,
+    restoreSession,
+  }
+}
+
+function defineAuthStore(gateway: SessionGateway) {
+  return defineStore(AUTH_STORE_ID, (): SessionState => createSessionState(gateway))
 }
 
 export function createSession(options: SessionOptions): Session {
-  const useAuthStore = defineAuthStore(options)
+  const useAuthStore = defineAuthStore(options.gateway)
   const context: SessionContext = {
     useAuthStore,
     loginRouteName: options.loginRouteName,

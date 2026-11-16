@@ -53,6 +53,16 @@ async function readBody<T>(response: Response): Promise<T> {
   return (text === '' ? undefined : JSON.parse(text)) as T
 }
 
+function buildRequestInit(request: RequestOptions, timeoutMs: number): RequestInit {
+  return {
+    method: request.method,
+    headers:
+      request.body === undefined ? undefined : { [HTTP_HEADER.CONTENT_TYPE]: MIME_TYPE.JSON },
+    body: request.body === undefined ? undefined : JSON.stringify(request.body),
+    signal: AbortSignal.timeout(timeoutMs),
+  }
+}
+
 export function createHttpClient(options: HttpClientOptions): HttpClient {
   let unauthorizedHandler: (() => Promise<boolean>) | null = null
 
@@ -60,13 +70,10 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
     let response: Response
 
     try {
-      response = await fetch(buildUrl(options.baseUrl, request.path, request.query), {
-        method: request.method,
-        headers:
-          request.body === undefined ? undefined : { [HTTP_HEADER.CONTENT_TYPE]: MIME_TYPE.JSON },
-        body: request.body === undefined ? undefined : JSON.stringify(request.body),
-        signal: AbortSignal.timeout(options.timeoutMs),
-      })
+      response = await fetch(
+        buildUrl(options.baseUrl, request.path, request.query),
+        buildRequestInit(request, options.timeoutMs),
+      )
     } catch {
       throw new ApiError(null)
     }
