@@ -5,8 +5,6 @@ import { SHARED_ROUTE_NAMES } from '@shared/constants/routes'
 import { useViewError } from '@shared/composables/use-view-error'
 import { SECRETS_PAGE_SIZE } from '@/constants/pagination'
 import { RESOURCE_KEYS } from '@/constants/resource-keys'
-import { SECRET_SOURCE } from '@/models/secret-source'
-import type { SecretSource } from '@/models/secret-source'
 import { validateSecretForm } from './validate-secret-form'
 import { useSecretForm } from './use-secret-form'
 import { useSecretsCrud } from './use-secrets-crud'
@@ -19,9 +17,9 @@ export function useSecretsView() {
 
   const pageSize = ref(SECRETS_PAGE_SIZE)
   const total = ref(0)
-  const source = ref<SecretSource>(SECRET_SOURCE.DATABASE)
+  const showPasswords = ref(false)
 
-  const list = useSecretsList(pageSize, total, source, run)
+  const list = useSecretsList(pageSize, total, showPasswords, run)
   const form = useSecretForm()
 
   function confirmDelete(): boolean {
@@ -46,11 +44,6 @@ export function useSecretsView() {
     await crud.save()
   }
 
-  async function changeSource(target: SecretSource): Promise<void> {
-    form.close()
-    await list.changeSource(target)
-  }
-
   function goHome(): void {
     void router.push({ name: SHARED_ROUTE_NAMES.HOME })
   }
@@ -70,10 +63,10 @@ export function useSecretsView() {
     formPassword: form.password,
     selectedItem: list.selectedItem,
     selectedId: list.selectedId,
-    source,
+    showPasswords,
     errorMessage,
     changePage: list.changePage,
-    changeSource,
+    togglePasswords: list.togglePasswords,
     openCreateForm: form.openCreate,
     closeForm: form.close,
     selectRow: list.select,

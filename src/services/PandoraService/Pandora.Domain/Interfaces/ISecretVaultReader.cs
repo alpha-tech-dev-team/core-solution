@@ -5,5 +5,5 @@ namespace Pandora.Domain.Interfaces;
 
 public interface ISecretVaultReader
 {
-    Task<Result<IReadOnlyList<SecretListItem>>> GetListItems(CancellationToken cancellationToken);
+    Task<Result<IReadOnlyList<SecretPageItem>>> GetListItems(CancellationToken cancellationToken);
 }

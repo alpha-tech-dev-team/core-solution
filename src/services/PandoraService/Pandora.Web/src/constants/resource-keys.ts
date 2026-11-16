@@ -63,6 +63,5 @@ export const RESOURCE_KEYS = {
   SECRETS_PAGE_PREV: 'secrets_page_prev',
   SECRETS_PAGE_NEXT: 'secrets_page_next',
   SECRETS_PAGE_INFO: 'secrets_page_info',
-  SECRETS_SOURCE_DATABASE: 'secrets_source_database',
-  SECRETS_SOURCE_VAULTWARDEN: 'secrets_source_vaultwarden',
+  SECRETS_SHOW_PASSWORDS: 'secrets_show_passwords',
 } as const

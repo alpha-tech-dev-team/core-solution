@@ -3,7 +3,6 @@ import LogoutButton from '@shared/components/LogoutButton.vue'
 import { useTranslations } from '@shared/i18n/create-i18n'
 import { LOADING_PLACEHOLDER } from '@shared/constants/ui'
 import { RESOURCE_KEYS } from '@/constants/resource-keys'
-import { SECRET_SOURCE } from '@/models/secret-source'
 import PaginationNav from '@shared/components/PaginationNav.vue'
 import { useSecretsView } from './use-secrets-view'
 
@@ -23,10 +22,10 @@ const {
   formPassword,
   selectedItem,
   selectedId,
-  source,
+  showPasswords,
   errorMessage,
   changePage,
-  changeSource,
+  togglePasswords,
   openCreateForm,
   closeForm,
   selectRow,
@@ -35,8 +34,6 @@ const {
   save,
   goHome,
 } = page
-
-const isVaultSource = (): boolean => source.value === SECRET_SOURCE.VAULTWARDEN
 </script>
 
 <template>
@@ -55,22 +52,12 @@ const isVaultSource = (): boolean => source.value === SECRET_SOURCE.VAULTWARDEN
       <div class="toolbar">
         <div class="toolbar__group">
           <h2>{{ tr(RESOURCE_KEYS.SECRETS_TITLE) }}</h2>
-          <button
-            class="btn btn--ghost btn--sm"
-            :disabled="!isVaultSource()"
-            @click="changeSource(SECRET_SOURCE.DATABASE)"
-          >
-            {{ tr(RESOURCE_KEYS.SECRETS_SOURCE_DATABASE) }}
-          </button>
-          <button
-            class="btn btn--ghost btn--sm"
-            :disabled="isVaultSource()"
-            @click="changeSource(SECRET_SOURCE.VAULTWARDEN)"
-          >
-            {{ tr(RESOURCE_KEYS.SECRETS_SOURCE_VAULTWARDEN) }}
-          </button>
+          <label class="checkbox">
+            <input type="checkbox" :checked="showPasswords" @change="togglePasswords" />
+            {{ tr(RESOURCE_KEYS.SECRETS_SHOW_PASSWORDS) }}
+          </label>
         </div>
-        <div v-if="!isFormVisible && !isVaultSource()" class="toolbar__group">
+        <div v-if="!isFormVisible" class="toolbar__group">
           <button class="btn btn--primary" @click="openCreateForm">
             {{ tr(RESOURCE_KEYS.SECRETS_ADD) }}
           </button>
@@ -123,6 +110,7 @@ const isVaultSource = (): boolean => source.value === SECRET_SOURCE.VAULTWARDEN
           <tr>
             <th>{{ tr(RESOURCE_KEYS.SECRETS_FIELD_NAME) }}</th>
             <th>{{ tr(RESOURCE_KEYS.SECRETS_FIELD_USERNAME) }}</th>
+            <th v-if="showPasswords">{{ tr(RESOURCE_KEYS.SECRETS_FIELD_PASSWORD) }}</th>
           </tr>
         </thead>
         <tbody>
@@ -134,6 +122,7 @@ const isVaultSource = (): boolean => source.value === SECRET_SOURCE.VAULTWARDEN
           >
             <td>{{ item.name }}</td>
             <td>{{ item.username }}</td>
+            <td v-if="showPasswords">{{ item.password ?? '' }}</td>
           </tr>
         </tbody>
       </table>

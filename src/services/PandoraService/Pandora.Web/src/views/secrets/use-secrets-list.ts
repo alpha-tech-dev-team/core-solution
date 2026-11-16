@@ -2,7 +2,6 @@ import { computed, ref, type ComputedRef, type Ref } from 'vue'
 import { FIRST_PAGE } from '@shared/constants/pagination'
 import { fetchSecrets } from '@/api/secrets'
 import type { SecretItem } from '@/models/secret-item'
-import type { SecretSource } from '@/models/secret-source'
 
 export interface SecretsList {
   items: Ref<SecretItem[]>
@@ -13,7 +12,7 @@ export interface SecretsList {
   isLoading: Ref<boolean>
   load(): Promise<void>
   changePage(target: number): Promise<void>
-  changeSource(target: SecretSource): Promise<void>
+  togglePasswords(): Promise<void>
   select(item: SecretItem): void
   resetSelection(): void
 }
@@ -21,7 +20,7 @@ export interface SecretsList {
 export function useSecretsList(
   pageSize: Ref<number>,
   total: Ref<number>,
-  source: Ref<SecretSource>,
+  showPasswords: Ref<boolean>,
   run: (action: () => Promise<void>) => Promise<boolean>,
 ): SecretsList {
   const items = ref<SecretItem[]>([])
@@ -39,11 +38,11 @@ export function useSecretsList(
 
     try {
       await run(async () => {
-        let result = await fetchSecrets(page.value, pageSize.value, source.value)
+        let result = await fetchSecrets(page.value, pageSize.value, showPasswords.value)
 
         while (result.items.length === 0 && result.total > 0 && page.value > FIRST_PAGE) {
           page.value -= 1
-          result = await fetchSecrets(page.value, pageSize.value, source.value)
+          result = await fetchSecrets(page.value, pageSize.value, showPasswords.value)
         }
 
         items.value = result.items
@@ -64,12 +63,8 @@ export function useSecretsList(
     await load()
   }
 
-  async function changeSource(target: SecretSource): Promise<void> {
-    if (target === source.value) return
-
-    source.value = target
-    page.value = FIRST_PAGE
-    selectedId.value = null
+  async function togglePasswords(): Promise<void> {
+    showPasswords.value = !showPasswords.value
     await load()
   }
 
@@ -86,7 +81,7 @@ export function useSecretsList(
     isLoading,
     load,
     changePage,
-    changeSource,
+    togglePasswords,
     select,
     resetSelection: () => {
       selectedId.value = null

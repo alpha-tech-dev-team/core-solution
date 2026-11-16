@@ -2,19 +2,18 @@ import { api } from '@shared/app/app-session'
 import { PAGINATION_QUERY, SECRET_ENDPOINTS } from '@/constants/api'
 import type { CreateSecretPayload } from '@/models/create-secret-payload'
 import type { SecretItem } from '@/models/secret-item'
-import type { SecretSource } from '@/models/secret-source'
 import type { Page } from '@shared/models/page'
 import type { UpdateSecretPayload } from '@/models/update-secret-payload'
 
 export async function fetchSecrets(
   page: number,
   pageSize: number,
-  source: SecretSource,
+  includePasswords: boolean,
 ): Promise<Page<SecretItem>> {
   return await api.get<Page<SecretItem>>(SECRET_ENDPOINTS.COLLECTION, {
     [PAGINATION_QUERY.PAGE]: page,
     [PAGINATION_QUERY.PAGE_SIZE]: pageSize,
-    [PAGINATION_QUERY.SOURCE]: source,
+    [PAGINATION_QUERY.INCLUDE_PASSWORDS]: includePasswords,
   })
 }
 

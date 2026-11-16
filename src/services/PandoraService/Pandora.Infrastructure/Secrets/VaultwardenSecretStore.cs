@@ -82,14 +82,14 @@ public sealed class VaultwardenSecretStore : ISecretStore, ISecretVaultReader
             : Result<IReadOnlyList<SecretItem>>.Success(items.Select(item => new SecretItem(item.Id, item.Name)).ToList());
     }
 
-    public async Task<Result<IReadOnlyList<SecretListItem>>> GetListItems(CancellationToken cancellationToken)
+    public async Task<Result<IReadOnlyList<SecretPageItem>>> GetListItems(CancellationToken cancellationToken)
     {
         var items = await FetchItems(cancellationToken);
 
         return items is null
-            ? Result<IReadOnlyList<SecretListItem>>.Failure(ErrorCode.VaultwardenUnavailable.ToString())
-            : Result<IReadOnlyList<SecretListItem>>.Success(items
-                .Select(item => new SecretListItem(item.Id, item.Name, item.Login?.Username ?? string.Empty))
+            ? Result<IReadOnlyList<SecretPageItem>>.Failure(ErrorCode.VaultwardenUnavailable.ToString())
+            : Result<IReadOnlyList<SecretPageItem>>.Success(items
+                .Select(item => new SecretPageItem(item.Id, item.Name, item.Login?.Username ?? string.Empty, item.Login?.Password))
                 .ToList());
     }
 

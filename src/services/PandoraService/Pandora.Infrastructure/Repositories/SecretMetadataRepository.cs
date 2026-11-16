@@ -29,7 +29,7 @@ public sealed class SecretMetadataRepository : ISecretMetadataRepository
         var items = await query.OrderBy(source)
             .Skip((int)Math.Min(skip, int.MaxValue))
             .Take(query.PageSize)
-            .Select(metadata => new SecretListItem(metadata.VaultItemId, metadata.ResourceName, metadata.Username))
+            .Select(metadata => new SecretPageItem(metadata.VaultItemId, metadata.ResourceName, metadata.Username, null))
             .ToListAsync(cancellationToken);
 
         return new SecretListPage(items, query.Page, query.PageSize, total);

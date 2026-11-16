@@ -2,7 +2,6 @@ using CoreSolution.Shared.Results;
 using MediatR;
 using Pandora.Domain.Constants;
 using Pandora.Domain.Entities;
-using Pandora.Domain.Enums;
 using Pandora.Domain.Interfaces;
 using Pandora.Domain.Models;
 
@@ -24,41 +23,35 @@ public sealed class GetSecretsMessageHandler : IRequestHandler<GetSecretsMessage
         var page = request.Page ?? PaginationLimits.DefaultPage;
         var pageSize = request.PageSize ?? PaginationLimits.DefaultPageSize;
 
-        if (ResolveSource(request.Source) is SecretSource.Vaultwarden)
-        {
-            return await ReadVaultPageAsync(page, pageSize, cancellationToken);
-        }
-
         var dbPage = await _metadataRepository.GetPage(
             new SecretPageQuery(page, pageSize, OrderByResourceName),
             cancellationToken);
 
-        return Result<SecretListPage>.Success(dbPage);
-    }
-
-    private async Task<Result<SecretListPage>> ReadVaultPageAsync(int page, int pageSize, CancellationToken cancellationToken)
-    {
-        var itemsResult = await _vaultReader.GetListItems(cancellationToken);
-
-        if (itemsResult.Value is null)
-        {
-            return Result<SecretListPage>.Failure(itemsResult.ErrorCode ?? string.Empty);
-        }
-
-        var items = itemsResult.Value;
-        var pageItems = items
-            .OrderBy(item => item.Name)
-            .ThenBy(item => item.Id)
-            .Skip((page - PaginationLimits.FirstPage) * pageSize)
-            .Take(pageSize)
+        var items = dbPage.Items
+            .Select(item => new SecretPageItem(item.Id, item.Name, item.Username, null))
             .ToList();
 
-        return Result<SecretListPage>.Success(new SecretListPage(pageItems, page, pageSize, items.Count));
-    }
+        if (request.IncludePasswords is not true)
+        {
+            return Result<SecretListPage>.Success(new SecretListPage(items, dbPage.Page, dbPage.PageSize, dbPage.Total));
+        }
 
-    private static SecretSource ResolveSource(string? source)
-    {
-        return Enum.TryParse<SecretSource>(source, ignoreCase: true, out var parsed) ? parsed : SecretSource.Database;
+        var passwordsResult = await _vaultReader.GetListItems(cancellationToken);
+
+        if (passwordsResult.Value is null)
+        {
+            return Result<SecretListPage>.Failure(passwordsResult.ErrorCode ?? string.Empty);
+        }
+
+        var passwordsById = passwordsResult.Value.ToDictionary(item => item.Id, item => item.Password);
+
+        var withPasswords = items
+            .Select(item => passwordsById.TryGetValue(item.Id, out var password)
+                ? item with { Password = password }
+                : item)
+            .ToList();
+
+        return Result<SecretListPage>.Success(new SecretListPage(withPasswords, dbPage.Page, dbPage.PageSize, dbPage.Total));
     }
 
     private static IOrderedQueryable<SecretMetadata> OrderByResourceName(IQueryable<SecretMetadata> query)
