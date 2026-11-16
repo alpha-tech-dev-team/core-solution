@@ -25,6 +25,8 @@ public static class DatabaseConstants
         public const string TelegramUserId = "telegram_user_id";
         public const string VaultItemId = "vault_item_id";
         public const string IsActive = "is_active";
+        public const string GrantedAt = "granted_at";
+        public const string GrantedBy = "granted_by";
         public const int VaultItemIdMaxLength = 36;
         public const bool IsActiveDefault = true;
     }
@@ -38,6 +40,7 @@ public static class DatabaseConstants
         public const string Action = "action";
         public const string TargetItemId = "target_item_id";
         public const string RequestSource = "request_source";
+        public const string TargetTelegramUserId = "target_telegram_user_id";
         public const int ActionMaxLength = 50;
         public const int TargetItemIdMaxLength = 36;
         public const int RequestSourceMaxLength = 20;

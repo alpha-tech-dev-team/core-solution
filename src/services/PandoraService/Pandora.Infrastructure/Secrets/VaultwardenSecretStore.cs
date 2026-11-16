@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Pandora.Domain.Enums;
 using Pandora.Domain.Interfaces;
 using Pandora.Domain.Models;
+using Pandora.Infrastructure.Secrets.Vaultwarden;
 
 namespace Pandora.Infrastructure.Secrets;
 
@@ -70,7 +71,7 @@ public sealed class VaultwardenSecretStore : ISecretStore, ISecretVaultReader
             return Result<Secret>.Failure(ErrorCode.SecretNotFound.ToString());
         }
 
-        return Result<Secret>.Success(new Secret(itemDetails.Name, itemDetails.Login.Username ?? string.Empty, itemDetails.Login.Password));
+        return Result<Secret>.Success(new Secret(itemDetails.Name ?? string.Empty, itemDetails.Login.Username ?? string.Empty, itemDetails.Login.Password));
     }
 
     public async Task<Result<IReadOnlyList<SecretItem>>> GetItems(CancellationToken cancellationToken)
@@ -93,7 +94,7 @@ public sealed class VaultwardenSecretStore : ISecretStore, ISecretVaultReader
                 .ToList());
     }
 
-    private async Task<IReadOnlyList<VaultwardenItem>?> FetchItems(CancellationToken cancellationToken)
+    private async Task<IReadOnlyList<VaultwardenListItem>?> FetchItems(CancellationToken cancellationToken)
     {
         try
         {
@@ -128,9 +129,4 @@ public sealed class VaultwardenSecretStore : ISecretStore, ISecretVaultReader
     {
         return (int)response.StatusCode < (int)HttpStatusCode.InternalServerError && result?.Success == false;
     }
-
-    private sealed record VaultwardenResponse<T>(bool Success, T? Data);
-    private sealed record VaultwardenList(string? Object, IReadOnlyList<VaultwardenItem>? Data);
-    private sealed record VaultwardenItem(string Id, string Name, VaultwardenLogin? Login);
-    private sealed record VaultwardenLogin(string? Username, string? Password);
 }

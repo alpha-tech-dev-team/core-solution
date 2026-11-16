@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Pandora.Domain.Entities;
+using Pandora.Domain.Enums;
 using Pandora.Domain.Interfaces;
 using Pandora.Domain.Models;
 using Pandora.Infrastructure.Database;
@@ -33,18 +34,17 @@ public sealed class PermissionRepository : IPermissionRepository
                 cancellationToken);
     }
 
-    public async Task<EmployeeSecretPage> GetPage(long telegramUserId, int page, int pageSize, CancellationToken cancellationToken)
+    public async Task<EmployeeSecretPage> GetPage(
+        long telegramUserId,
+        SecretPageQuery query,
+        CancellationToken cancellationToken)
     {
-        var query = _context.SecretMetadata.AsNoTracking();
+        var source = LiveSecrets();
+        var total = await source.CountAsync(cancellationToken);
 
-        var total = await query.CountAsync(cancellationToken);
-        var skip = (long)(page - 1) * pageSize;
-
-        var items = await query
-            .OrderBy(metadata => metadata.ResourceName)
-            .ThenBy(metadata => metadata.VaultItemId)
-            .Skip((int)Math.Min(skip, int.MaxValue))
-            .Take(pageSize)
+        var items = await query.OrderBy(source)
+            .Skip(query.Page.Skip)
+            .Take(query.Page.PageSize)
             .Select(metadata => new EmployeeSecretItem(
                 metadata.VaultItemId,
                 metadata.ResourceName,
@@ -54,17 +54,18 @@ public sealed class PermissionRepository : IPermissionRepository
                     && permission.IsActive)))
             .ToListAsync(cancellationToken);
 
-        return new EmployeeSecretPage(items, page, pageSize, total);
+        return new EmployeeSecretPage(items, query.Page.Page, query.Page.PageSize, total);
     }
 
-    public async Task<bool> Grant(long telegramUserId, string itemId, CancellationToken cancellationToken)
+    public async Task<SecretAccessGrantResult> Grant(
+        long telegramUserId,
+        string itemId,
+        Guid adminUserId,
+        CancellationToken cancellationToken)
     {
-        var secretExists = await _context.SecretMetadata
-            .AnyAsync(metadata => metadata.VaultItemId == itemId, cancellationToken);
-
-        if (!secretExists)
+        if (!await LiveSecrets().AnyAsync(metadata => metadata.VaultItemId == itemId, cancellationToken))
         {
-            return false;
+            return SecretAccessGrantResult.SecretNotFound;
         }
 
         var permission = await _context.Permission
@@ -72,36 +73,42 @@ public sealed class PermissionRepository : IPermissionRepository
                 item => item.TelegramUserId == telegramUserId && item.VaultItemId == itemId,
                 cancellationToken);
 
+        if (permission is not null && permission.IsActive)
+        {
+            return SecretAccessGrantResult.AlreadyGranted;
+        }
+
+        var grantedAt = DateTime.UtcNow;
+
         if (permission is null)
         {
             _context.Permission.Add(new Permission
             {
                 TelegramUserId = telegramUserId,
                 VaultItemId = itemId,
-                IsActive = true
+                IsActive = true,
+                GrantedAt = grantedAt,
+                GrantedBy = adminUserId
             });
 
-            return true;
-        }
-
-        if (permission.IsActive)
-        {
-            return true;
+            return SecretAccessGrantResult.Granted;
         }
 
         permission.IsActive = true;
+        permission.GrantedAt = grantedAt;
+        permission.GrantedBy = adminUserId;
 
-        return true;
+        return SecretAccessGrantResult.Granted;
     }
 
-    public async Task<bool> Revoke(long telegramUserId, string itemId, CancellationToken cancellationToken)
+    public async Task<SecretAccessRevokeResult> Revoke(
+        long telegramUserId,
+        string itemId,
+        CancellationToken cancellationToken)
     {
-        var secretExists = await _context.SecretMetadata
-            .AnyAsync(metadata => metadata.VaultItemId == itemId, cancellationToken);
-
-        if (!secretExists)
+        if (!await LiveSecrets().AnyAsync(metadata => metadata.VaultItemId == itemId, cancellationToken))
         {
-            return false;
+            return SecretAccessRevokeResult.SecretNotFound;
         }
 
         var permission = await _context.Permission
@@ -111,16 +118,23 @@ public sealed class PermissionRepository : IPermissionRepository
 
         if (permission is null || !permission.IsActive)
         {
-            return true;
+            return SecretAccessRevokeResult.AlreadyRevoked;
         }
 
         permission.IsActive = false;
 
-        return true;
+        return SecretAccessRevokeResult.Revoked;
     }
 
     public Task SaveChanges(CancellationToken cancellationToken)
     {
         return _context.SaveChangesAsync(cancellationToken);
+    }
+
+    private IQueryable<SecretMetadata> LiveSecrets()
+    {
+        return _context.SecretMetadata
+            .AsNoTracking()
+            .Where(metadata => metadata.SyncOperation != SecretSyncOperation.Delete);
     }
 }

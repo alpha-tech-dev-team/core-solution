@@ -5,19 +5,20 @@ using Pandora.Application.Features.Secrets.Common;
 using Pandora.Domain.Constants;
 using Pandora.Domain.Enums;
 using Pandora.Domain.Interfaces;
+using Pandora.Domain.Models;
 
 namespace Pandora.Application.Features.Permissions;
 
-public sealed class RevokeSecretAccessMessageHandler : IRequestHandler<RevokeSecretAccessMessage, Result>
+public sealed class RevokeSecretAccessHandler : IRequestHandler<RevokeSecretAccessMessage, Result>
 {
     private readonly IPermissionRepository _permissionRepository;
     private readonly SecretAuditLogger _auditLogger;
-    private readonly ILogger<RevokeSecretAccessMessageHandler> _logger;
+    private readonly ILogger<RevokeSecretAccessHandler> _logger;
 
-    public RevokeSecretAccessMessageHandler(
+    public RevokeSecretAccessHandler(
         IPermissionRepository permissionRepository,
         SecretAuditLogger auditLogger,
-        ILogger<RevokeSecretAccessMessageHandler> logger)
+        ILogger<RevokeSecretAccessHandler> logger)
     {
         _permissionRepository = permissionRepository;
         _auditLogger = auditLogger;
@@ -26,21 +27,32 @@ public sealed class RevokeSecretAccessMessageHandler : IRequestHandler<RevokeSec
 
     public async Task<Result> Handle(RevokeSecretAccessMessage request, CancellationToken cancellationToken)
     {
-        var revoked = await _permissionRepository.Revoke(request.TelegramUserId, request.ItemId, cancellationToken);
+        var result = await _permissionRepository.Revoke(
+            request.TelegramUserId,
+            request.ItemId,
+            cancellationToken);
 
-        if (!revoked)
+        if (result is SecretAccessRevokeResult.SecretNotFound)
         {
-            _logger.LogWarning("Отзыв доступа отклонен: секрет {ItemId} не найден", request.ItemId);
+            _logger.LogWarning("Отзыв доступа отклонён: секрет {ItemId} не найден", request.ItemId);
 
             return Result.Failure(nameof(ErrorCode.SecretNotFound));
         }
 
-        _logger.LogInformation("Доступ к секрету {ItemId} отозван у сотрудника", request.ItemId);
+        if (result is SecretAccessRevokeResult.AlreadyRevoked)
+        {
+            _logger.LogInformation("Доступ к секрету {ItemId} уже отсутствует", request.ItemId);
+
+            return Result.Success();
+        }
+
+        _logger.LogInformation("Доступ к секрету {ItemId} отозван", request.ItemId);
 
         await _auditLogger.LogActionAsync(
             request.AdminUserId,
             AuditConstants.ActionSecretAccessRevoked,
             request.ItemId,
+            request.TelegramUserId,
             cancellationToken);
 
         await _permissionRepository.SaveChanges(cancellationToken);

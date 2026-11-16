@@ -1,4 +1,4 @@
-namespace Pandora.Domain.Constants;
+namespace CoreSolution.Shared.Pagination;
 
 public static class PaginationLimits
 {

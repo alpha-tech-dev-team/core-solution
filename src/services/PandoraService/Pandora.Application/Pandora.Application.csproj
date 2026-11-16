@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -14,6 +14,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Pandora.Domain\Pandora.Domain.csproj" />
     <ProjectReference Include="..\..\..\shared\CoreSolution.Shared\CoreSolution.Shared.csproj" />
+    <ProjectReference Include="..\..\..\shared\CoreSolution.Shared.Application\CoreSolution.Shared.Application.csproj" />
   </ItemGroup>
 
 </Project>

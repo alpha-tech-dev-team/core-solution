@@ -24,15 +24,14 @@ public sealed class SecretMetadataRepository : ISecretMetadataRepository
             .Where(metadata => metadata.SyncOperation != SecretSyncOperation.Delete);
 
         var total = await source.CountAsync(cancellationToken);
-        var skip = (long)(query.Page - PaginationLimits.FirstPage) * query.PageSize;
 
         var items = await query.OrderBy(source)
-            .Skip((int)Math.Min(skip, int.MaxValue))
-            .Take(query.PageSize)
+            .Skip(query.Page.Skip)
+            .Take(query.Page.PageSize)
             .Select(metadata => new SecretPageItem(metadata.VaultItemId, metadata.ResourceName, metadata.Username, null))
             .ToListAsync(cancellationToken);
 
-        return new SecretListPage(items, query.Page, query.PageSize, total);
+        return new SecretListPage(items, query.Page.Page, query.Page.PageSize, total);
     }
 
     public async Task<SecretMetadata?> GetById(string vaultItemId, CancellationToken cancellationToken)
