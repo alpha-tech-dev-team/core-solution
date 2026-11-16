@@ -30,7 +30,7 @@ function fullName(employee: Employee): string {
     <p v-if="error" class="dialog__error">{{ error }}</p>
 
     <div class="dialog__actions">
-      <button type="button" class="dialog__button dialog__button--danger" @click="emit('confirm')">
+      <button type="button" class="dialog__button dialog__button--danger" :disabled="isSelf" @click="emit('confirm')">
         {{ tr('employee_delete') }}
       </button>
       <button type="button" class="dialog__button" @click="emit('close')">

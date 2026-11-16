@@ -20,11 +20,17 @@ public class IdentityService : IIdentityService
 
     public async Task<Result> ActivateUser(long telegramUserId, string phone, CancellationToken cancellationToken = default)
     {
-        var user = await _users.GetByPhone(phone, cancellationToken);
+        var user = await _users.GetByPhone(phone, cancellationToken: cancellationToken);
         if (user is null)
         {
             _logger.LogWarning("Активация пропущена: пользователь не найден но номеру");
             return Result.Failure(nameof(IdentityErrorCode.UserNotFound));
+        }
+
+        if (user.Status == UserStatus.Blocked)
+        {
+            _logger.LogWarning("Активация отклонена: пользователь заблокирован");
+            return Result.Failure(nameof(IdentityErrorCode.UserBlocked));
         }
 
         if (user.TelegramUserId is not null && user.TelegramUserId != telegramUserId)
@@ -54,6 +60,12 @@ public class IdentityService : IIdentityService
     public async Task<Result> CheckUser(long telegramUserId, string access, CancellationToken cancellationToken = default)
     {
         var user = await _users.GetByTelegramUserId(telegramUserId, cancellationToken);
+
+        if (user is not null && user.Status == UserStatus.Blocked)
+        {
+            _logger.LogInformation("Доступ запрещен пользователю: аккаунт заблокирован");
+            return Result.Failure(nameof(IdentityErrorCode.UserBlocked));
+        }
 
         var hasAccess = user is not null
             && user.Status == UserStatus.Active

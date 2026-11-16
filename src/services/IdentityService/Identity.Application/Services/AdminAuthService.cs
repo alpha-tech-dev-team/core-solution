@@ -41,10 +41,16 @@ public class AdminAuthService : IAdminAuthService
             return Result<AuthTokens>.Failure(nameof(IdentityErrorCode.InvalidCredentials));
         }
 
+        if (user.Status == UserStatus.Archived)
+        {
+            _logger.LogWarning("Вход администратора отклонен: пользователь в архиве");
+            return Result<AuthTokens>.Failure(nameof(IdentityErrorCode.InvalidCredentials));
+        }
+
         if (user.Status == UserStatus.Blocked)
         {
             _logger.LogWarning("Вход администратора отклонен: пользователь заблокирован");
-            return Result<AuthTokens>.Failure(nameof(IdentityErrorCode.AccessDenied));
+            return Result<AuthTokens>.Failure(nameof(IdentityErrorCode.UserBlocked));
         }
 
         if (!HasAdminRole(user))
@@ -71,9 +77,9 @@ public class AdminAuthService : IAdminAuthService
             return Result<AuthTokens>.Failure(nameof(IdentityErrorCode.InvalidRefreshToken));
         }
 
-        if (user.Status == UserStatus.Blocked)
+        if (user.Status is UserStatus.Blocked or UserStatus.Archived)
         {
-            _logger.LogWarning("Обновление токена отклонено: пользователь заблокирован");
+            _logger.LogWarning("Обновление токена отклонено: пользователь заблокирован или в архиве");
             return Result<AuthTokens>.Failure(nameof(IdentityErrorCode.InvalidRefreshToken));
         }
 

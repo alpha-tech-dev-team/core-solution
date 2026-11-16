@@ -40,15 +40,16 @@ public abstract class SubmitPhoneHandlerBase : IRequestHandler<SubmitPhoneMessag
             });
         }
 
-        var confirmed = await _phoneConfirmationService.ConfirmAsync(
+        var confirmationError = await _phoneConfirmationService.ConfirmAsync(
             request.TelegramUserId,
             request.Phone,
             _initialStep,
             cancellationToken);
 
-        if (!confirmed)
+        if (confirmationError is not null)
         {
-            return Result<WorkflowResponse>.Failure(ErrorCodes.AccessNotConfirmed);
+            return Result<WorkflowResponse>.Failure(
+                confirmationError == ErrorCodes.UserBlocked ? ErrorCodes.UserBlocked : ErrorCodes.AccessNotConfirmed);
         }
 
         return await _mediator.Send(CreateNextMessage(request), cancellationToken);
