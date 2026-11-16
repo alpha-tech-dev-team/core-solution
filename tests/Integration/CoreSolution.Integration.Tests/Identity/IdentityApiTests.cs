@@ -1,6 +1,9 @@
 using System.Net;
 using System.Net.Http.Json;
+using Identity.Api.Models;
 using Identity.Application.Contracts.Client;
+using Identity.Application.Errors;
+using Identity.Domain.Enums;
 using Xunit;
 
 namespace CoreSolution.Integration.Tests.IdentityTests;
@@ -47,6 +50,62 @@ public sealed class IdentityApiTests(IntegrationFixture fixture)
         var response = await client.PostAsJsonAsync(CheckRoute, new CheckUserRequest(telegramUserId, "pandora"));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Activate_BlockedUser_ReturnsForbiddenAndStaysBlocked()
+    {
+        const string phone = "+79995550005";
+        const long telegramUserId = 9005;
+
+        await fixture.SeedPendingUserAsync(phone);
+        await fixture.SetUserStatusAsync(phone, UserStatus.Blocked);
+        using var client = fixture.CreateIdentityHttpClient();
+
+        var response = await client.PostAsJsonAsync(ActivateRoute, new ActivateUserRequest(telegramUserId, phone));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.UserBlocked), error!.Code);
+        var state = await fixture.GetUserStateAsync(phone);
+        Assert.Equal(UserStatus.Blocked, state.Status);
+        Assert.Null(state.TelegramUserId);
+    }
+
+    [Fact]
+    public async Task Activate_ArchivedUser_IsRejectedAndStaysArchived()
+    {
+        const string phone = "+79995550007";
+        const long telegramUserId = 9007;
+
+        await fixture.SeedPendingUserAsync(phone);
+        await fixture.SetUserStatusAsync(phone, UserStatus.Archived);
+        using var client = fixture.CreateIdentityHttpClient();
+
+        var response = await client.PostAsJsonAsync(ActivateRoute, new ActivateUserRequest(telegramUserId, phone));
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        var state = await fixture.GetUserStateAsync(phone);
+        Assert.Equal(UserStatus.Archived, state.Status);
+        Assert.Null(state.TelegramUserId);
+    }
+
+    [Fact]
+    public async Task Check_BlockedUser_ReturnsUserBlocked()
+    {
+        const string phone = "+79995550006";
+        const long telegramUserId = 9006;
+
+        await fixture.SeedPendingUserAsync(phone, "Pandora");
+        using var client = fixture.CreateIdentityHttpClient();
+        _ = await client.PostAsJsonAsync(ActivateRoute, new ActivateUserRequest(telegramUserId, phone));
+        await fixture.SetUserStatusAsync(phone, UserStatus.Blocked);
+
+        var response = await client.PostAsJsonAsync(CheckRoute, new CheckUserRequest(telegramUserId, "Pandora"));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.UserBlocked), error!.Code);
     }
 
     [Fact]

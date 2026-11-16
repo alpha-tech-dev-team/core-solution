@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { reactive, ref, watch } from 'vue'
 import { tr } from '@/i18n'
+import { INPUT_LIMITS } from '@/constants/validation'
 import type { EmployeeInput } from '@/stores/models/employee-input'
 import { validateEmployeeForm, type EmployeeFormField, type EmployeeFormErrors } from '@/validation/employee'
 import ModalDialog from '@/components/ModalDialog.vue'
@@ -79,7 +80,7 @@ function submit() {
       </label>
       <label class="dialog__field">
         {{ tr('employee_phone') }}
-        <input v-model="draft.phone" type="text" />
+        <input v-model="draft.phone" type="text" :maxlength="INPUT_LIMITS.PHONE_MAX_LENGTH" />
         <span v-if="fieldErrors.phone" class="dialog__field-error">{{ fieldErrors.phone }}</span>
       </label>
 

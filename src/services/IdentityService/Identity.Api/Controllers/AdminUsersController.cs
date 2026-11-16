@@ -30,7 +30,7 @@ public sealed class AdminUsersController : ControllerBase
     [HttpGet(ApiRoutes.Users)]
     public async Task<IActionResult> GetUsers([FromQuery] GetUsersRequest request, CancellationToken cancellationToken)
     {
-        var result = await _adminUserService.GetUsers(request.Page, request.PageSize, cancellationToken);
+        var result = await _adminUserService.GetUsers(request.Page, request.PageSize, request.IncludeArchived, cancellationToken);
 
         return result.ToActionResult();
     }
@@ -62,9 +62,9 @@ public sealed class AdminUsersController : ControllerBase
     [HttpDelete(ApiRoutes.UserById)]
     public async Task<IActionResult> DeleteUser(Guid id, CancellationToken cancellationToken)
     {
-        var result = await _adminUserService.DeleteUser(id, cancellationToken);
+        var result = await _adminUserService.DeleteUser(id, _currentUser.UserId, cancellationToken);
 
-        return result.ToActionResultOrInvalidateSession(Response, _currentUser.IsCurrentUser(id));
+        return result.ToActionResult();
     }
 
     [HttpPut(ApiRoutes.UserRoles)]
@@ -72,9 +72,7 @@ public sealed class AdminUsersController : ControllerBase
     {
         var result = await _adminUserService.AssignRoles(id, request.Adapt<UserRolesData>(), _currentUser.UserId, cancellationToken);
 
-        return result.ToActionResultOrInvalidateSession(
-            Response,
-            _currentUser.IsCurrentUser(id) && !request.Roles.Contains(RoleType.PandoraAdmin));
+        return result.ToActionResult();
     }
 
     [HttpPut(ApiRoutes.UserStatus)]

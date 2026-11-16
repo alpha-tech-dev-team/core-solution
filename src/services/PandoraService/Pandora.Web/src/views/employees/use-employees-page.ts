@@ -156,11 +156,26 @@ export function useEmployeesPage() {
     const employee = selectedEmployee.value
     if (employee === null) return
 
+    const wasSelf = isSelf(employee)
+
     errorMessage.value = ''
     const error = await employeesStore.assignRoles(employee, roleNames, adminLogin, adminPassword)
     if (error !== null) {
       showError(error)
       return
+    }
+
+    if (wasSelf) {
+      const refreshed = await authStore.refreshTokens()
+      if (!refreshed) {
+        await authStore.logout()
+        await router.push(ROUTES.LOGIN)
+        return
+      }
+
+      if (adminLogin !== null && adminPassword !== null) {
+        authStore.username = adminLogin
+      }
     }
 
     isRolesOpen.value = false
@@ -176,6 +191,23 @@ export function useEmployeesPage() {
 
     errorMessage.value = ''
     const error = await employeesStore.setStatus(employee, nextStatus)
+    if (error === null) return
+
+    showError(error)
+  }
+
+  async function toggleArchived(): Promise<void> {
+    employeesStore.includeArchived = !employeesStore.includeArchived
+    selectedEmployeeId.value = null
+    await load(1)
+  }
+
+  async function restore(): Promise<void> {
+    const employee = selectedEmployee.value
+    if (employee === null) return
+
+    errorMessage.value = ''
+    const error = await employeesStore.setStatus(employee, EMPLOYEE_STATUS.ACTIVE)
     if (error === null) return
 
     showError(error)
@@ -208,6 +240,8 @@ export function useEmployeesPage() {
     closeDelete,
     confirmDelete,
     saveRoles,
-    toggleBlock
+    toggleBlock,
+    toggleArchived,
+    restore
   }
 }

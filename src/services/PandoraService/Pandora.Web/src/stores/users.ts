@@ -18,11 +18,14 @@ export const useEmployeesStore = defineStore(EMPLOYEE_STORE_ID, () => {
   const totalPages = computed(() => pageSize.value === 0 ? 0 : Math.ceil(total.value / pageSize.value))
   const isLoading = ref(false)
   const rolesLoaded = ref(false)
+  const includeArchived = ref(false)
 
   async function load(pageNumber: number = page.value): Promise<RequestError | null> {
     isLoading.value = true
     try {
-      const response = await api.get<EmployeesPage>(EMPLOYEE_ENDPOINTS.LIST, { params: { page: pageNumber } })
+      const response = await api.get<EmployeesPage>(EMPLOYEE_ENDPOINTS.LIST, {
+        params: { page: pageNumber, includeArchived: includeArchived.value }
+      })
       employees.value = response.data.items
       page.value = response.data.page
       pageSize.value = response.data.pageSize
@@ -106,6 +109,7 @@ export const useEmployeesStore = defineStore(EMPLOYEE_STORE_ID, () => {
     total,
     totalPages,
     isLoading,
+    includeArchived,
     load,
     loadRoles,
     create,

@@ -58,7 +58,7 @@ const {
           </button>
           <button
             class="employees-page__nav-link"
-            :disabled="selectedEmployee === null"
+            :disabled="selectedEmployee === null || page.isSelf(selectedEmployee) || selectedEmployee?.status === EMPLOYEE_STATUS.ARCHIVED"
             @click="page.toggleBlock()"
           >
             {{ selectedEmployee?.status === EMPLOYEE_STATUS.BLOCKED
@@ -66,17 +66,30 @@ const {
               : tr('employee_block') }}
           </button>
           <button
+            class="employees-page__nav-link"
+            :disabled="selectedEmployee?.status !== EMPLOYEE_STATUS.ARCHIVED"
+            @click="page.restore()"
+          >
+            {{ tr('employee_restore') }}
+          </button>
+          <button
             class="employees-page__nav-link employees-page__nav-link--danger"
-            :disabled="selectedEmployee === null"
+            :disabled="selectedEmployee === null || page.isSelf(selectedEmployee) || selectedEmployee?.status === EMPLOYEE_STATUS.ARCHIVED"
             @click="page.openDelete()"
           >
             {{ tr('employee_delete') }}
           </button>
         </div>
 
-        <button class="employees-page__nav-link" @click="page.openCreateForm()">
-          {{ tr('employee_add') }}
-        </button>
+        <div class="employees-toolbar__group">
+          <label class="employees-toolbar__toggle">
+            <input type="checkbox" :checked="employeesStore.includeArchived" @change="page.toggleArchived()" />
+            {{ tr('employees_include_archived') }}
+          </label>
+          <button class="employees-page__nav-link" @click="page.openCreateForm()">
+            {{ tr('employee_add') }}
+          </button>
+        </div>
       </div>
 
       <p v-if="employeesStore.isLoading">{{ LOADING_PLACEHOLDER }}</p>
@@ -237,6 +250,13 @@ const {
 .employees-toolbar__group {
   display: flex;
   gap: var(--space-2);
+}
+
+.employees-toolbar__toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-base);
 }
 
 .employees {
