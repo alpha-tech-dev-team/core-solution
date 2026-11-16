@@ -1,7 +1,8 @@
+using CoreSolution.Shared.Constants;
+using CoreSolution.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using Pandora.Domain.Entities;
 using Pandora.Domain.Interfaces;
-using Pandora.Domain.Models;
 using Pandora.Infrastructure.Database;
 
 namespace Pandora.Infrastructure.Repositories;
@@ -21,16 +22,16 @@ public sealed class AuditRepository : IAuditRepository
         await _context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<AuditEntryPage> GetPage(int page, int pageSize, CancellationToken cancellationToken)
+    public async Task<PagedResult<AuditEntry>> GetPage(int page, int pageSize, CancellationToken cancellationToken)
     {
         var query = _context.AuditEntry.AsNoTracking();
 
         var total = await query.CountAsync(cancellationToken);
-        var offset = (long)(page - 1) * pageSize;
+        var offset = (long)(page - PaginationLimits.FirstPage) * pageSize;
 
         if (offset >= total)
         {
-            return new AuditEntryPage([], page, pageSize, total);
+            return new PagedResult<AuditEntry>([], page, pageSize, total);
         }
 
         var items = await query
@@ -40,6 +41,6 @@ public sealed class AuditRepository : IAuditRepository
             .Take(pageSize)
             .ToListAsync(cancellationToken);
 
-        return new AuditEntryPage(items, page, pageSize, total);
+        return new PagedResult<AuditEntry>(items, page, pageSize, total);
     }
 }

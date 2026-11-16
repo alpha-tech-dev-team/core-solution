@@ -1,6 +1,6 @@
 using CoreSolution.Shared.Results;
 using MediatR;
-using Pandora.Domain.Constants;
+using CoreSolution.Shared.Constants;
 using Pandora.Domain.Entities;
 using Pandora.Domain.Interfaces;
 using Pandora.Domain.Models;

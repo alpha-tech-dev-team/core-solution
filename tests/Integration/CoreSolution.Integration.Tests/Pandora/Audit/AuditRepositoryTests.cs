@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Pandora.Domain.Constants;
+using CoreSolution.Shared.Constants;
 using Pandora.Domain.Entities;
 using Pandora.Infrastructure.Database;
 using Pandora.Infrastructure.Repositories;

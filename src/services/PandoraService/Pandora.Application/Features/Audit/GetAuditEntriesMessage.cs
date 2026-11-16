@@ -1,11 +1,10 @@
+using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
 using MediatR;
-using Pandora.Domain.Models;
+using Pandora.Domain.Entities;
 
 namespace Pandora.Application.Features.Audit;
 
-public sealed class GetAuditEntriesMessage : IRequest<Result<AuditEntryPage>>
+public sealed class GetAuditEntriesMessage : PagedQuery, IRequest<Result<PagedResult<AuditEntry>>>
 {
-    public int? Page { get; set; }
-    public int? PageSize { get; set; }
 }
