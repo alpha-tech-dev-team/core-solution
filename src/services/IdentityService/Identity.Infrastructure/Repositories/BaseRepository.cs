@@ -14,11 +14,6 @@ public abstract class BaseRepository<TEntity>(AppDbContext context) : IRepositor
         Context.Set<TEntity>().Add(entity);
     }
 
-    public void Remove(TEntity entity)
-    {
-        Context.Set<TEntity>().Remove(entity);
-    }
-
     public virtual Task<int> SaveChanges(CancellationToken cancellationToken = default)
     {
         ApplyTimestamps(DateTime.UtcNow);
