@@ -39,9 +39,7 @@ public sealed class ShowMenuHandler : IRequestHandler<ShowMenuMessage, Result<Wo
                 new WorkflowButton(category.Name, CallbackConstants.CategoryPrefix + category.Id)))
             .ToList();
 
-        var hasNextPage = page.Page * page.PageSize < page.Total;
-
-        if (hasNextPage)
+        if (page.HasNextPage)
         {
             buttonRows.Add(new WorkflowButtonRow(
                 new WorkflowButton(
