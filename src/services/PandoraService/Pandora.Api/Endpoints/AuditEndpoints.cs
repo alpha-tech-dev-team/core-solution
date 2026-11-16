@@ -14,13 +14,13 @@ public static class AuditEndpoints
     {
         var group = endpoints.MapGroup(ApiRoutes.AdminGroup).RequireAuthorization(nameof(UserRole.PandoraAdmin));
 
-        group.MapGet(ApiRoutes.Audit, List)
+        group.MapGet(ApiRoutes.Audit, GetAuditEntries)
             .AddEndpointFilter<ValidationFilter<GetAuditEntriesMessage>>();
 
         return endpoints;
     }
 
-    private static async Task<IResult> List(
+    private static async Task<IResult> GetAuditEntries(
         [FromServices] IMediator mediator,
         [AsParameters] GetAuditEntriesMessage message,
         CancellationToken cancellationToken = default)
