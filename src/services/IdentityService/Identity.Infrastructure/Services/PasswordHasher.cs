@@ -6,10 +6,10 @@ using Identity.Domain.Options;
 using Konscious.Security.Cryptography;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-
-namespace Identity.Infrastructure.Services;
 using Identity.Infrastructure.Constants;
 using Identity.Infrastructure.Models;
+
+namespace Identity.Infrastructure.Services;
 
 public sealed class PasswordHasher : IPasswordHasher
 {
