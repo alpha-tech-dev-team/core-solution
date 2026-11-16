@@ -2,11 +2,11 @@
 import LogoutButton from '@shared/components/LogoutButton.vue'
 import { useTranslations } from '@shared/i18n/create-i18n'
 import { EMPLOYEE_STATUS } from '@/constants/employee-status'
-import { FIRST_PAGE } from '@/constants/pagination'
 import { RESOURCE_KEYS } from '@/constants/resource-keys'
 import { ROUTE_NAMES } from '@/constants/routes'
 import { LOADING_PLACEHOLDER } from '@shared/constants/ui'
 import { useEmployeesView } from './use-employees-view'
+import PaginationNav from '@/components/PaginationNav.vue'
 import EmployeeDeleteDialog from './EmployeeDeleteDialog.vue'
 import EmployeeFormDialog from './EmployeeFormDialog.vue'
 import EmployeeRolesDialog from './EmployeeRolesDialog.vue'
@@ -123,25 +123,16 @@ const {
         </tbody>
       </table>
 
-      <nav v-if="employeesStore.totalPages > 1" class="pager">
-        <button
-          class="btn btn--ghost btn--sm"
-          :disabled="employeesStore.page <= FIRST_PAGE"
-          @click="page.goToPage(employeesStore.page - 1)"
-        >
-          {{ tr(RESOURCE_KEYS.EMPLOYEES_PAGE_PREV) }}
-        </button>
-        <span class="pager__label">
-          {{ tr(RESOURCE_KEYS.EMPLOYEES_PAGE_OF, employeesStore.page, employeesStore.totalPages) }}
-        </span>
-        <button
-          class="btn btn--ghost btn--sm"
-          :disabled="employeesStore.page >= employeesStore.totalPages"
-          @click="page.goToPage(employeesStore.page + 1)"
-        >
-          {{ tr(RESOURCE_KEYS.EMPLOYEES_PAGE_NEXT) }}
-        </button>
-      </nav>
+      <PaginationNav
+        :page="employeesStore.page"
+        :total-pages="employeesStore.totalPages"
+        :prev-label="tr(RESOURCE_KEYS.EMPLOYEES_PAGE_PREV)"
+        :next-label="tr(RESOURCE_KEYS.EMPLOYEES_PAGE_NEXT)"
+        :info-label="
+          tr(RESOURCE_KEYS.EMPLOYEES_PAGE_OF, employeesStore.page, employeesStore.totalPages)
+        "
+        @change="page.goToPage($event)"
+      />
 
       <EmployeeFormDialog
         :open="isFormOpen"
