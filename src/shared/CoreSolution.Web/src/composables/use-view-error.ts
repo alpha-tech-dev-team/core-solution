@@ -1,5 +1,5 @@
 import { ref, type Ref } from 'vue'
-import { useTranslations } from '@shared/i18n/create-i18n'
+import { useTranslations } from '../i18n/create-i18n'
 
 export interface ViewErrorState {
   errorMessage: Ref<string>
