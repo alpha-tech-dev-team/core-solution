@@ -37,6 +37,7 @@ public static class InfrastructureExtensions
             }));
 
         services.AddScoped<IIncidentCategoryRepository, IncidentCategoryRepository>();
+        services.AddScoped<IRoomRepository, RoomRepository>();
 
         services.AddIdentityClient(configuration);
         services.Replace(ServiceDescriptor.Scoped<ISessionFactory, AtlasSessionFactory>());

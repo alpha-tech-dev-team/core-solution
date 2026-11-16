@@ -19,6 +19,10 @@ public static class AtlasErrorTextKeys
         [nameof(ErrorCode.InvalidTelegramUserId)] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.InvalidTelegramUserId),
         [nameof(ErrorCode.InvalidMessageId)] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.InvalidMessageId),
         [nameof(ErrorCode.InvalidPageNumber)] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.InvalidPageNumber),
-        [nameof(ErrorCode.InvalidCategoryId)] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.InvalidCategoryId)
+        [nameof(ErrorCode.InvalidCategoryId)] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.InvalidCategoryId),
+        [nameof(ErrorCode.RoomsNotFound)] = (nameof(WorkflowStep.RoomSelection), LocalizationKeysConstants.RoomSelection.RoomsNotFound),
+        [nameof(ErrorCode.RoomNotFound)] = (nameof(WorkflowStep.RoomSelection), LocalizationKeysConstants.RoomSelection.RoomNotFound),
+        [nameof(ErrorCode.InvalidRoomId)] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.InvalidRoomId),
+        [nameof(ErrorCode.InvalidRoomText)] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.InvalidRoomText)
     }.ToFrozenDictionary();
 }

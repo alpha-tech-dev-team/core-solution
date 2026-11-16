@@ -1,6 +1,5 @@
-using Atlas.Application.Common;
+using Atlas.Application.Features.Rooms;
 using Atlas.Domain.Constants;
-using Atlas.Domain.Constants.Localization;
 using Atlas.Domain.Enums;
 using Atlas.Domain.Interfaces.Repositories;
 using Atlas.Domain.Models;
@@ -16,18 +15,18 @@ public sealed class SelectProblemCategoryHandler : IRequestHandler<SelectProblem
     private readonly IIncidentCategoryRepository _categoryRepository;
     private readonly IRequestContext _requestContext;
     private readonly ISessionService _sessionService;
-    private readonly ILocalizer _localizer;
+    private readonly IMediator _mediator;
 
     public SelectProblemCategoryHandler(
         IIncidentCategoryRepository categoryRepository,
         IRequestContext requestContext,
         ISessionService sessionService,
-        ILocalizer localizer)
+        IMediator mediator)
     {
         _categoryRepository = categoryRepository;
         _requestContext = requestContext;
         _sessionService = sessionService;
-        _localizer = localizer;
+        _mediator = mediator;
     }
 
     public async Task<Result<WorkflowResponse>> Handle(SelectProblemCategoryMessage request, CancellationToken cancellationToken)
@@ -42,23 +41,10 @@ public sealed class SelectProblemCategoryHandler : IRequestHandler<SelectProblem
         var session = (AtlasUserSession)_requestContext.Session;
         session.IncidentCategoryId = category.Id;
 
-        await _sessionService.UpdateState(session, nameof(WorkflowStep.CategorySelected), cancellationToken);
+        await _sessionService.UpdateState(session, nameof(WorkflowStep.RoomSelection), cancellationToken);
 
-        return Result<WorkflowResponse>.Success(new WorkflowResponse
-        {
-            Text = string.Format(
-                _localizer.GetPhrase(
-                    nameof(WorkflowStep.CategorySelected),
-                    LocalizationKeysConstants.CategorySelected.Text),
-                category.Name),
-            ButtonRows = new List<WorkflowButtonRow>
-            {
-                new(new WorkflowButton(
-                    _localizer.GetPhrase(
-                        nameof(WorkflowStep.CategorySelected),
-                        LocalizationKeysConstants.CategorySelected.Button),
-                    CallbackConstants.CategoryPagePrefix + PaginationLimits.FirstPage))
-            }
-        });
+        return await _mediator.Send(
+            new ShowRoomsMessage(request.TelegramUserId, request.MessageId, PaginationLimits.FirstPage),
+            cancellationToken);
     }
 }

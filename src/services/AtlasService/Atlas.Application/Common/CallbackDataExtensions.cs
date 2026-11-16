@@ -17,4 +17,18 @@ public static class CallbackDataExtensions
 
         return Guid.TryParse(value, out var categoryId) ? categoryId : Guid.Empty;
     }
+
+    public static int ParseRoomPage(this string data)
+    {
+        var value = data[CallbackConstants.RoomPagePrefix.Length..];
+
+        return int.TryParse(value, out var page) ? page : PaginationLimits.FirstPage;
+    }
+
+    public static Guid ParseRoomId(this string data)
+    {
+        var value = data[CallbackConstants.RoomPrefix.Length..];
+
+        return Guid.TryParse(value, out var roomId) ? roomId : Guid.Empty;
+    }
 }

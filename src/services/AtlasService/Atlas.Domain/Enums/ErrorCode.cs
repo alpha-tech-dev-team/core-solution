@@ -11,5 +11,9 @@ public enum ErrorCode
     InvalidTelegramUserId,
     InvalidMessageId,
     InvalidPageNumber,
-    InvalidCategoryId
+    InvalidCategoryId,
+    RoomsNotFound,
+    RoomNotFound,
+    InvalidRoomId,
+    InvalidRoomText
 }

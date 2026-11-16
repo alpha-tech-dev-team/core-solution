@@ -4,5 +4,7 @@ public enum WorkflowStep
 {
     Idle,
     ProblemCategorySelection,
-    CategorySelected
+    CategorySelected,
+    RoomSelection,
+    RoomSelected
 }
