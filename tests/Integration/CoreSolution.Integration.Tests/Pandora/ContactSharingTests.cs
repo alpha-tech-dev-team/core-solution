@@ -8,7 +8,7 @@ using CoreSolution.Shared.TgBot.Extensions;
 using Identity.Domain.Enums;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
-using Pandora.Application.Features.Credentials;
+using Pandora.TgBot.Application.Features.Credentials;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using Xunit;

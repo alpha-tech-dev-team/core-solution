@@ -30,6 +30,16 @@ public static class MigrationExtensions
             .LogInformation("Применяется сид категорий инцидентов.");
 
         await IncidentCategorySeed.SeedAsync(dbContext);
+
+        services.GetRequiredService<ILogger<MigrationLog>>()
+            .LogInformation("Применяется сид типов оборудования.");
+
+        await EquipmentTypeSeed.SeedAsync(dbContext);
+
+        services.GetRequiredService<ILogger<MigrationLog>>()
+            .LogInformation("Применяется сид кабинетов.");
+
+        await RoomSeed.SeedAsync(dbContext);
     }
 
     private sealed class MigrationLog

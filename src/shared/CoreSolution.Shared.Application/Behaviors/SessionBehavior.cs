@@ -14,6 +14,7 @@ public sealed class SessionBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
 {
     private readonly IRequestContext _requestContext;
     private readonly ISessionService _sessionService;
+    private readonly ISessionFactory _sessionFactory;
     private readonly IIdentityClient _identityClient;
     private readonly IMediator _mediator;
     private readonly SessionBehaviorOptions _options;
@@ -22,6 +23,7 @@ public sealed class SessionBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
     public SessionBehavior(
         IRequestContext requestContext,
         ISessionService sessionService,
+        ISessionFactory sessionFactory,
         IIdentityClient identityClient,
         IMediator mediator,
         SessionBehaviorOptions options,
@@ -29,6 +31,7 @@ public sealed class SessionBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
     {
         _requestContext = requestContext;
         _sessionService = sessionService;
+        _sessionFactory = sessionFactory;
         _identityClient = identityClient;
         _mediator = mediator;
         _options = options;
@@ -63,7 +66,7 @@ public sealed class SessionBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
                     return ResultFactory.Success<TResponse, WorkflowResponse>(activation.Value!);
                 }
 
-                session = UserSession.Create(botRequest.TelegramUserId, _options.InitialStep);
+                session = _sessionFactory.Create(botRequest.TelegramUserId, _options.InitialStep);
                 await _sessionService.SaveSession(session, cancellationToken);
 
                 _logger.LogInformation("Сессия восстановлена по identity, пользователь {TgUserId}, сообщение {MessageId}", botRequest.TelegramUserId, botRequest.MessageId);

@@ -8,11 +8,16 @@ public sealed class PhoneConfirmationService : IPhoneConfirmationService
 {
     private readonly IIdentityClient _identityClient;
     private readonly ISessionService _sessionService;
+    private readonly ISessionFactory _sessionFactory;
 
-    public PhoneConfirmationService(IIdentityClient identityClient, ISessionService sessionService)
+    public PhoneConfirmationService(
+        IIdentityClient identityClient,
+        ISessionService sessionService,
+        ISessionFactory sessionFactory)
     {
         _identityClient = identityClient;
         _sessionService = sessionService;
+        _sessionFactory = sessionFactory;
     }
 
     public async Task<string?> ConfirmAsync(long telegramUserId, string? phone, string initialStep, CancellationToken cancellationToken)
@@ -27,7 +32,7 @@ public sealed class PhoneConfirmationService : IPhoneConfirmationService
             }
         }
 
-        await _sessionService.SaveSession(UserSession.Create(telegramUserId, initialStep), cancellationToken);
+        await _sessionService.SaveSession(_sessionFactory.Create(telegramUserId, initialStep), cancellationToken);
 
         return null;
     }

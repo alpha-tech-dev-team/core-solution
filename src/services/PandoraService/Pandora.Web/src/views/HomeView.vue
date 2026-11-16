@@ -19,6 +19,7 @@ async function logout() {
       <h1>{{ tr('app_title') }}</h1>
       <nav class="home__nav">
         <RouterLink class="home__link" :to="ROUTES.EMPLOYEES">{{ tr('employees_title') }}</RouterLink>
+        <RouterLink class="home__link" :to="ROUTES.SECRETS">{{ tr('nav_secrets') }}</RouterLink>
         <button class="home__logout" @click="logout">{{ tr('auth_logout') }}</button>
       </nav>
     </header>

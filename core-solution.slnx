@@ -21,6 +21,7 @@
     <Project Path="src/services/PandoraService/Pandora.Domain/Pandora.Domain.csproj" />
     <Project Path="src/services/PandoraService/Pandora.Infrastructure/Pandora.Infrastructure.csproj" />
     <Project Path="src/services/PandoraService/Pandora.TgBot/Pandora.TgBot.csproj" />
+    <Project Path="src/services/PandoraService/Pandora.TgBot.Application/Pandora.TgBot.Application.csproj" />
   </Folder>
   <Folder Name="/src/shared/">
     <Project Path="src/shared/CoreSolution.Shared.Application/CoreSolution.Shared.Application.csproj" />

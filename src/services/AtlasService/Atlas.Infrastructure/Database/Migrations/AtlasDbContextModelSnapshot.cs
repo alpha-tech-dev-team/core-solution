@@ -2,7 +2,6 @@
 using System;
 using Atlas.Domain.Enums;
 using Atlas.Infrastructure.Database.Context;
-using Atlas.Infrastructure.Database.Constants;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
@@ -45,11 +44,28 @@ namespace Atlas.Infrastructure.Database.Migrations
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("now()");
 
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Patronymic")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("patronymic");
+
                     b.Property<EmployeeRole>("Role")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("employee_role")
                         .HasDefaultValue(EmployeeRole.Employee)
                         .HasColumnName("role");
+
+                    b.Property<string>("Surname")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("surname");
 
                     b.Property<DateTime>("UpdatedAt")
                         .ValueGeneratedOnAdd()
@@ -60,6 +76,32 @@ namespace Atlas.Infrastructure.Database.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("employees", (string)null);
+                });
+
+            modelBuilder.Entity("Atlas.Domain.Entities.EquipmentType", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("equipment_types", (string)null);
                 });
 
             modelBuilder.Entity("Atlas.Domain.Entities.Hardware", b =>
@@ -75,6 +117,10 @@ namespace Atlas.Infrastructure.Database.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("now()");
+
+                    b.Property<Guid>("EquipmentTypeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("equipment_type_id");
 
                     b.Property<string>("InventoryNumber")
                         .HasMaxLength(100)
@@ -96,12 +142,6 @@ namespace Atlas.Infrastructure.Database.Migrations
                         .HasColumnType("character varying(255)")
                         .HasColumnName("serial_number");
 
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("type");
-
                     b.Property<DateTime>("UpdatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
@@ -110,10 +150,12 @@ namespace Atlas.Infrastructure.Database.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("EquipmentTypeId");
+
                     b.HasIndex("InventoryNumber")
                         .IsUnique();
 
-                    b.HasIndex("RoomId", "Type");
+                    b.HasIndex("RoomId", "EquipmentTypeId");
 
                     b.ToTable("hardware", (string)null);
                 });
@@ -484,11 +526,19 @@ namespace Atlas.Infrastructure.Database.Migrations
 
             modelBuilder.Entity("Atlas.Domain.Entities.Hardware", b =>
                 {
+                    b.HasOne("Atlas.Domain.Entities.EquipmentType", "EquipmentType")
+                        .WithMany("Hardware")
+                        .HasForeignKey("EquipmentTypeId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
                     b.HasOne("Atlas.Domain.Entities.Room", "Room")
                         .WithMany("Hardware")
                         .HasForeignKey("RoomId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+
+                    b.Navigation("EquipmentType");
 
                     b.Navigation("Room");
                 });
@@ -628,6 +678,11 @@ namespace Atlas.Infrastructure.Database.Migrations
                     b.Navigation("EmployeeIncidents");
 
                     b.Navigation("StatusChanges");
+                });
+
+            modelBuilder.Entity("Atlas.Domain.Entities.EquipmentType", b =>
+                {
+                    b.Navigation("Hardware");
                 });
 
             modelBuilder.Entity("Atlas.Domain.Entities.Hardware", b =>

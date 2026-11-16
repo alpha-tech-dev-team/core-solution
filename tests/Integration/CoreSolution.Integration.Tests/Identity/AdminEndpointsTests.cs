@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using Identity.Api.Models;
+using Identity.Application.Constants;
 using Identity.Application.Contracts.Admin;
 using Identity.Application.Contracts.Client;
 using CoreSolution.Shared.Enums;
@@ -728,18 +729,23 @@ public sealed class AdminEndpointsTests
 
     private static async Task<EmployeeInfoDto[]> GetUsers(HttpClient client)
     {
-        const int pageSize = 50;
-        var first = await client.GetFromJsonAsync<EmployeesPageDto>($"{UsersRoute}?pageSize={pageSize}");
-        var items = new List<EmployeeInfoDto>(first!.Items);
-        var totalPages = (int)Math.Ceiling(first.Total / (double)pageSize);
+        var items = new List<EmployeeInfoDto>();
 
-        for (var page = 2; page <= totalPages; page++)
+        for (var page = ValidationConstants.PageMin; ; page++)
         {
-            var next = await client.GetFromJsonAsync<EmployeesPageDto>($"{UsersRoute}?page={page}&pageSize={pageSize}");
-            items.AddRange(next!.Items);
-        }
+            var response = await client.GetAsync(
+                $"{UsersRoute}?page={page}&pageSize={ValidationConstants.PageSizeMax}");
 
-        return items.ToArray();
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            var body = (await response.Content.ReadFromJsonAsync<EmployeesPageDto>())!;
+
+            items.AddRange(body.Items);
+
+            if (items.Count >= body.Total || body.Items.Length == 0)
+            {
+                return [.. items];
+            }
+        }
     }
 
     private sealed record EmployeesPageDto(EmployeeInfoDto[] Items, int Total);

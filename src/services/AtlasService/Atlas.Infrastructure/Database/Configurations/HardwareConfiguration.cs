@@ -20,9 +20,8 @@ public sealed class HardwareConfiguration : IEntityTypeConfiguration<Hardware>
             .HasMaxLength(DatabaseConstants.Hardware.NameMaxLength)
             .IsRequired();
 
-        builder.Property(x => x.Type)
-            .HasColumnName(DatabaseConstants.Hardware.Type)
-            .HasMaxLength(DatabaseConstants.Hardware.TypeMaxLength)
+        builder.Property(x => x.EquipmentTypeId)
+            .HasColumnName(DatabaseConstants.Hardware.EquipmentTypeId)
             .IsRequired();
 
         builder.Property(x => x.InventoryNumber)
@@ -48,11 +47,16 @@ public sealed class HardwareConfiguration : IEntityTypeConfiguration<Hardware>
         builder.HasIndex(x => x.InventoryNumber)
             .IsUnique();
 
-        builder.HasIndex(x => new { x.RoomId, x.Type });
+        builder.HasIndex(x => new { x.RoomId, x.EquipmentTypeId });
 
         builder.HasOne(x => x.Room)
             .WithMany(x => x.Hardware)
             .HasForeignKey(x => x.RoomId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        builder.HasOne(x => x.EquipmentType)
+            .WithMany(x => x.Hardware)
+            .HasForeignKey(x => x.EquipmentTypeId)
             .OnDelete(DeleteBehavior.NoAction);
     }
 }

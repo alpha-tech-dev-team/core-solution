@@ -1,6 +1,0 @@
-@Pandora.Api_HostAddress = http://localhost:5008
-
-GET {{Pandora.Api_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

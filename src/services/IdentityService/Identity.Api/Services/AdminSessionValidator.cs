@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using Identity.Application.Errors;
-using Identity.Domain.Constants;
+using CoreSolution.Shared.Constants;
 using Identity.Domain.Enums;
 using Identity.Domain.Interfaces.Repositories;
 using UserEntity = Identity.Domain.Entities.User;
@@ -18,7 +18,7 @@ public sealed class AdminSessionValidator
 
     public async Task<string?> ValidateAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
     {
-        var subject = principal.FindFirst(IdentityClaims.Subject)?.Value;
+        var subject = principal.FindFirst(JwtClaimConstants.Subject)?.Value;
 
         if (!Guid.TryParse(subject, out var userId))
         {
@@ -56,17 +56,17 @@ public sealed class AdminSessionValidator
             return;
         }
 
-        foreach (var claim in identity.FindAll(IdentityClaims.Role).ToList())
+        foreach (var claim in identity.FindAll(JwtClaimConstants.Role).ToList())
         {
             identity.RemoveClaim(claim);
         }
 
         foreach (var role in user.UserRoles.Select(x => x.Role.Name).Distinct(StringComparer.OrdinalIgnoreCase))
         {
-            identity.AddClaim(new Claim(IdentityClaims.Role, role));
+            identity.AddClaim(new Claim(JwtClaimConstants.Role, role));
         }
 
-        var login = identity.FindFirst(IdentityClaims.UniqueName);
+        var login = identity.FindFirst(JwtClaimConstants.UniqueName);
         if (login is not null)
         {
             identity.RemoveClaim(login);
@@ -74,7 +74,7 @@ public sealed class AdminSessionValidator
 
         if (user.AdminUsername is not null)
         {
-            identity.AddClaim(new Claim(IdentityClaims.UniqueName, user.AdminUsername));
+            identity.AddClaim(new Claim(JwtClaimConstants.UniqueName, user.AdminUsername));
         }
     }
 }

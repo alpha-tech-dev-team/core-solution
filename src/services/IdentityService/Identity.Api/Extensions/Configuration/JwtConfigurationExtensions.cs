@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using CoreSolution.Shared.Constants;
 using CoreSolution.Shared.Enums;
 using CoreSolution.Shared.Options;
 using Identity.Api.Constants;
@@ -23,7 +24,7 @@ public static class JwtConfigurationExtensions
             && string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(SecretEnvironmentVariable)))
         {
             throw new InvalidOperationException(
-                $"В Production секрет JWT задаётся только переменной окружения {SecretEnvironmentVariable}");
+                $"В Production секрет JWT должен быть передан переменной окружения {SecretEnvironmentVariable}");
         }
 
         services
@@ -34,21 +35,27 @@ public static class JwtConfigurationExtensions
             .Configure<IOptions<JwtOptions>>((jwt, jwtOptionsAccessor) =>
             {
                 var options = jwtOptionsAccessor.Value;
+                var secret = options.Secret;
 
-                jwt.MapInboundClaims = JwtConstants.MapInboundClaims;
+                ArgumentException.ThrowIfNullOrWhiteSpace(secret);
+                ArgumentOutOfRangeException.ThrowIfLessThan(
+                    Encoding.UTF8.GetByteCount(secret),
+                    JwtOptions.MinimumSecretLength);
+
+                jwt.MapInboundClaims = JwtValidationConstants.MapInboundClaims;
                 jwt.TokenValidationParameters = new TokenValidationParameters
                 {
-                    ValidateIssuer = JwtConstants.ValidateIssuer,
+                    ValidateIssuer = JwtValidationConstants.ValidateIssuer,
                     ValidIssuer = options.Issuer,
-                    ValidateAudience = JwtConstants.ValidateAudience,
+                    ValidateAudience = JwtValidationConstants.ValidateAudience,
                     ValidAudience = options.Audience,
-                    ValidateIssuerSigningKey = JwtConstants.ValidateIssuerSigningKey,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(options.Secret)),
-                    ValidateLifetime = JwtConstants.ValidateLifetime,
-                    ClockSkew = JwtConstants.ClockSkew,
-                    ValidAlgorithms = JwtConstants.ValidAlgorithms,
-                    NameClaimType = IdentityClaims.UniqueName,
-                    RoleClaimType = IdentityClaims.Role
+                    ValidateIssuerSigningKey = JwtValidationConstants.ValidateIssuerSigningKey,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret)),
+                    ValidateLifetime = JwtValidationConstants.ValidateLifetime,
+                    ClockSkew = JwtValidationConstants.ClockSkew,
+                    ValidAlgorithms = JwtValidationConstants.ValidAlgorithms,
+                    NameClaimType = JwtClaimConstants.UniqueName,
+                    RoleClaimType = JwtClaimConstants.Role
                 };
                 jwt.Events = new JwtBearerEvents
                 {
@@ -91,7 +98,9 @@ public static class JwtConfigurationExtensions
         services.AddAuthorizationBuilder()
             .AddPolicy(
                 nameof(UserRole.PandoraAdmin),
-                policy => policy.RequireRole(nameof(UserRole.PandoraAdmin)));
+                policy => policy
+                    .RequireRole(nameof(UserRole.PandoraAdmin))
+                    .RequireClaim(JwtClaimConstants.Subject));
 
         return services;
     }
