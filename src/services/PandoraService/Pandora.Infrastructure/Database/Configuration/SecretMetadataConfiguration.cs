@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Pandora.Domain.Entities;
+using Pandora.Domain.Enums;
 
 namespace Pandora.Infrastructure.Database.Configuration;
 
@@ -16,8 +17,11 @@ public sealed class SecretMetadataConfiguration : IEntityTypeConfiguration<Secre
         builder.Property(e => e.SyncOperation)
             .HasColumnName(DatabaseConstants.SecretMetadata.SyncOperation)
             .HasMaxLength(DatabaseConstants.SecretMetadata.SyncOperationMaxLength)
-            .HasConversion<string>();
-        builder.Property(e => e.AttemptCount).HasColumnName(DatabaseConstants.SecretMetadata.AttemptCount);
+            .HasConversion<string>()
+            .HasDefaultValue(SecretSyncOperation.None);
+        builder.Property(e => e.AttemptCount)
+            .HasColumnName(DatabaseConstants.SecretMetadata.AttemptCount)
+            .HasDefaultValue(0);
         builder.Property(e => e.NextAttemptAt).HasColumnName(DatabaseConstants.SecretMetadata.NextAttemptAt);
         builder.Property(e => e.LastError)
             .HasColumnName(DatabaseConstants.SecretMetadata.LastError)

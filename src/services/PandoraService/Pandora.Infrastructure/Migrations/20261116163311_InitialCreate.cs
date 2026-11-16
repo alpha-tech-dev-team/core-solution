@@ -17,7 +17,8 @@ namespace Pandora.Infrastructure.Migrations
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     timestamp = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    user_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    user_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    telegram_user_id = table.Column<long>(type: "bigint", nullable: true),
                     action = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     target_item_id = table.Column<string>(type: "character varying(36)", maxLength: 36, nullable: true),
                     request_source = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false)
@@ -33,7 +34,11 @@ namespace Pandora.Infrastructure.Migrations
                 {
                     vault_item_id = table.Column<string>(type: "character varying(36)", maxLength: 36, nullable: false),
                     resource_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    username = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
+                    username = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    sync_operation = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false, defaultValue: "None"),
+                    attempt_count = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
+                    next_attempt_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    last_error = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -44,13 +49,13 @@ namespace Pandora.Infrastructure.Migrations
                 name: "permissions",
                 columns: table => new
                 {
-                    user_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    telegram_user_id = table.Column<long>(type: "bigint", nullable: false, defaultValue: 0L),
                     vault_item_id = table.Column<string>(type: "character varying(36)", maxLength: 36, nullable: false),
-                    is_active = table.Column<bool>(type: "boolean", nullable: false)
+                    is_active = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_permissions", x => new { x.user_id, x.vault_item_id });
+                    table.PrimaryKey("PK_permissions", x => new { x.telegram_user_id, x.vault_item_id });
                     table.ForeignKey(
                         name: "FK_permissions_secret_metadata_vault_item_id",
                         column: x => x.vault_item_id,
@@ -58,6 +63,11 @@ namespace Pandora.Infrastructure.Migrations
                         principalColumn: "vault_item_id",
                         onDelete: ReferentialAction.Cascade);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_audit_telegram_user_id",
+                table: "audit",
+                column: "telegram_user_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_audit_user_id",

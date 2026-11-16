@@ -12,6 +12,8 @@
   "error_ValidationFailed": "Please check the entered fields",
   "error_SelfActionForbidden": "You cannot block, delete or downgrade your own account",
   "error_TooManyRequests": "Too many attempts. Try again in a minute.",
+  "error_InvalidPage": "Invalid page number",
+  "error_InvalidPageSize": "Invalid page size",
   "error_InternalError": "Internal server error",
   "error_network": "Network error. Check your connection.",
   "error_unknown": "An unknown error occurred",

@@ -129,6 +129,46 @@ public sealed class AuditRepositoryTests(IntegrationFixture fixture)
         Assert.Equal(3, seen.Distinct().Count());
     }
 
+    [Fact]
+    public async Task GetPage_NonPositivePage_ReturnsFirstPageInsteadOfFailing()
+    {
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+        using var scope = provider.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<PandoraDbContext>();
+        var repository = new AuditRepository(database);
+
+        await database.AuditEntry.ExecuteDeleteAsync();
+        await database.SaveChangesAsync();
+
+        database.AuditEntry.Add(CreateEntry(DateTime.UtcNow, "show_services"));
+        await database.SaveChangesAsync();
+
+        var page = await repository.GetPage(-5, 10, CancellationToken.None);
+
+        Assert.Equal(PaginationLimits.FirstPage, page.Page);
+        Assert.Single(page.Items);
+    }
+
+    [Fact]
+    public async Task GetPage_NonPositivePageSize_FallsBackToMinimumPageSize()
+    {
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+        using var scope = provider.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<PandoraDbContext>();
+        var repository = new AuditRepository(database);
+
+        await database.AuditEntry.ExecuteDeleteAsync();
+        await database.SaveChangesAsync();
+
+        database.AuditEntry.Add(CreateEntry(DateTime.UtcNow, "show_services"));
+        await database.SaveChangesAsync();
+
+        var page = await repository.GetPage(1, 0, CancellationToken.None);
+
+        Assert.Equal(PaginationLimits.MinPageSize, page.PageSize);
+        Assert.Single(page.Items);
+    }
+
     private static AuditEntry CreateEntry(DateTime timestamp, string action) =>
         new(Guid.NewGuid(), timestamp, telegramUserId: 0, action, targetItemId: null, requestSource: "telegram");
 }

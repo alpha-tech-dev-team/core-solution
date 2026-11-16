@@ -24,23 +24,26 @@ public sealed class AuditRepository : IAuditRepository
 
     public async Task<PagedResult<AuditEntry>> GetPage(int page, int pageSize, CancellationToken cancellationToken)
     {
+        var pageNumber = Math.Max(page, PaginationLimits.FirstPage);
+        var size = Math.Clamp(pageSize, PaginationLimits.MinPageSize, PaginationLimits.MaxPageSize);
+
         var query = _context.AuditEntry.AsNoTracking();
 
         var total = await query.CountAsync(cancellationToken);
-        var offset = (long)(page - PaginationLimits.FirstPage) * pageSize;
+        var offset = (long)(pageNumber - PaginationLimits.FirstPage) * size;
 
         if (offset >= total)
         {
-            return new PagedResult<AuditEntry>([], page, pageSize, total);
+            return new PagedResult<AuditEntry>([], pageNumber, size, total);
         }
 
         var items = await query
             .OrderByDescending(entry => entry.Timestamp)
             .ThenBy(entry => entry.Id)
             .Skip((int)offset)
-            .Take(pageSize)
+            .Take(size)
             .ToListAsync(cancellationToken);
 
-        return new PagedResult<AuditEntry>(items, page, pageSize, total);
+        return new PagedResult<AuditEntry>(items, pageNumber, size, total);
     }
 }

@@ -70,7 +70,9 @@ namespace Pandora.Infrastructure.Migrations
             modelBuilder.Entity("Pandora.Domain.Entities.Permission", b =>
                 {
                     b.Property<long>("TelegramUserId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
+                        .HasDefaultValue(0L)
                         .HasColumnName("telegram_user_id");
 
                     b.Property<string>("VaultItemId")
@@ -99,7 +101,9 @@ namespace Pandora.Infrastructure.Migrations
                         .HasColumnName("vault_item_id");
 
                     b.Property<int>("AttemptCount")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
+                        .HasDefaultValue(0)
                         .HasColumnName("attempt_count");
 
                     b.Property<string>("LastError")
@@ -119,8 +123,10 @@ namespace Pandora.Infrastructure.Migrations
 
                     b.Property<string>("SyncOperation")
                         .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
+                        .HasDefaultValue("None")
                         .HasColumnName("sync_operation");
 
                     b.Property<string>("Username")

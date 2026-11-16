@@ -5,6 +5,4 @@ using Pandora.Domain.Entities;
 
 namespace Pandora.Application.Features.Audit;
 
-public sealed class GetAuditEntriesMessage : PagedQuery, IRequest<Result<PagedResult<AuditEntry>>>
-{
-}
+public sealed record GetAuditEntriesMessage : PagedQuery, IRequest<Result<PagedResult<AuditEntry>>>;

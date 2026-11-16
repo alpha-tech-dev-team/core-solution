@@ -55,6 +55,7 @@ public sealed class AuditEndpointTests(IntegrationFixture fixture)
         var response = await client.GetAsync($"{AuditRoute}?page=0&pageSize=0");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("InvalidPage", await ReadValidationCodeAsync(response));
     }
 
     [Fact]
@@ -92,6 +93,13 @@ public sealed class AuditEndpointTests(IntegrationFixture fixture)
             "web"));
 
         await database.SaveChangesAsync();
+    }
+
+    private static async Task<string?> ReadValidationCodeAsync(HttpResponseMessage response)
+    {
+        var problem = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>();
+
+        return problem is not null && problem.TryGetValue("code", out var code) ? code.ToString() : null;
     }
 
     private async Task<string> LoginAsAdminAsync(string roleName = nameof(UserRole.PandoraAdmin))

@@ -5,6 +5,4 @@ using Pandora.Domain.Models;
 
 namespace Pandora.Application.Features.Secrets.GetSecrets;
 
-public sealed class GetSecretsMessage : PagedQuery, IRequest<Result<SecretListPage>>
-{
-}
+public sealed record GetSecretsMessage : PagedQuery, IRequest<Result<SecretListPage>>;
