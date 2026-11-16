@@ -7,6 +7,7 @@ using Pandora.Domain.Interfaces;
 using Pandora.Domain.Options;
 using Pandora.Infrastructure.Database;
 using Pandora.Infrastructure.Repositories;
+using Pandora.Infrastructure.Secrets;
 using Pandora.Infrastructure.Secrets.Synchronization;
 using Serilog;
 using ApplicationAssemblyMarker = Pandora.Application.AssemblyMarker;
@@ -18,32 +19,20 @@ public static class ServiceConfigurationExtensions
     public static IServiceCollection AddServiceConfiguration(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddOpenApi();
-
         services.AddProblemDetails();
         services.AddExceptionHandler<GlobalExceptionHandler>();
-
         services.AddSerilog((serviceProvider, loggerConfiguration) => loggerConfiguration
             .ReadFrom.Configuration(configuration)
             .ReadFrom.Services(serviceProvider));
-
         services.AddOptionsConfiguration(configuration);
-
         services.AddDatabaseConfiguration();
-
-        services.AddSecretWriter();
-
-        services.AddSecretVaultReader();
-
+        services.AddSecretsConfiguration();
         services.AddScoped<SecretAuditLogger>();
-
+        services.AddScoped<IAuditFlush, AuditFlush>();
         services.AddScoped<SecretSyncService>();
-
         services.AddHostedService<SecretSyncWorker>();
-
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<ApplicationAssemblyMarker>());
-
         services.AddValidatorsFromAssemblyContaining<ApplicationAssemblyMarker>();
-
         services.AddJwtAuthentication();
 
         return services;
@@ -60,6 +49,26 @@ public static class ServiceConfigurationExtensions
 
         services.AddScoped<ISecretMetadataRepository, SecretMetadataRepository>();
         services.AddScoped<IPermissionRepository, PermissionRepository>();
+
+        return services;
+    }
+
+    private static IServiceCollection AddSecretsConfiguration(this IServiceCollection services)
+    {
+        services.AddVaultwardenClient<VaultwardenSecretWriter, ISecretWriter>();
+        services.AddVaultwardenClient<VaultwardenSecretStore, ISecretVaultReader>();
+
+        return services;
+    }
+
+    private static IServiceCollection AddVaultwardenClient<TClient, TService>(this IServiceCollection services)
+        where TClient : class, TService
+        where TService : class
+    {
+        services.AddHttpClient<TClient>((serviceProvider, client) =>
+            client.BaseAddress = new Uri(serviceProvider.GetRequiredService<IOptions<VaultwardenOptions>>().Value.BaseUrl));
+
+        services.AddScoped<TService>(provider => provider.GetRequiredService<TClient>());
 
         return services;
     }
