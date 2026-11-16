@@ -1,7 +1,13 @@
 import { createSecretFormSchema, updateSecretFormSchema } from '@/validation/secrets'
 import { firstValidationMessage } from '@shared/validation/validation-message'
 import type { ValidationMessage } from '@shared/validation/validation-message'
-import type { SecretFormValues } from '@/models/secret-form-values'
+
+export interface SecretFormValues {
+  name: string
+  username: string
+  password: string
+  isEditing: boolean
+}
 
 export function validateSecretForm(values: SecretFormValues): ValidationMessage | null {
   const schema = values.isEditing ? updateSecretFormSchema : createSecretFormSchema
