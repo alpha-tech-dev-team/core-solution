@@ -8,7 +8,7 @@ import {
   type EmployeeFormField,
 } from '@/validation/employee'
 import type { EmployeeInput } from '@/models/employee-input'
-import ModalDialog from '@shared/components/ModalDialog.vue'
+import ModalDialog from '@/components/ModalDialog.vue'
 
 const props = defineProps<{
   open: boolean

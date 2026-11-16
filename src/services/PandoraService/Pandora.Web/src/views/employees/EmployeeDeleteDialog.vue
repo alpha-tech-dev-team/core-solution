@@ -3,7 +3,7 @@ import { useTranslations } from '@shared/i18n/create-i18n'
 import { RESOURCE_KEYS } from '@/constants/resource-keys'
 import { formatEmployeeFullName } from '@/models/employee'
 import type { Employee } from '@/models/employee'
-import ModalDialog from '@shared/components/ModalDialog.vue'
+import ModalDialog from '@/components/ModalDialog.vue'
 
 defineProps<{
   open: boolean

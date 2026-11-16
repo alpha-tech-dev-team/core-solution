@@ -1,5 +1,3 @@
-export { API_BASE_URL, REQUEST_TIMEOUT_MS } from '@shared/constants/api'
-
 export const EMPLOYEE_ENDPOINTS = {
   LIST: '/users',
   BY_ID: (id: string) => `/users/${id}`,

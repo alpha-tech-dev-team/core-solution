@@ -1,7 +1,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTranslations } from '@shared/i18n/create-i18n'
-import { useViewError } from '@shared/composables/use-view-error'
+import { useViewError } from '@/composables/use-view-error'
 import { SHARED_ROUTE_NAMES } from '@shared/constants/routes'
 import { RESOURCE_KEYS } from '@/constants/resource-keys'
 import { FIRST_PAGE, SECRETS_PAGE_SIZE } from '@/constants/pagination'

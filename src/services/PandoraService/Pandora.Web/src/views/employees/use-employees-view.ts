@@ -1,6 +1,6 @@
 import { computed, onMounted, ref } from 'vue'
-import { useViewError } from '@shared/composables/use-view-error'
-import { useAuthStore } from '@/session'
+import { useViewError } from '@/composables/use-view-error'
+import { useAuthStore } from '@shared/app/app-session'
 import { useEmployeesStore } from '@/stores/employees'
 import { EMPLOYEE_STATUS } from '@/constants/employee-status'
 import { FIRST_PAGE } from '@/constants/pagination'

@@ -1,16 +1,6 @@
-import '@shared/styles/index.css'
-
-import App from '@/App.vue'
+import { bootstrapApp } from '@shared/app/bootstrap-app'
 import { routes } from '@/router/routes'
-import { i18n } from '@/i18n'
-import { appSession } from '@/session'
-import { mountWebApp } from '@shared/app/mount-web-app'
-import { APP_MOUNT_POINT } from '@shared/constants/app'
+import ru from '@/i18n/locales/ru.json'
+import en from '@/i18n/locales/en.json'
 
-mountWebApp({
-  root: App,
-  routes,
-  i18n,
-  appSession,
-  mountPoint: APP_MOUNT_POINT,
-})
+bootstrapApp({ routes, locales: { ru, en } })

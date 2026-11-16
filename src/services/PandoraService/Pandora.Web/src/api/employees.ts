@@ -1,12 +1,13 @@
-import { api } from '@/session'
+import { api } from '@shared/app/app-session'
 import { EMPLOYEE_ENDPOINTS, PAGINATION_QUERY } from '@/constants/api'
+import type { Employee } from '@/models/employee'
 import type { EmployeeInput } from '@/models/employee-input'
 import type { EmployeeRolesPayload } from '@/models/employee-roles-payload'
 import type { EmployeeStatus } from '@/models/employee-status'
-import type { EmployeesPage } from '@/models/employees-page'
+import type { Page } from '@shared/models/page'
 
-export async function fetchEmployees(page: number): Promise<EmployeesPage> {
-  return await api.get<EmployeesPage>(EMPLOYEE_ENDPOINTS.LIST, {
+export async function fetchEmployees(page: number): Promise<Page<Employee>> {
+  return await api.get<Page<Employee>>(EMPLOYEE_ENDPOINTS.LIST, {
     [PAGINATION_QUERY.PAGE]: page,
   })
 }
