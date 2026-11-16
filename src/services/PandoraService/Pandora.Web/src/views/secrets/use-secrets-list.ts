@@ -1,5 +1,5 @@
 import { computed, ref, type ComputedRef, type Ref } from 'vue'
-import { FIRST_PAGE } from '@/constants/pagination'
+import { FIRST_PAGE } from '@shared/constants/pagination'
 import { fetchSecrets } from '@/api/secrets'
 import type { SecretItem } from '@/models/secret-item'
 

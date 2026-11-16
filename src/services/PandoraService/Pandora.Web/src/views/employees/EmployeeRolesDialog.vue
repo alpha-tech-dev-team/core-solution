@@ -5,7 +5,7 @@ import { RESOURCE_KEYS } from '@/constants/resource-keys'
 import { isAdminRole, PANDORA_ADMIN_ROLE } from '@/constants/roles'
 import type { Employee } from '@/models/employee'
 import type { EmployeeRolesPayload } from '@/models/employee-roles-payload'
-import ModalDialog from '@/components/ModalDialog.vue'
+import ModalDialog from '@shared/components/ModalDialog.vue'
 
 const props = defineProps<{
   open: boolean

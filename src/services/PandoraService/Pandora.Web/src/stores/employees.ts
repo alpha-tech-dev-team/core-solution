@@ -10,7 +10,7 @@ import {
   updateEmployeeStatus,
 } from '@/api/employees'
 import { EMPLOYEE_STORE_ID } from '@/constants/stores'
-import { FIRST_PAGE } from '@/constants/pagination'
+import { FIRST_PAGE } from '@shared/constants/pagination'
 import type { Employee } from '@/models/employee'
 import type { EmployeeInput } from '@/models/employee-input'
 import type { EmployeeRolesPayload } from '@/models/employee-roles-payload'

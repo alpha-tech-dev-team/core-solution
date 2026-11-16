@@ -3,7 +3,7 @@ import LogoutButton from '@shared/components/LogoutButton.vue'
 import { useTranslations } from '@shared/i18n/create-i18n'
 import { LOADING_PLACEHOLDER } from '@shared/constants/ui'
 import { RESOURCE_KEYS } from '@/constants/resource-keys'
-import PaginationNav from '@/components/PaginationNav.vue'
+import PaginationNav from '@shared/components/PaginationNav.vue'
 import { useSecretsView } from './use-secrets-view'
 
 const page = useSecretsView()

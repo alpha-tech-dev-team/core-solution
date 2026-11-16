@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { FIRST_PAGE } from '@/constants/pagination'
+import { FIRST_PAGE } from '../constants/pagination'
 
 defineProps<{
   page: number
