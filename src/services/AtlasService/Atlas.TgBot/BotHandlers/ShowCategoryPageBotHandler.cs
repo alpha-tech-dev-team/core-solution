@@ -11,8 +11,6 @@ namespace Atlas.TgBot.BotHandlers;
 
 public sealed class ShowCategoryPageBotHandler : IBotHandler
 {
-    private static readonly InlineKeyboardMarkup EmptyMarkup = new(Array.Empty<InlineKeyboardButton>());
-
     private readonly IMediator _mediator;
     private readonly ITelegramNotificationService _telegramNotificationService;
     private readonly IUserErrorMapper _userErrorMapper;
@@ -34,22 +32,18 @@ public sealed class ShowCategoryPageBotHandler : IBotHandler
 
     public async Task HandleAsync(Update update, CancellationToken cancellationToken)
     {
-        if (update.CallbackQuery is not { Data: string data, Message: { Chat.Id: long telegramUserId, MessageId: int messageId } })
+        if (update.CallbackQuery is { Data: string data, Message: { Chat.Id: long telegramUserId, MessageId: int messageId } })
         {
-            return;
+            var result = await _mediator.Send(
+                new ShowMenuMessage(telegramUserId, messageId, data.ParsePage()),
+                cancellationToken);
+
+            await _telegramNotificationService.SendOrEditAsync(
+                telegramUserId,
+                messageId,
+                result.GetUserText(_userErrorMapper),
+                result.ToTelegramMarkup() as InlineKeyboardMarkup,
+                cancellationToken);
         }
-
-        var result = await _mediator.Send(
-            new ShowMenuMessage(telegramUserId, messageId, data.ParsePage()),
-            cancellationToken);
-
-        var markup = result.ToTelegramMarkup() as InlineKeyboardMarkup ?? EmptyMarkup;
-
-        await _telegramNotificationService.SendOrEditAsync(
-            telegramUserId,
-            messageId,
-            result.GetUserText(_userErrorMapper),
-            markup,
-            cancellationToken);
     }
 }
