@@ -59,6 +59,7 @@ export const VALIDATION_RULES = {
 } as const
 
 export const AUDIT_ACTIONS = {
+  submit_phone: `${AUDIT_ACTION_KEY_PREFIX}_submit_phone`,
   show_services: `${AUDIT_ACTION_KEY_PREFIX}_show_services`,
   get_credentials: `${AUDIT_ACTION_KEY_PREFIX}_get_credentials`,
   secret_created: `${AUDIT_ACTION_KEY_PREFIX}_secret_created`,

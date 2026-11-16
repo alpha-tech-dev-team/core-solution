@@ -10,4 +10,5 @@ export interface Employee {
   status: EmployeeStatus
   roles: string[]
   adminUsername: string | null
+  telegramUserId: number | null
 }

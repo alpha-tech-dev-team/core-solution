@@ -9,6 +9,7 @@ import { AUDIT_PAGE_SIZE, FIRST_PAGE } from '@/constants/pagination'
 import { LOADING_PLACEHOLDER } from '@/constants/ui'
 import { toRequestError } from '@/api/request-error'
 import { fetchAuditEntries } from '@/api/audit'
+import { fetchEmployeeNames, type EmployeeNames } from '@/api/employees'
 import { createAuditHubConnection } from '@/api/audit-hub'
 import type { AuditEntry } from '@/stores/models/audit-entry'
 
@@ -16,6 +17,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 const entries = ref<AuditEntry[]>([])
+const employeeNames = ref<EmployeeNames>({ byId: new Map(), byTelegramId: new Map() })
 const page = ref(FIRST_PAGE)
 const total = ref(0)
 const isLoading = ref(false)
@@ -37,6 +39,26 @@ async function loadEntries() {
     errorMessage.value = trRequestError(toRequestError(error))
   } finally {
     isLoading.value = false
+  }
+}
+
+function actorName(entry: AuditEntry): string {
+  if (entry.telegramUserId !== null) {
+    return employeeNames.value.byTelegramId.get(entry.telegramUserId) ?? String(entry.telegramUserId)
+  }
+
+  if (entry.userId !== null) {
+    return employeeNames.value.byId.get(entry.userId) ?? entry.userId
+  }
+
+  return ''
+}
+
+async function loadEmployeeNames() {
+  try {
+    employeeNames.value = await fetchEmployeeNames()
+  } catch (error) {
+    console.error('Не удалось загрузить сотрудников для журнала действий', error)
   }
 }
 
@@ -74,6 +96,7 @@ async function startLiveUpdates() {
 
 onMounted(() => {
   void loadEntries()
+  void loadEmployeeNames()
   void startLiveUpdates()
 })
 
@@ -110,7 +133,7 @@ onUnmounted(() => {
         <tbody>
           <tr v-for="entry in entries" :key="entry.id">
             <td>{{ new Date(entry.timestamp).toLocaleString() }}</td>
-            <td>{{ entry.telegramUserId ?? entry.userId ?? '' }}</td>
+            <td>{{ actorName(entry) }}</td>
             <td>{{ trAuditAction(entry.action) }}</td>
             <td>{{ entry.targetItemId ?? '' }}</td>
             <td>{{ trAuditSource(entry.requestSource) }}</td>

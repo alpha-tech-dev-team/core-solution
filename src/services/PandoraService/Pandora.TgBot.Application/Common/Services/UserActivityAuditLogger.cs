@@ -22,9 +22,14 @@ public sealed class UserActivityAuditLogger
         _logger = logger;
     }
 
-    public async Task LogAsync(IUserActionMessage userAction, CancellationToken cancellationToken)
+    public Task LogAsync(IUserActionMessage userAction, CancellationToken cancellationToken)
     {
-        var entry = new AuditEntry(Guid.NewGuid(), DateTime.UtcNow, userAction.TelegramUserId, userAction.Action, userAction.TargetItemId, AuditConstants.Sources.Telegram);
+        return LogAsync(userAction.TelegramUserId, userAction.Action, userAction.TargetItemId, cancellationToken);
+    }
+
+    public async Task LogAsync(long telegramUserId, string action, string? targetItemId, CancellationToken cancellationToken)
+    {
+        var entry = new AuditEntry(Guid.NewGuid(), DateTime.UtcNow, telegramUserId, action, targetItemId, AuditConstants.Sources.Telegram);
 
         try
         {
@@ -33,7 +38,7 @@ public sealed class UserActivityAuditLogger
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _logger.LogError(exception, "Не удалось записать действие {Action} пользователя {TgUserId}", userAction.Action, userAction.TelegramUserId);
+            _logger.LogError(exception, "Не удалось записать действие {Action} пользователя {TgUserId}", action, telegramUserId);
         }
     }
 }

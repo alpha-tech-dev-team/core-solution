@@ -105,6 +105,7 @@
   "secrets_page_prev": "Назад",
   "secrets_page_next": "Вперёд",
   "secrets_page_info": "Страница {0} из {1}",
+  "audit_action_submit_phone": "Поделился номером телефона",
   "audit_action_show_services": "Просмотр списка сервисов",
   "audit_action_get_credentials": "Получение учётных данных",
   "audit_source_telegram": "Телеграм",

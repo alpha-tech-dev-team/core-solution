@@ -99,7 +99,7 @@ public sealed class UserActivityAuditTests(IntegrationFixture fixture)
     }
 
     [Fact]
-    public async Task SubmitPhone_WritesAuditEntryForServicesShownAfterActivation()
+    public async Task SubmitPhone_WritesPhoneSharingAndServicesShownEntries()
     {
         const long telegramUserId = 8104;
         const string phone = "+79995550114";
@@ -113,9 +113,27 @@ public sealed class UserActivityAuditTests(IntegrationFixture fixture)
         Assert.True(result.IsSuccess);
 
         var entries = await GetAuditEntriesAsync(provider, telegramUserId);
+        var submitPhoneEntry = Assert.Single(entries, entry => entry.Action == AuditConstants.Actions.SubmitPhone);
 
-        Assert.Single(entries);
-        Assert.Equal(AuditConstants.Actions.ShowServices, entries[0].Action);
+        Assert.Null(submitPhoneEntry.TargetItemId);
+        Assert.Equal(AuditConstants.Sources.Telegram, submitPhoneEntry.RequestSource);
+        Assert.Contains(entries, entry => entry.Action == AuditConstants.Actions.ShowServices);
+    }
+
+    [Fact]
+    public async Task SubmitPhone_UnknownPhone_WritesNoPhoneSharingEntry()
+    {
+        const long telegramUserId = 8107;
+
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+
+        var result = await SendAsync(provider, new SubmitPhoneMessage(telegramUserId, MessageId, "+79995550199"));
+
+        Assert.False(result.IsSuccess);
+
+        var entries = await GetAuditEntriesAsync(provider, telegramUserId);
+
+        Assert.DoesNotContain(entries, entry => entry.Action == AuditConstants.Actions.SubmitPhone);
     }
 
     [Fact]

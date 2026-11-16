@@ -105,6 +105,7 @@
   "secrets_page_prev": "Previous",
   "secrets_page_next": "Next",
   "secrets_page_info": "Page {0} of {1}",
+  "audit_action_submit_phone": "Shared phone number",
   "audit_action_show_services": "Viewed service list",
   "audit_action_get_credentials": "Retrieved credentials",
   "audit_source_telegram": "Telegram",

@@ -9,6 +9,7 @@ public static class AuditConstants
 
     public static class Actions
     {
+        public const string SubmitPhone = "submit_phone";
         public const string ShowServices = "show_services";
         public const string GetCredentials = "get_credentials";
     }
