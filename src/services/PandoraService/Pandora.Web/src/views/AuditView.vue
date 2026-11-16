@@ -18,6 +18,7 @@ const authStore = useAuthStore()
 
 const entries = ref<AuditEntry[]>([])
 const employeeNames = ref<EmployeeNames>({ byId: new Map(), byTelegramId: new Map() })
+const areEmployeeNamesLoading = ref(false)
 const page = ref(FIRST_PAGE)
 const total = ref(0)
 const isLoading = ref(false)
@@ -54,11 +55,29 @@ function actorName(entry: AuditEntry): string {
   return ''
 }
 
+function knowsActor(entry: AuditEntry): boolean {
+  if (entry.telegramUserId !== null) {
+    return employeeNames.value.byTelegramId.has(entry.telegramUserId)
+  }
+
+  if (entry.userId !== null) {
+    return employeeNames.value.byId.has(entry.userId)
+  }
+
+  return true
+}
+
 async function loadEmployeeNames() {
+  if (areEmployeeNamesLoading.value) return
+
+  areEmployeeNamesLoading.value = true
+
   try {
     employeeNames.value = await fetchEmployeeNames()
   } catch (error) {
     console.error('Не удалось загрузить сотрудников для журнала действий', error)
+  } finally {
+    areEmployeeNamesLoading.value = false
   }
 }
 
@@ -83,6 +102,10 @@ function addLiveEntry(entry: AuditEntry) {
 
   if (page.value === FIRST_PAGE) {
     entries.value = [entry, ...entries.value]
+  }
+
+  if (!knowsActor(entry)) {
+    void loadEmployeeNames()
   }
 }
 
