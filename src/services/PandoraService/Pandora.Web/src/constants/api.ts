@@ -21,4 +21,5 @@ export const PAGINATION_QUERY = {
   PAGE: 'page',
   PAGE_SIZE: 'pageSize',
   INCLUDE_ARCHIVED: 'includeArchived',
+  SOURCE: 'source',
 } as const

@@ -32,6 +32,8 @@ public static class ServiceConfigurationExtensions
 
         services.AddSecretWriter();
 
+        services.AddSecretVaultReader();
+
         services.AddScoped<SecretAuditLogger>();
 
         services.AddScoped<SecretSyncService>();

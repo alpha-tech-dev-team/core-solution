@@ -3,6 +3,7 @@ import LogoutButton from '@shared/components/LogoutButton.vue'
 import { useTranslations } from '@shared/i18n/create-i18n'
 import { LOADING_PLACEHOLDER } from '@shared/constants/ui'
 import { RESOURCE_KEYS } from '@/constants/resource-keys'
+import { SECRET_SOURCE } from '@/models/secret-source'
 import PaginationNav from '@shared/components/PaginationNav.vue'
 import { useSecretsView } from './use-secrets-view'
 
@@ -22,8 +23,10 @@ const {
   formPassword,
   selectedItem,
   selectedId,
+  source,
   errorMessage,
   changePage,
+  changeSource,
   openCreateForm,
   closeForm,
   selectRow,
@@ -32,6 +35,8 @@ const {
   save,
   goHome,
 } = page
+
+const isVaultSource = (): boolean => source.value === SECRET_SOURCE.VAULTWARDEN
 </script>
 
 <template>
@@ -48,8 +53,24 @@ const {
 
     <main class="page__body">
       <div class="toolbar">
-        <h2>{{ tr(RESOURCE_KEYS.SECRETS_TITLE) }}</h2>
-        <div v-if="!isFormVisible" class="toolbar__group">
+        <div class="toolbar__group">
+          <h2>{{ tr(RESOURCE_KEYS.SECRETS_TITLE) }}</h2>
+          <button
+            class="btn btn--ghost btn--sm"
+            :disabled="!isVaultSource()"
+            @click="changeSource(SECRET_SOURCE.DATABASE)"
+          >
+            {{ tr(RESOURCE_KEYS.SECRETS_SOURCE_DATABASE) }}
+          </button>
+          <button
+            class="btn btn--ghost btn--sm"
+            :disabled="isVaultSource()"
+            @click="changeSource(SECRET_SOURCE.VAULTWARDEN)"
+          >
+            {{ tr(RESOURCE_KEYS.SECRETS_SOURCE_VAULTWARDEN) }}
+          </button>
+        </div>
+        <div v-if="!isFormVisible && !isVaultSource()" class="toolbar__group">
           <button class="btn btn--primary" @click="openCreateForm">
             {{ tr(RESOURCE_KEYS.SECRETS_ADD) }}
           </button>

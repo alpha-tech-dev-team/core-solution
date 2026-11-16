@@ -90,6 +90,8 @@
   "secrets_page_prev": "Previous",
   "secrets_page_next": "Next",
   "secrets_page_info": "Page {0} of {1}",
+  "secrets_source_database": "From database",
+  "secrets_source_vaultwarden": "From Vaultwarden",
   "auth_login_title": "Panel sign in",
   "error_code_UserNotFound": "User not found",
   "error_code_RoleNotFound": "Role not found",

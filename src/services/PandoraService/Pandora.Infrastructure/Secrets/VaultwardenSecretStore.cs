@@ -9,7 +9,7 @@ using Pandora.Domain.Models;
 
 namespace Pandora.Infrastructure.Secrets;
 
-public sealed class VaultwardenSecretStore : ISecretStore
+public sealed class VaultwardenSecretStore : ISecretStore, ISecretVaultReader
 {
     private const string ListRoute = "list/object/items";
     private const string ItemRoute = "object/item";
@@ -80,6 +80,17 @@ public sealed class VaultwardenSecretStore : ISecretStore
         return items is null
             ? Result<IReadOnlyList<SecretItem>>.Failure(ErrorCode.VaultwardenUnavailable.ToString())
             : Result<IReadOnlyList<SecretItem>>.Success(items.Select(item => new SecretItem(item.Id, item.Name)).ToList());
+    }
+
+    public async Task<Result<IReadOnlyList<SecretListItem>>> GetListItems(CancellationToken cancellationToken)
+    {
+        var items = await FetchItems(cancellationToken);
+
+        return items is null
+            ? Result<IReadOnlyList<SecretListItem>>.Failure(ErrorCode.VaultwardenUnavailable.ToString())
+            : Result<IReadOnlyList<SecretListItem>>.Success(items
+                .Select(item => new SecretListItem(item.Id, item.Name, item.Login?.Username ?? string.Empty))
+                .ToList());
     }
 
     private async Task<IReadOnlyList<VaultwardenItem>?> FetchItems(CancellationToken cancellationToken)
