@@ -39,16 +39,14 @@ public sealed class ShowMenuHandler : IRequestHandler<ShowMenuMessage, Result<Wo
                 new WorkflowButton(category.Name, CallbackConstants.CategoryPrefix + category.Id)))
             .ToList();
 
-        var hasNextPage = page.Page * page.PageSize < page.Total;
-
-        if (hasNextPage)
+        if (page.HasNextPage)
         {
             buttonRows.Add(new WorkflowButtonRow(
                 new WorkflowButton(
                     _localizer.GetPhrase(
                         nameof(WorkflowStep.ProblemCategorySelection),
                         LocalizationKeysConstants.ProblemCategorySelection.NextPage),
-                    CallbackConstants.CategoryPagePrefix + (page.Page + 1))));
+                    CallbackConstants.CategoryPagePrefix + page.NextPage)));
         }
 
         return Result<WorkflowResponse>.Success(new WorkflowResponse

@@ -7,6 +7,8 @@ namespace Atlas.Domain.Models;
 public sealed class AtlasUserSession : UserSession
 {
     public Guid? IncidentCategoryId { get; set; }
+    public Guid? RoomId { get; set; }
+    public int? RoomMenuMessageId { get; set; }
 
     public AtlasUserSession(long tgUserId, string state, Language language, DateTime lastUpdate)
         : base(tgUserId, state, language, lastUpdate)
