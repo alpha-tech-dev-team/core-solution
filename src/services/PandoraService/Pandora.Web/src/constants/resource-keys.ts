@@ -18,6 +18,8 @@ export const RESOURCE_KEYS = {
   EMPLOYEE_BLOCK: 'employee_block',
   EMPLOYEE_UNBLOCK: 'employee_unblock',
   EMPLOYEE_DELETE: 'employee_delete',
+  EMPLOYEE_RESTORE: 'employee_restore',
+  EMPLOYEES_INCLUDE_ARCHIVED: 'employees_include_archived',
   EMPLOYEE_DELETE_TITLE: 'employee_delete_title',
   EMPLOYEE_DELETE_QUESTION: 'employee_delete_question',
   EMPLOYEE_DELETE_SELF_WARNING: 'employee_delete_self_warning',

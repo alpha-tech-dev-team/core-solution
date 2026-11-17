@@ -2,6 +2,10 @@
 using CoreSolution.Shared.Constants;
 using CoreSolution.Shared.Enums;
 using CoreSolution.Shared.Options;
+using Identity.Api.Constants;
+using Identity.Api.Models;
+using Identity.Api.Services;
+using Identity.Application.Errors;
 using Identity.Domain.Constants;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
@@ -12,6 +16,7 @@ namespace Identity.Api.Extensions.Configuration;
 public static class JwtConfigurationExtensions
 {
     private const string SecretEnvironmentVariable = "Jwt__Secret";
+    private const string AuthenticationErrorItemKey = "AuthenticationErrorCode";
 
     public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IHostEnvironment environment)
     {
@@ -58,6 +63,34 @@ public static class JwtConfigurationExtensions
                     {
                         ctx.Token ??= ctx.Request.Cookies[AuthCookieConstants.AccessTokenName];
                         return Task.CompletedTask;
+                    },
+                    OnTokenValidated = async ctx =>
+                    {
+                        var validator = ctx.HttpContext.RequestServices.GetRequiredService<AdminSessionValidator>();
+                        var errorCode = await validator.ValidateAsync(ctx.Principal!, ctx.HttpContext.RequestAborted);
+
+                        if (errorCode is null)
+                        {
+                            return;
+                        }
+
+                        ctx.HttpContext.Items[AuthenticationErrorItemKey] = errorCode;
+                        ctx.Fail(errorCode);
+                    },
+                    OnChallenge = async ctx =>
+                    {
+                        var errorCode = ctx.HttpContext.Items[AuthenticationErrorItemKey] as string
+                            ?? nameof(IdentityErrorCode.InvalidCredentials);
+
+                        ctx.HandleResponse();
+                        await WriteErrorAsync(ctx.Response, StatusCodes.Status401Unauthorized, errorCode);
+                    },
+                    OnForbidden = ctx =>
+                    {
+                        return WriteErrorAsync(
+                            ctx.Response,
+                            StatusCodes.Status403Forbidden,
+                            nameof(IdentityErrorCode.AccessDenied));
                     }
                 };
             });
@@ -70,5 +103,12 @@ public static class JwtConfigurationExtensions
                     .RequireClaim(JwtClaimConstants.Subject));
 
         return services;
+    }
+
+    private static Task WriteErrorAsync(HttpResponse response, int statusCode, string errorCode)
+    {
+        response.StatusCode = statusCode;
+
+        return response.WriteAsJsonAsync(new ErrorResponse(errorCode));
     }
 }

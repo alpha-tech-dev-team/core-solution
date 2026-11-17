@@ -24,6 +24,7 @@ export const useEmployeesStore = defineStore(EMPLOYEE_STORE_ID, () => {
   const total = ref(0)
   const isLoading = ref(false)
   const rolesLoaded = ref(false)
+  const includeArchived = ref(false)
 
   const totalPages = computed(() =>
     pageSize.value === 0 ? 0 : Math.ceil(total.value / pageSize.value),
@@ -33,7 +34,7 @@ export const useEmployeesStore = defineStore(EMPLOYEE_STORE_ID, () => {
     isLoading.value = true
 
     try {
-      const response = await fetchEmployees(pageNumber)
+      const response = await fetchEmployees(pageNumber, includeArchived.value)
 
       employees.value = response.items
       page.value = response.page
@@ -84,6 +85,7 @@ export const useEmployeesStore = defineStore(EMPLOYEE_STORE_ID, () => {
     total,
     totalPages,
     isLoading,
+    includeArchived,
     load,
     loadRoles,
     create,

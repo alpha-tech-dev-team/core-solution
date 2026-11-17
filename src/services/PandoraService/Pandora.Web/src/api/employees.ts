@@ -6,9 +6,13 @@ import type { EmployeeRolesPayload } from '@/models/employee-roles-payload'
 import type { EmployeeStatus } from '@/models/employee-status'
 import type { Page } from '@shared/models/page'
 
-export async function fetchEmployees(page: number): Promise<Page<Employee>> {
+export async function fetchEmployees(
+  page: number,
+  includeArchived: boolean,
+): Promise<Page<Employee>> {
   return await api.get<Page<Employee>>(EMPLOYEE_ENDPOINTS.LIST, {
     [PAGINATION_QUERY.PAGE]: page,
+    [PAGINATION_QUERY.INCLUDE_ARCHIVED]: includeArchived,
   })
 }
 

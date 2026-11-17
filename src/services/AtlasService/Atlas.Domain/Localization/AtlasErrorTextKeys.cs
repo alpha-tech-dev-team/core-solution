@@ -12,6 +12,7 @@ public static class AtlasErrorTextKeys
     public static readonly FrozenDictionary<string, (string State, string Key)> ByErrorCode = new Dictionary<string, (string State, string Key)>
     {
         [ErrorCodes.AccessNotConfirmed] = (LocalizationConstants.IdleStateName, LocalizationConstants.Idle.AccessNotConfirmed),
+        [ErrorCodes.UserBlocked] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.UserBlocked),
         [nameof(ErrorCode.IncidentCategoriesNotFound)] = (nameof(WorkflowStep.ProblemCategorySelection), LocalizationKeysConstants.ProblemCategorySelection.CategoriesNotFound),
         [nameof(ErrorCode.IncidentCategoryNotFound)] = (nameof(WorkflowStep.ProblemCategorySelection), LocalizationKeysConstants.ProblemCategorySelection.CategoryNotFound),
         [nameof(ErrorCode.ValidationFailed)] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.ValidationFailed),

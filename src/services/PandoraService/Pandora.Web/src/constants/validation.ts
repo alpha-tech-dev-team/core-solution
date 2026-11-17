@@ -18,6 +18,7 @@ export const INPUT_LIMITS = {
   POSITION_MAX: 50,
   PHONE_DIGITS_MIN: 10,
   PHONE_DIGITS_MAX: 15,
+  PHONE_MAX_LENGTH: 16,
   SECRET_NAME_MAX: 100,
   SECRET_USERNAME_MAX: 100,
 } as const
@@ -26,6 +27,6 @@ export const INPUT_PATTERNS = {
   PERSON_NAME: /^[A-Za-zА-Яа-яЁё][A-Za-zА-Яа-яЁё -]*$/,
   POSITION: /^[A-Za-zА-Яа-яЁё0-9][A-Za-zА-Яа-яЁё0-9 ().-]*$/,
   PHONE: new RegExp(
-    `^\\+?[0-9]{${INPUT_LIMITS.PHONE_DIGITS_MIN},${INPUT_LIMITS.PHONE_DIGITS_MAX}}$`,
+    `^\\+[0-9]{${INPUT_LIMITS.PHONE_DIGITS_MIN},${INPUT_LIMITS.PHONE_DIGITS_MAX}}$`,
   ),
 } as const

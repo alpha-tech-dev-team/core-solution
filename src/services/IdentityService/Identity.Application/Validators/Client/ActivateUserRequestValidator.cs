@@ -13,6 +13,7 @@ public class ActivateUserRequestValidator : AbstractValidator<ActivateUserReques
 
         RuleFor(x => x.Phone)
             .NotEmpty()
-            .MaximumLength(ValidationConstants.PhoneMaxLength);
+            .MaximumLength(ValidationConstants.PhoneMaxLength)
+            .Matches(ValidationConstants.PhonePattern);
     }
 }

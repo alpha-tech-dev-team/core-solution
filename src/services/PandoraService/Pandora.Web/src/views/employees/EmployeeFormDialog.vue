@@ -2,6 +2,7 @@
 import { reactive, ref, watch } from 'vue'
 import { useTranslations } from '@shared/i18n/create-i18n'
 import { RESOURCE_KEYS } from '@/constants/resource-keys'
+import { INPUT_LIMITS } from '@/constants/validation'
 import {
   validateEmployeeForm,
   type EmployeeFormErrors,
@@ -98,7 +99,12 @@ function submit(): void {
       </label>
       <label class="field">
         <span class="field__label">{{ tr(RESOURCE_KEYS.EMPLOYEE_PHONE) }}</span>
-        <input v-model="draft.phone" class="input" type="text" />
+        <input
+          v-model="draft.phone"
+          class="input"
+          type="text"
+          :maxlength="INPUT_LIMITS.PHONE_MAX_LENGTH"
+        />
         <span v-if="fieldErrors.phone" class="field__error">{{ tr(fieldErrors.phone) }}</span>
       </label>
 

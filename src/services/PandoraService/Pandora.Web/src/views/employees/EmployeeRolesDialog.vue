@@ -44,7 +44,9 @@ const losesOwnAccess = computed(
 )
 
 const canSave = computed(
-  () => !needsCredentials.value || (adminLogin.value.trim() !== '' && adminPassword.value !== ''),
+  () =>
+    !losesOwnAccess.value &&
+    (!needsCredentials.value || (adminLogin.value.trim() !== '' && adminPassword.value !== '')),
 )
 
 function toggle(role: string, checked: boolean): void {

@@ -32,7 +32,7 @@ const { tr } = useTranslations()
     <p v-if="error" class="field__error">{{ error }}</p>
 
     <div class="form__actions">
-      <button type="button" class="btn btn--danger" @click="emit('confirm')">
+      <button type="button" class="btn btn--danger" :disabled="isSelf" @click="emit('confirm')">
         {{ tr(RESOURCE_KEYS.EMPLOYEE_DELETE) }}
       </button>
       <button type="button" class="btn btn--ghost" @click="emit('close')">

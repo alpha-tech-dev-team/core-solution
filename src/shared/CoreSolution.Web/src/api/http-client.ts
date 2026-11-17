@@ -3,7 +3,7 @@ import { HTTP_HEADER, HTTP_METHOD, HTTP_STATUS, MIME_TYPE } from './http'
 
 export type HttpMethod = (typeof HTTP_METHOD)[keyof typeof HTTP_METHOD]
 
-export type QueryParams = Record<string, string | number>
+export type QueryParams = Record<string, string | number | boolean>
 
 export interface HttpClientOptions {
   baseUrl: string

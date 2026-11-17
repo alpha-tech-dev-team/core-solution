@@ -21,6 +21,8 @@ const {
   select,
   goToPage,
   toggleBlock,
+  restore,
+  toggleArchived,
   isFormOpen,
   formInitial,
   isSaving,
@@ -72,7 +74,11 @@ const { tr, trStatus } = useTranslations()
           </button>
           <button
             class="btn btn--ghost"
-            :disabled="selectedEmployee === null"
+            :disabled="
+              selectedEmployee === null ||
+              isSelf(selectedEmployee) ||
+              selectedEmployee.status === EMPLOYEE_STATUS.ARCHIVED
+            "
             @click="toggleBlock()"
           >
             {{
@@ -82,17 +88,38 @@ const { tr, trStatus } = useTranslations()
             }}
           </button>
           <button
+            class="btn btn--ghost"
+            :disabled="selectedEmployee?.status !== EMPLOYEE_STATUS.ARCHIVED"
+            @click="restore()"
+          >
+            {{ tr(RESOURCE_KEYS.EMPLOYEE_RESTORE) }}
+          </button>
+          <button
             class="btn btn--danger"
-            :disabled="selectedEmployee === null"
+            :disabled="
+              selectedEmployee === null ||
+              isSelf(selectedEmployee) ||
+              selectedEmployee.status === EMPLOYEE_STATUS.ARCHIVED
+            "
             @click="openDelete()"
           >
             {{ tr(RESOURCE_KEYS.EMPLOYEE_DELETE) }}
           </button>
         </div>
 
-        <button class="btn btn--primary" @click="openCreateForm()">
-          {{ tr(RESOURCE_KEYS.EMPLOYEE_ADD) }}
-        </button>
+        <div class="toolbar__group">
+          <label class="checkbox">
+            <input
+              type="checkbox"
+              :checked="employeesStore.includeArchived"
+              @change="toggleArchived()"
+            />
+            {{ tr(RESOURCE_KEYS.EMPLOYEES_INCLUDE_ARCHIVED) }}
+          </label>
+          <button class="btn btn--primary" @click="openCreateForm()">
+            {{ tr(RESOURCE_KEYS.EMPLOYEE_ADD) }}
+          </button>
+        </div>
       </div>
 
       <p v-if="employeesStore.isLoading" class="text-muted">{{ LOADING_PLACEHOLDER }}</p>

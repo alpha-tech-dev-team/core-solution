@@ -62,6 +62,19 @@ export function useEmployeesView() {
     await run(() => employeesStore.setStatus(employee, nextStatus))
   }
 
+  async function restore(): Promise<void> {
+    const employee = selectedEmployee.value
+    if (employee === null) return
+
+    await run(() => employeesStore.setStatus(employee, EMPLOYEE_STATUS.ACTIVE))
+  }
+
+  async function toggleArchived(): Promise<void> {
+    employeesStore.includeArchived = !employeesStore.includeArchived
+    selectedEmployeeId.value = null
+    await load(FIRST_PAGE)
+  }
+
   onMounted(load)
 
   return {
@@ -74,6 +87,8 @@ export function useEmployeesView() {
     select,
     goToPage,
     toggleBlock,
+    restore,
+    toggleArchived,
 
     isFormOpen: form.isOpen,
     formInitial: form.initial,

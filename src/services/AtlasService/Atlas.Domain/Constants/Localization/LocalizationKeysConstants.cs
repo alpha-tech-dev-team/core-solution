@@ -5,6 +5,7 @@ public static class LocalizationKeysConstants
     public static class Idle
     {
         public const string PhoneRequest = "PhoneRequest";
+        public const string UserBlocked = "UserBlocked";
         public const string AccessNotConfirmed = "AccessNotConfirmed";
         public const string SessionNotFound = "SessionNotFound";
         public const string UnexpectedError = "UnexpectedError";
