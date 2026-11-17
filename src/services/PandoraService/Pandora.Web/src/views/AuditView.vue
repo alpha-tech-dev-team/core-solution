@@ -10,14 +10,17 @@ import { LOADING_PLACEHOLDER } from '@/constants/ui'
 import {
   AUDIT_DEFAULT_SORT_BY,
   AUDIT_DEFAULT_SORT_DIRECTION,
+  AUDIT_SORT_ARIA_VALUES,
+  AUDIT_SORT_INDICATOR_CLASSES,
   AUDIT_SEARCH_DEBOUNCE_MS,
   AUDIT_SORT_FIELDS
 } from '@/constants/audit'
+import type { AuditSortAriaValue } from '@/constants/audit'
 import { toRequestError } from '@/api/request-error'
 import { fetchAuditEntries } from '@/api/audit'
 import { fetchEmployeeNames, type EmployeeNames } from '@/api/employees'
 import { createAuditHubConnection } from '@/api/audit-hub'
-import type { AuditEntry, AuditQuery } from '@/stores/models/audit-entry'
+import { API_SORT_DIRECTION, type AuditEntry, type AuditQuery } from '@/stores/models/audit-entry'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -82,23 +85,35 @@ function onSearchInput() {
 
 function toggleSort(field: string) {
   if (query.sortBy === field) {
-    query.sortDirection = query.sortDirection === 'asc' ? 'desc' : 'asc'
+    query.sortDirection = query.sortDirection === API_SORT_DIRECTION.ASCENDING
+      ? API_SORT_DIRECTION.DESCENDING
+      : API_SORT_DIRECTION.ASCENDING
   } else {
     query.sortBy = field
-    query.sortDirection = 'asc'
+    query.sortDirection = API_SORT_DIRECTION.ASCENDING
   }
 
   void applyQuery()
 }
 
-function sortIndicator(field: string): string {
-  if (query.sortBy !== field) return ''
-
-  return query.sortDirection === 'asc' ? '▲' : '▼'
-}
-
 function isSortedBy(field: string): boolean {
   return query.sortBy === field
+}
+
+function sortAriaValue(field: string): AuditSortAriaValue {
+  if (!isSortedBy(field)) return AUDIT_SORT_ARIA_VALUES.NONE
+
+  return query.sortDirection === API_SORT_DIRECTION.ASCENDING
+    ? AUDIT_SORT_ARIA_VALUES.ASCENDING
+    : AUDIT_SORT_ARIA_VALUES.DESCENDING
+}
+
+function sortIndicatorClass(field: string): string {
+  if (!isSortedBy(field)) return ''
+
+  return query.sortDirection === API_SORT_DIRECTION.ASCENDING
+    ? AUDIT_SORT_INDICATOR_CLASSES.ASCENDING
+    : AUDIT_SORT_INDICATOR_CLASSES.DESCENDING
 }
 
 function actorName(entry: AuditEntry): string {
@@ -237,45 +252,49 @@ onUnmounted(() => {
       <table v-else class="audit__table">
         <thead>
           <tr>
-            <th>
+            <th :aria-sort="sortAriaValue(AUDIT_SORT_FIELDS.TIMESTAMP)">
               <button
                 type="button"
                 class="audit__sort"
                 :class="{ 'audit__sort--active': isSortedBy(AUDIT_SORT_FIELDS.TIMESTAMP) }"
                 @click="toggleSort(AUDIT_SORT_FIELDS.TIMESTAMP)"
               >
-                {{ tr(RESOURCE_KEYS.AUDIT_COLUMN_TIME) }} {{ sortIndicator(AUDIT_SORT_FIELDS.TIMESTAMP) }}
+                {{ tr(RESOURCE_KEYS.AUDIT_COLUMN_TIME) }}
+                <span class="audit__sort-indicator" :class="sortIndicatorClass(AUDIT_SORT_FIELDS.TIMESTAMP)" aria-hidden="true" />
               </button>
             </th>
             <th>{{ tr(RESOURCE_KEYS.AUDIT_COLUMN_USER) }}</th>
-            <th>
+            <th :aria-sort="sortAriaValue(AUDIT_SORT_FIELDS.ACTION)">
               <button
                 type="button"
                 class="audit__sort"
                 :class="{ 'audit__sort--active': isSortedBy(AUDIT_SORT_FIELDS.ACTION) }"
                 @click="toggleSort(AUDIT_SORT_FIELDS.ACTION)"
               >
-                {{ tr(RESOURCE_KEYS.AUDIT_COLUMN_ACTION) }} {{ sortIndicator(AUDIT_SORT_FIELDS.ACTION) }}
+                {{ tr(RESOURCE_KEYS.AUDIT_COLUMN_ACTION) }}
+                <span class="audit__sort-indicator" :class="sortIndicatorClass(AUDIT_SORT_FIELDS.ACTION)" aria-hidden="true" />
               </button>
             </th>
-            <th>
+            <th :aria-sort="sortAriaValue(AUDIT_SORT_FIELDS.TARGET_ITEM_ID)">
               <button
                 type="button"
                 class="audit__sort"
                 :class="{ 'audit__sort--active': isSortedBy(AUDIT_SORT_FIELDS.TARGET_ITEM_ID) }"
                 @click="toggleSort(AUDIT_SORT_FIELDS.TARGET_ITEM_ID)"
               >
-                {{ tr(RESOURCE_KEYS.AUDIT_COLUMN_TARGET) }} {{ sortIndicator(AUDIT_SORT_FIELDS.TARGET_ITEM_ID) }}
+                {{ tr(RESOURCE_KEYS.AUDIT_COLUMN_TARGET) }}
+                <span class="audit__sort-indicator" :class="sortIndicatorClass(AUDIT_SORT_FIELDS.TARGET_ITEM_ID)" aria-hidden="true" />
               </button>
             </th>
-            <th>
+            <th :aria-sort="sortAriaValue(AUDIT_SORT_FIELDS.REQUEST_SOURCE)">
               <button
                 type="button"
                 class="audit__sort"
                 :class="{ 'audit__sort--active': isSortedBy(AUDIT_SORT_FIELDS.REQUEST_SOURCE) }"
                 @click="toggleSort(AUDIT_SORT_FIELDS.REQUEST_SOURCE)"
               >
-                {{ tr(RESOURCE_KEYS.AUDIT_COLUMN_SOURCE) }} {{ sortIndicator(AUDIT_SORT_FIELDS.REQUEST_SOURCE) }}
+                {{ tr(RESOURCE_KEYS.AUDIT_COLUMN_SOURCE) }}
+                <span class="audit__sort-indicator" :class="sortIndicatorClass(AUDIT_SORT_FIELDS.REQUEST_SOURCE)" aria-hidden="true" />
               </button>
             </th>
           </tr>
@@ -386,12 +405,33 @@ onUnmounted(() => {
 }
 
 .audit__sort {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
   padding: 0;
   background: transparent;
   border: none;
   color: inherit;
   font-size: inherit;
   cursor: pointer;
+}
+
+.audit__sort-indicator {
+  width: 0;
+  height: 0;
+  border-right: 4px solid transparent;
+  border-left: 4px solid transparent;
+  opacity: 0.35;
+}
+
+.audit__sort-indicator--ascending {
+  border-bottom: 5px solid currentColor;
+  opacity: 1;
+}
+
+.audit__sort-indicator--descending {
+  border-top: 5px solid currentColor;
+  opacity: 1;
 }
 
 .audit__sort--active {

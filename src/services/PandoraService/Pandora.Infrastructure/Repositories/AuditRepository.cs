@@ -78,7 +78,7 @@ public sealed class AuditRepository : IAuditRepository
             ? filter.SortBy
             : AuditEntrySortFields.Default;
         var selector = AuditEntrySortFields.Fields[sortField];
-        var ordered = filter.SortDirection == AuditSortDirection.Ascending
+        var ordered = filter.SortDirection == SortDirection.Ascending
             ? query.OrderBy(selector)
             : query.OrderByDescending(selector);
 

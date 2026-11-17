@@ -15,12 +15,22 @@ export interface AuditEntryPage {
   total: number
 }
 
-export type SortDirection = 'asc' | 'desc'
+export enum SortDirection {
+  Ascending = 'Ascending',
+  Descending = 'Descending'
+}
 
 export interface AuditQuery {
   search?: string
   action?: string
   requestSource?: string
   sortBy?: string
-  sortDirection?: SortDirection
+  sortDirection?: ApiSortDirection
 }
+
+export const API_SORT_DIRECTION = {
+  ASCENDING: 'Ascending',
+  DESCENDING: 'Descending'
+} as const
+
+export type ApiSortDirection = (typeof API_SORT_DIRECTION)[keyof typeof API_SORT_DIRECTION]

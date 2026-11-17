@@ -24,7 +24,7 @@ public sealed class GetAuditEntriesHandler : IRequestHandler<GetAuditEntriesMess
             request.Action,
             request.RequestSource,
             request.SortBy,
-            ParseSortDirection(request.SortDirection));
+            request.SortDirection ?? SortDirection.Descending);
 
         var page = await _auditRepository.GetPage(
             request.Page ?? PaginationLimits.DefaultPage,
@@ -33,12 +33,5 @@ public sealed class GetAuditEntriesHandler : IRequestHandler<GetAuditEntriesMess
             cancellationToken);
 
         return Result<PagedResult<AuditEntry>>.Success(page);
-    }
-
-    private static AuditSortDirection ParseSortDirection(string? value)
-    {
-        return string.Equals(value, "asc", StringComparison.OrdinalIgnoreCase)
-            ? AuditSortDirection.Ascending
-            : AuditSortDirection.Descending;
     }
 }

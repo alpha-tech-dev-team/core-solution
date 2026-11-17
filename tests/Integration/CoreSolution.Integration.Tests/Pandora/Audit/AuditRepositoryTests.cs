@@ -13,7 +13,7 @@ namespace CoreSolution.Integration.Tests.PandoraTests;
 [Collection(nameof(IntegrationCollection))]
 public sealed class AuditRepositoryTests(IntegrationFixture fixture)
 {
-    private static readonly AuditEntryFilter EmptyFilter = new(null, null, null, null, AuditSortDirection.Descending);
+    private static readonly AuditEntryFilter EmptyFilter = new(null, null, null, null, SortDirection.Descending);
     [Fact]
     public async Task GetPage_ReturnsNewestFirstWithTotalCount()
     {
@@ -239,7 +239,7 @@ public sealed class AuditRepositoryTests(IntegrationFixture fixture)
         await database.SaveChangesAsync();
 
         var page = await repository.GetPage(
-            1, 10, EmptyFilter with { SortBy = AuditEntrySortFields.Action, SortDirection = AuditSortDirection.Ascending }, CancellationToken.None);
+            1, 10, EmptyFilter with { SortBy = AuditEntrySortFields.Action, SortDirection = SortDirection.Ascending }, CancellationToken.None);
 
         Assert.Equal(["get_credentials", "show_services"], page.Items.Select(entry => entry.Action));
     }

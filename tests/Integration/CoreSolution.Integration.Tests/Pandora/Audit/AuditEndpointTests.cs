@@ -54,8 +54,9 @@ public sealed class AuditEndpointTests(IntegrationFixture fixture)
 
         var response = await client.GetAsync($"{AuditRoute}?page=0&pageSize=0");
 
+        var body = await response.Content.ReadAsStringAsync();
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Equal("InvalidPage", await ReadValidationCodeAsync(response));
+        Assert.True("InvalidPage" == await ReadValidationCodeAsync(response), body);
     }
 
     [Fact]
@@ -73,6 +74,20 @@ public sealed class AuditEndpointTests(IntegrationFixture fixture)
     }
 
     [Fact]
+    public async Task GetAudit_WithUnknownSortDirection_ReturnsBadRequest()
+    {
+        var cookie = await LoginAsAdminAsync();
+        using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add("Cookie", cookie);
+
+        var response = await client.GetAsync($"{AuditRoute}?sortDirection=999");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("InvalidSortDirection", await ReadValidationCodeAsync(response));
+    }
+
+    [Fact]
     public async Task GetAudit_WithSearchAndFilters_ReturnsMatchingEntries()
     {
         var targetId = Guid.NewGuid().ToString();
@@ -85,7 +100,7 @@ public sealed class AuditEndpointTests(IntegrationFixture fixture)
         client.DefaultRequestHeaders.Add("Cookie", cookie);
 
         var response = await client.GetAsync(
-            $"{AuditRoute}?page=1&pageSize=10&search={targetId}&action=secret_created&requestSource=web&sortBy=action&sortDirection=asc");
+            $"{AuditRoute}?page=1&pageSize=10&search={targetId}&action=secret_created&requestSource=web&sortBy=action&sortDirection=Ascending");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var page = await response.Content.ReadFromJsonAsync<AuditPageResponse>();

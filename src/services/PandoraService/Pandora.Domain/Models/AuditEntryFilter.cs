@@ -1,3 +1,5 @@
+using CoreSolution.Shared.Models;
+
 namespace Pandora.Domain.Models;
 
 public sealed record AuditEntryFilter(
@@ -5,4 +7,4 @@ public sealed record AuditEntryFilter(
     string? Action,
     string? RequestSource,
     string? SortBy,
-    AuditSortDirection SortDirection);
+    SortDirection SortDirection);

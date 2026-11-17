@@ -9,7 +9,6 @@ public static class AuditEntrySortFields
     public const string Action = "action";
     public const string RequestSource = "requestSource";
     public const string TargetItemId = "targetItemId";
-
     public const string Default = Timestamp;
 
     public static readonly IReadOnlyDictionary<string, Expression<Func<AuditEntry, object>>> Fields =

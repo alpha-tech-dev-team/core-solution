@@ -1,7 +1,6 @@
-using CoreSolution.Shared.Constants;
 using FluentValidation;
 using Pandora.Application.Features.Secrets.GetSecrets;
-using Pandora.Domain.Enums;
+using Pandora.Application.Validation;
 
 namespace Pandora.Application.Validators;
 
@@ -9,14 +8,6 @@ public sealed class GetSecretsMessageValidator : AbstractValidator<GetSecretsMes
 {
     public GetSecretsMessageValidator()
     {
-        RuleFor(message => message.Page)
-            .GreaterThanOrEqualTo(PaginationLimits.FirstPage)
-            .WithErrorCode(nameof(ErrorCode.InvalidPage))
-            .When(message => message.Page.HasValue);
-
-        RuleFor(message => message.PageSize)
-            .InclusiveBetween(PaginationLimits.MinPageSize, PaginationLimits.MaxPageSize)
-            .WithErrorCode(nameof(ErrorCode.InvalidPageSize))
-            .When(message => message.PageSize.HasValue);
+        this.AddPagingRules();
     }
 }
