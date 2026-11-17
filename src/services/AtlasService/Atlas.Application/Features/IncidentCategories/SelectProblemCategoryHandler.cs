@@ -18,10 +18,8 @@ public sealed class SelectProblemCategoryHandler
     private readonly IIncidentCategoryRepository _categoryRepository;
     private readonly IMediator _mediator;
 
-    protected override string NextWorkflowState
-    {
-        get { return nameof(WorkflowStep.RoomSelection); }
-    }
+    protected override string NextWorkflowState => nameof(WorkflowStep.RoomSelection);
+
     public SelectProblemCategoryHandler(
         IIncidentCategoryRepository categoryRepository,
         IRequestContext requestContext,

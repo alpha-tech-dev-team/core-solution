@@ -17,10 +17,8 @@ public sealed class ShowRoomsHandler
     private readonly IRoomRepository _roomRepository;
     private readonly ILocalizer _localizer;
 
-    protected override string NextWorkflowState
-    {
-        get { return nameof(WorkflowStep.RoomSelection); }
-    }
+    protected override string NextWorkflowState => nameof(WorkflowStep.RoomSelection);
+
     public ShowRoomsHandler(
         IRoomRepository roomRepository,
         IRequestContext requestContext,

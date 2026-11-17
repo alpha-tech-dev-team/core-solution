@@ -17,10 +17,8 @@ public sealed class SelectRoomHandler
     private readonly IRoomRepository _roomRepository;
     private readonly ILocalizer _localizer;
 
-    protected override string NextWorkflowState
-    {
-        get { return nameof(WorkflowStep.RoomSelected); }
-    }
+    protected override string NextWorkflowState => nameof(WorkflowStep.RoomSelected);
+
     public SelectRoomHandler(
         IRoomRepository roomRepository,
         IRequestContext requestContext,
@@ -30,11 +28,6 @@ public sealed class SelectRoomHandler
     {
         _roomRepository = roomRepository;
         _localizer = localizer;
-    }
-
-    protected override void ApplyState(AtlasUserSession session, SelectRoomMessage request)
-    {
-        session.RoomId = request.RoomId;
     }
 
     public async Task<Result<WorkflowResponse>> Handle(SelectRoomMessage request, CancellationToken cancellationToken)
@@ -64,5 +57,10 @@ public sealed class SelectRoomHandler
                     CallbackConstants.RoomPagePrefix + PaginationLimits.FirstPage))
             }
         });
+    }
+
+    protected override void ApplyState(AtlasUserSession session, SelectRoomMessage request)
+    {
+        session.RoomId = request.RoomId;
     }
 }
