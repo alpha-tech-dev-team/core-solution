@@ -11,23 +11,30 @@ using MediatR;
 
 namespace Atlas.Application.Features.Rooms;
 
-public sealed class SelectRoomHandler : IRequestHandler<SelectRoomMessage, Result<WorkflowResponse>>
+public sealed class SelectRoomHandler
+    : SessionStateHandler<SelectRoomMessage>, IRequestHandler<SelectRoomMessage, Result<WorkflowResponse>>
 {
     private readonly IRoomRepository _roomRepository;
-    private readonly IRequestContext _requestContext;
-    private readonly ISessionService _sessionService;
     private readonly ILocalizer _localizer;
 
+    protected override string NextWorkflowState
+    {
+        get { return nameof(WorkflowStep.RoomSelected); }
+    }
     public SelectRoomHandler(
         IRoomRepository roomRepository,
         IRequestContext requestContext,
         ISessionService sessionService,
         ILocalizer localizer)
+        : base(requestContext, sessionService)
     {
         _roomRepository = roomRepository;
-        _requestContext = requestContext;
-        _sessionService = sessionService;
         _localizer = localizer;
+    }
+
+    protected override void ApplyState(AtlasUserSession session, SelectRoomMessage request)
+    {
+        session.RoomId = request.RoomId;
     }
 
     public async Task<Result<WorkflowResponse>> Handle(SelectRoomMessage request, CancellationToken cancellationToken)
@@ -39,10 +46,7 @@ public sealed class SelectRoomHandler : IRequestHandler<SelectRoomMessage, Resul
             return Result<WorkflowResponse>.Failure(nameof(ErrorCode.RoomNotFound));
         }
 
-        var session = (AtlasUserSession)_requestContext.Session;
-        session.RoomId = room.Id;
-
-        await _sessionService.UpdateState(session, nameof(WorkflowStep.RoomSelected), cancellationToken);
+        await UpdateState(request, cancellationToken);
 
         return Result<WorkflowResponse>.Success(new WorkflowResponse
         {

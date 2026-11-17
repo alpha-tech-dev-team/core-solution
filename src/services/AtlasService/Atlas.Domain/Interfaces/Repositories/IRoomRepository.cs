@@ -4,5 +4,8 @@ namespace Atlas.Domain.Interfaces.Repositories;
 
 public interface IRoomRepository : IRepository<Room>
 {
-    Task<IReadOnlyList<Room>> FindByNameAsync(string nameFragment, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Room>> FindByNameAsync(
+        string nameFragment,
+        Func<IQueryable<Room>, IOrderedQueryable<Room>> orderBy,
+        CancellationToken cancellationToken = default);
 }

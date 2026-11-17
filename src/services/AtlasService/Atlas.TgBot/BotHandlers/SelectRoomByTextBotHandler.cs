@@ -17,39 +17,31 @@ public sealed class SelectRoomByTextBotHandler : IBotHandler
     private readonly IMediator _mediator;
     private readonly ITelegramNotificationService _telegramNotificationService;
     private readonly IUserErrorMapper _userErrorMapper;
-    private readonly ISessionService _sessionService;
+    private readonly IRequestContext _requestContext;
 
     public SelectRoomByTextBotHandler(
         IMediator mediator,
         ITelegramNotificationService telegramNotificationService,
         IUserErrorMapper userErrorMapper,
-        ISessionService sessionService)
+        IRequestContext requestContext)
     {
         _mediator = mediator;
         _telegramNotificationService = telegramNotificationService;
         _userErrorMapper = userErrorMapper;
-        _sessionService = sessionService;
+        _requestContext = requestContext;
     }
 
     public bool CanHandle(Update update)
     {
-        if (update.Message?.Text is null)
-        {
-            return false;
-        }
-
-        var session = GetSession(update.Message.Chat.Id);
-
-        return session is AtlasUserSession atlasSession
-            && atlasSession.State == nameof(WorkflowStep.RoomSelection);
+        return update.Message?.Text is not null
+            && _requestContext.Session is AtlasUserSession { State: nameof(WorkflowStep.RoomSelection) };
     }
 
     public async Task HandleAsync(Update update, CancellationToken cancellationToken)
     {
         if (update.Message is { Text: string text, Chat.Id: long telegramUserId, MessageId: int messageId })
         {
-            var session = GetSession(telegramUserId);
-            var menuMessageId = session?.RoomMenuMessageId;
+            var menuMessageId = (_requestContext.Session as AtlasUserSession)?.RoomMenuMessageId;
 
             var result = await _mediator.Send(
                 new SelectRoomByTextMessage(telegramUserId, messageId, text, menuMessageId),
@@ -73,15 +65,5 @@ public sealed class SelectRoomByTextBotHandler : IBotHandler
                 result.ToTelegramMarkup() as InlineKeyboardMarkup,
                 cancellationToken);
         }
-    }
-
-    private AtlasUserSession? GetSession(long telegramUserId)
-    {
-        var session = _sessionService
-            .GetSession(telegramUserId, CancellationToken.None)
-            .GetAwaiter()
-            .GetResult();
-
-        return session as AtlasUserSession;
     }
 }

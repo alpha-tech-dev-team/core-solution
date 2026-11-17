@@ -24,12 +24,12 @@ public sealed class SelectRoomByTextHandler : IRequestHandler<SelectRoomByTextMe
 
     public async Task<Result<WorkflowResponse>> Handle(SelectRoomByTextMessage request, CancellationToken cancellationToken)
     {
-        var rooms = await _roomRepository.FindByNameAsync(request.Text, cancellationToken);
+        var rooms = await _roomRepository.FindByNameAsync(request.Text, RoomSorting.Apply, cancellationToken);
 
         var requested = request.Text.Trim();
 
         var room = rooms.FirstOrDefault(candidate => string.Equals(candidate.Name, requested, StringComparison.OrdinalIgnoreCase))
-            ?? (rooms.Count == 1 ? rooms[0] : null);
+            ?? (rooms is [var singleRoom] ? singleRoom : null);
 
         if (room is not null)
         {

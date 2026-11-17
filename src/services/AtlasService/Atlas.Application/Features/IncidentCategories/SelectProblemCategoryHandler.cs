@@ -1,3 +1,4 @@
+using Atlas.Application.Common;
 using Atlas.Application.Features.Rooms;
 using Atlas.Domain.Constants;
 using Atlas.Domain.Enums;
@@ -10,26 +11,31 @@ using MediatR;
 
 namespace Atlas.Application.Features.IncidentCategories;
 
-public sealed class SelectProblemCategoryHandler : IRequestHandler<SelectProblemCategoryMessage, Result<WorkflowResponse>>
+public sealed class SelectProblemCategoryHandler
+    : SessionStateHandler<SelectProblemCategoryMessage>,
+      IRequestHandler<SelectProblemCategoryMessage, Result<WorkflowResponse>>
 {
     private readonly IIncidentCategoryRepository _categoryRepository;
-    private readonly IRequestContext _requestContext;
-    private readonly ISessionService _sessionService;
     private readonly IMediator _mediator;
 
+    protected override string NextWorkflowState
+    {
+        get { return nameof(WorkflowStep.RoomSelection); }
+    }
     public SelectProblemCategoryHandler(
         IIncidentCategoryRepository categoryRepository,
         IRequestContext requestContext,
         ISessionService sessionService,
         IMediator mediator)
+        : base(requestContext, sessionService)
     {
         _categoryRepository = categoryRepository;
-        _requestContext = requestContext;
-        _sessionService = sessionService;
         _mediator = mediator;
     }
 
-    public async Task<Result<WorkflowResponse>> Handle(SelectProblemCategoryMessage request, CancellationToken cancellationToken)
+    public async Task<Result<WorkflowResponse>> Handle(
+        SelectProblemCategoryMessage request,
+        CancellationToken cancellationToken)
     {
         var category = await _categoryRepository.GetByIdAsync(request.CategoryId, cancellationToken);
 
@@ -38,13 +44,15 @@ public sealed class SelectProblemCategoryHandler : IRequestHandler<SelectProblem
             return Result<WorkflowResponse>.Failure(nameof(ErrorCode.IncidentCategoryNotFound));
         }
 
-        var session = (AtlasUserSession)_requestContext.Session;
-        session.IncidentCategoryId = category.Id;
-
-        await _sessionService.UpdateState(session, nameof(WorkflowStep.RoomSelection), cancellationToken);
+        await UpdateState(request, cancellationToken);
 
         return await _mediator.Send(
             new ShowRoomsMessage(request.TelegramUserId, request.MessageId, PaginationLimits.FirstPage),
             cancellationToken);
+    }
+
+    protected override void ApplyState(AtlasUserSession session, SelectProblemCategoryMessage request)
+    {
+        session.IncidentCategoryId = request.CategoryId;
     }
 }

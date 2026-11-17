@@ -11,31 +11,30 @@ using MediatR;
 
 namespace Atlas.Application.Features.Rooms;
 
-public sealed class ShowRoomsHandler : IRequestHandler<ShowRoomsMessage, Result<WorkflowResponse>>
+public sealed class ShowRoomsHandler
+    : SessionStateHandler<ShowRoomsMessage>, IRequestHandler<ShowRoomsMessage, Result<WorkflowResponse>>
 {
     private readonly IRoomRepository _roomRepository;
-    private readonly IRequestContext _requestContext;
-    private readonly ISessionService _sessionService;
     private readonly ILocalizer _localizer;
 
+    protected override string NextWorkflowState
+    {
+        get { return nameof(WorkflowStep.RoomSelection); }
+    }
     public ShowRoomsHandler(
         IRoomRepository roomRepository,
         IRequestContext requestContext,
         ISessionService sessionService,
         ILocalizer localizer)
+        : base(requestContext, sessionService)
     {
         _roomRepository = roomRepository;
-        _requestContext = requestContext;
-        _sessionService = sessionService;
         _localizer = localizer;
     }
 
     public async Task<Result<WorkflowResponse>> Handle(ShowRoomsMessage request, CancellationToken cancellationToken)
     {
-        var session = (AtlasUserSession)_requestContext.Session;
-        session.RoomMenuMessageId = request.MessageId;
-
-        await _sessionService.UpdateState(session, nameof(WorkflowStep.RoomSelection), cancellationToken);
+        await UpdateState(request, cancellationToken);
 
         var page = await _roomRepository.GetPageAsync(
             new PageRequest(request.Page, PaginationLimits.RoomsPageSize),
@@ -69,5 +68,10 @@ public sealed class ShowRoomsHandler : IRequestHandler<ShowRoomsMessage, Result<
                 LocalizationKeysConstants.RoomSelection.Text),
             ButtonRows = buttonRows
         });
+    }
+
+    protected override void ApplyState(AtlasUserSession session, ShowRoomsMessage request)
+    {
+        session.RoomMenuMessageId = request.MessageId;
     }
 }

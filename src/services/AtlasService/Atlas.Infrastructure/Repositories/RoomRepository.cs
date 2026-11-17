@@ -12,15 +12,17 @@ public sealed class RoomRepository : BaseRepository<Room>, IRoomRepository
     {
     }
 
-    public async Task<IReadOnlyList<Room>> FindByNameAsync(string nameFragment, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Room>> FindByNameAsync(
+        string nameFragment,
+        Func<IQueryable<Room>, IOrderedQueryable<Room>> orderBy,
+        CancellationToken cancellationToken = default)
     {
         var normalized = nameFragment.Trim().ToLower();
 
-        return await Entities
+        var query = Entities
             .AsNoTracking()
-            .Where(room => room.Name.ToLower().Contains(normalized))
-            .OrderBy(room => room.Name)
-            .ThenBy(room => room.Id)
-            .ToListAsync(cancellationToken);
+            .Where(room => room.Name.ToLower().Contains(normalized));
+
+        return await orderBy(query).ToListAsync(cancellationToken);
     }
 }
