@@ -28,7 +28,7 @@ public sealed class EmployeeSecretsRepositoryTests(IntegrationFixture fixture)
 
         var page = await repository.GetPage(
             Random.Shared.NextInt64(1, long.MaxValue),
-            new SecretPageQuery(new PageRequest(PaginationLimits.DefaultPage, PaginationLimits.MaxPageSize), OrderByName),
+            new SecretPageMessage(new PageRequest(PaginationLimits.DefaultPage, PaginationLimits.MaxPageSize), OrderByName),
             CancellationToken.None);
 
         Assert.Contains(page.Items, item => item.Id == visibleId);
@@ -48,12 +48,12 @@ public sealed class EmployeeSecretsRepositoryTests(IntegrationFixture fixture)
 
         var firstPage = await repository.GetPage(
             42,
-            new SecretPageQuery(new PageRequest(PaginationLimits.FirstPage, PaginationLimits.MinPageSize), OrderByName),
+            new SecretPageMessage(new PageRequest(PaginationLimits.FirstPage, PaginationLimits.MinPageSize), OrderByName),
             CancellationToken.None);
 
         var secondPage = await repository.GetPage(
             42,
-            new SecretPageQuery(new PageRequest(PaginationLimits.FirstPage + 1, PaginationLimits.MinPageSize), OrderByName),
+            new SecretPageMessage(new PageRequest(PaginationLimits.FirstPage + 1, PaginationLimits.MinPageSize), OrderByName),
             CancellationToken.None);
 
         Assert.Single(firstPage.Items);

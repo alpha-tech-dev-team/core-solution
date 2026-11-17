@@ -34,7 +34,7 @@ public sealed class GetSecretsHandler : IRequestHandler<GetSecretsMessage, Resul
     public async Task<Result<SecretListPage>> Handle(GetSecretsMessage request, CancellationToken cancellationToken)
     {
         var dbPage = await _metadataRepository.GetPage(
-            new SecretPageQuery(request.ToPageRequest(), SecretSorting.ByResourceName),
+            new SecretPageMessage(request.ToPageRequest(), SecretSorting.ByResourceName),
             cancellationToken);
 
         if (request.IncludePasswords is not true)

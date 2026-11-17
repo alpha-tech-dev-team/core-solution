@@ -6,7 +6,7 @@ public interface IPermissionRepository
 {
     Task<IReadOnlyList<string>> GetAllowedItemIds(long telegramUserId, CancellationToken cancellationToken);
     Task<bool> HasAccess(long telegramUserId, string itemId, CancellationToken cancellationToken);
-    Task<EmployeeSecretPage> GetPage(long telegramUserId, SecretPageQuery query, CancellationToken cancellationToken);
+    Task<EmployeeSecretPage> GetPage(long telegramUserId, SecretPageMessage message, CancellationToken cancellationToken);
     Task<SecretAccessGrantResult> Grant(
         long telegramUserId,
         string itemId,

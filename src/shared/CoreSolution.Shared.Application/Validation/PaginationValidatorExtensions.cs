@@ -6,14 +6,14 @@ namespace CoreSolution.Shared.Application.Validation;
 public static class PaginationValidatorExtensions
 {
     public static void ApplyPaginationRules<T>(this AbstractValidator<T> validator)
-        where T : IPagedRequest
+        where T : PagedMessage
     {
-        validator.RuleFor(request => request.Page)
+        validator.RuleFor(message => message.Page)
             .GreaterThanOrEqualTo(PaginationLimits.DefaultPage)
-            .When(request => request.Page.HasValue);
+            .When(message => message.Page.HasValue);
 
-        validator.RuleFor(request => request.PageSize)
+        validator.RuleFor(message => message.PageSize)
             .InclusiveBetween(PaginationLimits.MinPageSize, PaginationLimits.MaxPageSize)
-            .When(request => request.PageSize.HasValue);
+            .When(message => message.PageSize.HasValue);
     }
 }

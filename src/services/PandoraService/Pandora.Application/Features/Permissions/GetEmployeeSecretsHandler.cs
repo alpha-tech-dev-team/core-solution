@@ -22,7 +22,7 @@ public sealed class GetEmployeeSecretsHandler : IRequestHandler<GetEmployeeSecre
     {
         var result = await _permissionRepository.GetPage(
             request.TelegramUserId,
-            new SecretPageQuery(request.ToPageRequest(), SecretSorting.ByResourceName),
+            new SecretPageMessage(request.ToPageRequest(), SecretSorting.ByResourceName),
             cancellationToken);
 
         return Result<EmployeeSecretPage>.Success(result);

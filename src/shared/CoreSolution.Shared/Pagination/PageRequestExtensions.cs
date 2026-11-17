@@ -2,10 +2,10 @@ namespace CoreSolution.Shared.Pagination;
 
 public static class PageRequestExtensions
 {
-    public static PageRequest ToPageRequest(this IPagedRequest request)
+    public static PageRequest ToPageRequest(this PagedMessage message)
     {
         return new PageRequest(
-            request.Page ?? PaginationLimits.DefaultPage,
-            request.PageSize ?? PaginationLimits.DefaultPageSize);
+            message.Page ?? PaginationLimits.DefaultPage,
+            message.PageSize ?? PaginationLimits.DefaultPageSize);
     }
 }

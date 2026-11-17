@@ -3,6 +3,6 @@ using Pandora.Domain.Entities;
 
 namespace Pandora.Domain.Models;
 
-public sealed record SecretPageQuery(
+public sealed record SecretPageMessage(
     PageRequest Page,
     Func<IQueryable<SecretMetadata>, IOrderedQueryable<SecretMetadata>> OrderBy);

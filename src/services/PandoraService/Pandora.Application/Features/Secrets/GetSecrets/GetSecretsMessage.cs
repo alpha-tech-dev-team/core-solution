@@ -7,11 +7,9 @@ using Pandora.Domain.Models;
 
 namespace Pandora.Application.Features.Secrets.GetSecrets;
 
-public sealed class GetSecretsMessage : IRequest<Result<SecretListPage>>, IPagedRequest, IAdminUserRequest
+public sealed record GetSecretsMessage : PagedMessage, IRequest<Result<SecretListPage>>, IAdminUserRequest
 {
-    public int? Page { get; set; }
-    public int? PageSize { get; set; }
-    public bool? IncludePasswords { get; set; }
+    public bool? IncludePasswords { get; init; }
 
     [JsonIgnore]
     public Guid AdminUserId { get; private set; }

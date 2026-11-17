@@ -5,9 +5,7 @@ using Pandora.Domain.Models;
 
 namespace Pandora.Application.Features.Permissions;
 
-public sealed class GetEmployeeSecretsMessage : IRequest<Result<EmployeeSecretPage>>, IPagedRequest
+public sealed record GetEmployeeSecretsMessage : PagedMessage, IRequest<Result<EmployeeSecretPage>>
 {
-    public long TelegramUserId { get; set; }
-    public int? Page { get; set; }
-    public int? PageSize { get; set; }
+    public long TelegramUserId { get; init; }
 }

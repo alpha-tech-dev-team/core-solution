@@ -36,15 +36,15 @@ public sealed class PermissionRepository : IPermissionRepository
 
     public async Task<EmployeeSecretPage> GetPage(
         long telegramUserId,
-        SecretPageQuery query,
+        SecretPageMessage message,
         CancellationToken cancellationToken)
     {
         var source = LiveSecrets();
         var total = await source.CountAsync(cancellationToken);
 
-        var items = await query.OrderBy(source)
-            .Skip(query.Page.Skip)
-            .Take(query.Page.PageSize)
+        var items = await message.OrderBy(source)
+            .Skip(message.Page.Skip)
+            .Take(message.Page.PageSize)
             .Select(metadata => new EmployeeSecretItem(
                 metadata.VaultItemId,
                 metadata.ResourceName,
@@ -54,7 +54,7 @@ public sealed class PermissionRepository : IPermissionRepository
                     && permission.IsActive)))
             .ToListAsync(cancellationToken);
 
-        return new EmployeeSecretPage(items, query.Page.Page, query.Page.PageSize, total);
+        return new EmployeeSecretPage(items, message.Page.Page, message.Page.PageSize, total);
     }
 
     public async Task<SecretAccessGrantResult> Grant(

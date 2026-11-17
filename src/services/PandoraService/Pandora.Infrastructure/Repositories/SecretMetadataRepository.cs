@@ -17,7 +17,7 @@ public sealed class SecretMetadataRepository : ISecretMetadataRepository
         _context = context;
     }
 
-    public async Task<SecretListPage> GetPage(SecretPageQuery query, CancellationToken cancellationToken)
+    public async Task<SecretListPage> GetPage(SecretPageMessage message, CancellationToken cancellationToken)
     {
         var source = _context.SecretMetadata
             .AsNoTracking()
@@ -25,13 +25,13 @@ public sealed class SecretMetadataRepository : ISecretMetadataRepository
 
         var total = await source.CountAsync(cancellationToken);
 
-        var items = await query.OrderBy(source)
-            .Skip(query.Page.Skip)
-            .Take(query.Page.PageSize)
+        var items = await message.OrderBy(source)
+            .Skip(message.Page.Skip)
+            .Take(message.Page.PageSize)
             .Select(metadata => new SecretPageItem(metadata.VaultItemId, metadata.ResourceName, metadata.Username, null))
             .ToListAsync(cancellationToken);
 
-        return new SecretListPage(items, query.Page.Page, query.Page.PageSize, total);
+        return new SecretListPage(items, message.Page.Page, message.Page.PageSize, total);
     }
 
     public async Task<SecretMetadata?> GetById(string vaultItemId, CancellationToken cancellationToken)
