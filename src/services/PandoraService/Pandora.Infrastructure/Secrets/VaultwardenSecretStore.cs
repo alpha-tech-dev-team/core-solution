@@ -64,14 +64,21 @@ public sealed class VaultwardenSecretStore : ISecretStore, ISecretVaultReader
 
         var itemDetails = result?.Data;
 
-        if (string.IsNullOrWhiteSpace(itemDetails?.Login?.Password))
+        if (string.IsNullOrWhiteSpace(itemDetails?.Name))
+        {
+            _logger.LogWarning("В элементе {ItemId} нет названия", itemId);
+
+            return Result<Secret>.Failure(ErrorCode.SecretNotFound.ToString());
+        }
+
+        if (string.IsNullOrWhiteSpace(itemDetails.Login?.Password))
         {
             _logger.LogWarning("В элементе {ItemId} нет пароля", itemId);
 
             return Result<Secret>.Failure(ErrorCode.SecretNotFound.ToString());
         }
 
-        return Result<Secret>.Success(new Secret(itemDetails.Name ?? string.Empty, itemDetails.Login.Username ?? string.Empty, itemDetails.Login.Password));
+        return Result<Secret>.Success(new Secret(itemDetails.Name, itemDetails.Login.Username ?? string.Empty, itemDetails.Login.Password));
     }
 
     public async Task<Result<IReadOnlyList<SecretItem>>> GetItems(CancellationToken cancellationToken)
