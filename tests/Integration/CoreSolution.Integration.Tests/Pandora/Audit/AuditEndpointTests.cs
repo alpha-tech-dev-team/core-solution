@@ -59,6 +59,45 @@ public sealed class AuditEndpointTests(IntegrationFixture fixture)
     }
 
     [Fact]
+    public async Task GetAudit_WithUnknownSortField_ReturnsBadRequest()
+    {
+        var cookie = await LoginAsAdminAsync();
+        using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add("Cookie", cookie);
+
+        var response = await client.GetAsync($"{AuditRoute}?sortBy=unknown");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("InvalidSortField", await ReadValidationCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task GetAudit_WithSearchAndFilters_ReturnsMatchingEntries()
+    {
+        var targetId = Guid.NewGuid().ToString();
+        await SeedAuditEntryAsync("secret_created", targetId, "web");
+        await SeedAuditEntryAsync("secret_deleted", Guid.NewGuid().ToString(), "web");
+
+        var cookie = await LoginAsAdminAsync();
+        using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add("Cookie", cookie);
+
+        var response = await client.GetAsync(
+            $"{AuditRoute}?page=1&pageSize=10&search={targetId}&action=secret_created&requestSource=web&sortBy=action&sortDirection=asc");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var page = await response.Content.ReadFromJsonAsync<AuditPageResponse>();
+
+        Assert.NotNull(page);
+        var entry = Assert.Single(page!.Items);
+        Assert.Equal("secret_created", entry.Action);
+        Assert.Equal(targetId, entry.TargetItemId);
+        Assert.Equal("web", entry.RequestSource);
+    }
+
+    [Fact]
     public async Task GetAudit_AsAdmin_ReturnsStoredEntry()
     {
         await SeedAuditEntryAsync();
@@ -78,7 +117,7 @@ public sealed class AuditEndpointTests(IntegrationFixture fixture)
         Assert.Contains(page.Items, entry => entry.Action == "secret_created" && entry.RequestSource == "web");
     }
 
-    private async Task SeedAuditEntryAsync()
+    private async Task SeedAuditEntryAsync(string action = "secret_created", string? targetItemId = null, string requestSource = "web")
     {
         await using var provider = await fixture.CreatePandoraServiceProviderAsync();
         using var scope = provider.CreateScope();
@@ -88,9 +127,9 @@ public sealed class AuditEndpointTests(IntegrationFixture fixture)
             Guid.NewGuid(),
             DateTime.UtcNow,
             Guid.NewGuid(),
-            "secret_created",
-            null,
-            "web"));
+            action,
+            targetItemId,
+            requestSource));
 
         await database.SaveChangesAsync();
     }

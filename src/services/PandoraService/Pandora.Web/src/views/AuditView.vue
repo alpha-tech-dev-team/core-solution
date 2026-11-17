@@ -1,17 +1,23 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { tr, trAuditAction, trAuditSource, trRequestError } from '@/i18n'
-import { RESOURCE_KEYS } from '@/constants/i18n'
+import { AUDIT_ACTIONS, AUDIT_SOURCES, RESOURCE_KEYS } from '@/constants/i18n'
 import { ROUTES } from '@/constants/routes'
 import { AUDIT_PAGE_SIZE, FIRST_PAGE } from '@/constants/pagination'
 import { LOADING_PLACEHOLDER } from '@/constants/ui'
+import {
+  AUDIT_DEFAULT_SORT_BY,
+  AUDIT_DEFAULT_SORT_DIRECTION,
+  AUDIT_SEARCH_DEBOUNCE_MS,
+  AUDIT_SORT_FIELDS
+} from '@/constants/audit'
 import { toRequestError } from '@/api/request-error'
 import { fetchAuditEntries } from '@/api/audit'
 import { fetchEmployeeNames, type EmployeeNames } from '@/api/employees'
 import { createAuditHubConnection } from '@/api/audit-hub'
-import type { AuditEntry } from '@/stores/models/audit-entry'
+import type { AuditEntry, AuditQuery } from '@/stores/models/audit-entry'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -24,6 +30,25 @@ const total = ref(0)
 const isLoading = ref(false)
 const errorMessage = ref('')
 
+const query = reactive<AuditQuery>({
+  search: '',
+  action: '',
+  requestSource: '',
+  sortBy: AUDIT_DEFAULT_SORT_BY,
+  sortDirection: AUDIT_DEFAULT_SORT_DIRECTION
+})
+
+const actionOptions = Object.keys(AUDIT_ACTIONS)
+const sourceOptions = Object.keys(AUDIT_SOURCES)
+
+const isDefaultView = computed(() =>
+  !query.search
+  && !query.action
+  && !query.requestSource
+  && query.sortBy === AUDIT_DEFAULT_SORT_BY
+  && query.sortDirection === AUDIT_DEFAULT_SORT_DIRECTION
+)
+
 const totalPages = computed(() => Math.max(FIRST_PAGE, Math.ceil(total.value / AUDIT_PAGE_SIZE)))
 const canGoBack = computed(() => page.value > FIRST_PAGE)
 const canGoForward = computed(() => page.value < totalPages.value)
@@ -33,7 +58,7 @@ async function loadEntries() {
   errorMessage.value = ''
 
   try {
-    const result = await fetchAuditEntries(page.value, AUDIT_PAGE_SIZE)
+    const result = await fetchAuditEntries(page.value, AUDIT_PAGE_SIZE, query)
     entries.value = result.items
     total.value = result.total
   } catch (error) {
@@ -41,6 +66,39 @@ async function loadEntries() {
   } finally {
     isLoading.value = false
   }
+}
+
+async function applyQuery() {
+  page.value = FIRST_PAGE
+  await loadEntries()
+}
+
+let searchTimer: number | undefined
+
+function onSearchInput() {
+  window.clearTimeout(searchTimer)
+  searchTimer = window.setTimeout(() => void applyQuery(), AUDIT_SEARCH_DEBOUNCE_MS)
+}
+
+function toggleSort(field: string) {
+  if (query.sortBy === field) {
+    query.sortDirection = query.sortDirection === 'asc' ? 'desc' : 'asc'
+  } else {
+    query.sortBy = field
+    query.sortDirection = 'asc'
+  }
+
+  void applyQuery()
+}
+
+function sortIndicator(field: string): string {
+  if (query.sortBy !== field) return ''
+
+  return query.sortDirection === 'asc' ? '▲' : '▼'
+}
+
+function isSortedBy(field: string): boolean {
+  return query.sortBy === field
 }
 
 function actorName(entry: AuditEntry): string {
@@ -98,10 +156,14 @@ const auditHub = createAuditHubConnection(addLiveEntry)
 function addLiveEntry(entry: AuditEntry) {
   if (entries.value.some((existing) => existing.id === entry.id)) return
 
-  total.value += 1
+  if (isDefaultView.value) {
+    total.value += 1
 
-  if (page.value === FIRST_PAGE) {
-    entries.value = [entry, ...entries.value]
+    if (page.value === FIRST_PAGE) {
+      entries.value = [entry, ...entries.value]
+    }
+  } else {
+    void loadEntries()
   }
 
   if (!knowsActor(entry)) {
@@ -124,6 +186,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  window.clearTimeout(searchTimer)
   void auditHub.stop()
 })
 </script>
@@ -139,6 +202,34 @@ onUnmounted(() => {
     </header>
 
     <main class="audit__body">
+      <div class="audit__toolbar">
+        <input
+          v-model="query.search"
+          type="search"
+          class="audit__search"
+          :placeholder="tr(RESOURCE_KEYS.AUDIT_SEARCH_PLACEHOLDER)"
+          @input="onSearchInput"
+        />
+        <label class="audit__filter">
+          <span>{{ tr(RESOURCE_KEYS.AUDIT_COLUMN_ACTION) }}</span>
+          <select v-model="query.action" @change="applyQuery">
+            <option value="">{{ tr(RESOURCE_KEYS.AUDIT_FILTER_ALL) }}</option>
+            <option v-for="action in actionOptions" :key="action" :value="action">
+              {{ trAuditAction(action) }}
+            </option>
+          </select>
+        </label>
+        <label class="audit__filter">
+          <span>{{ tr(RESOURCE_KEYS.AUDIT_COLUMN_SOURCE) }}</span>
+          <select v-model="query.requestSource" @change="applyQuery">
+            <option value="">{{ tr(RESOURCE_KEYS.AUDIT_FILTER_ALL) }}</option>
+            <option v-for="source in sourceOptions" :key="source" :value="source">
+              {{ trAuditSource(source) }}
+            </option>
+          </select>
+        </label>
+      </div>
+
       <p v-if="errorMessage" class="audit__error">{{ errorMessage }}</p>
       <p v-else-if="isLoading" class="audit__placeholder">{{ LOADING_PLACEHOLDER }}</p>
       <p v-else-if="entries.length === 0" class="audit__placeholder">{{ tr(RESOURCE_KEYS.AUDIT_EMPTY) }}</p>
@@ -146,11 +237,47 @@ onUnmounted(() => {
       <table v-else class="audit__table">
         <thead>
           <tr>
-            <th>{{ tr(RESOURCE_KEYS.AUDIT_COLUMN_TIME) }}</th>
+            <th>
+              <button
+                type="button"
+                class="audit__sort"
+                :class="{ 'audit__sort--active': isSortedBy(AUDIT_SORT_FIELDS.TIMESTAMP) }"
+                @click="toggleSort(AUDIT_SORT_FIELDS.TIMESTAMP)"
+              >
+                {{ tr(RESOURCE_KEYS.AUDIT_COLUMN_TIME) }} {{ sortIndicator(AUDIT_SORT_FIELDS.TIMESTAMP) }}
+              </button>
+            </th>
             <th>{{ tr(RESOURCE_KEYS.AUDIT_COLUMN_USER) }}</th>
-            <th>{{ tr(RESOURCE_KEYS.AUDIT_COLUMN_ACTION) }}</th>
-            <th>{{ tr(RESOURCE_KEYS.AUDIT_COLUMN_TARGET) }}</th>
-            <th>{{ tr(RESOURCE_KEYS.AUDIT_COLUMN_SOURCE) }}</th>
+            <th>
+              <button
+                type="button"
+                class="audit__sort"
+                :class="{ 'audit__sort--active': isSortedBy(AUDIT_SORT_FIELDS.ACTION) }"
+                @click="toggleSort(AUDIT_SORT_FIELDS.ACTION)"
+              >
+                {{ tr(RESOURCE_KEYS.AUDIT_COLUMN_ACTION) }} {{ sortIndicator(AUDIT_SORT_FIELDS.ACTION) }}
+              </button>
+            </th>
+            <th>
+              <button
+                type="button"
+                class="audit__sort"
+                :class="{ 'audit__sort--active': isSortedBy(AUDIT_SORT_FIELDS.TARGET_ITEM_ID) }"
+                @click="toggleSort(AUDIT_SORT_FIELDS.TARGET_ITEM_ID)"
+              >
+                {{ tr(RESOURCE_KEYS.AUDIT_COLUMN_TARGET) }} {{ sortIndicator(AUDIT_SORT_FIELDS.TARGET_ITEM_ID) }}
+              </button>
+            </th>
+            <th>
+              <button
+                type="button"
+                class="audit__sort"
+                :class="{ 'audit__sort--active': isSortedBy(AUDIT_SORT_FIELDS.REQUEST_SOURCE) }"
+                @click="toggleSort(AUDIT_SORT_FIELDS.REQUEST_SOURCE)"
+              >
+                {{ tr(RESOURCE_KEYS.AUDIT_COLUMN_SOURCE) }} {{ sortIndicator(AUDIT_SORT_FIELDS.REQUEST_SOURCE) }}
+              </button>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -225,6 +352,50 @@ onUnmounted(() => {
   flex: 1;
   padding: var(--space-5);
   overflow-x: auto;
+}
+
+.audit__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.audit__search {
+  flex: 1 1 240px;
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-small);
+}
+
+.audit__filter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--font-size-small);
+  color: var(--color-text-secondary);
+}
+
+.audit__filter select {
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-small);
+}
+
+.audit__sort {
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: inherit;
+  cursor: pointer;
+}
+
+.audit__sort--active {
+  color: var(--color-text);
 }
 
 .audit__table {

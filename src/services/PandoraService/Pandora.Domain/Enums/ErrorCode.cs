@@ -11,5 +11,7 @@ public enum ErrorCode
     MalformedRequest,
     InvalidPage,
     InvalidPageSize,
+    InvalidSortField,
+    InvalidSortDirection,
     InternalError
 }

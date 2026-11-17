@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using CoreSolution.Shared.Constants;
 using Pandora.Domain.Entities;
+using Pandora.Domain.Models;
+using CoreSolution.Shared.Models;
 using Pandora.Infrastructure.Database;
 using Pandora.Infrastructure.Repositories;
 using Xunit;
@@ -11,6 +13,7 @@ namespace CoreSolution.Integration.Tests.PandoraTests;
 [Collection(nameof(IntegrationCollection))]
 public sealed class AuditRepositoryTests(IntegrationFixture fixture)
 {
+    private static readonly AuditEntryFilter EmptyFilter = new(null, null, null, null, AuditSortDirection.Descending);
     [Fact]
     public async Task GetPage_ReturnsNewestFirstWithTotalCount()
     {
@@ -28,14 +31,14 @@ public sealed class AuditRepositoryTests(IntegrationFixture fixture)
         database.AuditEntry.AddRange(oldest, middle, newest);
         await database.SaveChangesAsync();
 
-        var firstPage = await repository.GetPage(1, 2, CancellationToken.None);
+        var firstPage = await repository.GetPage(1, 2, EmptyFilter, CancellationToken.None);
 
         Assert.Equal(3, firstPage.Total);
         Assert.Equal(1, firstPage.Page);
         Assert.Equal(2, firstPage.PageSize);
         Assert.Equal([newest.Id, middle.Id], firstPage.Items.Select(entry => entry.Id));
 
-        var secondPage = await repository.GetPage(2, 2, CancellationToken.None);
+        var secondPage = await repository.GetPage(2, 2, EmptyFilter, CancellationToken.None);
 
         Assert.Equal(3, secondPage.Total);
         Assert.Equal([oldest.Id], secondPage.Items.Select(entry => entry.Id));
@@ -96,7 +99,7 @@ public sealed class AuditRepositoryTests(IntegrationFixture fixture)
         database.AuditEntry.Add(CreateEntry(DateTime.UtcNow, "show_services"));
         await database.SaveChangesAsync();
 
-        var page = await repository.GetPage(int.MaxValue, PaginationLimits.MaxPageSize, CancellationToken.None);
+        var page = await repository.GetPage(int.MaxValue, PaginationLimits.MaxPageSize, EmptyFilter, CancellationToken.None);
 
         Assert.Equal(1, page.Total);
         Assert.Empty(page.Items);
@@ -120,8 +123,8 @@ public sealed class AuditRepositoryTests(IntegrationFixture fixture)
             CreateEntry(timestamp, "third"));
         await database.SaveChangesAsync();
 
-        var firstPage = await repository.GetPage(1, 2, CancellationToken.None);
-        var secondPage = await repository.GetPage(2, 2, CancellationToken.None);
+        var firstPage = await repository.GetPage(1, 2, EmptyFilter, CancellationToken.None);
+        var secondPage = await repository.GetPage(2, 2, EmptyFilter, CancellationToken.None);
 
         var seen = firstPage.Items.Concat(secondPage.Items).Select(entry => entry.Id).ToList();
 
@@ -143,7 +146,7 @@ public sealed class AuditRepositoryTests(IntegrationFixture fixture)
         database.AuditEntry.Add(CreateEntry(DateTime.UtcNow, "show_services"));
         await database.SaveChangesAsync();
 
-        var page = await repository.GetPage(-5, 10, CancellationToken.None);
+        var page = await repository.GetPage(-5, 10, EmptyFilter, CancellationToken.None);
 
         Assert.Equal(PaginationLimits.FirstPage, page.Page);
         Assert.Single(page.Items);
@@ -163,10 +166,82 @@ public sealed class AuditRepositoryTests(IntegrationFixture fixture)
         database.AuditEntry.Add(CreateEntry(DateTime.UtcNow, "show_services"));
         await database.SaveChangesAsync();
 
-        var page = await repository.GetPage(1, 0, CancellationToken.None);
+        var page = await repository.GetPage(1, 0, EmptyFilter, CancellationToken.None);
 
         Assert.Equal(PaginationLimits.MinPageSize, page.PageSize);
         Assert.Single(page.Items);
+    }
+
+    [Fact]
+    public async Task GetPage_Search_MatchesActionTargetAndSource()
+    {
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+        using var scope = provider.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<PandoraDbContext>();
+        var repository = new AuditRepository(database);
+
+        await database.AuditEntry.ExecuteDeleteAsync();
+        await database.SaveChangesAsync();
+
+        database.AuditEntry.AddRange(
+            new AuditEntry(Guid.NewGuid(), DateTime.UtcNow, telegramUserId: 1, "get_credentials", "vault-item", "telegram"),
+            new AuditEntry(Guid.NewGuid(), DateTime.UtcNow, Guid.NewGuid(), "secret_created", null, "web"),
+            new AuditEntry(Guid.NewGuid(), DateTime.UtcNow, telegramUserId: 2, "show_services", null, "telegram"));
+        await database.SaveChangesAsync();
+
+        var byTarget = await repository.GetPage(1, 10, EmptyFilter with { Search = "vault" }, CancellationToken.None);
+        var byAction = await repository.GetPage(1, 10, EmptyFilter with { Search = "SECRET" }, CancellationToken.None);
+        var bySource = await repository.GetPage(1, 10, EmptyFilter with { Search = "WEB" }, CancellationToken.None);
+
+        Assert.Equal("get_credentials", Assert.Single(byTarget.Items).Action);
+        Assert.Equal("secret_created", Assert.Single(byAction.Items).Action);
+        Assert.Equal("secret_created", Assert.Single(bySource.Items).Action);
+    }
+
+    [Fact]
+    public async Task GetPage_FiltersByActionAndSourceWithTotalOfFilteredRows()
+    {
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+        using var scope = provider.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<PandoraDbContext>();
+        var repository = new AuditRepository(database);
+
+        await database.AuditEntry.ExecuteDeleteAsync();
+        await database.SaveChangesAsync();
+
+        database.AuditEntry.AddRange(
+            CreateEntry(DateTime.UtcNow, "show_services"),
+            CreateEntry(DateTime.UtcNow, "get_credentials"),
+            CreateEntry(DateTime.UtcNow, "get_credentials"));
+        await database.SaveChangesAsync();
+
+        var page = await repository.GetPage(
+            1, 10, EmptyFilter with { Action = "get_credentials", RequestSource = "telegram" }, CancellationToken.None);
+
+        Assert.Equal(2, page.Total);
+        Assert.All(page.Items, entry => Assert.Equal("get_credentials", entry.Action));
+    }
+
+    [Fact]
+    public async Task GetPage_SortsByActionAscending()
+    {
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+        using var scope = provider.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<PandoraDbContext>();
+        var repository = new AuditRepository(database);
+
+        await database.AuditEntry.ExecuteDeleteAsync();
+        await database.SaveChangesAsync();
+
+        database.AuditEntry.AddRange(
+            CreateEntry(DateTime.UtcNow, "show_services"),
+            CreateEntry(DateTime.UtcNow, "get_credentials"));
+        await database.SaveChangesAsync();
+
+        var page = await repository.GetPage(
+            1, 10, EmptyFilter with { SortBy = AuditEntrySortFields.Action, SortDirection = AuditSortDirection.Ascending }, CancellationToken.None);
+
+        Assert.Equal(["get_credentials", "show_services"], page.Items.Select(entry => entry.Action));
     }
 
     private static AuditEntry CreateEntry(DateTime timestamp, string action) =>

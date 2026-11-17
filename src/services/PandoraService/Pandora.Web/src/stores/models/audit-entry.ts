@@ -14,3 +14,13 @@ export interface AuditEntryPage {
   pageSize: number
   total: number
 }
+
+export type SortDirection = 'asc' | 'desc'
+
+export interface AuditQuery {
+  search?: string
+  action?: string
+  requestSource?: string
+  sortBy?: string
+  sortDirection?: SortDirection
+}

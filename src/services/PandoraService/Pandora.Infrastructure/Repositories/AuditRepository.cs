@@ -3,6 +3,7 @@ using CoreSolution.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using Pandora.Domain.Entities;
 using Pandora.Domain.Interfaces;
+using Pandora.Domain.Models;
 using Pandora.Infrastructure.Database;
 
 namespace Pandora.Infrastructure.Repositories;
@@ -22,12 +23,12 @@ public sealed class AuditRepository : IAuditRepository
         await _context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<PagedResult<AuditEntry>> GetPage(int page, int pageSize, CancellationToken cancellationToken)
+    public async Task<PagedResult<AuditEntry>> GetPage(int page, int pageSize, AuditEntryFilter filter, CancellationToken cancellationToken)
     {
         var pageNumber = Math.Max(page, PaginationLimits.FirstPage);
         var size = Math.Clamp(pageSize, PaginationLimits.MinPageSize, PaginationLimits.MaxPageSize);
 
-        var query = _context.AuditEntry.AsNoTracking();
+        var query = ApplyFilter(_context.AuditEntry.AsNoTracking(), filter);
 
         var total = await query.CountAsync(cancellationToken);
         var offset = (long)(pageNumber - PaginationLimits.FirstPage) * size;
@@ -37,13 +38,52 @@ public sealed class AuditRepository : IAuditRepository
             return new PagedResult<AuditEntry>([], pageNumber, size, total);
         }
 
-        var items = await query
-            .OrderByDescending(entry => entry.Timestamp)
-            .ThenBy(entry => entry.Id)
+        var items = await ApplySorting(query, filter)
             .Skip((int)offset)
             .Take(size)
             .ToListAsync(cancellationToken);
 
         return new PagedResult<AuditEntry>(items, pageNumber, size, total);
+    }
+
+    private static IQueryable<AuditEntry> ApplyFilter(IQueryable<AuditEntry> query, AuditEntryFilter filter)
+    {
+        if (!string.IsNullOrWhiteSpace(filter.Search))
+        {
+            var search = filter.Search.Trim().ToLowerInvariant();
+            query = query.Where(entry =>
+                entry.Action.ToLower().Contains(search) ||
+                (entry.TargetItemId != null && entry.TargetItemId.ToLower().Contains(search)) ||
+                entry.RequestSource.ToLower().Contains(search) ||
+                (entry.UserId != null && entry.UserId.Value.ToString().Contains(search)) ||
+                (entry.TelegramUserId != null && entry.TelegramUserId.Value.ToString().Contains(search)));
+        }
+
+        if (!string.IsNullOrWhiteSpace(filter.Action))
+        {
+            query = query.Where(entry => entry.Action == filter.Action);
+        }
+
+        if (!string.IsNullOrWhiteSpace(filter.RequestSource))
+        {
+            query = query.Where(entry => entry.RequestSource == filter.RequestSource);
+        }
+
+        return query;
+    }
+
+    private static IQueryable<AuditEntry> ApplySorting(IQueryable<AuditEntry> query, AuditEntryFilter filter)
+    {
+        var sortField = filter.SortBy is not null && AuditEntrySortFields.Fields.ContainsKey(filter.SortBy)
+            ? filter.SortBy
+            : AuditEntrySortFields.Default;
+        var selector = AuditEntrySortFields.Fields[sortField];
+        var ordered = filter.SortDirection == AuditSortDirection.Ascending
+            ? query.OrderBy(selector)
+            : query.OrderByDescending(selector);
+
+        return sortField == AuditEntrySortFields.Timestamp
+            ? ordered.ThenBy(entry => entry.Id)
+            : ordered.ThenByDescending(entry => entry.Timestamp).ThenBy(entry => entry.Id);
     }
 }

@@ -2,6 +2,7 @@ using CoreSolution.Shared.Constants;
 using FluentValidation;
 using Pandora.Application.Features.Audit;
 using Pandora.Domain.Enums;
+using Pandora.Domain.Models;
 
 namespace Pandora.Application.Validators;
 
@@ -18,5 +19,16 @@ public sealed class GetAuditEntriesMessageValidator : AbstractValidator<GetAudit
             .InclusiveBetween(PaginationLimits.MinPageSize, PaginationLimits.MaxPageSize)
             .WithErrorCode(nameof(ErrorCode.InvalidPageSize))
             .When(message => message.PageSize.HasValue);
+
+        RuleFor(message => message.SortBy)
+            .Must(field => AuditEntrySortFields.Fields.ContainsKey(field!))
+            .WithErrorCode(nameof(ErrorCode.InvalidSortField))
+            .When(message => message.SortBy is not null);
+
+        RuleFor(message => message.SortDirection)
+            .Must(direction => string.Equals(direction, "asc", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(direction, "desc", StringComparison.OrdinalIgnoreCase))
+            .WithErrorCode(nameof(ErrorCode.InvalidSortDirection))
+            .When(message => message.SortDirection is not null);
     }
 }

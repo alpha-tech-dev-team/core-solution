@@ -26,6 +26,8 @@ export const RESOURCE_KEYS = {
   AUDIT_COLUMN_TARGET: 'audit_column_target',
   AUDIT_COLUMN_SOURCE: 'audit_column_source',
   AUDIT_EMPTY: 'audit_empty',
+  AUDIT_SEARCH_PLACEHOLDER: 'audit_search_placeholder',
+  AUDIT_FILTER_ALL: 'audit_filter_all',
   AUDIT_PAGE_INFO: 'audit_page_info',
   AUDIT_PREV_PAGE: 'audit_prev_page',
   AUDIT_NEXT_PAGE: 'audit_next_page',
