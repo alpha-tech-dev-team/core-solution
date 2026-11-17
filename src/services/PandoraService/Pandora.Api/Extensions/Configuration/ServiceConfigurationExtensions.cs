@@ -1,13 +1,8 @@
 using FluentValidation;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Pandora.Api.Middleware;
 using Pandora.Application.Features.Secrets.Common;
 using Pandora.Domain.Interfaces;
-using Pandora.Domain.Options;
 using Pandora.Infrastructure.Database;
-using Pandora.Infrastructure.Repositories;
-using Pandora.Infrastructure.Secrets;
 using Pandora.Infrastructure.Secrets.Synchronization;
 using Serilog;
 using ApplicationAssemblyMarker = Pandora.Application.AssemblyMarker;
@@ -34,41 +29,6 @@ public static class ServiceConfigurationExtensions
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<ApplicationAssemblyMarker>());
         services.AddValidatorsFromAssemblyContaining<ApplicationAssemblyMarker>();
         services.AddJwtAuthentication();
-
-        return services;
-    }
-
-    public static IServiceCollection AddDatabaseConfiguration(this IServiceCollection services)
-    {
-        services.AddScoped<IAuditContext, AuditContext>();
-        services.AddScoped<AuditSaveChangesInterceptor>();
-
-        services.AddDbContext<PandoraDbContext>((serviceProvider, options) => options
-            .UseNpgsql(serviceProvider.GetRequiredService<IOptions<DatabaseOptions>>().Value.ConnectionString)
-            .AddInterceptors(serviceProvider.GetRequiredService<AuditSaveChangesInterceptor>()));
-
-        services.AddScoped<ISecretMetadataRepository, SecretMetadataRepository>();
-        services.AddScoped<IPermissionRepository, PermissionRepository>();
-
-        return services;
-    }
-
-    private static IServiceCollection AddSecretsConfiguration(this IServiceCollection services)
-    {
-        services.AddVaultwardenClient<VaultwardenSecretWriter, ISecretWriter>();
-        services.AddVaultwardenClient<VaultwardenSecretStore, ISecretVaultReader>();
-
-        return services;
-    }
-
-    private static IServiceCollection AddVaultwardenClient<TClient, TService>(this IServiceCollection services)
-        where TClient : class, TService
-        where TService : class
-    {
-        services.AddHttpClient<TClient>((serviceProvider, client) =>
-            client.BaseAddress = new Uri(serviceProvider.GetRequiredService<IOptions<VaultwardenOptions>>().Value.BaseUrl));
-
-        services.AddScoped<TService>(provider => provider.GetRequiredService<TClient>());
 
         return services;
     }
