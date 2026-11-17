@@ -14,20 +14,20 @@ public sealed class GetSecretsHandler : IRequestHandler<GetSecretsMessage, Resul
     private readonly ISecretMetadataRepository _metadataRepository;
     private readonly ISecretVaultReader _vaultReader;
     private readonly SecretAuditLogger _auditLogger;
-    private readonly IAuditFlush _auditFlush;
+    private readonly IAuditSaver _auditSaver;
     private readonly ILogger<GetSecretsHandler> _logger;
 
     public GetSecretsHandler(
         ISecretMetadataRepository metadataRepository,
         ISecretVaultReader vaultReader,
         SecretAuditLogger auditLogger,
-        IAuditFlush auditFlush,
+        IAuditSaver auditSaver,
         ILogger<GetSecretsHandler> logger)
     {
         _metadataRepository = metadataRepository;
         _vaultReader = vaultReader;
         _auditLogger = auditLogger;
-        _auditFlush = auditFlush;
+        _auditSaver = auditSaver;
         _logger = logger;
     }
 
@@ -72,7 +72,7 @@ public sealed class GetSecretsHandler : IRequestHandler<GetSecretsMessage, Resul
                 cancellationToken);
         }
 
-        await _auditFlush.Flush(cancellationToken);
+        await _auditSaver.SaveChanges(cancellationToken);
 
         return Result<SecretListPage>.Success(
             new SecretListPage(items, dbPage.Page, dbPage.PageSize, dbPage.Total));

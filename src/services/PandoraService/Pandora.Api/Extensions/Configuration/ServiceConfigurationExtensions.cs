@@ -28,7 +28,7 @@ public static class ServiceConfigurationExtensions
         services.AddDatabaseConfiguration();
         services.AddSecretsConfiguration();
         services.AddScoped<SecretAuditLogger>();
-        services.AddScoped<IAuditFlush, AuditFlush>();
+        services.AddScoped<IAuditSaver, AuditSaver>();
         services.AddScoped<SecretSyncService>();
         services.AddHostedService<SecretSyncWorker>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<ApplicationAssemblyMarker>());

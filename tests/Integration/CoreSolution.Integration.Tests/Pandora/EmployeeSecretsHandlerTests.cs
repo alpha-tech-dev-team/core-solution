@@ -29,7 +29,7 @@ public sealed class EmployeeSecretsHandlerTests(IntegrationFixture fixture)
 
         var itemId = await AddSecret(context, "integration-plain-secret");
         var vaultReader = new StubVaultReader((itemId, "stored-password"));
-        var handler = CreateGetSecretsHandler(context, vaultReader, new CapturingAuditFlush(new AuditContext()));
+        var handler = CreateGetSecretsHandler(context, vaultReader, new CapturingAuditSaver(new AuditContext()));
 
         var result = await handler.Handle(
             new GetSecretsMessage
@@ -57,8 +57,8 @@ public sealed class EmployeeSecretsHandlerTests(IntegrationFixture fixture)
         var adminUserId = Guid.NewGuid();
         var vaultReader = new StubVaultReader((itemId, "revealed-password"));
         var auditContext = new AuditContext();
-        var auditFlush = new CapturingAuditFlush(auditContext);
-        var handler = CreateGetSecretsHandler(context, vaultReader, auditFlush);
+        var auditSaver = new CapturingAuditSaver(auditContext);
+        var handler = CreateGetSecretsHandler(context, vaultReader, auditSaver);
 
         var result = await handler.Handle(
             WithAdmin(new GetSecretsMessage
@@ -73,17 +73,17 @@ public sealed class EmployeeSecretsHandlerTests(IntegrationFixture fixture)
 
         Assert.Equal("revealed-password", item.Password);
         Assert.Equal(1, vaultReader.CallCount);
-        Assert.Equal(1, auditFlush.FlushCount);
+        Assert.Equal(1, auditSaver.SaveCount);
 
         var entry = Assert.Single(
-            auditFlush.Entries,
+            auditSaver.Entries,
             candidate => candidate.TargetItemId == itemId);
 
         Assert.Equal(AuditConstants.ActionSecretPasswordsViewed, entry.Action);
         Assert.Equal(adminUserId, entry.UserId);
-        Assert.Equal(auditFlush.Entries.Count, auditFlush.Entries.Select(candidate => candidate.TargetItemId).Distinct().Count());
+        Assert.Equal(auditSaver.Entries.Count, auditSaver.Entries.Select(candidate => candidate.TargetItemId).Distinct().Count());
 
-        foreach (var auditedEntry in auditFlush.Entries)
+        foreach (var auditedEntry in auditSaver.Entries)
         {
             Assert.True(auditedEntry.TargetItemId!.Length <= DatabaseConstants.Audit.TargetItemIdMaxLength);
         }
@@ -98,7 +98,7 @@ public sealed class EmployeeSecretsHandlerTests(IntegrationFixture fixture)
 
         var itemId = await AddSecret(context, "integration-duplicate-secret");
         var vaultReader = new StubVaultReader((itemId, "first-password"), (itemId, "second-password"));
-        var handler = CreateGetSecretsHandler(context, vaultReader, new CapturingAuditFlush(new AuditContext()));
+        var handler = CreateGetSecretsHandler(context, vaultReader, new CapturingAuditSaver(new AuditContext()));
 
         var result = await handler.Handle(
             new GetSecretsMessage
@@ -124,8 +124,8 @@ public sealed class EmployeeSecretsHandlerTests(IntegrationFixture fixture)
         var revealedId = await AddSecret(context, "integration-revealed-secret");
         var missingId = await AddSecret(context, "integration-not-in-vault-secret");
         var vaultReader = new StubVaultReader((revealedId, "revealed-password"));
-        var auditFlush = new CapturingAuditFlush(new AuditContext());
-        var handler = CreateGetSecretsHandler(context, vaultReader, auditFlush);
+        var auditSaver = new CapturingAuditSaver(new AuditContext());
+        var handler = CreateGetSecretsHandler(context, vaultReader, auditSaver);
 
         var result = await handler.Handle(
             WithAdmin(
@@ -141,7 +141,7 @@ public sealed class EmployeeSecretsHandlerTests(IntegrationFixture fixture)
         Assert.Equal("revealed-password", result.Value!.Items.Single(secret => secret.Id == revealedId).Password);
         Assert.Null(result.Value.Items.Single(secret => secret.Id == missingId).Password);
 
-        var entry = Assert.Single(auditFlush.Entries);
+        var entry = Assert.Single(auditSaver.Entries);
 
         Assert.Equal(revealedId, entry.TargetItemId);
     }
@@ -155,7 +155,7 @@ public sealed class EmployeeSecretsHandlerTests(IntegrationFixture fixture)
 
         await AddSecret(context, "integration-page-secret");
         await AddSecret(context, "integration-page-secret-2");
-        var handler = CreateGetSecretsHandler(context, new StubVaultReader(), new CapturingAuditFlush(new AuditContext()));
+        var handler = CreateGetSecretsHandler(context, new StubVaultReader(), new CapturingAuditSaver(new AuditContext()));
 
         var first = await handler.Handle(
             new GetSecretsMessage { Page = PaginationLimits.FirstPage, PageSize = 1 },
@@ -334,11 +334,11 @@ public sealed class EmployeeSecretsHandlerTests(IntegrationFixture fixture)
         var context = scope.ServiceProvider.GetRequiredService<PandoraDbContext>();
 
         var itemId = await AddSecret(context, "integration-vault-down-secret");
-        var auditFlush = new CapturingAuditFlush(new AuditContext());
+        var auditSaver = new CapturingAuditSaver(new AuditContext());
         var handler = CreateGetSecretsHandler(
             context,
             new FailingVaultReader(),
-            auditFlush);
+            auditSaver);
 
         var result = await handler.Handle(
             new GetSecretsMessage
@@ -354,8 +354,8 @@ public sealed class EmployeeSecretsHandlerTests(IntegrationFixture fixture)
         var item = result.Value!.Items.Single(secret => secret.Id == itemId);
 
         Assert.Null(item.Password);
-        Assert.Equal(0, auditFlush.FlushCount);
-        Assert.Empty(auditFlush.Entries);
+        Assert.Equal(0, auditSaver.SaveCount);
+        Assert.Empty(auditSaver.Entries);
     }
 
     private static T WithAdmin<T>(T message, Guid adminUserId)
@@ -369,13 +369,13 @@ public sealed class EmployeeSecretsHandlerTests(IntegrationFixture fixture)
     private static GetSecretsHandler CreateGetSecretsHandler(
         PandoraDbContext context,
         ISecretVaultReader vaultReader,
-        CapturingAuditFlush auditFlush)
+        CapturingAuditSaver auditSaver)
     {
         return new GetSecretsHandler(
             new SecretMetadataRepository(context),
             vaultReader,
-            new SecretAuditLogger(auditFlush.AuditContext),
-            auditFlush,
+            new SecretAuditLogger(auditSaver.AuditContext),
+            auditSaver,
             NullLogger<GetSecretsHandler>.Instance);
     }
 
@@ -432,20 +432,20 @@ public sealed class EmployeeSecretsHandlerTests(IntegrationFixture fixture)
         }
     }
 
-    private sealed class CapturingAuditFlush : IAuditFlush
+    private sealed class CapturingAuditSaver : IAuditSaver
     {
-        public CapturingAuditFlush(IAuditContext auditContext)
+        public CapturingAuditSaver(IAuditContext auditContext)
         {
             AuditContext = auditContext;
         }
 
         public IAuditContext AuditContext { get; }
-        public int FlushCount { get; private set; }
+        public int SaveCount { get; private set; }
         public IReadOnlyList<AuditEntry> Entries { get; private set; } = Array.Empty<AuditEntry>();
 
-        public Task Flush(CancellationToken cancellationToken)
+        public Task SaveChanges(CancellationToken cancellationToken)
         {
-            FlushCount += 1;
+            SaveCount += 1;
             Entries = AuditContext.TakeAll();
 
             return Task.CompletedTask;
