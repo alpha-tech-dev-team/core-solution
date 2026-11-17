@@ -7,6 +7,8 @@ public static class AuditConstants
     public const string ActionSecretDeleted = "secret_deleted";
     public const string SourceWeb = "web";
 
+    public const string AuditChannel = "audit:new";
+
     public static class Actions
     {
         public const string SubmitPhone = "submit_phone";

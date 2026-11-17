@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using Pandora.Domain.Constants;
 using Pandora.Domain.Entities;
 using Pandora.Domain.Interfaces;
 using Pandora.Domain.Models;
@@ -9,7 +10,7 @@ namespace Pandora.Infrastructure.Audit;
 
 public sealed class RedisAuditNotifier : IAuditNotifier
 {
-    public static readonly RedisChannel Channel = RedisChannel.Literal("audit:new");
+    public static readonly RedisChannel Channel = RedisChannel.Literal(AuditConstants.AuditChannel);
 
     private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
 

@@ -24,10 +24,10 @@ public sealed class UserActivityAuditLogger
 
     public Task LogAsync(IUserActionMessage userAction, CancellationToken cancellationToken)
     {
-        return LogAsync(userAction.TelegramUserId, userAction.Action, userAction.TargetItemId, cancellationToken);
+        return Log(userAction.TelegramUserId, userAction.Action, userAction.TargetItemId, cancellationToken);
     }
 
-    public async Task LogAsync(long telegramUserId, string action, string? targetItemId, CancellationToken cancellationToken)
+    public async Task Log(long telegramUserId, string action, string? targetItemId, CancellationToken cancellationToken)
     {
         var entry = new AuditEntry(Guid.NewGuid(), DateTime.UtcNow, telegramUserId, action, targetItemId, AuditConstants.Sources.Telegram);
 

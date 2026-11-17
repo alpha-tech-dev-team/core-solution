@@ -31,7 +31,7 @@ public sealed class SubmitPhoneHandler : SubmitPhoneHandlerBase
 
         if (result.IsSuccess && request.Phone is not null)
         {
-            await _auditLogger.LogAsync(request.TelegramUserId, AuditConstants.Actions.SubmitPhone, targetItemId: null, cancellationToken);
+            await _auditLogger.Log(request.TelegramUserId, AuditConstants.Actions.SubmitPhone, targetItemId: null, cancellationToken);
         }
 
         return result;
