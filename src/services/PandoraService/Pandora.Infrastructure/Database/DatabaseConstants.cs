@@ -1,3 +1,5 @@
+using Pandora.Domain.Constants;
+
 namespace Pandora.Infrastructure.Database;
 
 public static class DatabaseConstants
@@ -12,7 +14,7 @@ public static class DatabaseConstants
         public const string AttemptCount = "attempt_count";
         public const string NextAttemptAt = "next_attempt_at";
         public const string LastError = "last_error";
-        public const int VaultItemIdMaxLength = 36;
+        public const int VaultItemIdMaxLength = SecretMetadataLimits.VaultItemIdMaxLength;
         public const int ResourceNameMaxLength = 100;
         public const int UsernameMaxLength = 100;
         public const int SyncOperationMaxLength = 20;
@@ -27,7 +29,7 @@ public static class DatabaseConstants
         public const string IsActive = "is_active";
         public const string GrantedAt = "granted_at";
         public const string GrantedBy = "granted_by";
-        public const int VaultItemIdMaxLength = 36;
+        public const int VaultItemIdMaxLength = SecretMetadataLimits.VaultItemIdMaxLength;
         public const bool IsActiveDefault = true;
     }
 

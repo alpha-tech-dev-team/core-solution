@@ -17,9 +17,11 @@ public static class EmployeeSecretsEndpoints
         group.MapGet(ApiRoutes.EmployeeSecrets, List)
             .AddEndpointFilter<ValidationFilter<GetEmployeeSecretsMessage>>();
         group.MapPut(ApiRoutes.EmployeeSecretById, Grant)
-            .AddEndpointFilter<RequestContextFilter>();
+            .AddEndpointFilter<RequestContextFilter>()
+            .AddEndpointFilter<ValidationFilter<GrantSecretAccessMessage>>();
         group.MapDelete(ApiRoutes.EmployeeSecretById, Revoke)
-            .AddEndpointFilter<RequestContextFilter>();
+            .AddEndpointFilter<RequestContextFilter>()
+            .AddEndpointFilter<ValidationFilter<RevokeSecretAccessMessage>>();
 
         return endpoints;
     }
