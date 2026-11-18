@@ -1,4 +1,3 @@
-using CoreSolution.Shared.Pagination;
 using CoreSolution.Shared.Results;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -34,7 +33,7 @@ public sealed class GetSecretsHandler : IRequestHandler<GetSecretsMessage, Resul
     public async Task<Result<SecretListPage>> Handle(GetSecretsMessage request, CancellationToken cancellationToken)
     {
         var dbPage = await _metadataRepository.GetPage(
-            new SecretPageMessage(request.ToPageRequest(), SecretSorting.ByResourceName),
+            new SecretPageMessage(request, SecretSorting.ByResourceName),
             cancellationToken);
 
         if (request.IncludePasswords is not true)

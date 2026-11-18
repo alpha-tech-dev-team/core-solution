@@ -9,11 +9,13 @@ public static class PaginationValidatorExtensions
         where T : PagedMessage
     {
         validator.RuleFor(message => message.Page)
-            .GreaterThanOrEqualTo(PaginationLimits.DefaultPage)
-            .When(message => message.Page.HasValue);
+            .Cascade(CascadeMode.Stop)
+            .NotNull()
+            .GreaterThanOrEqualTo(PaginationLimits.FirstPage);
 
         validator.RuleFor(message => message.PageSize)
-            .InclusiveBetween(PaginationLimits.MinPageSize, PaginationLimits.MaxPageSize)
-            .When(message => message.PageSize.HasValue);
+            .Cascade(CascadeMode.Stop)
+            .NotNull()
+            .InclusiveBetween(PaginationLimits.MinPageSize, PaginationLimits.MaxPageSize);
     }
 }

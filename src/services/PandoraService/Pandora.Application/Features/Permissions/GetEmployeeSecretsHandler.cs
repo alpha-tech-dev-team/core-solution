@@ -1,4 +1,3 @@
-using CoreSolution.Shared.Pagination;
 using CoreSolution.Shared.Results;
 using MediatR;
 using Pandora.Application.Features.Secrets.Common;
@@ -22,7 +21,7 @@ public sealed class GetEmployeeSecretsHandler : IRequestHandler<GetEmployeeSecre
     {
         var result = await _permissionRepository.GetPage(
             request.TelegramUserId,
-            new SecretPageMessage(request.ToPageRequest(), SecretSorting.ByResourceName),
+            new SecretPageMessage(request, SecretSorting.ByResourceName),
             cancellationToken);
 
         return Result<EmployeeSecretPage>.Success(result);

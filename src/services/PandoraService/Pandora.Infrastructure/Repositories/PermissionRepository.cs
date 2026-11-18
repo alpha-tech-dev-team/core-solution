@@ -43,8 +43,8 @@ public sealed class PermissionRepository : IPermissionRepository
         var total = await source.CountAsync(cancellationToken);
 
         var items = await message.OrderBy(source)
-            .Skip(message.Page.Skip)
-            .Take(message.Page.PageSize)
+            .Skip(message.Paging.Skip)
+            .Take(message.Paging.EffectivePageSize)
             .Select(metadata => new EmployeeSecretItem(
                 metadata.VaultItemId,
                 metadata.ResourceName,
@@ -54,7 +54,7 @@ public sealed class PermissionRepository : IPermissionRepository
                     && permission.IsActive)))
             .ToListAsync(cancellationToken);
 
-        return new EmployeeSecretPage(items, message.Page.Page, message.Page.PageSize, total);
+        return new EmployeeSecretPage(items, message.Paging.EffectivePage, message.Paging.EffectivePageSize, total);
     }
 
     public async Task<SecretAccessGrantResult> Grant(

@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Pandora.Domain.Constants;
 using Pandora.Domain.Entities;
 using Pandora.Domain.Enums;
 using Pandora.Domain.Interfaces;
@@ -26,12 +25,12 @@ public sealed class SecretMetadataRepository : ISecretMetadataRepository
         var total = await source.CountAsync(cancellationToken);
 
         var items = await message.OrderBy(source)
-            .Skip(message.Page.Skip)
-            .Take(message.Page.PageSize)
+            .Skip(message.Paging.Skip)
+            .Take(message.Paging.EffectivePageSize)
             .Select(metadata => new SecretPageItem(metadata.VaultItemId, metadata.ResourceName, metadata.Username, null))
             .ToListAsync(cancellationToken);
 
-        return new SecretListPage(items, message.Page.Page, message.Page.PageSize, total);
+        return new SecretListPage(items, message.Paging.EffectivePage, message.Paging.EffectivePageSize, total);
     }
 
     public async Task<SecretMetadata?> GetById(string vaultItemId, CancellationToken cancellationToken)
