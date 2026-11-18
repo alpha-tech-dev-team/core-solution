@@ -22,7 +22,7 @@ public sealed class UserActivityBehavior<TRequest, TResponse> : IPipelineBehavio
 
         if (request is IUserActionMessage userAction && response.IsSuccess && !cancellationToken.IsCancellationRequested)
         {
-            await _auditLogger.LogAsync(userAction, cancellationToken);
+            await _auditLogger.Log(userAction, cancellationToken);
         }
 
         return response;

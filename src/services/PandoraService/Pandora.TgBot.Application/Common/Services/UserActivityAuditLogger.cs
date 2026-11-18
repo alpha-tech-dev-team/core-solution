@@ -22,7 +22,7 @@ public sealed class UserActivityAuditLogger
         _logger = logger;
     }
 
-    public Task LogAsync(IUserActionMessage userAction, CancellationToken cancellationToken)
+    public Task Log(IUserActionMessage userAction, CancellationToken cancellationToken)
     {
         return Log(userAction.TelegramUserId, userAction.Action, userAction.TargetItemId, cancellationToken);
     }

@@ -4,12 +4,46 @@ import { EMPLOYEES_PAGE_SIZE, FIRST_PAGE } from '@/constants/pagination'
 import { formatEmployeeName } from '@/utils/employee-name'
 import type { EmployeesPage } from '@/stores/models/employees-page'
 
+const EMPLOYEE_NAME_REFRESH_INTERVAL_MS = 60_000
+
 export interface EmployeeNames {
   byId: ReadonlyMap<string, string>
   byTelegramId: ReadonlyMap<number, string>
 }
 
-export async function fetchEmployeeNames(): Promise<EmployeeNames> {
+let employeeNamesCache: EmployeeNames | undefined
+let employeeNamesRequest: Promise<EmployeeNames> | undefined
+let lastEmployeeNamesRefresh = Number.NEGATIVE_INFINITY
+
+export function fetchEmployeeNames(): Promise<EmployeeNames> {
+  if (employeeNamesCache !== undefined) return Promise.resolve(employeeNamesCache)
+  if (employeeNamesRequest !== undefined) return employeeNamesRequest
+
+  return requestEmployeeNames()
+}
+
+export function refreshEmployeeNames(): Promise<EmployeeNames> {
+  if (employeeNamesRequest !== undefined) return employeeNamesRequest
+  if (Date.now() - lastEmployeeNamesRefresh < EMPLOYEE_NAME_REFRESH_INTERVAL_MS) return fetchEmployeeNames()
+
+  return requestEmployeeNames(true)
+}
+
+function requestEmployeeNames(forceRefresh = false): Promise<EmployeeNames> {
+  employeeNamesRequest = loadEmployeeNames()
+    .then((names) => {
+      employeeNamesCache = names
+      if (forceRefresh) lastEmployeeNamesRefresh = Date.now()
+      return names
+    })
+    .finally(() => {
+      employeeNamesRequest = undefined
+    })
+
+  return employeeNamesRequest
+}
+
+async function loadEmployeeNames(): Promise<EmployeeNames> {
   const byId = new Map<string, string>()
   const byTelegramId = new Map<number, string>()
 
@@ -32,7 +66,7 @@ export async function fetchEmployeeNames(): Promise<EmployeeNames> {
       }
     }
 
-    if (page * EMPLOYEES_PAGE_SIZE >= data.total) {
+    if (data.items.length === 0 || data.page * data.pageSize >= data.total) {
       return { byId, byTelegramId }
     }
   }

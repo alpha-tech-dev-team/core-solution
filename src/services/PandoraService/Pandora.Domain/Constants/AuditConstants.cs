@@ -8,6 +8,7 @@ public static class AuditConstants
     public const string SourceWeb = "web";
 
     public const string AuditChannel = "audit:new";
+    public const int SearchMaxLength = 200;
 
     public static class Actions
     {

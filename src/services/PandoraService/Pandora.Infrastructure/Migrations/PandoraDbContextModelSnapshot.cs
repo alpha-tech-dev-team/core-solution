@@ -60,7 +60,13 @@ namespace Pandora.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Action");
+
+                    b.HasIndex("RequestSource");
+
                     b.HasIndex("TelegramUserId");
+
+                    b.HasIndex("Timestamp");
 
                     b.HasIndex("UserId");
 

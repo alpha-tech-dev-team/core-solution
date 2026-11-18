@@ -65,14 +65,37 @@ namespace Pandora.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_audit_action",
+                table: "audit",
+                column: "action");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_audit_request_source",
+                table: "audit",
+                column: "request_source");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_audit_telegram_user_id",
                 table: "audit",
                 column: "telegram_user_id");
 
             migrationBuilder.CreateIndex(
+                name: "IX_audit_timestamp",
+                table: "audit",
+                column: "timestamp");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_audit_user_id",
                 table: "audit",
                 column: "user_id");
+
+            // ILIKE '%substring%' cannot use B-tree indexes; trigram GIN indexes keep the audit search off a sequential scan.
+            migrationBuilder.Sql("CREATE EXTENSION IF NOT EXISTS pg_trgm;");
+            migrationBuilder.Sql("CREATE INDEX ix_audit_action_trgm ON audit USING gin (action gin_trgm_ops);");
+            migrationBuilder.Sql("CREATE INDEX ix_audit_target_item_id_trgm ON audit USING gin (target_item_id gin_trgm_ops);");
+            migrationBuilder.Sql("CREATE INDEX ix_audit_request_source_trgm ON audit USING gin (request_source gin_trgm_ops);");
+            migrationBuilder.Sql("CREATE INDEX ix_audit_user_id_text_trgm ON audit USING gin ((user_id::text) gin_trgm_ops);");
+            migrationBuilder.Sql("CREATE INDEX ix_audit_telegram_user_id_text_trgm ON audit USING gin ((telegram_user_id::text) gin_trgm_ops);");
 
             migrationBuilder.CreateIndex(
                 name: "IX_permissions_vault_item_id",

@@ -12,13 +12,15 @@ import {
   AUDIT_DEFAULT_SORT_DIRECTION,
   AUDIT_SORT_ARIA_VALUES,
   AUDIT_SORT_INDICATOR_CLASSES,
+  AUDIT_SEARCH_MAX_LENGTH,
   AUDIT_SEARCH_DEBOUNCE_MS,
+  AUDIT_LIVE_REFRESH_DEBOUNCE_MS,
   AUDIT_SORT_FIELDS
 } from '@/constants/audit'
 import type { AuditSortAriaValue } from '@/constants/audit'
 import { toRequestError } from '@/api/request-error'
 import { fetchAuditEntries } from '@/api/audit'
-import { fetchEmployeeNames, type EmployeeNames } from '@/api/employees'
+import { fetchEmployeeNames, refreshEmployeeNames, type EmployeeNames } from '@/api/employees'
 import { createAuditHubConnection } from '@/api/audit-hub'
 import { API_SORT_DIRECTION, type AuditEntry, type AuditQuery } from '@/stores/models/audit-entry'
 
@@ -29,9 +31,12 @@ const entries = ref<AuditEntry[]>([])
 const employeeNames = ref<EmployeeNames>({ byId: new Map(), byTelegramId: new Map() })
 const areEmployeeNamesLoading = ref(false)
 const page = ref(FIRST_PAGE)
+const pageSize = ref(AUDIT_PAGE_SIZE)
 const total = ref(0)
 const isLoading = ref(false)
 const errorMessage = ref('')
+let entriesRequestId = 0
+let liveRefreshTimer: number | undefined
 
 const query = reactive<AuditQuery>({
   search: '',
@@ -52,22 +57,37 @@ const isDefaultView = computed(() =>
   && query.sortDirection === AUDIT_DEFAULT_SORT_DIRECTION
 )
 
-const totalPages = computed(() => Math.max(FIRST_PAGE, Math.ceil(total.value / AUDIT_PAGE_SIZE)))
+const totalPages = computed(() => Math.max(FIRST_PAGE, Math.ceil(total.value / pageSize.value)))
 const canGoBack = computed(() => page.value > FIRST_PAGE)
 const canGoForward = computed(() => page.value < totalPages.value)
 
 async function loadEntries() {
+  const requestId = ++entriesRequestId
+  const requestedPage = page.value
   isLoading.value = true
   errorMessage.value = ''
 
   try {
-    const result = await fetchAuditEntries(page.value, AUDIT_PAGE_SIZE, query)
+    const result = await fetchAuditEntries(requestedPage, pageSize.value, query)
+    if (requestId !== entriesRequestId) return
+
+    const lastPage = Math.max(FIRST_PAGE, Math.ceil(result.total / result.pageSize))
+    if (result.page > lastPage) {
+      page.value = lastPage
+      await loadEntries()
+      return
+    }
+
     entries.value = result.items
+    page.value = result.page
+    pageSize.value = result.pageSize
     total.value = result.total
   } catch (error) {
-    errorMessage.value = trRequestError(toRequestError(error))
+    if (requestId === entriesRequestId) {
+      errorMessage.value = trRequestError(toRequestError(error))
+    }
   } finally {
-    isLoading.value = false
+    if (requestId === entriesRequestId) isLoading.value = false
   }
 }
 
@@ -154,6 +174,16 @@ async function loadEmployeeNames() {
   }
 }
 
+async function refreshUnknownActor(entry: AuditEntry) {
+  if (knowsActor(entry)) return
+
+  try {
+    employeeNames.value = await refreshEmployeeNames()
+  } catch (error) {
+    console.error('Не удалось обновить список сотрудников для журнала действий', error)
+  }
+}
+
 async function changePage(target: number) {
   if (target < FIRST_PAGE || target > totalPages.value || target === page.value) return
 
@@ -175,15 +205,20 @@ function addLiveEntry(entry: AuditEntry) {
     total.value += 1
 
     if (page.value === FIRST_PAGE) {
-      entries.value = [entry, ...entries.value]
+      entries.value = [entry, ...entries.value].slice(0, pageSize.value)
+    } else {
+      scheduleLiveRefresh()
     }
   } else {
-    void loadEntries()
+    scheduleLiveRefresh()
   }
 
-  if (!knowsActor(entry)) {
-    void loadEmployeeNames()
-  }
+  void refreshUnknownActor(entry)
+}
+
+function scheduleLiveRefresh() {
+  window.clearTimeout(liveRefreshTimer)
+  liveRefreshTimer = window.setTimeout(() => void loadEntries(), AUDIT_LIVE_REFRESH_DEBOUNCE_MS)
 }
 
 async function startLiveUpdates() {
@@ -201,7 +236,9 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  entriesRequestId += 1
   window.clearTimeout(searchTimer)
+  window.clearTimeout(liveRefreshTimer)
   void auditHub.stop()
 })
 </script>
@@ -222,6 +259,7 @@ onUnmounted(() => {
           v-model="query.search"
           type="search"
           class="audit__search"
+          :maxlength="AUDIT_SEARCH_MAX_LENGTH"
           :placeholder="tr(RESOURCE_KEYS.AUDIT_SEARCH_PLACEHOLDER)"
           @input="onSearchInput"
         />

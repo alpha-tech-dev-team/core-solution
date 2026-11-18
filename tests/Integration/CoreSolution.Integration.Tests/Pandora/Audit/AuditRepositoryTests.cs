@@ -244,6 +244,28 @@ public sealed class AuditRepositoryTests(IntegrationFixture fixture)
         Assert.Equal(["get_credentials", "show_services"], page.Items.Select(entry => entry.Action));
     }
 
+    [Fact]
+    public async Task GetPage_SortFieldIsCaseInsensitive()
+    {
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+        using var scope = provider.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<PandoraDbContext>();
+        var repository = new AuditRepository(database);
+
+        await database.AuditEntry.ExecuteDeleteAsync();
+        await database.SaveChangesAsync();
+
+        database.AuditEntry.AddRange(
+            CreateEntry(DateTime.UtcNow, "show_services"),
+            CreateEntry(DateTime.UtcNow, "get_credentials"));
+        await database.SaveChangesAsync();
+
+        var page = await repository.GetPage(
+            1, 10, EmptyFilter with { SortBy = "action", SortDirection = SortDirection.Ascending }, CancellationToken.None);
+
+        Assert.Equal(["get_credentials", "show_services"], page.Items.Select(entry => entry.Action));
+    }
+
     private static AuditEntry CreateEntry(DateTime timestamp, string action) =>
         new(Guid.NewGuid(), timestamp, telegramUserId: 0, action, targetItemId: null, requestSource: "telegram");
 }

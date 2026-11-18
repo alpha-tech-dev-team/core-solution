@@ -50,13 +50,13 @@ public sealed class AuditRepository : IAuditRepository
     {
         if (!string.IsNullOrWhiteSpace(filter.Search))
         {
-            var search = filter.Search.Trim().ToLowerInvariant();
+            var search = $"%{EscapeLikePattern(filter.Search.Trim())}%";
             query = query.Where(entry =>
-                entry.Action.ToLower().Contains(search) ||
-                (entry.TargetItemId != null && entry.TargetItemId.ToLower().Contains(search)) ||
-                entry.RequestSource.ToLower().Contains(search) ||
-                (entry.UserId != null && entry.UserId.Value.ToString().Contains(search)) ||
-                (entry.TelegramUserId != null && entry.TelegramUserId.Value.ToString().Contains(search)));
+                EF.Functions.ILike(entry.Action, search, "\\") ||
+                (entry.TargetItemId != null && EF.Functions.ILike(entry.TargetItemId, search, "\\")) ||
+                EF.Functions.ILike(entry.RequestSource, search, "\\") ||
+                (entry.UserId != null && EF.Functions.ILike(entry.UserId.Value.ToString(), search, "\\")) ||
+                (entry.TelegramUserId != null && EF.Functions.ILike(entry.TelegramUserId.Value.ToString(), search, "\\")));
         }
 
         if (!string.IsNullOrWhiteSpace(filter.Action))
@@ -72,11 +72,16 @@ public sealed class AuditRepository : IAuditRepository
         return query;
     }
 
+    private static string EscapeLikePattern(string value)
+    {
+        return value.Replace("\\", "\\\\", StringComparison.Ordinal)
+            .Replace("%", "\\%", StringComparison.Ordinal)
+            .Replace("_", "\\_", StringComparison.Ordinal);
+    }
+
     private static IQueryable<AuditEntry> ApplySorting(IQueryable<AuditEntry> query, AuditEntryFilter filter)
     {
-        var sortField = filter.SortBy is not null && AuditEntrySortFields.Fields.ContainsKey(filter.SortBy)
-            ? filter.SortBy
-            : AuditEntrySortFields.Default;
+        var sortField = AuditEntrySortFields.Resolve(filter.SortBy);
         var selector = AuditEntrySortFields.Fields[sortField];
         var ordered = filter.SortDirection == SortDirection.Ascending
             ? query.OrderBy(selector)

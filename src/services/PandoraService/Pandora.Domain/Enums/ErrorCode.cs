@@ -13,5 +13,6 @@ public enum ErrorCode
     InvalidPageSize,
     InvalidSortField,
     InvalidSortDirection,
+    InvalidSearch,
     InternalError
 }

@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Pandora.Domain.Entities;
@@ -9,7 +10,7 @@ public sealed class AuditSaveChangesInterceptor : SaveChangesInterceptor
 {
     private readonly IAuditContext _auditContext;
     private readonly IAuditNotifier? _auditNotifier;
-    private readonly List<AuditEntry> _pendingNotifications = [];
+    private readonly ConditionalWeakTable<DbContext, List<AuditEntry>> _pendingByContext = new();
 
     public AuditSaveChangesInterceptor(IAuditContext auditContext, IAuditNotifier? auditNotifier = null)
     {
@@ -34,31 +35,53 @@ public sealed class AuditSaveChangesInterceptor : SaveChangesInterceptor
         return base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 
+    public override int SavedChanges(SaveChangesCompletedEventData eventData, int result)
+    {
+        PublishAfterCommit(eventData.Context);
+
+        return base.SavedChanges(eventData, result);
+    }
+
     public override async ValueTask<int> SavedChangesAsync(
         SaveChangesCompletedEventData eventData,
         int result,
         CancellationToken cancellationToken = default)
     {
-        if (_auditNotifier is not null)
-        {
-            foreach (var entry in _pendingNotifications)
-            {
-                await _auditNotifier.NotifyAsync(entry);
-            }
-        }
-
-        _pendingNotifications.Clear();
+        await PublishAfterCommitAsync(eventData.Context);
 
         return await base.SavedChangesAsync(eventData, result, cancellationToken);
+    }
+
+    public override void SaveChangesFailed(DbContextErrorEventData eventData)
+    {
+        RemovePending(eventData.Context);
+
+        base.SaveChangesFailed(eventData);
     }
 
     public override Task SaveChangesFailedAsync(
         DbContextErrorEventData eventData,
         CancellationToken cancellationToken = default)
     {
-        _pendingNotifications.Clear();
+        RemovePending(eventData.Context);
 
         return base.SaveChangesFailedAsync(eventData, cancellationToken);
+    }
+
+    public override void SaveChangesCanceled(DbContextEventData eventData)
+    {
+        RemovePending(eventData.Context);
+
+        base.SaveChangesCanceled(eventData);
+    }
+
+    public override Task SaveChangesCanceledAsync(
+        DbContextEventData eventData,
+        CancellationToken cancellationToken = default)
+    {
+        RemovePending(eventData.Context);
+
+        return base.SaveChangesCanceledAsync(eventData, cancellationToken);
     }
 
     private void AddAuditEntries(DbContext? context)
@@ -68,10 +91,62 @@ public sealed class AuditSaveChangesInterceptor : SaveChangesInterceptor
             return;
         }
 
+        var pending = _pendingByContext.GetOrCreateValue(context);
+
         foreach (var entry in _auditContext.TakeAll())
         {
             context.Add(entry);
-            _pendingNotifications.Add(entry);
+            pending.Add(entry);
+        }
+    }
+
+    private void PublishAfterCommit(DbContext? context)
+    {
+        if (_auditNotifier is null)
+        {
+            RemovePending(context);
+
+            return;
+        }
+
+        foreach (var entry in TakePending(context))
+        {
+            // Only sync SaveChanges reaches this path, and the app does not use it; blocking here is a deliberate fallback.
+            _auditNotifier.NotifyAsync(entry).GetAwaiter().GetResult();
+        }
+    }
+
+    private async Task PublishAfterCommitAsync(DbContext? context)
+    {
+        var pending = TakePending(context);
+        if (_auditNotifier is null)
+        {
+            return;
+        }
+
+        foreach (var entry in pending)
+        {
+            await _auditNotifier.NotifyAsync(entry);
+        }
+    }
+
+    private IReadOnlyList<AuditEntry> TakePending(DbContext? context)
+    {
+        if (context is null || !_pendingByContext.TryGetValue(context, out var pending))
+        {
+            return [];
+        }
+
+        _pendingByContext.Remove(context);
+
+        return pending;
+    }
+
+    private void RemovePending(DbContext? context)
+    {
+        if (context is not null)
+        {
+            _pendingByContext.Remove(context);
         }
     }
 }

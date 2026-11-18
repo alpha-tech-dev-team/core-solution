@@ -15,11 +15,6 @@ export interface AuditEntryPage {
   total: number
 }
 
-export enum SortDirection {
-  Ascending = 'Ascending',
-  Descending = 'Descending'
-}
-
 export interface AuditQuery {
   search?: string
   action?: string

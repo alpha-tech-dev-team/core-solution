@@ -21,7 +21,7 @@ public sealed class SecretMetadataConfiguration : IEntityTypeConfiguration<Secre
             .HasDefaultValue(SecretSyncOperation.None);
         builder.Property(e => e.AttemptCount)
             .HasColumnName(DatabaseConstants.SecretMetadata.AttemptCount)
-            .HasDefaultValue(0);
+            .HasDefaultValue(SecretMetadata.DefaultAttemptCount);
         builder.Property(e => e.NextAttemptAt).HasColumnName(DatabaseConstants.SecretMetadata.NextAttemptAt);
         builder.Property(e => e.LastError)
             .HasColumnName(DatabaseConstants.SecretMetadata.LastError)

@@ -27,7 +27,7 @@ public static class PagedMessageValidatorExtensions
         where TMessage : PagedMessage, ISortMessage
     {
         validator.RuleFor(message => message.SortBy)
-            .Must(field => field is null || sortFields.Contains(field, StringComparer.Ordinal))
+            .Must(field => field is null || sortFields.Contains(field, StringComparer.OrdinalIgnoreCase))
             .WithErrorCode(nameof(ErrorCode.InvalidSortField));
 
         validator.RuleFor(message => message.SortDirection)

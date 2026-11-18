@@ -7,6 +7,7 @@ using Pandora.Domain.Entities;
 using Pandora.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Pandora.Domain.Constants;
 using Xunit;
 
 namespace CoreSolution.Integration.Tests.PandoraTests;
@@ -85,6 +86,22 @@ public sealed class AuditEndpointTests(IntegrationFixture fixture)
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Equal("InvalidSortDirection", await ReadValidationCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task GetAudit_WithTooLongSearch_ReturnsBadRequest()
+    {
+        var cookie = await LoginAsAdminAsync();
+        using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add("Cookie", cookie);
+
+        var search = new string('a', AuditConstants.SearchMaxLength + 1);
+
+        var response = await client.GetAsync($"{AuditRoute}?search={search}");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("InvalidSearch", await ReadValidationCodeAsync(response));
     }
 
     [Fact]

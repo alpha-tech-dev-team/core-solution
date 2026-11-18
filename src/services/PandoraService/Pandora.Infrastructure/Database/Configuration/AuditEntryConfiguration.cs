@@ -19,5 +19,8 @@ public sealed class AuditEntryConfiguration : IEntityTypeConfiguration<AuditEntr
         builder.Property(e => e.RequestSource).HasColumnName(DatabaseConstants.Audit.RequestSource).HasMaxLength(DatabaseConstants.Audit.RequestSourceMaxLength);
         builder.HasIndex(e => e.UserId);
         builder.HasIndex(e => e.TelegramUserId);
+        builder.HasIndex(e => e.Timestamp);
+        builder.HasIndex(e => e.Action);
+        builder.HasIndex(e => e.RequestSource);
     }
 }

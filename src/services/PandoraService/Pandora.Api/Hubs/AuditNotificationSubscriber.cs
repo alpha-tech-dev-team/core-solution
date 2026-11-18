@@ -29,7 +29,14 @@ public sealed class AuditNotificationSubscriber : BackgroundService
         var queue = await _redis.GetSubscriber().SubscribeAsync(RedisAuditNotifier.Channel);
         queue.OnMessage(BroadcastAsync);
 
-        await Task.Delay(Timeout.Infinite, stoppingToken);
+        try
+        {
+            await Task.Delay(Timeout.Infinite, stoppingToken);
+        }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        {
+            await queue.UnsubscribeAsync();
+        }
     }
 
     private async Task BroadcastAsync(ChannelMessage message)

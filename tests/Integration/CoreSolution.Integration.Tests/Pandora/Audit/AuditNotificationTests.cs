@@ -27,6 +27,22 @@ public sealed class AuditNotificationTests(IntegrationFixture fixture)
     }
 
     [Fact]
+    public void SaveChangesSync_AfterAuditEnqueued_PublishesEntryAfterCommit()
+    {
+        var notifier = new RecordingAuditNotifier();
+        var auditContext = new AuditContext();
+        using var database = CreateDatabase(auditContext, notifier);
+        var entry = CreateEntry();
+        auditContext.Enqueue(entry);
+
+        database.SaveChanges();
+
+        var published = Assert.Single(notifier.Published);
+        Assert.Equal(entry.Id, published.Id);
+        Assert.True(database.AuditEntry.Any(item => item.Id == entry.Id));
+    }
+
+    [Fact]
     public async Task SaveChanges_WhenCommitFails_PublishesNothing()
     {
         var notifier = new RecordingAuditNotifier();
