@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Pandora.Application.Features.Secrets.Common;
 using Pandora.Domain.Constants;
+using Pandora.Domain.Enums;
 using Pandora.Domain.Interfaces;
 using Pandora.Domain.Models;
 
@@ -41,32 +42,30 @@ public sealed class GetSecretsHandler : IRequestHandler<GetSecretsMessage, Resul
             return Result<SecretListPage>.Success(dbPage);
         }
 
-        var passwordsResult = await _vaultReader.GetListItems(cancellationToken);
+        var pageItemIds = dbPage.Items.Select(item => item.Id).ToList();
+
+        var passwordsResult = await _vaultReader.GetPasswords(pageItemIds, cancellationToken);
 
         if (passwordsResult.Value is null)
         {
-            _logger.LogWarning(
-                "Пароли не получены из Vaultwarden ({ErrorCode}), список отдан без паролей",
-                passwordsResult.ErrorCode);
+            _logger.LogWarning("Vaultwarden не вернул пароли ({ErrorCode})", passwordsResult.ErrorCode);
 
-            return Result<SecretListPage>.Success(dbPage);
+            return Result<SecretListPage>.Failure(ErrorCode.VaultwardenUnavailable.ToString());
         }
 
-        var passwordsById = passwordsResult.Value
-            .GroupBy(item => item.Id)
-            .ToDictionary(group => group.Key, group => group.First().Password);
-
         var items = dbPage.Items
-            .Select(item => passwordsById.TryGetValue(item.Id, out var password)
+            .Select(item => passwordsResult.Value.TryGetValue(item.Id, out var password)
                 ? item with { Password = password }
                 : item)
             .ToList();
 
-        foreach (var item in items.Where(item => item.Password is not null))
+        foreach (var item in items)
         {
             await _auditLogger.LogActionAsync(
                 request.AdminUserId,
-                AuditConstants.ActionSecretPasswordsViewed,
+                item.Password is null
+                    ? AuditConstants.ActionSecretListViewed
+                    : AuditConstants.ActionSecretPasswordsViewed,
                 item.Id,
                 cancellationToken);
         }

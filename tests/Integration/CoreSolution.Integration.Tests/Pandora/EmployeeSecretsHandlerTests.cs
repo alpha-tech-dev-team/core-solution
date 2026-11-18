@@ -1,4 +1,4 @@
-using CoreSolution.Shared.Pagination;
+﻿using CoreSolution.Shared.Pagination;
 using CoreSolution.Shared.Results;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -10,7 +10,6 @@ using Pandora.Domain.Constants;
 using Pandora.Domain.Entities;
 using Pandora.Domain.Enums;
 using Pandora.Domain.Interfaces;
-using Pandora.Domain.Models;
 using Pandora.Infrastructure.Database;
 using Pandora.Infrastructure.Repositories;
 using Xunit;
@@ -115,7 +114,7 @@ public sealed class EmployeeSecretsHandlerTests(IntegrationFixture fixture)
     }
 
     [Fact]
-    public async Task GetSecrets_WithPasswords_AuditsOnlyRevealedSecrets()
+    public async Task GetSecrets_WithPasswords_AuditsEverySecretOnPage()
     {
         await using var provider = await fixture.CreatePandoraServiceProviderAsync();
         using var scope = provider.CreateScope();
@@ -141,9 +140,15 @@ public sealed class EmployeeSecretsHandlerTests(IntegrationFixture fixture)
         Assert.Equal("revealed-password", result.Value!.Items.Single(secret => secret.Id == revealedId).Password);
         Assert.Null(result.Value.Items.Single(secret => secret.Id == missingId).Password);
 
-        var entry = Assert.Single(auditSaver.Entries);
+        var revealedEntry = Assert.Single(auditSaver.Entries, entry => entry.TargetItemId == revealedId);
+        var missingEntry = Assert.Single(auditSaver.Entries, entry => entry.TargetItemId == missingId);
 
-        Assert.Equal(revealedId, entry.TargetItemId);
+        Assert.Equal(AuditConstants.ActionSecretPasswordsViewed, revealedEntry.Action);
+        Assert.Equal(AuditConstants.ActionSecretListViewed, missingEntry.Action);
+
+        Assert.Equal(
+            result.Value.Items.Count,
+            auditSaver.Entries.Select(entry => entry.TargetItemId).Distinct().Count());
     }
 
     [Fact]
@@ -327,13 +332,13 @@ public sealed class EmployeeSecretsHandlerTests(IntegrationFixture fixture)
     }
 
     [Fact]
-    public async Task GetSecrets_VaultUnavailable_StillReturnsDatabasePage()
+    public async Task GetSecrets_VaultUnavailable_ReturnsVaultwardenUnavailable()
     {
         await using var provider = await fixture.CreatePandoraServiceProviderAsync();
         using var scope = provider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<PandoraDbContext>();
 
-        var itemId = await AddSecret(context, "integration-vault-down-secret");
+        await AddSecret(context, "integration-vault-down-secret");
         var auditSaver = new CapturingAuditSaver(new AuditContext());
         var handler = CreateGetSecretsHandler(
             context,
@@ -349,13 +354,48 @@ public sealed class EmployeeSecretsHandlerTests(IntegrationFixture fixture)
             },
             CancellationToken.None);
 
-        Assert.True(result.IsSuccess);
+        Assert.False(result.IsSuccess);
+        Assert.Equal(
+            Pandora.Domain.Enums.ErrorCode.VaultwardenUnavailable.ToString(),
+            result.ErrorCode);
 
-        var item = result.Value!.Items.Single(secret => secret.Id == itemId);
-
-        Assert.Null(item.Password);
         Assert.Equal(0, auditSaver.SaveCount);
         Assert.Empty(auditSaver.Entries);
+    }
+
+    [Fact]
+    public async Task GetSecrets_RequestedOnlyPagePasswords()
+    {
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+        using var scope = provider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<PandoraDbContext>();
+
+        var firstId = await AddSecret(context, "integration-page-a");
+        var secondId = await AddSecret(context, "integration-page-b");
+        var vaultReader = new StubVaultReader(
+            (firstId, "first-password"),
+            (secondId, "second-password"));
+        var handler = CreateGetSecretsHandler(
+            context,
+            vaultReader,
+            new CapturingAuditSaver(new AuditContext()));
+
+        var result = await handler.Handle(
+            new GetSecretsMessage
+            {
+                Page = PaginationLimits.FirstPage,
+                PageSize = PaginationLimits.MaxPageSize,
+                IncludePasswords = true
+            },
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+
+        var pageIds = result.Value!.Items.Select(item => item.Id).ToList();
+
+        Assert.NotNull(vaultReader.RequestedIds);
+        Assert.Equal(pageIds.Count, vaultReader.RequestedIds!.Count);
+        Assert.All(vaultReader.RequestedIds, id => Assert.Contains(id, pageIds));
     }
 
     private static T WithAdmin<T>(T message, Guid adminUserId)
@@ -410,24 +450,37 @@ public sealed class EmployeeSecretsHandlerTests(IntegrationFixture fixture)
 
         public int CallCount { get; private set; }
 
-        public Task<Result<IReadOnlyList<SecretPageItem>>> GetListItems(CancellationToken cancellationToken)
+        public IReadOnlyCollection<string>? RequestedIds { get; private set; }
+
+        public Task<Result<IReadOnlyDictionary<string, string>>> GetPasswords(
+            IReadOnlyCollection<string> itemIds,
+            CancellationToken cancellationToken)
         {
             CallCount += 1;
+            RequestedIds = itemIds;
 
-            IReadOnlyList<SecretPageItem> items = _items
-                .Select(item => new SecretPageItem(item.Id, item.Id, "integration-login", item.Password))
-                .ToList();
+            var passwords = new Dictionary<string, string>();
 
-            return Task.FromResult(Result<IReadOnlyList<SecretPageItem>>.Success(items));
+            foreach (var item in _items)
+            {
+                if (itemIds.Contains(item.Id) && !passwords.ContainsKey(item.Id))
+                {
+                    passwords[item.Id] = item.Password;
+                }
+            }
+
+            return Task.FromResult(Result<IReadOnlyDictionary<string, string>>.Success(passwords));
         }
     }
 
     private sealed class FailingVaultReader : ISecretVaultReader
     {
-        public Task<Result<IReadOnlyList<SecretPageItem>>> GetListItems(CancellationToken cancellationToken)
+        public Task<Result<IReadOnlyDictionary<string, string>>> GetPasswords(
+            IReadOnlyCollection<string> itemIds,
+            CancellationToken cancellationToken)
         {
             return Task.FromResult(
-                Result<IReadOnlyList<SecretPageItem>>.Failure(
+                Result<IReadOnlyDictionary<string, string>>.Failure(
                     Pandora.Domain.Enums.ErrorCode.VaultwardenUnavailable.ToString()));
         }
     }

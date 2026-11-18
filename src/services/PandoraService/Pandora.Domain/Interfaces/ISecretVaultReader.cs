@@ -1,9 +1,10 @@
 using CoreSolution.Shared.Results;
-using Pandora.Domain.Models;
 
 namespace Pandora.Domain.Interfaces;
 
 public interface ISecretVaultReader
 {
-    Task<Result<IReadOnlyList<SecretPageItem>>> GetListItems(CancellationToken cancellationToken);
+    Task<Result<IReadOnlyDictionary<string, string>>> GetPasswords(
+        IReadOnlyCollection<string> itemIds,
+        CancellationToken cancellationToken);
 }

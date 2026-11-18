@@ -90,15 +90,35 @@ public sealed class VaultwardenSecretStore : ISecretStore, ISecretVaultReader
             : Result<IReadOnlyList<SecretItem>>.Success(items.Select(item => new SecretItem(item.Id, item.Name)).ToList());
     }
 
-    public async Task<Result<IReadOnlyList<SecretPageItem>>> GetListItems(CancellationToken cancellationToken)
+    public async Task<Result<IReadOnlyDictionary<string, string>>> GetPasswords(
+        IReadOnlyCollection<string> itemIds,
+        CancellationToken cancellationToken)
     {
         var items = await FetchItems(cancellationToken);
 
-        return items is null
-            ? Result<IReadOnlyList<SecretPageItem>>.Failure(ErrorCode.VaultwardenUnavailable.ToString())
-            : Result<IReadOnlyList<SecretPageItem>>.Success(items
-                .Select(item => new SecretPageItem(item.Id, item.Name, item.Login?.Username ?? string.Empty, item.Login?.Password))
-                .ToList());
+        if (items is null)
+        {
+            return Result<IReadOnlyDictionary<string, string>>.Failure(ErrorCode.VaultwardenUnavailable.ToString());
+        }
+
+        var requestedIds = itemIds.ToHashSet(StringComparer.Ordinal);
+
+        var passwords = new Dictionary<string, string>(StringComparer.Ordinal);
+
+        foreach (var item in items)
+        {
+            if (string.IsNullOrWhiteSpace(item.Id)
+                || !requestedIds.Contains(item.Id)
+                || string.IsNullOrWhiteSpace(item.Login?.Password)
+                || passwords.ContainsKey(item.Id))
+            {
+                continue;
+            }
+
+            passwords[item.Id] = item.Login.Password;
+        }
+
+        return Result<IReadOnlyDictionary<string, string>>.Success(passwords);
     }
 
     private async Task<IReadOnlyList<VaultwardenListItem>?> FetchItems(CancellationToken cancellationToken)

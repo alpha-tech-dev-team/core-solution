@@ -10,7 +10,6 @@ namespace Pandora.Application.Features.Secrets.GetSecrets;
 public sealed record GetSecretsMessage : PagedMessage, IRequest<Result<SecretListPage>>, IAdminUserRequest
 {
     public bool? IncludePasswords { get; init; }
-
     [JsonIgnore]
     public Guid AdminUserId { get; private set; }
 
