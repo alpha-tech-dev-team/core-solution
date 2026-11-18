@@ -89,7 +89,6 @@ namespace Pandora.Infrastructure.Migrations
                 table: "audit",
                 column: "user_id");
 
-            // ILIKE '%substring%' cannot use B-tree indexes; trigram GIN indexes keep the audit search off a sequential scan.
             migrationBuilder.Sql("CREATE EXTENSION IF NOT EXISTS pg_trgm;");
             migrationBuilder.Sql("CREATE INDEX ix_audit_action_trgm ON audit USING gin (action gin_trgm_ops);");
             migrationBuilder.Sql("CREATE INDEX ix_audit_target_item_id_trgm ON audit USING gin (target_item_id gin_trgm_ops);");

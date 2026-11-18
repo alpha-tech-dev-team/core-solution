@@ -111,7 +111,6 @@ public sealed class AuditSaveChangesInterceptor : SaveChangesInterceptor
 
         foreach (var entry in TakePending(context))
         {
-            // Only sync SaveChanges reaches this path, and the app does not use it; blocking here is a deliberate fallback.
             _auditNotifier.NotifyAsync(entry).GetAwaiter().GetResult();
         }
     }
