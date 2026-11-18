@@ -87,6 +87,7 @@
   "error_code_internalError": "Internal server error",
   "error_code_badRequest": "Invalid request",
   "error_code_conflict": "Data conflict",
+  "error_code_Conflict": "Data conflict",
   "secrets_page_prev": "Previous",
   "secrets_page_next": "Next",
   "secrets_page_info": "Page {0} of {1}",

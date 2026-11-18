@@ -12,6 +12,7 @@ internal static class PandoraErrorStatusCodes
             [ErrorCode.InvalidSecretData] = StatusCodes.Status400BadRequest,
             [ErrorCode.MalformedRequest] = StatusCodes.Status400BadRequest,
             [ErrorCode.SecretNotFound] = StatusCodes.Status404NotFound,
+            [ErrorCode.Conflict] = StatusCodes.Status409Conflict,
             [ErrorCode.VaultwardenUnavailable] = StatusCodes.Status503ServiceUnavailable,
             [ErrorCode.DatabaseUnavailable] = StatusCodes.Status503ServiceUnavailable,
             [ErrorCode.InternalError] = StatusCodes.Status500InternalServerError
@@ -54,6 +55,11 @@ internal static class PandoraErrorStatusCodes
 
     private static (int StatusCode, string Code) MapPostgres(PostgresException exception)
     {
+        if (exception.SqlState == PostgresErrorCodes.UniqueViolation)
+        {
+            return Fail(ErrorCode.Conflict);
+        }
+
         return Fail(exception.IsTransient ? ErrorCode.DatabaseUnavailable : ErrorCode.InternalError);
     }
 
