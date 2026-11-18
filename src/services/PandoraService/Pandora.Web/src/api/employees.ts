@@ -1,8 +1,11 @@
-import api from './client'
+import { api } from '@shared/app/app-session'
 import { EMPLOYEE_ENDPOINTS, PAGINATION_QUERY } from '@/constants/api'
-import { EMPLOYEES_PAGE_SIZE, FIRST_PAGE } from '@/constants/pagination'
-import { formatEmployeeName } from '@/utils/employee-name'
-import type { EmployeesPage } from '@/stores/models/employees-page'
+import { FIRST_PAGE } from '@shared/constants/pagination'
+import { formatEmployeeFullName, type Employee } from '@/models/employee'
+import type { EmployeeInput } from '@/models/employee-input'
+import type { EmployeeRolesPayload } from '@/models/employee-roles-payload'
+import type { EmployeeStatus } from '@/models/employee-status'
+import type { Page } from '@shared/models/page'
 
 const EMPLOYEE_NAME_REFRESH_INTERVAL_MS = 60_000
 
@@ -24,7 +27,9 @@ export function fetchEmployeeNames(): Promise<EmployeeNames> {
 
 export function refreshEmployeeNames(): Promise<EmployeeNames> {
   if (employeeNamesRequest !== undefined) return employeeNamesRequest
-  if (Date.now() - lastEmployeeNamesRefresh < EMPLOYEE_NAME_REFRESH_INTERVAL_MS) return fetchEmployeeNames()
+  if (Date.now() - lastEmployeeNamesRefresh < EMPLOYEE_NAME_REFRESH_INTERVAL_MS) {
+    return fetchEmployeeNames()
+  }
 
   return requestEmployeeNames(true)
 }
@@ -48,16 +53,10 @@ async function loadEmployeeNames(): Promise<EmployeeNames> {
   const byTelegramId = new Map<number, string>()
 
   for (let page = FIRST_PAGE; ; page += 1) {
-    const { data } = await api.get<EmployeesPage>(EMPLOYEE_ENDPOINTS.LIST, {
-      params: {
-        [PAGINATION_QUERY.PAGE]: page,
-        [PAGINATION_QUERY.PAGE_SIZE]: EMPLOYEES_PAGE_SIZE,
-        includeArchived: true
-      }
-    })
+    const result = await fetchEmployees(page, true)
 
-    for (const employee of data.items) {
-      const name = formatEmployeeName(employee)
+    for (const employee of result.items) {
+      const name = formatEmployeeFullName(employee)
 
       byId.set(employee.id, name)
 
@@ -66,8 +65,48 @@ async function loadEmployeeNames(): Promise<EmployeeNames> {
       }
     }
 
-    if (data.items.length === 0 || data.page * data.pageSize >= data.total) {
+    if (result.items.length === 0 || result.page * result.pageSize >= result.total) {
       return { byId, byTelegramId }
     }
   }
+}
+
+export async function fetchEmployees(
+  page: number,
+  includeArchived: boolean,
+): Promise<Page<Employee>> {
+  return await api.get<Page<Employee>>(EMPLOYEE_ENDPOINTS.LIST, {
+    [PAGINATION_QUERY.PAGE]: page,
+    [PAGINATION_QUERY.INCLUDE_ARCHIVED]: includeArchived,
+  })
+}
+
+export async function fetchEmployeeRoles(): Promise<string[]> {
+  return await api.get<string[]>(EMPLOYEE_ENDPOINTS.ROLES)
+}
+
+export async function createEmployee(input: EmployeeInput): Promise<void> {
+  await api.post(EMPLOYEE_ENDPOINTS.LIST, input)
+}
+
+export async function updateEmployee(employeeId: string, input: EmployeeInput): Promise<void> {
+  await api.put(EMPLOYEE_ENDPOINTS.BY_ID(employeeId), input)
+}
+
+export async function deleteEmployee(employeeId: string): Promise<void> {
+  await api.delete(EMPLOYEE_ENDPOINTS.BY_ID(employeeId))
+}
+
+export async function assignEmployeeRoles(
+  employeeId: string,
+  payload: EmployeeRolesPayload,
+): Promise<void> {
+  await api.put(EMPLOYEE_ENDPOINTS.ROLES_OF(employeeId), payload)
+}
+
+export async function updateEmployeeStatus(
+  employeeId: string,
+  status: EmployeeStatus,
+): Promise<void> {
+  await api.put(EMPLOYEE_ENDPOINTS.STATUS_OF(employeeId), { status })
 }

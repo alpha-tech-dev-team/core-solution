@@ -1,5 +1,5 @@
 import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr'
-import type { AuditEntry } from '@/stores/models/audit-entry'
+import type { AuditEntry } from '@/models/audit-entry'
 
 const AUDIT_HUB_URL = '/hubs/audit'
 const RECEIVE_AUDIT_ENTRY = 'ReceiveAuditEntry'

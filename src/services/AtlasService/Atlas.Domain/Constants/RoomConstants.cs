@@ -25,4 +25,36 @@ public static class RoomConstants
         public const string Name = "Кабинет 101";
         public const string Description = "Кабинет 101, первый этаж";
     }
+
+    public static class Office401
+    {
+        public static readonly Guid Id = Guid.Parse("4f715bed-51d4-44b5-bb62-1340f6fed750");
+
+        public const string Name = "Кабинет 401";
+        public const string Description = "Кабинет 401, четвёртый этаж";
+    }
+
+    public static class Office402
+    {
+        public static readonly Guid Id = Guid.Parse("50826cfe-62e5-45c6-8c73-2451077fe861");
+
+        public const string Name = "Кабинет 402";
+        public const string Description = "Кабинет 402, четвёртый этаж";
+    }
+
+    public static class Office507
+    {
+        public static readonly Guid Id = Guid.Parse("61937d0f-73f6-46d7-9d84-3562188f9720");
+
+        public const string Name = "Кабинет 507";
+        public const string Description = "Кабинет 507, пятый этаж";
+    }
+
+    public static class Office508
+    {
+        public static readonly Guid Id = Guid.Parse("72a48e20-8407-47e8-ae95-46732990a830");
+
+        public const string Name = "Кабинет 508";
+        public const string Description = "Кабинет 508, пятый этаж";
+    }
 }

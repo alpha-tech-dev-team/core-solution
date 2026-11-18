@@ -1,11 +1,27 @@
 {
-  "files": [],
-  "references": [
-    {
-      "path": "./tsconfig.node.json"
-    },
-    {
-      "path": "./tsconfig.app.json"
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noEmit": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "jsx": "preserve",
+    "useDefineForClassFields": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      "@shared/*": ["../../../../src/shared/CoreSolution.Web/src/*"],
+      "vue": ["./node_modules/vue"],
+      "pinia": ["./node_modules/pinia"],
+      "vue-router": ["./node_modules/vue-router"],
+      "zod": ["./node_modules/zod"]
     }
-  ]
+  },
+  "include": ["env.d.ts", "src/**/*.ts", "src/**/*.vue"],
+  "exclude": ["node_modules", "dist"]
 }
