@@ -1,10 +1,6 @@
-import { createApp } from 'vue'
-import { createPinia } from 'pinia'
-import router from '@/router'
-import App from '@/App.vue'
-import '@/styles/global.css'
+import { bootstrapApp } from '@shared/app/bootstrap-app'
+import { routes } from '@/router/routes'
+import ru from '@/i18n/locales/ru.json'
+import en from '@/i18n/locales/en.json'
 
-const app = createApp(App)
-app.use(createPinia())
-app.use(router)
-app.mount('#app')
+bootstrapApp({ routes, locales: { ru, en } })

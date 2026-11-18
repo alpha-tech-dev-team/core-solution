@@ -1,108 +1,140 @@
 <script setup lang="ts">
-import { EMPLOYEE_STATUS } from '@/stores/models/employee-status'
-import { tr, trStatus } from '@/i18n'
-import { ROUTES } from '@/constants/routes'
-import { LOADING_PLACEHOLDER } from '@/constants/ui'
-import { useEmployeesPage } from './use-employees-page'
+import LogoutButton from '@shared/components/LogoutButton.vue'
+import { useTranslations } from '@shared/i18n/create-i18n'
+import { LOADING_PLACEHOLDER } from '@shared/constants/ui'
+import { EMPLOYEE_STATUS } from '@/constants/employee-status'
+import { RESOURCE_KEYS } from '@/constants/resource-keys'
+import { ROUTE_NAMES } from '@/constants/routes'
+import PaginationNav from '@shared/components/PaginationNav.vue'
+import { useEmployeesView } from './use-employees-view'
+import EmployeeDeleteDialog from './EmployeeDeleteDialog.vue'
 import EmployeeFormDialog from './EmployeeFormDialog.vue'
 import EmployeeRolesDialog from './EmployeeRolesDialog.vue'
-import EmployeeDeleteDialog from './EmployeeDeleteDialog.vue'
-
-const page = useEmployeesPage()
 
 const {
   employeesStore,
   errorMessage,
   selectedEmployee,
   selectedEmployeeId,
+  formatEmployeeFullName,
+  isSelf,
+  select,
+  goToPage,
+  toggleBlock,
+  restore,
+  toggleArchived,
   isFormOpen,
-  isRolesOpen,
-  isSaving,
-  isDeleteOpen,
   formInitial,
-  fullName,
-  logout
-} = page
+  isSaving,
+  openCreateForm,
+  openEditForm,
+  closeForm,
+  save,
+  isRolesOpen,
+  openRoles,
+  closeRoles,
+  saveRoles,
+  isDeleteOpen,
+  openDelete,
+  closeDelete,
+  confirmDelete,
+} = useEmployeesView()
+
+const { tr, trStatus } = useTranslations()
 </script>
 
 <template>
-  <div class="employees-page">
-    <header class="employees-page__header">
-      <h1>{{ tr('employees_title') }}</h1>
-      <nav class="employees-page__nav">
-        <RouterLink class="employees-page__nav-link" :to="ROUTES.HOME">{{ tr('nav_home') }}</RouterLink>
-        <button class="employees-page__nav-link" @click="logout">{{ tr('auth_logout') }}</button>
+  <div class="page">
+    <header class="page__header">
+      <h1>{{ tr(RESOURCE_KEYS.EMPLOYEES_TITLE) }}</h1>
+      <nav class="page__nav">
+        <RouterLink class="btn btn--ghost btn--sm" :to="{ name: ROUTE_NAMES.HOME }">
+          {{ tr(RESOURCE_KEYS.NAV_HOME) }}
+        </RouterLink>
+        <LogoutButton />
       </nav>
     </header>
 
-    <main class="employees-page__body">
-      <p v-if="errorMessage && !isFormOpen && !isRolesOpen" class="employees-page__error">
+    <main class="page__body">
+      <p v-if="errorMessage && !isFormOpen && !isRolesOpen" class="alert alert--error">
         {{ errorMessage }}
       </p>
 
-      <div class="employees-toolbar">
-        <div class="employees-toolbar__group">
+      <div class="toolbar">
+        <div class="toolbar__group">
+          <button class="btn btn--ghost" :disabled="selectedEmployee === null" @click="openRoles()">
+            {{ tr(RESOURCE_KEYS.EMPLOYEE_ROLES) }}
+          </button>
           <button
-            class="employees-page__nav-link"
+            class="btn btn--ghost"
             :disabled="selectedEmployee === null"
-            @click="page.openRoles()"
+            @click="openEditForm()"
           >
-            {{ tr('employee_roles') }}
+            {{ tr(RESOURCE_KEYS.EMPLOYEE_EDIT) }}
           </button>
           <button
-            class="employees-page__nav-link"
-            :disabled="selectedEmployee === null"
-            @click="page.openEditForm()"
+            class="btn btn--ghost"
+            :disabled="
+              selectedEmployee === null ||
+              isSelf(selectedEmployee) ||
+              selectedEmployee.status === EMPLOYEE_STATUS.ARCHIVED
+            "
+            @click="toggleBlock()"
           >
-            {{ tr('employee_edit') }}
+            {{
+              selectedEmployee?.status === EMPLOYEE_STATUS.BLOCKED
+                ? tr(RESOURCE_KEYS.EMPLOYEE_UNBLOCK)
+                : tr(RESOURCE_KEYS.EMPLOYEE_BLOCK)
+            }}
           </button>
           <button
-            class="employees-page__nav-link"
-            :disabled="selectedEmployee === null || page.isSelf(selectedEmployee) || selectedEmployee?.status === EMPLOYEE_STATUS.ARCHIVED"
-            @click="page.toggleBlock()"
-          >
-            {{ selectedEmployee?.status === EMPLOYEE_STATUS.BLOCKED
-              ? tr('employee_unblock')
-              : tr('employee_block') }}
-          </button>
-          <button
-            class="employees-page__nav-link"
+            class="btn btn--ghost"
             :disabled="selectedEmployee?.status !== EMPLOYEE_STATUS.ARCHIVED"
-            @click="page.restore()"
+            @click="restore()"
           >
-            {{ tr('employee_restore') }}
+            {{ tr(RESOURCE_KEYS.EMPLOYEE_RESTORE) }}
           </button>
           <button
-            class="employees-page__nav-link employees-page__nav-link--danger"
-            :disabled="selectedEmployee === null || page.isSelf(selectedEmployee) || selectedEmployee?.status === EMPLOYEE_STATUS.ARCHIVED"
-            @click="page.openDelete()"
+            class="btn btn--danger"
+            :disabled="
+              selectedEmployee === null ||
+              isSelf(selectedEmployee) ||
+              selectedEmployee.status === EMPLOYEE_STATUS.ARCHIVED
+            "
+            @click="openDelete()"
           >
-            {{ tr('employee_delete') }}
+            {{ tr(RESOURCE_KEYS.EMPLOYEE_DELETE) }}
           </button>
         </div>
 
-        <div class="employees-toolbar__group">
-          <label class="employees-toolbar__toggle">
-            <input type="checkbox" :checked="employeesStore.includeArchived" @change="page.toggleArchived()" />
-            {{ tr('employees_include_archived') }}
+        <div class="toolbar__group">
+          <label class="checkbox">
+            <input
+              type="checkbox"
+              :checked="employeesStore.includeArchived"
+              @change="toggleArchived()"
+            />
+            {{ tr(RESOURCE_KEYS.EMPLOYEES_INCLUDE_ARCHIVED) }}
           </label>
-          <button class="employees-page__nav-link" @click="page.openCreateForm()">
-            {{ tr('employee_add') }}
+          <button class="btn btn--primary" @click="openCreateForm()">
+            {{ tr(RESOURCE_KEYS.EMPLOYEE_ADD) }}
           </button>
         </div>
       </div>
 
-      <p v-if="employeesStore.isLoading">{{ LOADING_PLACEHOLDER }}</p>
-      <p v-else-if="employeesStore.employees.length === 0">{{ tr('employees_empty') }}</p>
+      <p v-if="employeesStore.isLoading" class="text-muted">{{ LOADING_PLACEHOLDER }}</p>
+      <p v-else-if="employeesStore.employees.length === 0" class="text-muted">
+        {{ tr(RESOURCE_KEYS.EMPLOYEES_EMPTY) }}
+      </p>
 
-      <table v-else class="employees">
+      <table v-else class="table">
         <thead>
           <tr>
-            <th>{{ tr('employee_name') }}</th>
-            <th>{{ tr('employee_position') }}</th>
-            <th>{{ tr('employee_phone') }}</th>
-            <th>{{ tr('employee_status') }}</th>
-            <th>{{ tr('employee_roles') }}</th>
+            <th>{{ tr(RESOURCE_KEYS.EMPLOYEE_NAME) }}</th>
+            <th>{{ tr(RESOURCE_KEYS.EMPLOYEE_POSITION) }}</th>
+            <th>{{ tr(RESOURCE_KEYS.EMPLOYEE_PHONE) }}</th>
+            <th>{{ tr(RESOURCE_KEYS.EMPLOYEE_STATUS) }}</th>
+            <th>{{ tr(RESOURCE_KEYS.EMPLOYEE_ROLES) }}</th>
           </tr>
         </thead>
         <tbody>
@@ -111,212 +143,60 @@ const {
             :key="employee.id"
             tabindex="0"
             :aria-current="employee.id === selectedEmployeeId ? 'true' : undefined"
-            :class="{ 'employees__row--selected': employee.id === selectedEmployeeId }"
-            @click="page.select(employee.id)"
-            @keydown.enter.prevent="page.select(employee.id)"
-            @keydown.space.prevent="page.select(employee.id)"
+            :class="{ 'table__row--selected': employee.id === selectedEmployeeId }"
+            @click="select(employee.id)"
+            @keydown.enter.prevent="select(employee.id)"
+            @keydown.space.prevent="select(employee.id)"
           >
-            <td>{{ fullName(employee) }}</td>
+            <td>{{ formatEmployeeFullName(employee) }}</td>
             <td>{{ employee.position }}</td>
-            <td>{{ employee.phone }}</td>
+            <td class="numeric">{{ employee.phone }}</td>
             <td>{{ trStatus(employee.status) }}</td>
             <td>
-              <span v-for="role in employee.roles" :key="role" class="employees__role">{{ role }}</span>
+              <span v-for="role in employee.roles" :key="role" class="badge">{{ role }}</span>
             </td>
           </tr>
         </tbody>
       </table>
 
-      <nav v-if="employeesStore.totalPages > 1" class="employees-pager">
-        <button
-          class="employees-page__nav-link"
-          :disabled="employeesStore.page <= 1"
-          @click="page.goToPage(employeesStore.page - 1)"
-        >
-          {{ tr('employees_page_prev') }}
-        </button>
-        <span class="employees-pager__label">
-          {{ tr('employees_page_of', employeesStore.page, employeesStore.totalPages) }}
-        </span>
-        <button
-          class="employees-page__nav-link"
-          :disabled="employeesStore.page >= employeesStore.totalPages"
-          @click="page.goToPage(employeesStore.page + 1)"
-        >
-          {{ tr('employees_page_next') }}
-        </button>
-      </nav>
+      <PaginationNav
+        :page="employeesStore.page"
+        :total-pages="employeesStore.totalPages"
+        :prev-label="tr(RESOURCE_KEYS.EMPLOYEES_PAGE_PREV)"
+        :next-label="tr(RESOURCE_KEYS.EMPLOYEES_PAGE_NEXT)"
+        :info-label="
+          tr(RESOURCE_KEYS.EMPLOYEES_PAGE_OF, employeesStore.page, employeesStore.totalPages)
+        "
+        @change="goToPage($event)"
+      />
 
       <EmployeeFormDialog
         :open="isFormOpen"
         :initial="formInitial"
         :error="isFormOpen ? errorMessage : ''"
         :saving="isSaving"
-        @submit="page.save($event)"
-        @close="page.closeForm()"
+        @submit="save($event)"
+        @close="closeForm()"
       />
 
       <EmployeeRolesDialog
         :open="isRolesOpen"
         :employee="selectedEmployee"
-        :is-self="page.isSelf(selectedEmployee)"
+        :is-self="isSelf(selectedEmployee)"
         :roles="employeesStore.roles"
         :error="isRolesOpen ? errorMessage : ''"
-        @save="page.saveRoles($event.roles, $event.adminLogin, $event.adminPassword)"
-        @close="page.closeRoles()"
+        @save="saveRoles($event.roles, $event.adminLogin, $event.adminPassword)"
+        @close="closeRoles()"
       />
 
       <EmployeeDeleteDialog
         :open="isDeleteOpen"
         :employee="selectedEmployee"
-        :is-self="page.isSelf(selectedEmployee)"
+        :is-self="isSelf(selectedEmployee)"
         :error="isDeleteOpen ? errorMessage : ''"
-        @confirm="page.confirmDelete()"
-        @close="page.closeDelete()"
+        @confirm="confirmDelete()"
+        @close="closeDelete()"
       />
     </main>
   </div>
 </template>
-
-<style scoped>
-.employees-page {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-
-.employees-page__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-3) var(--space-5);
-  background: var(--color-surface);
-  border-bottom: var(--border-width) solid var(--color-border);
-}
-
-.employees-page__header h1 {
-  font-size: var(--font-size-heading);
-}
-
-.employees-page__nav {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.employees-page__nav-link {
-  padding: var(--space-2) var(--space-3);
-  background: transparent;
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-sm);
-  color: var(--color-text);
-  font-size: var(--font-size-base);
-  text-decoration: none;
-}
-
-.employees-page__nav-link:hover:enabled {
-  background: var(--color-bg);
-}
-
-.employees-page__nav-link:disabled {
-  color: var(--color-text-muted);
-  cursor: default;
-}
-
-.employees-page__nav-link--danger {
-  color: var(--color-error);
-  border-color: var(--color-error);
-}
-
-.employees-page__body {
-  flex: 1;
-  padding: var(--space-5);
-  font-size: var(--font-size-base);
-}
-
-.employees-page__error {
-  color: var(--color-error);
-  font-size: var(--font-size-small);
-  margin-bottom: var(--space-3);
-}
-
-.employees-toolbar {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
-}
-
-.employees-toolbar__group {
-  display: flex;
-  gap: var(--space-2);
-}
-
-.employees-toolbar__toggle {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--font-size-base);
-}
-
-.employees {
-  width: 100%;
-  background: var(--color-surface);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius);
-  border-collapse: collapse;
-}
-
-.employees th,
-.employees td {
-  padding: var(--space-2) var(--space-3);
-  text-align: left;
-  border-bottom: var(--border-width) solid var(--color-border);
-}
-
-.employees th {
-  font-size: var(--font-size-small);
-  color: var(--color-text-secondary);
-}
-
-.employees tbody tr {
-  cursor: pointer;
-}
-
-.employees tbody tr:hover {
-  background: var(--color-bg);
-}
-
-.employees tbody tr:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: -2px;
-}
-
-.employees__role {
-  display: inline-block;
-  padding: var(--space-1) var(--space-2);
-  margin-right: var(--space-1);
-  background: var(--color-bg);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-small);
-  white-space: nowrap;
-}
-
-.employees__row--selected,
-.employees__row--selected:hover {
-  background: var(--color-row-selected);
-}
-
-.employees-pager {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-top: var(--space-3);
-}
-
-.employees-pager__label {
-  font-size: var(--font-size-small);
-  color: var(--color-text-secondary);
-}
-</style>

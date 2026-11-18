@@ -1,0 +1,15 @@
+{
+  "app_title": "Atlas",
+  "auth_login_title": "Admin panel sign in",
+  "error_network": "The server is not responding. Check your connection and try again.",
+  "admin_section_title": "Admin panel",
+  "admin_page_title": "Overview",
+  "admin_page_subtitle": "Summary for the Identity service.",
+  "admin_stats_label": "Metrics",
+  "admin_users_label": "Users",
+  "admin_sessions_label": "Active sessions",
+  "admin_requests_label": "Requests per day",
+  "admin_empty_value": "—",
+  "admin_recent_title": "Recent sign-ins",
+  "admin_empty_state": "Data will appear when the Identity API starts returning the sign-in list."
+}
