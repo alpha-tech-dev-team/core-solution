@@ -86,7 +86,7 @@ public sealed class PermissionRepository : IPermissionRepository
             {
                 TelegramUserId = telegramUserId,
                 VaultItemId = itemId,
-                IsActive = true,
+                IsActive = DatabaseConstants.Permissions.IsActiveGranted,
                 GrantedAt = grantedAt,
                 GrantedBy = adminUserId
             });
@@ -94,7 +94,7 @@ public sealed class PermissionRepository : IPermissionRepository
             return SecretAccessGrantResult.Granted;
         }
 
-        permission.IsActive = true;
+        permission.IsActive = DatabaseConstants.Permissions.IsActiveGranted;
         permission.GrantedAt = grantedAt;
         permission.GrantedBy = adminUserId;
 
@@ -121,7 +121,7 @@ public sealed class PermissionRepository : IPermissionRepository
             return SecretAccessRevokeResult.AlreadyRevoked;
         }
 
-        permission.IsActive = false;
+        permission.IsActive = DatabaseConstants.Permissions.IsActiveRevoked;
 
         return SecretAccessRevokeResult.Revoked;
     }

@@ -31,6 +31,8 @@ public static class DatabaseConstants
         public const string GrantedBy = "granted_by";
         public const int VaultItemIdMaxLength = SecretMetadataLimits.VaultItemIdMaxLength;
         public const bool IsActiveDefault = true;
+        public const bool IsActiveGranted = true;
+        public const bool IsActiveRevoked = false;
     }
 
     public static class Audit
