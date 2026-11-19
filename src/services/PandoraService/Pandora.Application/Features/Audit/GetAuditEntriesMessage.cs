@@ -12,6 +12,8 @@ public sealed record GetAuditEntriesMessage(
     string? SortBy = null,
     SortDirection? SortDirection = null,
     string? Action = null,
-    string? RequestSource = null)
+    string? RequestSource = null,
+    string? UserIds = null,
+    string? TelegramUserIds = null)
     : PagedSearchSortMessage(Page, PageSize, Search, SortBy, SortDirection),
         IRequest<Result<PagedResult<AuditEntry>>>;

@@ -7,4 +7,6 @@ public sealed record AuditEntryFilter(
     string? Action,
     string? RequestSource,
     string? SortBy,
-    SortDirection SortDirection);
+    SortDirection SortDirection,
+    IReadOnlyCollection<Guid>? UserIds = null,
+    IReadOnlyCollection<long>? TelegramUserIds = null);

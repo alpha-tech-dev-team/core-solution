@@ -24,7 +24,9 @@ public sealed class GetAuditEntriesHandler : IRequestHandler<GetAuditEntriesMess
             request.Action,
             request.RequestSource,
             request.SortBy,
-            request.SortDirection ?? SortDirection.Descending);
+            request.SortDirection ?? SortDirection.Descending,
+            ParseUserIds(request.UserIds),
+            ParseTelegramUserIds(request.TelegramUserIds));
 
         var page = await _auditRepository.GetPage(
             request.Page ?? PaginationLimits.DefaultPage,
@@ -33,5 +35,33 @@ public sealed class GetAuditEntriesHandler : IRequestHandler<GetAuditEntriesMess
             cancellationToken);
 
         return Result<PagedResult<AuditEntry>>.Success(page);
+    }
+
+    private static Guid[] ParseUserIds(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return [];
+        }
+
+        return value
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(item => Guid.TryParse(item, out var id) ? id : (Guid?)null)
+            .OfType<Guid>()
+            .ToArray();
+    }
+
+    private static long[] ParseTelegramUserIds(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return [];
+        }
+
+        return value
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(item => long.TryParse(item, out var id) ? id : (long?)null)
+            .OfType<long>()
+            .ToArray();
     }
 }

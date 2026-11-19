@@ -105,7 +105,7 @@
   "audit_column_target": "Объект",
   "audit_column_source": "Источник",
   "audit_empty": "Записей нет",
-  "audit_search_placeholder": "Поиск по действию, объекту, источнику или ID пользователя",
+  "audit_search_placeholder": "Поиск по действию, объекту, источнику, имени или ID пользователя",
   "audit_filter_all": "Все",
   "audit_page_prev": "Назад",
   "audit_page_next": "Вперёд",

@@ -105,7 +105,7 @@
   "audit_column_target": "Object",
   "audit_column_source": "Source",
   "audit_empty": "No entries",
-  "audit_search_placeholder": "Search by action, object, source or user ID",
+  "audit_search_placeholder": "Search by action, object, source, user name or ID",
   "audit_filter_all": "All",
   "audit_page_prev": "Previous",
   "audit_page_next": "Next",

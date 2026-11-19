@@ -59,17 +59,7 @@ public sealed class AuditRepository : IAuditRepository
     {
         if (!string.IsNullOrWhiteSpace(filter.Search))
         {
-            var search = string.Format(
-                CultureInfo.InvariantCulture,
-                SearchPatternTemplate,
-                EscapeLikePattern(filter.Search.Trim()));
-
-            query = query.Where(entry =>
-                EF.Functions.ILike(entry.Action, search, BackslashCharacter) ||
-                (entry.TargetItemId != null && EF.Functions.ILike(entry.TargetItemId, search, BackslashCharacter)) ||
-                EF.Functions.ILike(entry.RequestSource, search, BackslashCharacter) ||
-                (entry.UserId != null && EF.Functions.ILike(entry.UserId.Value.ToString(), search, BackslashCharacter)) ||
-                (entry.TelegramUserId != null && EF.Functions.ILike(entry.TelegramUserId.Value.ToString(), search, BackslashCharacter)));
+            query = ApplySearch(query, filter);
         }
 
         if (!string.IsNullOrWhiteSpace(filter.Action))
@@ -83,6 +73,26 @@ public sealed class AuditRepository : IAuditRepository
         }
 
         return query;
+    }
+
+    private static IQueryable<AuditEntry> ApplySearch(IQueryable<AuditEntry> query, AuditEntryFilter filter)
+    {
+        var search = string.Format(
+            CultureInfo.InvariantCulture,
+            SearchPatternTemplate,
+            EscapeLikePattern(filter.Search!.Trim()));
+
+        var userIds = filter.UserIds?.ToArray() ?? [];
+        var telegramUserIds = filter.TelegramUserIds?.ToArray() ?? [];
+
+        return query.Where(entry =>
+            EF.Functions.ILike(entry.Action, search, BackslashCharacter) ||
+            (entry.TargetItemId != null && EF.Functions.ILike(entry.TargetItemId, search, BackslashCharacter)) ||
+            EF.Functions.ILike(entry.RequestSource, search, BackslashCharacter) ||
+            (entry.UserId != null && EF.Functions.ILike(entry.UserId.Value.ToString(), search, BackslashCharacter)) ||
+            (entry.TelegramUserId != null && EF.Functions.ILike(entry.TelegramUserId.Value.ToString(), search, BackslashCharacter)) ||
+            (userIds.Length > 0 && entry.UserId != null && userIds.Contains(entry.UserId.Value)) ||
+            (telegramUserIds.Length > 0 && entry.TelegramUserId != null && telegramUserIds.Contains(entry.TelegramUserId.Value)));
     }
 
     private static string EscapeLikePattern(string value)

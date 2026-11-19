@@ -21,4 +21,6 @@ export interface AuditQuery {
   requestSource?: string
   sortBy?: string
   sortDirection?: ApiSortDirection
+  userIds?: string
+  telegramUserIds?: string
 }

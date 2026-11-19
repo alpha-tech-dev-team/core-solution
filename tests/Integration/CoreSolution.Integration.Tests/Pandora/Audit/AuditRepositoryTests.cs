@@ -199,6 +199,36 @@ public sealed class AuditRepositoryTests(IntegrationFixture fixture)
     }
 
     [Fact]
+    public async Task GetPage_SearchByActorIds_ReturnsEntriesOfMatchedActors()
+    {
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+        using var scope = provider.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<PandoraDbContext>();
+        var repository = new AuditRepository(database);
+
+        await database.AuditEntry.ExecuteDeleteAsync();
+
+        var webUserId = Guid.NewGuid();
+        const long telegramUserId = 42;
+        var webEntry = new AuditEntry(Guid.NewGuid(), DateTime.UtcNow, webUserId, "secret_created", null, "web");
+        var telegramEntry = new AuditEntry(Guid.NewGuid(), DateTime.UtcNow, telegramUserId, "show_services", null, "telegram");
+
+        database.AuditEntry.AddRange(
+            webEntry,
+            telegramEntry,
+            new AuditEntry(Guid.NewGuid(), DateTime.UtcNow, telegramUserId: 43, "get_credentials", null, "telegram"));
+        await database.SaveChangesAsync();
+
+        var byUserId = await repository.GetPage(
+            1, 10, EmptyFilter with { Search = "иван", UserIds = [webUserId] }, CancellationToken.None);
+        var byTelegramUserId = await repository.GetPage(
+            1, 10, EmptyFilter with { Search = "иван", TelegramUserIds = [telegramUserId] }, CancellationToken.None);
+
+        Assert.Equal(webEntry.Id, Assert.Single(byUserId.Items).Id);
+        Assert.Equal(telegramEntry.Id, Assert.Single(byTelegramUserId.Items).Id);
+    }
+
+    [Fact]
     public async Task GetPage_FiltersByActionAndSourceWithTotalOfFilteredRows()
     {
         await using var provider = await fixture.CreatePandoraServiceProviderAsync();

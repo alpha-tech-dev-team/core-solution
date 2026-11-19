@@ -8,16 +8,49 @@ import { useAuditFilters } from './use-audit-filters'
 import { useAuditLiveUpdates } from './use-audit-live-updates'
 
 export function useAuditView() {
+  const employeeNames = ref<EmployeeNames>({ byId: new Map(), byTelegramId: new Map() })
   const filters = useAuditFilters(applyQuery)
   const entries = useAuditEntries(filters.query)
-  const employeeNames = ref<EmployeeNames>({ byId: new Map(), byTelegramId: new Map() })
   let liveRefreshTimer: number | undefined
 
   const liveUpdates = useAuditLiveUpdates(addLiveEntry)
 
   async function applyQuery(): Promise<void> {
+    const actors = matchActorIds(filters.query.search)
+    filters.query.userIds = actors.userIds ?? ''
+    filters.query.telegramUserIds = actors.telegramUserIds ?? ''
     entries.page.value = FIRST_PAGE
     await entries.load()
+  }
+
+  function matchActorIds(search: string | undefined): {
+    userIds?: string
+    telegramUserIds?: string
+  } {
+    const needle = search?.trim().toLowerCase()
+
+    if (!needle) return {}
+
+    const userIds = [...employeeNames.value.byId]
+      .filter(([, name]) => matchesName(name, needle))
+      .map(([id]) => id)
+    const telegramUserIds = [...employeeNames.value.byTelegramId]
+      .filter(([, name]) => matchesName(name, needle))
+      .map(([id]) => String(id))
+
+    return {
+      userIds: userIds.join(',') || undefined,
+      telegramUserIds: telegramUserIds.join(',') || undefined,
+    }
+  }
+
+  function matchesName(name: string, needle: string): boolean {
+    const normalizedName = name.toLowerCase()
+
+    return needle
+      .split(' ')
+      .filter(Boolean)
+      .every((part) => normalizedName.includes(part))
   }
 
   function actorName(entry: AuditEntry): string {

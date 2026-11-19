@@ -130,6 +130,27 @@ public sealed class AuditEndpointTests(IntegrationFixture fixture)
     }
 
     [Fact]
+    public async Task GetAudit_WithActorUserIds_ReturnsEntriesOfMatchedActors()
+    {
+        var userId = Guid.NewGuid();
+        await SeedAuditEntryAsync(userId: userId);
+
+        var cookie = await LoginAsAdminAsync();
+        using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add("Cookie", cookie);
+
+        var response = await client.GetAsync($"{AuditRoute}?page=1&pageSize=10&search=иван&userIds={userId}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var page = await response.Content.ReadFromJsonAsync<AuditPageResponse>();
+
+        Assert.NotNull(page);
+        var entry = Assert.Single(page!.Items);
+        Assert.Equal(userId, entry.UserId);
+    }
+
+    [Fact]
     public async Task GetAudit_AsAdmin_ReturnsStoredEntry()
     {
         await SeedAuditEntryAsync();
@@ -149,7 +170,11 @@ public sealed class AuditEndpointTests(IntegrationFixture fixture)
         Assert.Contains(page.Items, entry => entry.Action == "secret_created" && entry.RequestSource == "web");
     }
 
-    private async Task SeedAuditEntryAsync(string action = "secret_created", string? targetItemId = null, string requestSource = "web")
+    private async Task SeedAuditEntryAsync(
+        string action = "secret_created",
+        string? targetItemId = null,
+        string requestSource = "web",
+        Guid? userId = null)
     {
         await using var provider = await fixture.CreatePandoraServiceProviderAsync();
         using var scope = provider.CreateScope();
@@ -158,7 +183,7 @@ public sealed class AuditEndpointTests(IntegrationFixture fixture)
         database.AuditEntry.Add(new AuditEntry(
             Guid.NewGuid(),
             DateTime.UtcNow,
-            Guid.NewGuid(),
+            userId ?? Guid.NewGuid(),
             action,
             targetItemId,
             requestSource));
