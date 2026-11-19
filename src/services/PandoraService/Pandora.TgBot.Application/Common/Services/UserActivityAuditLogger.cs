@@ -34,7 +34,7 @@ public sealed class UserActivityAuditLogger
         try
         {
             await _auditRepository.Add(entry, cancellationToken);
-            await _auditNotifier.NotifyAsync(entry);
+            await _auditNotifier.Notify(entry);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {

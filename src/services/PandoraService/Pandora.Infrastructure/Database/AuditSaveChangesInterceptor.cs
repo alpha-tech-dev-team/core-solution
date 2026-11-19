@@ -111,7 +111,7 @@ public sealed class AuditSaveChangesInterceptor : SaveChangesInterceptor
 
         foreach (var entry in TakePending(context))
         {
-            _auditNotifier.NotifyAsync(entry).GetAwaiter().GetResult();
+            _auditNotifier.Notify(entry).GetAwaiter().GetResult();
         }
     }
 
@@ -125,7 +125,7 @@ public sealed class AuditSaveChangesInterceptor : SaveChangesInterceptor
 
         foreach (var entry in pending)
         {
-            await _auditNotifier.NotifyAsync(entry);
+            await _auditNotifier.Notify(entry);
         }
     }
 

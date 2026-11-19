@@ -87,7 +87,7 @@ public sealed class AuditNotificationTests(IntegrationFixture fixture)
     {
         public List<AuditEntry> Published { get; } = [];
 
-        public Task NotifyAsync(AuditEntry entry)
+        public Task Notify(AuditEntry entry)
         {
             Published.Add(entry);
 

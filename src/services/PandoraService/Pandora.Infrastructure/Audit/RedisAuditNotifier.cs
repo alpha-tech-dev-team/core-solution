@@ -23,7 +23,7 @@ public sealed class RedisAuditNotifier : IAuditNotifier
         _logger = logger;
     }
 
-    public async Task NotifyAsync(AuditEntry entry)
+    public async Task Notify(AuditEntry entry)
     {
         try
         {

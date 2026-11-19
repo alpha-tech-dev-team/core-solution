@@ -4,5 +4,5 @@ namespace Pandora.Domain.Interfaces;
 
 public interface IAuditNotifier
 {
-    Task NotifyAsync(AuditEntry entry);
+    Task Notify(AuditEntry entry);
 }
