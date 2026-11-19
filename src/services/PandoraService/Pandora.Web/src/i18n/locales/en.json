@@ -105,7 +105,7 @@
   "audit_column_target": "Object",
   "audit_column_source": "Source",
   "audit_empty": "No entries",
-  "audit_search_placeholder": "Search by action, object or user",
+  "audit_search_placeholder": "Search by action, object, source or user ID",
   "audit_filter_all": "All",
   "audit_page_prev": "Previous",
   "audit_page_next": "Next",
@@ -120,5 +120,7 @@
   "audit_source_web": "Web panel",
   "error_code_InvalidSearch": "The search query is too long",
   "error_code_InvalidSortField": "Unknown sort field",
-  "error_code_InvalidSortDirection": "Unknown sort direction"
+  "error_code_InvalidSortDirection": "Unknown sort direction",
+  "error_code_InvalidPage": "Invalid page number",
+  "error_code_InvalidPageSize": "Invalid page size"
 }

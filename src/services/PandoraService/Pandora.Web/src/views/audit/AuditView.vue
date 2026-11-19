@@ -3,7 +3,7 @@ import LogoutButton from '@shared/components/LogoutButton.vue'
 import PaginationNav from '@shared/components/PaginationNav.vue'
 import { LOADING_PLACEHOLDER } from '@shared/constants/ui'
 import { useTranslations } from '@shared/i18n/create-i18n'
-import { AUDIT_SEARCH_MAX_LENGTH, AUDIT_SORT_FIELDS } from '@/constants/audit'
+import { AUDIT_SORT_FIELDS } from '@/constants/audit'
 import { RESOURCE_KEYS } from '@/constants/resource-keys'
 import { ROUTE_NAMES } from '@/constants/routes'
 import { useAuditView } from './use-audit-view'
@@ -55,7 +55,6 @@ const {
           v-model="query.search"
           class="input audit__search"
           type="search"
-          :maxlength="AUDIT_SEARCH_MAX_LENGTH"
           :placeholder="tr(RESOURCE_KEYS.AUDIT_SEARCH_PLACEHOLDER)"
           @input="onSearchInput"
         />

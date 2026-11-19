@@ -12,18 +12,10 @@ namespace Pandora.Api.Extensions.Configuration;
 
 public static class JwtConfigurationExtensions
 {
-    private const string SecretEnvironmentVariable = "Jwt__Secret";
     private const string AccessTokenQueryParameter = "access_token";
 
-    public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IHostEnvironment environment)
+    public static IServiceCollection AddJwtAuthentication(this IServiceCollection services)
     {
-        if (environment.IsProduction()
-            && string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(SecretEnvironmentVariable)))
-        {
-            throw new InvalidOperationException(
-                $"В Production секрет JWT должен быть передан переменной окружения {SecretEnvironmentVariable}");
-        }
-
         services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer();

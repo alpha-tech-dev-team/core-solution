@@ -18,7 +18,7 @@ namespace Pandora.Api.Extensions.Configuration;
 
 public static class ServiceConfigurationExtensions
 {
-    public static IServiceCollection AddServiceConfiguration(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
+    public static IServiceCollection AddServiceConfiguration(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddOpenApi();
 
@@ -45,7 +45,7 @@ public static class ServiceConfigurationExtensions
 
         services.AddValidatorsFromAssemblyContaining<ApplicationAssemblyMarker>();
 
-        services.AddJwtAuthentication(environment);
+        services.AddJwtAuthentication();
 
         return services;
     }

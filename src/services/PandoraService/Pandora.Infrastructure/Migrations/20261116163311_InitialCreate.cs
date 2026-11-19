@@ -113,6 +113,8 @@ namespace Pandora.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "secret_metadata");
+
+            migrationBuilder.Sql("DROP EXTENSION IF EXISTS pg_trgm;");
         }
     }
 }

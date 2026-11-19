@@ -14,7 +14,7 @@ if (args.Contains(HostArguments.MigrateOnly))
     return;
 }
 
-builder.Services.AddServiceConfiguration(builder.Configuration, builder.Environment);
+builder.Services.AddServiceConfiguration(builder.Configuration);
 
 var app = builder.Build();
 
