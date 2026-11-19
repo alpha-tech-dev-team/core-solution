@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Logging;
 using Pandora.Domain.Entities;
 using Pandora.Domain.Interfaces;
 
@@ -10,11 +11,16 @@ public sealed class AuditSaveChangesInterceptor : SaveChangesInterceptor
 {
     private readonly IAuditContext _auditContext;
     private readonly IAuditNotifier? _auditNotifier;
+    private readonly ILogger<AuditSaveChangesInterceptor> _logger;
     private readonly ConditionalWeakTable<DbContext, List<AuditEntry>> _pendingByContext = new();
 
-    public AuditSaveChangesInterceptor(IAuditContext auditContext, IAuditNotifier? auditNotifier = null)
+    public AuditSaveChangesInterceptor(
+        IAuditContext auditContext,
+        ILogger<AuditSaveChangesInterceptor> logger,
+        IAuditNotifier? auditNotifier = null)
     {
         _auditContext = auditContext;
+        _logger = logger;
         _auditNotifier = auditNotifier;
     }
 
@@ -111,7 +117,19 @@ public sealed class AuditSaveChangesInterceptor : SaveChangesInterceptor
 
         foreach (var entry in TakePending(context))
         {
-            _auditNotifier.Notify(entry).GetAwaiter().GetResult();
+            _ = NotifyWithoutBlocking(entry);
+        }
+    }
+
+    private async Task NotifyWithoutBlocking(AuditEntry entry)
+    {
+        try
+        {
+            await _auditNotifier!.Notify(entry);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Не удалось отправить уведомление об аудите {Action}", entry.Action);
         }
     }
 
