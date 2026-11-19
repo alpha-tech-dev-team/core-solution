@@ -55,12 +55,11 @@ internal static class PandoraErrorStatusCodes
 
     private static (int StatusCode, string Code) MapPostgres(PostgresException exception)
     {
-        if (exception.SqlState == PostgresErrorCodes.UniqueViolation)
+        return exception.SqlState switch
         {
-            return Fail(ErrorCode.Conflict);
-        }
-
-        return Fail(exception.IsTransient ? ErrorCode.DatabaseUnavailable : ErrorCode.InternalError);
+            PostgresErrorCodes.UniqueViolation => Fail(ErrorCode.Conflict),
+            _ => Fail(exception.IsTransient ? ErrorCode.DatabaseUnavailable : ErrorCode.InternalError)
+        };
     }
 
     private static (int StatusCode, string Code) Fail(ErrorCode code)
