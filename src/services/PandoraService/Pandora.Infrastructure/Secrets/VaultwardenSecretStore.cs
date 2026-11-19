@@ -138,20 +138,16 @@ public sealed class VaultwardenSecretStore : ISecretStore, ISecretVaultReader
             }
             catch (JsonException exception)
             {
-                _logger.LogWarning(
-                    exception,
-                    "Не удалось разобрать ответ шлюза Vaultwarden для элемента {ItemId}",
-                    itemId);
+                _logger.LogWarning(exception, "Не удалось разобрать ответ шлюза Vaultwarden для {ItemId}", itemId);
 
                 return false;
             }
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogWarning(
-                    "Шлюз Vaultwarden вернул статус {StatusCode} для элемента {ItemId}",
-                    (int)response.StatusCode,
-                    itemId);
+                var statusCode = (int)response.StatusCode;
+
+                _logger.LogWarning("Шлюз Vaultwarden вернул статус {StatusCode} для {ItemId}", statusCode, itemId);
 
                 return IsMissingItem(response, result);
             }
