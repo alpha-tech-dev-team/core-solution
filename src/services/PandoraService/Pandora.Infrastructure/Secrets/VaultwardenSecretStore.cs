@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -14,6 +15,8 @@ public sealed class VaultwardenSecretStore : ISecretStore, ISecretVaultReader
 {
     private const string ListRoute = "list/object/items";
     private const string ItemRoute = "object/item";
+    private const string MissingItemMessagePrefix = "Not found.";
+    private const int PasswordFetchParallelism = 4;
     private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
 
     private readonly HttpClient _httpClient;
@@ -94,31 +97,82 @@ public sealed class VaultwardenSecretStore : ISecretStore, ISecretVaultReader
         IReadOnlyCollection<string> itemIds,
         CancellationToken cancellationToken)
     {
-        var items = await FetchItems(cancellationToken);
+        var passwords = new ConcurrentDictionary<string, string>(StringComparer.Ordinal);
 
-        if (items is null)
+        using var throttle = new SemaphoreSlim(PasswordFetchParallelism);
+
+        var tasks = itemIds
+            .Where(itemId => !string.IsNullOrWhiteSpace(itemId))
+            .Distinct(StringComparer.Ordinal)
+            .Select(itemId => FetchPassword(itemId, passwords, throttle, cancellationToken));
+
+        var results = await Task.WhenAll(tasks);
+
+        if (results.Contains(false))
         {
             return Result<IReadOnlyDictionary<string, string>>.Failure(ErrorCode.VaultwardenUnavailable.ToString());
         }
 
-        var requestedIds = itemIds.ToHashSet(StringComparer.Ordinal);
+        return Result<IReadOnlyDictionary<string, string>>.Success(passwords);
+    }
 
-        var passwords = new Dictionary<string, string>(StringComparer.Ordinal);
+    private async Task<bool> FetchPassword(
+        string itemId,
+        ConcurrentDictionary<string, string> passwords,
+        SemaphoreSlim throttle,
+        CancellationToken cancellationToken)
+    {
+        await throttle.WaitAsync(cancellationToken);
 
-        foreach (var item in items)
+        try
         {
-            if (string.IsNullOrWhiteSpace(item.Id)
-                || !requestedIds.Contains(item.Id)
-                || string.IsNullOrWhiteSpace(item.Login?.Password)
-                || passwords.ContainsKey(item.Id))
+            using var response = await _httpClient.GetAsync($"{ItemRoute}/{itemId}", cancellationToken);
+
+            VaultwardenResponse<VaultwardenItem>? result;
+
+            try
             {
-                continue;
+                result = await response.Content.ReadFromJsonAsync<VaultwardenResponse<VaultwardenItem>>(
+                    SerializerOptions,
+                    cancellationToken);
+            }
+            catch (JsonException exception)
+            {
+                _logger.LogWarning(
+                    exception,
+                    "Не удалось разобрать ответ шлюза Vaultwarden для элемента {ItemId}",
+                    itemId);
+
+                return false;
             }
 
-            passwords[item.Id] = item.Login.Password;
-        }
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning(
+                    "Шлюз Vaultwarden вернул статус {StatusCode} для элемента {ItemId}",
+                    (int)response.StatusCode,
+                    itemId);
 
-        return Result<IReadOnlyDictionary<string, string>>.Success(passwords);
+                return IsMissingItem(response, result);
+            }
+
+            if (!string.IsNullOrWhiteSpace(result?.Data?.Login?.Password))
+            {
+                passwords[itemId] = result.Data.Login.Password;
+            }
+
+            return true;
+        }
+        catch (HttpRequestException exception)
+        {
+            _logger.LogWarning(exception, "Не удалось получить пароль элемента {ItemId} из Vaultwarden", itemId);
+
+            return false;
+        }
+        finally
+        {
+            throttle.Release();
+        }
     }
 
     private async Task<IReadOnlyList<VaultwardenListItem>?> FetchItems(CancellationToken cancellationToken)
@@ -154,6 +208,8 @@ public sealed class VaultwardenSecretStore : ISecretStore, ISecretVaultReader
 
     private static bool IsMissingItem(HttpResponseMessage response, VaultwardenResponse<VaultwardenItem>? result)
     {
-        return (int)response.StatusCode < (int)HttpStatusCode.InternalServerError && result?.Success == false;
+        return (int)response.StatusCode < (int)HttpStatusCode.InternalServerError
+            && result?.Success == false
+            && result.Message?.StartsWith(MissingItemMessagePrefix, StringComparison.Ordinal) == true;
     }
 }

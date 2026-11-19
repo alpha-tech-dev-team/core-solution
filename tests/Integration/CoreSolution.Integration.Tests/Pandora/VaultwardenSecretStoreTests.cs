@@ -1,5 +1,7 @@
+using System.Collections.Concurrent;
 using System.Net;
 using System.Text;
+using System.Text.Json;
 using Microsoft.Extensions.Logging.Abstractions;
 using Pandora.Domain.Enums;
 using Pandora.Infrastructure.Secrets;
@@ -10,6 +12,30 @@ namespace CoreSolution.Integration.Tests.PandoraTests;
 public sealed class VaultwardenSecretStoreTests
 {
     private const string ItemId = "item-1";
+
+    private static string ItemWithPassword(string itemId, string password)
+    {
+        return ItemBody(itemId, password);
+    }
+
+    private static string ItemWithoutPassword(string itemId)
+    {
+        return ItemBody(itemId, null);
+    }
+
+    private static string ItemBody(string itemId, string? password)
+    {
+        return JsonSerializer.Serialize(new
+        {
+            success = true,
+            data = new
+            {
+                id = itemId,
+                name = "One",
+                login = new { username = "u1", password }
+            }
+        });
+    }
 
     [Fact]
     public async Task GetSecret_WithNameAndPassword_ReturnsSecret()
@@ -82,15 +108,13 @@ public sealed class VaultwardenSecretStoreTests
     [Fact]
     public async Task GetPasswords_RequestedIds_ReturnsOnlyMatchingPasswords()
     {
-        var store = CreateStore(
-            """
-            {"success":true,"data":{"object":"list","data":[
-              {"id":"item-1","name":"One","login":{"username":"u1","password":"p1"}},
-              {"id":"item-2","name":"Two","login":{"username":"u2","password":"p2"}}
-            ]}}
-            """);
+        var store = CreateItemStore(new Dictionary<string, string>
+        {
+            [ItemId] = ItemWithPassword(ItemId, "p1"),
+            ["item-2"] = ItemWithPassword("item-2", "p2")
+        });
 
-        var result = await store.GetPasswords(["item-1"], CancellationToken.None);
+        var result = await store.GetPasswords([ItemId], CancellationToken.None);
 
         Assert.True(result.IsSuccess);
         Assert.Equal("p1", Assert.Single(result.Value!).Value);
@@ -99,33 +123,30 @@ public sealed class VaultwardenSecretStoreTests
     [Fact]
     public async Task GetPasswords_ItemWithoutPassword_IsSkipped()
     {
-        var store = CreateStore(
-            """
-            {"success":true,"data":{"object":"list","data":[
-              {"id":"item-1","name":"One","login":{"username":"u1","password":null}},
-              {"id":"item-2","name":"Two","login":{"username":"u2","password":"p2"}}
-            ]}}
-            """);
+        var store = CreateItemStore(new Dictionary<string, string>
+        {
+            [ItemId] = ItemWithoutPassword(ItemId),
+            ["item-2"] = ItemWithPassword("item-2", "p2")
+        });
 
-        var result = await store.GetPasswords(["item-1", "item-2"], CancellationToken.None);
+        var result = await store.GetPasswords([ItemId, "item-2"], CancellationToken.None);
 
         Assert.True(result.IsSuccess);
-        Assert.False(result.Value!.ContainsKey("item-1"));
+        Assert.False(result.Value!.ContainsKey(ItemId));
         Assert.Equal("p2", result.Value["item-2"]);
     }
 
     [Fact]
-    public async Task GetPasswords_ItemWithNullId_IsSkipped()
+    public async Task GetPasswords_MissingItem_IsSkipped()
     {
-        var store = CreateStore(
-            """
-            {"success":true,"data":{"object":"list","data":[
-              {"id":null,"name":"Broken","login":{"username":"u1","password":"p1"}},
-              {"id":"item-2","name":"Two","login":{"username":"u2","password":"p2"}}
-            ]}}
-            """);
+        var store = CreateItemStore(
+            new Dictionary<string, string>
+            {
+                ["item-2"] = ItemWithPassword("item-2", "p2")
+            },
+            missingStatusCode: HttpStatusCode.BadRequest);
 
-        var result = await store.GetPasswords(["item-2"], CancellationToken.None);
+        var result = await store.GetPasswords([ItemId, "item-2"], CancellationToken.None);
 
         Assert.True(result.IsSuccess);
 
@@ -136,20 +157,22 @@ public sealed class VaultwardenSecretStoreTests
     }
 
     [Fact]
-    public async Task GetPasswords_DuplicateIds_KeepsFirstPassword()
+    public async Task GetPasswords_DuplicateIds_RequestsEachItemOnce()
     {
-        var store = CreateStore(
-            """
-            {"success":true,"data":{"object":"list","data":[
-              {"id":"item-1","name":"One","login":{"username":"u1","password":"first"}},
-              {"id":"item-1","name":"One","login":{"username":"u1","password":"second"}}
-            ]}}
-            """);
+        var handler = new RoutingHandler(
+            new Dictionary<string, string>
+            {
+                [ItemId] = ItemWithPassword(ItemId, "p1")
+            },
+            HttpStatusCode.BadRequest);
 
-        var result = await store.GetPasswords(["item-1"], CancellationToken.None);
+        var store = CreateStore(handler);
+
+        var result = await store.GetPasswords([ItemId, ItemId], CancellationToken.None);
 
         Assert.True(result.IsSuccess);
-        Assert.Equal("first", result.Value!["item-1"]);
+        Assert.Equal("p1", result.Value![ItemId]);
+        Assert.Equal(1, handler.RequestCount(ItemId));
     }
 
     [Fact]
@@ -163,9 +186,124 @@ public sealed class VaultwardenSecretStoreTests
         Assert.Equal(ErrorCode.VaultwardenUnavailable.ToString(), result.ErrorCode);
     }
 
+    [Fact]
+    public async Task GetPasswords_WhenGatewayReturnsBrokenBody_ReturnsVaultwardenUnavailable()
+    {
+        var store = CreateStore("""not-json""");
+
+        var result = await store.GetPasswords([ItemId], CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ErrorCode.VaultwardenUnavailable.ToString(), result.ErrorCode);
+    }
+
+    [Fact]
+    public async Task GetPasswords_WhenVaultIsLocked_ReturnsVaultwardenUnavailable()
+    {
+        var store = CreateStore("""{"success":false,"message":"Vault is locked."}""", HttpStatusCode.BadRequest);
+
+        var result = await store.GetPasswords([ItemId], CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ErrorCode.VaultwardenUnavailable.ToString(), result.ErrorCode);
+    }
+
+    [Fact]
+    public async Task GetSecret_WhenVaultIsLocked_ReturnsVaultwardenUnavailable()
+    {
+        var store = CreateStore("""{"success":false,"message":"Vault is locked."}""", HttpStatusCode.BadRequest);
+
+        var result = await store.GetSecret(ItemId, CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ErrorCode.VaultwardenUnavailable.ToString(), result.ErrorCode);
+    }
+
+    [Fact]
+    public async Task GetPasswords_MoreIdsThanParallelism_ReturnsEveryPassword()
+    {
+        var bodies = Enumerable.Range(1, 12)
+            .ToDictionary(
+                index => $"item-{index}",
+                index => ItemWithPassword($"item-{index}", $"p{index}"),
+                StringComparer.Ordinal);
+
+        var store = CreateItemStore(bodies);
+
+        var result = await store.GetPasswords(bodies.Keys.ToList(), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(12, result.Value!.Count);
+
+        foreach (var itemId in bodies.Keys)
+        {
+            Assert.Equal($"p{itemId[5..]}", result.Value[itemId]);
+        }
+    }
+
+    [Fact]
+    public async Task GetPasswords_WithEmptyIds_RequestsNothing()
+    {
+        var handler = new RoutingHandler(
+            new Dictionary<string, string>
+            {
+                [ItemId] = ItemWithPassword(ItemId, "p1")
+            },
+            HttpStatusCode.BadRequest);
+
+        var store = CreateStore(handler);
+
+        var result = await store.GetPasswords([string.Empty, "   "], CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Empty(result.Value!);
+        Assert.Equal(0, handler.TotalRequests);
+    }
+
+    [Fact]
+    public async Task GetPasswords_NeverExceedsParallelismLimit()
+    {
+        var handler = new ConcurrencyHandler();
+        var store = CreateStore(handler);
+        var itemIds = Enumerable.Range(1, 12).Select(index => $"item-{index}").ToList();
+
+        var call = store.GetPasswords(itemIds, CancellationToken.None);
+
+        var waited = 0;
+
+        while (handler.MaxObserved < 4 && !call.IsCompleted && waited < 500)
+        {
+            await Task.Delay(10);
+
+            waited++;
+        }
+
+        var observed = handler.MaxObserved;
+
+        handler.Release();
+
+        var result = await call;
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(12, result.Value!.Count);
+        Assert.InRange(observed, 1, 4);
+    }
+
     private static VaultwardenSecretStore CreateStore(string body, HttpStatusCode statusCode = HttpStatusCode.OK)
     {
-        var client = new HttpClient(new StubHandler(body, statusCode))
+        return CreateStore(new StubHandler(body, statusCode));
+    }
+
+    private static VaultwardenSecretStore CreateItemStore(
+        IReadOnlyDictionary<string, string> bodiesByItemId,
+        HttpStatusCode missingStatusCode = HttpStatusCode.OK)
+    {
+        return CreateStore(new RoutingHandler(bodiesByItemId, missingStatusCode));
+    }
+
+    private static VaultwardenSecretStore CreateStore(HttpMessageHandler handler)
+    {
+        var client = new HttpClient(handler)
         {
             BaseAddress = new Uri("http://localhost")
         };
@@ -183,6 +321,87 @@ public sealed class VaultwardenSecretStoreTests
             {
                 Content = new StringContent(body, Encoding.UTF8, "application/json")
             };
+
+            return Task.FromResult(response);
+        }
+    }
+
+    private sealed class ConcurrencyHandler : HttpMessageHandler
+    {
+        private readonly TaskCompletionSource _release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        private int _current;
+
+        public int MaxObserved { get; private set; }
+
+        public void Release()
+        {
+            _release.TrySetResult();
+        }
+
+        protected override async Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            var current = Interlocked.Increment(ref _current);
+
+            if (current > MaxObserved)
+            {
+                MaxObserved = current;
+            }
+
+            await _release.Task.WaitAsync(cancellationToken);
+
+            Interlocked.Decrement(ref _current);
+
+            var itemId = request.RequestUri?.Segments[^1] ?? string.Empty;
+
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(ItemWithPassword(itemId, "p1"), Encoding.UTF8, "application/json")
+            };
+        }
+    }
+
+    private sealed class RoutingHandler(
+        IReadOnlyDictionary<string, string> bodiesByItemId,
+        HttpStatusCode missingStatusCode) : HttpMessageHandler
+    {
+        private readonly ConcurrentDictionary<string, int> _requests = new(StringComparer.Ordinal);
+
+        public int RequestCount(string itemId)
+        {
+            return _requests.TryGetValue(itemId, out var count) ? count : 0;
+        }
+
+        public int TotalRequests
+        {
+            get
+            {
+                return _requests.Values.Sum();
+            }
+        }
+
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            var itemId = request.RequestUri?.Segments[^1] ?? string.Empty;
+
+            _requests.AddOrUpdate(itemId, 1, (_, count) => count + 1);
+
+            var response = bodiesByItemId.TryGetValue(itemId, out var body)
+                ? new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(body, Encoding.UTF8, "application/json")
+                }
+                : new HttpResponseMessage(missingStatusCode)
+                {
+                    Content = new StringContent(
+                        """{"success":false,"message":"Not found."}""",
+                        Encoding.UTF8,
+                        "application/json")
+                };
 
             return Task.FromResult(response);
         }
