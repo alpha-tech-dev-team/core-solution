@@ -9,7 +9,7 @@ public sealed class GrantSecretAccessMessageValidator : AbstractValidator<GrantS
     public GrantSecretAccessMessageValidator()
     {
         RuleFor(message => message.TelegramUserId)
-            .GreaterThan(0);
+            .GreaterThan(ValidationConstants.TelegramUserIdMinExclusive);
 
         RuleFor(message => message.ItemId)
             .NotEmpty()

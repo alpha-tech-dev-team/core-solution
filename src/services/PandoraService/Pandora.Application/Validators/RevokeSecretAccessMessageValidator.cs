@@ -9,7 +9,7 @@ public sealed class RevokeSecretAccessMessageValidator : AbstractValidator<Revok
     public RevokeSecretAccessMessageValidator()
     {
         RuleFor(message => message.TelegramUserId)
-            .GreaterThan(0);
+            .GreaterThan(ValidationConstants.TelegramUserIdMinExclusive);
 
         RuleFor(message => message.ItemId)
             .NotEmpty()
