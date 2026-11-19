@@ -10,6 +10,8 @@ namespace Pandora.Application.Features.Audit;
 
 public sealed class GetAuditEntriesHandler : IRequestHandler<GetAuditEntriesMessage, Result<PagedResult<AuditEntry>>>
 {
+    private const char IdentifierSeparator = ',';
+
     private readonly IAuditRepository _auditRepository;
 
     public GetAuditEntriesHandler(IAuditRepository auditRepository)
@@ -45,7 +47,7 @@ public sealed class GetAuditEntriesHandler : IRequestHandler<GetAuditEntriesMess
         }
 
         return value
-            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Split(IdentifierSeparator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Select(item => Guid.TryParse(item, out var id) ? id : (Guid?)null)
             .OfType<Guid>()
             .ToArray();
@@ -59,7 +61,7 @@ public sealed class GetAuditEntriesHandler : IRequestHandler<GetAuditEntriesMess
         }
 
         return value
-            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Split(IdentifierSeparator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Select(item => long.TryParse(item, out var id) ? id : (long?)null)
             .OfType<long>()
             .ToArray();
