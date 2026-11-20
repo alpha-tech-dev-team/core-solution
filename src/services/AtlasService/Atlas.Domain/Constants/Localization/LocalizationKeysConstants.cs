@@ -2,6 +2,9 @@ namespace Atlas.Domain.Constants.Localization;
 
 public static class LocalizationKeysConstants
 {
+    public const string IncidentAcceptedStateName = "IncidentAccepted";
+    public const string IncidentResolvedStateName = "IncidentResolved";
+
     public static class Idle
     {
         public const string PhoneRequest = "PhoneRequest";
@@ -28,5 +31,15 @@ public static class LocalizationKeysConstants
     {
         public const string Text = "Text";
         public const string Button = "Button";
+    }
+
+    public static class IncidentAccepted
+    {
+        public const string Text = "Text";
+    }
+
+    public static class IncidentResolved
+    {
+        public const string Text = "Text";
     }
 }

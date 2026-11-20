@@ -1,8 +1,10 @@
+using Atlas.Application.Abstractions;
 using Atlas.Application.Behaviors;
 using Atlas.Application.Features.Activation;
 using Atlas.Domain.Constants;
 using Atlas.TgBot.Features.Activation;
 using Atlas.TgBot.Localization;
+using Atlas.TgBot.Notifications;
 using Atlas.TgBot.Options;
 using CoreSolution.Shared.Application.Behaviors;
 using CoreSolution.Shared.Application.Messages;
@@ -31,6 +33,7 @@ public static class ApplicationExtensions
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(SessionBehavior<,>));
         services.AddScoped<IUserErrorMapper, AtlasUserErrorMapper>();
+        services.AddScoped<IIncidentNotificationService, IncidentNotificationService>();
 
         services.Configure<PhoneConfirmationOptions>(configuration.GetSection(PhoneConfirmationOptions.SectionName));
 
