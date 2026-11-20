@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,11 +13,15 @@ namespace Pandora.Infrastructure.Audit;
 public sealed class AuditOutboxPublisher : BackgroundService
 {
     private const int BatchSize = 20;
-    private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(5);
-    private static readonly string SelectPendingSql =
-        $"select * from {DatabaseConstants.AuditOutbox.Table} " +
-        $"order by {DatabaseConstants.AuditOutbox.CreatedAt} " +
-        $"limit {BatchSize} for update skip locked";
+    private const int RetryDelaySeconds = 5;
+    private const string SelectPendingSqlTemplate = "select * from {0} order by {1} limit {2} for update skip locked";
+    private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(RetryDelaySeconds);
+    private static readonly string SelectPendingSql = string.Format(
+        CultureInfo.InvariantCulture,
+        SelectPendingSqlTemplate,
+        DatabaseConstants.AuditOutbox.Table,
+        DatabaseConstants.AuditOutbox.CreatedAt,
+        BatchSize);
 
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IAuditNotifier _notifier;
