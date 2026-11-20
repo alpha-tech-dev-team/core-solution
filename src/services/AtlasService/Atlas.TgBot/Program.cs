@@ -5,11 +5,11 @@ using CoreSolution.Shared.TgBot.DependencyInjection;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-builder.Services.AddTelegramBot(builder.Configuration);
 builder.Services.AddAtlasLogging(builder.Configuration);
 builder.Services.AddBotInfrastructure(builder.Configuration);
 builder.Services.AddApplication(builder.Configuration, builder.Environment);
 builder.Services.AddBotHandlers<AssemblyMarker>();
+builder.Services.AddTelegramBot(builder.Configuration);
 
 var app = builder.Build();
 
