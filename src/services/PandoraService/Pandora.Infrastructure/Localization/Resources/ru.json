@@ -14,6 +14,7 @@
     "VaultwardenUnavailable": "Сервис временно недоступен. Попробуйте позже.",
     "LoginLabel": "Логин",
     "PasswordLabel": "Пароль",
-    "CredentialsTemplate": "{0}\n{1}: {2}\n{3}: {4}"
+    "CredentialsTemplate": "{0}\n{1}: {2}\n{3}: {4}",
+    "AccessExpired": "Истёк срок доступа к «{0}», запрошенного {1} UTC"
   }
 }

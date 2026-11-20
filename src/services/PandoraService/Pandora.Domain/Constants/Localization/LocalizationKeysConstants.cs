@@ -21,5 +21,6 @@ public static class LocalizationKeysConstants
         public const string LoginLabel = "LoginLabel";
         public const string PasswordLabel = "PasswordLabel";
         public const string CredentialsTemplate = "CredentialsTemplate";
+        public const string AccessExpired = "AccessExpired";
     }
 }

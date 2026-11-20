@@ -51,6 +51,10 @@ public sealed class GetCredentialsHandler : IRequestHandler<GetCredentialsMessag
             _localizer.GetPhrase(nameof(WorkflowStep.ServiceSelection), LocalizationKeysConstants.ServiceSelection.PasswordLabel),
             secret.Password);
 
-        return Result<WorkflowResponse>.Success(new WorkflowResponse { Text = text });
+        return Result<WorkflowResponse>.Success(new WorkflowResponse
+        {
+            Text = text,
+            ContainsSensitiveData = true
+        });
     }
 }

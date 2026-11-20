@@ -6,4 +6,5 @@ public sealed class WorkflowResponse
     public IReadOnlyList<WorkflowButtonRow>? ButtonRows { get; set; }
     public bool RequestContact { get; set; }
     public string? ContactButtonText { get; set; }
+    public bool ContainsSensitiveData { get; set; }
 }
