@@ -14,7 +14,6 @@ public sealed class AtlasUserSession : UserSession
     public Guid? SoftwareId { get; set; }
     public string? IncidentDescription { get; set; }
     public int? RoomMenuMessageId { get; set; }
-
     [JsonIgnore]
     public WorkflowStep Step
     {
@@ -37,7 +36,6 @@ public sealed class AtlasUserSession : UserSession
         RoomId = null;
         HardwareId = null;
         SoftwareId = null;
-        RoomMenuMessageId = null;
         IncidentDescription = null;
     }
 

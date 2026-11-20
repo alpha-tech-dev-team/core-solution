@@ -55,7 +55,9 @@ public sealed class ShowHardwareHandler : IRequestHandler<ShowHardwareMessage, R
             query => query.OrderBy(item => item.Name).ThenBy(item => item.Id),
             cancellationToken);
 
-        if (page.Total == 0)
+        await _sessionService.UpdateState(session, nameof(WorkflowStep.HardwareSelection), cancellationToken);
+
+        if (page.Items.Count == 0)
         {
             return Result<WorkflowResponse>.Success(new WorkflowResponse
             {
@@ -66,7 +68,6 @@ public sealed class ShowHardwareHandler : IRequestHandler<ShowHardwareMessage, R
             });
         }
 
-        await _sessionService.UpdateState(session, nameof(WorkflowStep.HardwareSelection), cancellationToken);
         var rows = page.Items
             .Select(item => new WorkflowButtonRow(new WorkflowButton(
                 item.Name,

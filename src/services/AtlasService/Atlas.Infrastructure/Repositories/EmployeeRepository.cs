@@ -6,6 +6,7 @@ using Atlas.Domain.Interfaces.Repositories;
 using Atlas.Domain.Models;
 using Atlas.Infrastructure.Database.Context;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace Atlas.Infrastructure.Repositories;
 
@@ -49,13 +50,33 @@ public sealed class EmployeeRepository : IEmployeeRepository
             };
 
             _context.Employees.Add(employee);
+
+            try
+            {
+                await _context.SaveChangesAsync(cancellationToken);
+                return employee;
+            }
+            catch (DbUpdateException exception)
+                when (exception.InnerException is PostgresException
+                {
+                    SqlState: PostgresErrorCodes.UniqueViolation
+                })
+            {
+                _context.Entry(employee).State = EntityState.Detached;
+
+                employee = await _context.Employees
+                    .SingleAsync(candidate => candidate.TelegramUserId == telegramUserId, cancellationToken);
+            }
         }
-        else
+
+        if (directoryProfile is null)
         {
-            employee.Name = profile.Name;
-            employee.Surname = profile.Surname;
-            employee.Patronymic = profile.Patronymic;
+            return employee;
         }
+
+        employee.Name = profile.Name;
+        employee.Surname = profile.Surname;
+        employee.Patronymic = profile.Patronymic;
 
         await _context.SaveChangesAsync(cancellationToken);
 

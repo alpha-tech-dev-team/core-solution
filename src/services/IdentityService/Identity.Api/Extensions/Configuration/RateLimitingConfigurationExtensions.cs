@@ -22,6 +22,7 @@ public static class RateLimitingConfigurationExtensions
         {
             limiter.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
             limiter.AddPolicy<string, AuthRateLimitingPolicy>(RateLimitingPolicies.Auth);
+            limiter.AddPolicy<string, AuthRateLimitingPolicy>(RateLimitingPolicies.Client);
         });
 
         return services;

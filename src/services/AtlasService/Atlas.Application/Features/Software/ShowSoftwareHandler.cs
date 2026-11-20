@@ -54,7 +54,9 @@ public sealed class ShowSoftwareHandler : IRequestHandler<ShowSoftwareMessage, R
             query => query.OrderBy(item => item.Name).ThenBy(item => item.Version).ThenBy(item => item.Id),
             cancellationToken);
 
-        if (page.Total == 0)
+        await _sessionService.UpdateState(session, nameof(WorkflowStep.SoftwareSelection), cancellationToken);
+
+        if (page.Items.Count == 0)
         {
             return Result<WorkflowResponse>.Success(new WorkflowResponse
             {
@@ -65,11 +67,11 @@ public sealed class ShowSoftwareHandler : IRequestHandler<ShowSoftwareMessage, R
             });
         }
 
-        await _sessionService.UpdateState(session, nameof(WorkflowStep.SoftwareSelection), cancellationToken);
-
         var rows = page.Items
             .Select(item => new WorkflowButtonRow(new WorkflowButton(
-                item.Version is null ? item.Name : $"{item.Name} ({item.Version})",
+                item.Version is null
+                    ? item.Name
+                    : string.Format(SoftwareConstants.DisplayNameFormat, item.Name, item.Version),
                 CallbackConstants.SoftwarePrefix + item.Id)))
             .ToList();
 

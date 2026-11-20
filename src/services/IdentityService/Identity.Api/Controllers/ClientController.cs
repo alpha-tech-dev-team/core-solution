@@ -3,11 +3,13 @@ using Identity.Api.Extensions.Http;
 using Identity.Application.Contracts.Client;
 using Identity.Domain.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Identity.Api.Controllers;
 
 [ApiController]
 [Route(ApiRoutes.ClientGroup)]
+[EnableRateLimiting(RateLimitingPolicies.Client)]
 public sealed class ClientController : ControllerBase
 {
     private readonly IIdentityService _identityService;

@@ -6,10 +6,6 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Atlas.TgBot.BotHandlers;
 
-/// <summary>
-/// Единая отправка ответа бота: удаляет предыдущее сообщение бота и запоминает id нового,
-/// чтобы следующий ответ снова удалял именно сообщение бота, а не сообщение пользователя.
-/// </summary>
 public static class BotReplyExtensions
 {
     public static async Task SendReplyAsync(

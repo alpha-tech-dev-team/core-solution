@@ -1,5 +1,6 @@
 ﻿using Atlas.Infrastructure.Database.Constants;
 using Atlas.Domain.Entities;
+using Atlas.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -25,6 +26,8 @@ public sealed class IncidentCategoryConfiguration : IEntityTypeConfiguration<Inc
 
         builder.Property(x => x.Type)
             .HasColumnName(DatabaseConstants.IncidentCategory.Type)
+            .HasDefaultValue(IncidentCategoryType.Other)
+            .HasSentinel((IncidentCategoryType)(-1))
             .IsRequired();
 
         builder.HasIndex(x => x.Name)

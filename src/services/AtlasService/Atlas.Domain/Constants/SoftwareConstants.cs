@@ -2,6 +2,8 @@ namespace Atlas.Domain.Constants;
 
 public static class SoftwareConstants
 {
+    public const string DisplayNameFormat = "{0} ({1})";
+
     public static class Accounting
     {
         public static readonly Guid Id = Guid.Parse("c4d5e6f7-0819-4ca2-9d34-56e7f8091a2b");
