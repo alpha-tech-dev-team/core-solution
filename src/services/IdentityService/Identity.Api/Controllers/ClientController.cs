@@ -32,4 +32,12 @@ public sealed class ClientController : ControllerBase
 
         return result.ToActionResult();
     }
+
+    [HttpGet(ApiRoutes.Employee)]
+    public async Task<IActionResult> GetEmployee([FromRoute] GetEmployeeRequest request, CancellationToken cancellationToken)
+    {
+        var result = await _identityService.GetEmployee(request.TelegramUserId, cancellationToken);
+
+        return result.ToActionResult();
+    }
 }
