@@ -47,7 +47,6 @@ public sealed class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
             .HasDefaultValueSql(DatabaseConstants.Defaults.NowSql);
 
         builder.HasIndex(x => x.TelegramUserId)
-            .HasDatabaseName(DatabaseConstants.Employee.TelegramUserIdIndex)
             .IsUnique();
     }
 }

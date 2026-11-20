@@ -1,3 +1,4 @@
+using Atlas.Application.Abstractions;
 using Atlas.Domain.Entities;
 using Atlas.TgBot.Notifications;
 using CoreSolution.Shared.Abstractions;
@@ -18,6 +19,17 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
     private const long TicketNumber = 1042;
 
     [Fact]
+    public void DependencyInjection_AtlasScope_ResolvesIncidentNotificationService()
+    {
+        using var atlas = fixture.CreateAtlasServiceProvider();
+        using var scope = atlas.CreateScope();
+
+        var service = scope.ServiceProvider.GetRequiredService<IIncidentNotificationService>();
+
+        Assert.IsType<IncidentNotificationService>(service);
+    }
+
+    [Fact]
     public async Task NotifyAcceptedAsync_AuthorAndEngineer_NotifiesBothInOrder()
     {
         await using var atlas = fixture.CreateAtlasServiceProvider();
@@ -33,6 +45,7 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
         Assert.All(
             notifications.Messages,
             message => Assert.Contains(TicketNumber.ToString(), message.Text));
+        Assert.All(notifications.Messages, message => Assert.True(message.IsAlert));
     }
 
     [Fact]
@@ -90,6 +103,7 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
         var message = Assert.Single(notifications.Messages);
         Assert.Contains(TicketNumber.ToString(), message.Text);
         Assert.Contains(resolution, message.Text);
+        Assert.True(message.IsAlert);
     }
 
     [Fact]
@@ -151,7 +165,7 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
 
     private sealed class RecordingNotificationService(long? failingChatId = null) : ITelegramNotificationService
     {
-        public List<(long ChatId, string Text)> Messages { get; } = [];
+        public List<(long ChatId, string Text, bool IsAlert)> Messages { get; } = [];
 
         public Task<Message> SendMessageAsync(
             long chatId,
@@ -159,16 +173,7 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
             ReplyMarkup? replyMarkup = null,
             CancellationToken cancellationToken = default)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            if (chatId == failingChatId)
-            {
-                throw new InvalidOperationException("Telegram send failed.");
-            }
-
-            Messages.Add((chatId, text));
-
-            return Task.FromResult(new Message());
+            return RecordMessageAsync(chatId, text, replyMarkup, isAlert: false, cancellationToken);
         }
 
         public Task<Message> SendAlertAsync(
@@ -177,7 +182,26 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
             ReplyMarkup? replyMarkup = null,
             CancellationToken cancellationToken = default)
         {
-            return SendMessageAsync(chatId, text, replyMarkup, cancellationToken);
+            return RecordMessageAsync(chatId, text, replyMarkup, isAlert: true, cancellationToken);
+        }
+
+        private Task<Message> RecordMessageAsync(
+            long chatId,
+            string text,
+            ReplyMarkup? replyMarkup,
+            bool isAlert,
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (chatId == failingChatId)
+            {
+                throw new InvalidOperationException("Telegram send failed.");
+            }
+
+            Messages.Add((chatId, text, isAlert));
+
+            return Task.FromResult(new Message());
         }
 
         public Task<Message> EditMessageAsync(

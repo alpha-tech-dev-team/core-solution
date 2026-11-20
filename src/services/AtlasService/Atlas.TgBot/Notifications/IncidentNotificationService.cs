@@ -27,7 +27,7 @@ public sealed class IncidentNotificationService : IIncidentNotificationService
     {
         var text = string.Format(
             _localizer.GetPhrase(
-                LocalizationKeysConstants.IncidentAcceptedStateName,
+                nameof(LocalizationKeysConstants.IncidentAccepted),
                 LocalizationKeysConstants.IncidentAccepted.Text),
             incident.TicketNumber);
 
@@ -38,7 +38,7 @@ public sealed class IncidentNotificationService : IIncidentNotificationService
     {
         var text = string.Format(
             _localizer.GetPhrase(
-                LocalizationKeysConstants.IncidentResolvedStateName,
+                nameof(LocalizationKeysConstants.IncidentResolved),
                 LocalizationKeysConstants.IncidentResolved.Text),
             incident.TicketNumber,
             incident.Resolution ?? string.Empty);
@@ -72,7 +72,7 @@ public sealed class IncidentNotificationService : IIncidentNotificationService
         {
             try
             {
-                await _telegramNotificationService.SendMessageAsync(
+                await _telegramNotificationService.SendAlertAsync(
                     chatId,
                     text,
                     cancellationToken: cancellationToken);
