@@ -1,6 +1,6 @@
 using Atlas.Application.Common;
 using Atlas.Application.Features.Rooms;
-using CoreSolution.Shared.Models;
+using CoreSolution.Shared.Abstractions;
 using CoreSolution.Shared.TgBot.Abstractions;
 using CoreSolution.Shared.TgBot.Extensions;
 using MediatR;
@@ -14,15 +14,21 @@ public sealed class ShowRoomPageBotHandler : IBotHandler
     private readonly IMediator _mediator;
     private readonly ITelegramNotificationService _telegramNotificationService;
     private readonly IUserErrorMapper _userErrorMapper;
+    private readonly IRequestContext _requestContext;
+    private readonly ISessionService _sessionService;
 
     public ShowRoomPageBotHandler(
         IMediator mediator,
         ITelegramNotificationService telegramNotificationService,
-        IUserErrorMapper userErrorMapper)
+        IUserErrorMapper userErrorMapper,
+        IRequestContext requestContext,
+        ISessionService sessionService)
     {
         _mediator = mediator;
         _telegramNotificationService = telegramNotificationService;
         _userErrorMapper = userErrorMapper;
+        _requestContext = requestContext;
+        _sessionService = sessionService;
     }
 
     public bool CanHandle(Update update)
@@ -38,9 +44,10 @@ public sealed class ShowRoomPageBotHandler : IBotHandler
                 new ShowRoomsMessage(telegramUserId, messageId, data.ParseRoomPage()),
                 cancellationToken);
 
-            await _telegramNotificationService.SendOrEditAsync(
+            await _telegramNotificationService.SendReplyAsync(
+                _requestContext,
+                _sessionService,
                 telegramUserId,
-                messageId,
                 result.GetUserText(_userErrorMapper),
                 result.ToTelegramMarkup() as InlineKeyboardMarkup,
                 cancellationToken);

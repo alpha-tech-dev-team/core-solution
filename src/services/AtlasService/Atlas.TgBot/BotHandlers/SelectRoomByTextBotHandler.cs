@@ -3,7 +3,6 @@ using Atlas.Application.Features.Rooms;
 using Atlas.Domain.Enums;
 using Atlas.Domain.Models;
 using CoreSolution.Shared.Abstractions;
-using CoreSolution.Shared.Models;
 using CoreSolution.Shared.TgBot.Abstractions;
 using CoreSolution.Shared.TgBot.Extensions;
 using MediatR;
@@ -18,17 +17,20 @@ public sealed class SelectRoomByTextBotHandler : IBotHandler
     private readonly ITelegramNotificationService _telegramNotificationService;
     private readonly IUserErrorMapper _userErrorMapper;
     private readonly IRequestContext _requestContext;
+    private readonly ISessionService _sessionService;
 
     public SelectRoomByTextBotHandler(
         IMediator mediator,
         ITelegramNotificationService telegramNotificationService,
         IUserErrorMapper userErrorMapper,
-        IRequestContext requestContext)
+        IRequestContext requestContext,
+        ISessionService sessionService)
     {
         _mediator = mediator;
         _telegramNotificationService = telegramNotificationService;
         _userErrorMapper = userErrorMapper;
         _requestContext = requestContext;
+        _sessionService = sessionService;
     }
 
     public bool CanHandle(Update update)
@@ -47,20 +49,10 @@ public sealed class SelectRoomByTextBotHandler : IBotHandler
                 new SelectRoomByTextMessage(telegramUserId, messageId, text, menuMessageId),
                 cancellationToken);
 
-            if (menuMessageId is null)
-            {
-                await _telegramNotificationService.SendMessageAsync(
-                    telegramUserId,
-                    result.GetUserText(_userErrorMapper),
-                    result.ToTelegramMarkup() as InlineKeyboardMarkup,
-                    cancellationToken);
-
-                return;
-            }
-
-            await _telegramNotificationService.SendOrEditAsync(
+            await _telegramNotificationService.SendReplyAsync(
+                _requestContext,
+                _sessionService,
                 telegramUserId,
-                menuMessageId.Value,
                 result.GetUserText(_userErrorMapper),
                 result.ToTelegramMarkup() as InlineKeyboardMarkup,
                 cancellationToken);
