@@ -12,6 +12,7 @@ public static class RouteConfigurationExtensions
         }
 
         app.MapSecretsEndpoints();
+        app.MapEmployeeSecretsEndpoints();
 
         return app;
     }

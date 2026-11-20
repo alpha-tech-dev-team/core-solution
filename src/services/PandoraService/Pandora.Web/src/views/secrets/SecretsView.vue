@@ -22,8 +22,10 @@ const {
   formPassword,
   selectedItem,
   selectedId,
+  showPasswords,
   errorMessage,
   changePage,
+  togglePasswords,
   openCreateForm,
   closeForm,
   selectRow,
@@ -48,7 +50,13 @@ const {
 
     <main class="page__body">
       <div class="toolbar">
-        <h2>{{ tr(RESOURCE_KEYS.SECRETS_TITLE) }}</h2>
+        <div class="toolbar__group">
+          <h2>{{ tr(RESOURCE_KEYS.SECRETS_TITLE) }}</h2>
+          <label class="checkbox">
+            <input type="checkbox" :checked="showPasswords" @change="togglePasswords" />
+            {{ tr(RESOURCE_KEYS.SECRETS_SHOW_PASSWORDS) }}
+          </label>
+        </div>
         <div v-if="!isFormVisible" class="toolbar__group">
           <button class="btn btn--primary" @click="openCreateForm">
             {{ tr(RESOURCE_KEYS.SECRETS_ADD) }}
@@ -102,6 +110,7 @@ const {
           <tr>
             <th>{{ tr(RESOURCE_KEYS.SECRETS_FIELD_NAME) }}</th>
             <th>{{ tr(RESOURCE_KEYS.SECRETS_FIELD_USERNAME) }}</th>
+            <th v-if="showPasswords">{{ tr(RESOURCE_KEYS.SECRETS_FIELD_PASSWORD) }}</th>
           </tr>
         </thead>
         <tbody>
@@ -113,6 +122,7 @@ const {
           >
             <td>{{ item.name }}</td>
             <td>{{ item.username }}</td>
+            <td v-if="showPasswords">{{ item.password ?? '' }}</td>
           </tr>
         </tbody>
       </table>
