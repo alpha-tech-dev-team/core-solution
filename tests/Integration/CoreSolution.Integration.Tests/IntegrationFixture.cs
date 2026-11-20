@@ -1,6 +1,8 @@
 ﻿using Atlas.Domain.Constants;
+using Atlas.Domain.Interfaces;
 using Atlas.Infrastructure.Database.Context;
 using Atlas.Infrastructure.Database.Seeds;
+using Atlas.Infrastructure.Identity;
 using AppRole = CoreSolution.Shared.Enums.UserRole;
 using Atlas.TgBot.Extensions.DependencyInjection;
 using CoreSolution.Shared.Abstractions;
@@ -239,6 +241,8 @@ public sealed class IntegrationFixture : IAsyncLifetime
         services.AddApplication(configuration, new TestHostEnvironment(Environments.Development));
         services.AddHttpClient<IIdentityClient, IdentityClient>()
             .ConfigurePrimaryHttpMessageHandler(() => _identity.Server.CreateHandler());
+        services.AddHttpClient<IEmployeeDirectory, IdentityEmployeeDirectory>()
+            .ConfigurePrimaryHttpMessageHandler(() => _identity.Server.CreateHandler());
 
         return services.BuildServiceProvider();
     }
@@ -256,6 +260,8 @@ public sealed class IntegrationFixture : IAsyncLifetime
             await IncidentCategorySeed.SeedAsync(dbContext);
             await EquipmentTypeSeed.SeedAsync(dbContext);
             await RoomSeed.SeedAsync(dbContext);
+            await HardwareSeed.SeedAsync(dbContext);
+            await SoftwareSeed.SeedAsync(dbContext);
 
             _atlasMigrated = true;
         }

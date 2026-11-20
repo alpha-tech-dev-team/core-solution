@@ -1,9 +1,11 @@
 using System.Net;
 using System.Net.Http.Json;
+using CoreSolution.Shared.Constants;
 using Identity.Api.Models;
 using Identity.Application.Contracts.Client;
 using Identity.Application.Errors;
 using Identity.Domain.Enums;
+using Identity.Domain.Models;
 using Xunit;
 
 namespace CoreSolution.Integration.Tests.IdentityTests;
@@ -121,5 +123,35 @@ public sealed class IdentityApiTests(IntegrationFixture fixture)
         var response = await client.PostAsJsonAsync(CheckRoute, new CheckUserRequest(telegramUserId, "Pandora"));
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetEmployee_ActivatedUser_ReturnsProfile()
+    {
+        const string phone = "+79995550008";
+        const long telegramUserId = 9008;
+
+        await fixture.SeedPendingUserAsync(phone);
+        using var client = fixture.CreateIdentityHttpClient();
+        _ = await client.PostAsJsonAsync(ActivateRoute, new ActivateUserRequest(telegramUserId, phone));
+
+        var response = await client.GetAsync(ClientApiRoutes.EmployeeByTelegramUser(telegramUserId));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var profile = await response.Content.ReadFromJsonAsync<EmployeeProfile>();
+
+        Assert.Equal("Integration", profile!.Name);
+        Assert.Equal("Test", profile.Surname);
+    }
+
+    [Fact]
+    public async Task GetEmployee_UnknownUser_ReturnsNotFound()
+    {
+        using var client = fixture.CreateIdentityHttpClient();
+
+        var response = await client.GetAsync(ClientApiRoutes.EmployeeByTelegramUser(9009));
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 }
