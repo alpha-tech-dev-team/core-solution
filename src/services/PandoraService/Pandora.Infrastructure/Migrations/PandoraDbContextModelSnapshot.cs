@@ -73,6 +73,29 @@ namespace Pandora.Infrastructure.Migrations
                     b.ToTable("audit", (string)null);
                 });
 
+            modelBuilder.Entity("Pandora.Domain.Entities.AuditOutboxEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("payload");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.ToTable("audit_outbox", (string)null);
+                });
+
             modelBuilder.Entity("Pandora.Domain.Entities.Permission", b =>
                 {
                     b.Property<long>("TelegramUserId")

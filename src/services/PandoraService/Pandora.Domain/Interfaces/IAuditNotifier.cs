@@ -1,8 +1,8 @@
-using Pandora.Domain.Entities;
+using Pandora.Domain.Models;
 
 namespace Pandora.Domain.Interfaces;
 
 public interface IAuditNotifier
 {
-    Task Notify(AuditEntry entry);
+    Task Notify(AuditEntryNotification notification);
 }

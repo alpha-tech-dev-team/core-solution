@@ -7,7 +7,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using Pandora.Domain.Constants;
 using Pandora.Domain.Entities;
+using Pandora.Infrastructure.Audit;
 using Pandora.Infrastructure.Database;
+using Pandora.TgBot.Application.Common.Services;
 using Pandora.TgBot.Application.Features.Credentials;
 using Pandora.TgBot.Application.Features.Services;
 using Xunit;
@@ -155,6 +157,32 @@ public sealed class UserActivityAuditTests(IntegrationFixture fixture)
         {
             await RenameAuditTableAsync("audit");
         }
+    }
+
+    [Fact]
+    public async Task Log_WritesAuditEntryAndOutboxEntryInSameSave()
+    {
+        const long telegramUserId = 8109;
+        const string action = "telegram_outbox_test";
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+        using var scope = provider.CreateScope();
+        var auditLogger = scope.ServiceProvider.GetRequiredService<UserActivityAuditLogger>();
+
+        await auditLogger.Log(telegramUserId, action, "target-item", CancellationToken.None);
+
+        var database = scope.ServiceProvider.GetRequiredService<PandoraDbContext>();
+        var entry = Assert.Single(await database.AuditEntry.AsNoTracking()
+            .Where(item => item.TelegramUserId == telegramUserId)
+            .ToListAsync());
+        var outbox = Assert.Single(await database.AuditOutbox.AsNoTracking()
+            .Where(item => item.Payload.Contains(entry.Id.ToString()))
+            .ToListAsync());
+        var notification = AuditNotificationSerializer.Deserialize(outbox.Payload);
+
+        Assert.Equal(action, entry.Action);
+        Assert.NotNull(notification);
+        Assert.Equal(entry.Id, notification.Id);
+        Assert.Equal(telegramUserId, notification.TelegramUserId);
     }
 
     private async Task RenameAuditTableAsync(string targetName)

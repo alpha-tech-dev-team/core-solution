@@ -43,4 +43,12 @@ public static class DatabaseConstants
         public const int TargetItemIdMaxLength = 36;
         public const int RequestSourceMaxLength = 20;
     }
+
+    public static class AuditOutbox
+    {
+        public const string Table = "audit_outbox";
+        public const string Id = "id";
+        public const string Payload = "payload";
+        public const string CreatedAt = "created_at";
+    }
 }

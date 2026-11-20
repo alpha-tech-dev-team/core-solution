@@ -1,6 +1,4 @@
-using System.Text.Json;
 using Microsoft.AspNetCore.SignalR;
-using Pandora.Domain.Models;
 using Pandora.Infrastructure.Audit;
 using StackExchange.Redis;
 
@@ -9,7 +7,6 @@ namespace Pandora.Api.Hubs;
 public sealed class AuditNotificationSubscriber : BackgroundService
 {
     private const int SubscriptionRetryDelaySeconds = 5;
-    private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
 
     private readonly IConnectionMultiplexer _redis;
     private readonly IHubContext<AuditHub> _hubContext;
@@ -83,9 +80,7 @@ public sealed class AuditNotificationSubscriber : BackgroundService
     {
         try
         {
-            var notification = JsonSerializer.Deserialize<AuditEntryNotification>(
-                message.Message.ToString(),
-                SerializerOptions);
+            var notification = AuditNotificationSerializer.Deserialize(message.Message.ToString());
 
             if (notification is not null)
             {

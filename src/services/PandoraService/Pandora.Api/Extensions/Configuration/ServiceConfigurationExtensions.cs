@@ -52,8 +52,12 @@ public static class ServiceConfigurationExtensions
 
     public static IServiceCollection AddDatabaseConfiguration(this IServiceCollection services, IConfiguration configuration)
     {
+        var redisConnection = configuration.GetSection(DatabaseOptions.SectionName).Get<DatabaseOptions>()?.RedisConnection;
+        var writeOutbox = !string.IsNullOrWhiteSpace(redisConnection);
+
         services.AddScoped<IAuditContext, AuditContext>();
-        services.AddScoped<AuditSaveChangesInterceptor>();
+        services.AddScoped<AuditSaveChangesInterceptor>(serviceProvider =>
+            new AuditSaveChangesInterceptor(serviceProvider.GetRequiredService<IAuditContext>(), writeOutbox));
 
         services.AddDbContext<PandoraDbContext>((serviceProvider, options) => options
             .UseNpgsql(serviceProvider.GetRequiredService<IOptions<DatabaseOptions>>().Value.ConnectionString)
@@ -64,13 +68,12 @@ public static class ServiceConfigurationExtensions
 
         services.AddSignalR();
 
-        var redisConnection = configuration.GetSection(DatabaseOptions.SectionName).Get<DatabaseOptions>()?.RedisConnection;
-
-        if (!string.IsNullOrWhiteSpace(redisConnection))
+        if (writeOutbox)
         {
-            services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConnection));
+            services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConnection!));
             services.AddSingleton<IAuditNotifier, RedisAuditNotifier>();
             services.AddHostedService<AuditNotificationSubscriber>();
+            services.AddHostedService<AuditOutboxPublisher>();
         }
 
         return services;

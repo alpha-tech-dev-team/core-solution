@@ -1,7 +1,5 @@
-using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Pandora.Domain.Constants;
-using Pandora.Domain.Entities;
 using Pandora.Domain.Interfaces;
 using Pandora.Domain.Models;
 using StackExchange.Redis;
@@ -12,8 +10,6 @@ public sealed class RedisAuditNotifier : IAuditNotifier
 {
     public static readonly RedisChannel Channel = RedisChannel.Literal(AuditConstants.AuditChannel);
 
-    private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
-
     private readonly IConnectionMultiplexer _redis;
     private readonly ILogger<RedisAuditNotifier> _logger;
 
@@ -23,16 +19,17 @@ public sealed class RedisAuditNotifier : IAuditNotifier
         _logger = logger;
     }
 
-    public async Task Notify(AuditEntry entry)
+    public async Task Notify(AuditEntryNotification notification)
     {
         try
         {
-            var payload = JsonSerializer.Serialize(AuditEntryNotification.From(entry), SerializerOptions);
+            var payload = AuditNotificationSerializer.Serialize(notification);
             await _redis.GetSubscriber().PublishAsync(Channel, payload);
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "Не удалось отправить уведомление об аудите {Action}", entry.Action);
+            _logger.LogError(exception, "Не удалось отправить уведомление об аудите {Action}", notification.Action);
+            throw;
         }
     }
 }

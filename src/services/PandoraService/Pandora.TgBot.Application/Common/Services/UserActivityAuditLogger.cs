@@ -8,17 +8,17 @@ namespace Pandora.TgBot.Application.Common.Services;
 
 public sealed class UserActivityAuditLogger
 {
-    private readonly IAuditRepository _auditRepository;
-    private readonly IAuditNotifier _auditNotifier;
+    private readonly IAuditContext _auditContext;
+    private readonly IAuditSaver _auditSaver;
     private readonly ILogger<UserActivityAuditLogger> _logger;
 
     public UserActivityAuditLogger(
-        IAuditRepository auditRepository,
-        IAuditNotifier auditNotifier,
+        IAuditContext auditContext,
+        IAuditSaver auditSaver,
         ILogger<UserActivityAuditLogger> logger)
     {
-        _auditRepository = auditRepository;
-        _auditNotifier = auditNotifier;
+        _auditContext = auditContext;
+        _auditSaver = auditSaver;
         _logger = logger;
     }
 
@@ -33,8 +33,8 @@ public sealed class UserActivityAuditLogger
 
         try
         {
-            await _auditRepository.Add(entry, cancellationToken);
-            await _auditNotifier.Notify(entry);
+            _auditContext.Enqueue(entry);
+            await _auditSaver.SaveAsync(cancellationToken);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
