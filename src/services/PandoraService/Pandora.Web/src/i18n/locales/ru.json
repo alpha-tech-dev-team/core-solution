@@ -104,5 +104,15 @@
   "error_code_InvalidSecretData": "Некорректные данные секрета",
   "error_code_VaultwardenUnavailable": "Хранилище секретов временно недоступно",
   "error_code_DatabaseUnavailable": "База данных временно недоступна",
-  "error_code_MalformedRequest": "Некорректный запрос"
+  "error_code_MalformedRequest": "Некорректный запрос",
+  "nav_settings": "Настройки",
+  "settings_title": "Настройки",
+  "settings_credential_access_title": "Время жизни учётных данных в боте",
+  "settings_credential_access_ttl": "Срок доступа",
+  "settings_credential_access_minutes": "мин",
+  "settings_credential_access_hint": "Сообщение с логином и паролем удаляется из чата.",
+  "settings_credential_access_updated_at": "Последнее изменение: {0}",
+  "settings_credential_access_not_updated": "Используется значение по умолчанию.",
+  "settings_save": "Сохранить",
+  "settings_saved": "Настройки сохранены"
 }

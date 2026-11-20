@@ -64,4 +64,15 @@ export const RESOURCE_KEYS = {
   SECRETS_PAGE_NEXT: 'secrets_page_next',
   SECRETS_PAGE_INFO: 'secrets_page_info',
   SECRETS_SHOW_PASSWORDS: 'secrets_show_passwords',
+
+  NAV_SETTINGS: 'nav_settings',
+  SETTINGS_TITLE: 'settings_title',
+  SETTINGS_CREDENTIAL_ACCESS_TITLE: 'settings_credential_access_title',
+  SETTINGS_CREDENTIAL_ACCESS_TTL: 'settings_credential_access_ttl',
+  SETTINGS_CREDENTIAL_ACCESS_MINUTES: 'settings_credential_access_minutes',
+  SETTINGS_CREDENTIAL_ACCESS_HINT: 'settings_credential_access_hint',
+  SETTINGS_CREDENTIAL_ACCESS_UPDATED_AT: 'settings_credential_access_updated_at',
+  SETTINGS_CREDENTIAL_ACCESS_NOT_UPDATED: 'settings_credential_access_not_updated',
+  SETTINGS_SAVE: 'settings_save',
+  SETTINGS_SAVED: 'settings_saved',
 } as const
