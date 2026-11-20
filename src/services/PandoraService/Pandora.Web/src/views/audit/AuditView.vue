@@ -20,6 +20,7 @@ const {
   totalPages,
   isLoading,
   errorMessage,
+  tooManyMatches,
   changePage,
   toggleSort,
   isSortedBy,
@@ -78,14 +79,18 @@ const {
         </label>
       </div>
 
-      <p v-if="errorMessage" class="alert alert--error">{{ errorMessage }}</p>
-      <p v-if="isLoading" class="text-muted">{{ LOADING_PLACEHOLDER }}</p>
+      <p v-if="tooManyMatches" class="alert alert--error">
+        {{ tr(RESOURCE_KEYS.AUDIT_TOO_MANY_MATCHES) }}
+      </p>
 
-      <p v-else-if="entries.length === 0" class="text-muted">
+      <p v-if="errorMessage" class="alert alert--error">{{ errorMessage }}</p>
+      <p v-if="isLoading && !tooManyMatches" class="text-muted">{{ LOADING_PLACEHOLDER }}</p>
+
+      <p v-else-if="entries.length === 0 && !tooManyMatches" class="text-muted">
         {{ tr(RESOURCE_KEYS.AUDIT_EMPTY) }}
       </p>
 
-      <table v-else class="table">
+      <table v-else-if="!tooManyMatches" class="table">
         <thead>
           <tr>
             <th :aria-sort="sortAriaValue(AUDIT_SORT_FIELDS.TIMESTAMP)">
@@ -163,6 +168,7 @@ const {
       </table>
 
       <PaginationNav
+        v-if="!tooManyMatches"
         :page="page"
         :total-pages="totalPages"
         :prev-label="tr(RESOURCE_KEYS.AUDIT_PAGE_PREV)"

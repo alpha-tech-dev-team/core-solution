@@ -1,7 +1,7 @@
 import { onMounted, onUnmounted, ref } from 'vue'
 import { FIRST_PAGE } from '@shared/constants/pagination'
 import { fetchEmployeeNames, refreshEmployeeNames, type EmployeeNames } from '@/api/employees'
-import { AUDIT_LIVE_REFRESH_DEBOUNCE_MS } from '@/constants/audit'
+import { AUDIT_LIVE_REFRESH_DEBOUNCE_MS, AUDIT_MAX_NAME_MATCH_IDS } from '@/constants/audit'
 import type { AuditEntry } from '@/models/audit-entry'
 import { useAuditEntries } from './use-audit-entries'
 import { useAuditFilters } from './use-audit-filters'
@@ -9,6 +9,7 @@ import { useAuditLiveUpdates } from './use-audit-live-updates'
 
 export function useAuditView() {
   const employeeNames = ref<EmployeeNames>({ byId: new Map(), byTelegramId: new Map() })
+  const tooManyMatches = ref(false)
   const filters = useAuditFilters(applyQuery)
   const entries = useAuditEntries(filters.query)
   let liveRefreshTimer: number | undefined
@@ -17,30 +18,50 @@ export function useAuditView() {
 
   async function applyQuery(): Promise<void> {
     const actors = matchActorIds(filters.query.search)
+    tooManyMatches.value = actors.tooManyMatches
     filters.query.userIds = actors.userIds ?? ''
     filters.query.telegramUserIds = actors.telegramUserIds ?? ''
     entries.page.value = FIRST_PAGE
+
+    if (tooManyMatches.value) {
+      entries.entries.value = []
+      return
+    }
+
     await entries.load()
   }
 
   function matchActorIds(search: string | undefined): {
     userIds?: string
     telegramUserIds?: string
+    tooManyMatches: boolean
   } {
     const needle = search?.trim().toLowerCase()
 
-    if (!needle) return {}
+    if (!needle) return { tooManyMatches: false }
 
-    const userIds = [...employeeNames.value.byId]
-      .filter(([, name]) => matchesName(name, needle))
-      .map(([id]) => id)
-    const telegramUserIds = [...employeeNames.value.byTelegramId]
-      .filter(([, name]) => matchesName(name, needle))
-      .map(([id]) => String(id))
+    const matchedEmployeeIds = new Set<string>()
+    const userIds: string[] = []
+    const telegramUserIds: string[] = []
+
+    for (const [id, name] of employeeNames.value.byId) {
+      if (!matchesName(name, needle)) continue
+      matchedEmployeeIds.add(id)
+      userIds.push(id)
+    }
+
+    for (const [telegramId, name] of employeeNames.value.byTelegramId) {
+      if (matchesName(name, needle)) telegramUserIds.push(String(telegramId))
+    }
+
+    if (matchedEmployeeIds.size > AUDIT_MAX_NAME_MATCH_IDS) {
+      return { tooManyMatches: true }
+    }
 
     return {
       userIds: userIds.join(',') || undefined,
       telegramUserIds: telegramUserIds.join(',') || undefined,
+      tooManyMatches: false,
     }
   }
 
@@ -142,6 +163,7 @@ export function useAuditView() {
     totalPages: entries.totalPages,
     isLoading: entries.isLoading,
     errorMessage: entries.errorMessage,
+    tooManyMatches,
     changePage: entries.changePage,
     toggleSort: filters.toggleSort,
     isSortedBy: filters.isSortedBy,

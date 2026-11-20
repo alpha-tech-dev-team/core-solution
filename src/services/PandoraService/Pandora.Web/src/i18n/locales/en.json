@@ -106,6 +106,7 @@
   "audit_column_source": "Source",
   "audit_empty": "No entries",
   "audit_search_placeholder": "Search by action, object, source, user name or ID",
+  "audit_too_many_matches": "Too many matches, please refine the name",
   "audit_filter_all": "All",
   "audit_page_prev": "Previous",
   "audit_page_next": "Next",

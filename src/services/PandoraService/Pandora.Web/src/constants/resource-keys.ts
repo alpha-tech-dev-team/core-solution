@@ -52,6 +52,7 @@ export const RESOURCE_KEYS = {
   AUDIT_COLUMN_SOURCE: 'audit_column_source',
   AUDIT_EMPTY: 'audit_empty',
   AUDIT_SEARCH_PLACEHOLDER: 'audit_search_placeholder',
+  AUDIT_TOO_MANY_MATCHES: 'audit_too_many_matches',
   AUDIT_FILTER_ALL: 'audit_filter_all',
   AUDIT_PAGE_PREV: 'audit_page_prev',
   AUDIT_PAGE_NEXT: 'audit_page_next',

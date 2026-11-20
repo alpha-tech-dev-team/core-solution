@@ -106,6 +106,7 @@
   "audit_column_source": "Источник",
   "audit_empty": "Записей нет",
   "audit_search_placeholder": "Поиск по действию, объекту, источнику, имени или ID пользователя",
+  "audit_too_many_matches": "Слишком много совпадений, уточните имя",
   "audit_filter_all": "Все",
   "audit_page_prev": "Назад",
   "audit_page_next": "Вперёд",

@@ -10,44 +10,72 @@ export interface AuditLiveUpdates {
 export function useAuditLiveUpdates(onEntry: (entry: AuditEntry) => void): AuditLiveUpdates {
   const connection = createAuditHubConnection(onEntry)
   let disposed = false
+  let loopActive = false
+  let reconnectPending = false
   let retryTimer: number | undefined
   let retryResolve: (() => void) | undefined
 
-  async function start(): Promise<void> {
-    while (!disposed) {
-      try {
-        await connection.start()
+  function settleRetry(): void {
+    if (retryTimer !== undefined) {
+      window.clearTimeout(retryTimer)
+      retryTimer = undefined
+    }
+    reconnectPending = false
+    retryResolve?.()
+    retryResolve = undefined
+  }
 
-        if (disposed) {
-          await connection.stop()
+  function waitBeforeRetry(): Promise<boolean> {
+    reconnectPending = true
+
+    return new Promise((resolve) => {
+      retryResolve = () => resolve(!disposed)
+      retryTimer = window.setTimeout(settleRetry, AUDIT_LIVE_RECONNECT_DELAY_MS)
+    })
+  }
+
+  async function start(): Promise<void> {
+    if (loopActive || disposed) return
+
+    loopActive = true
+
+    try {
+      while (!disposed) {
+        try {
+          await connection.start()
+
+          loopActive = false
+
+          if (disposed) {
+            await connection.stop()
+          }
+
+          return
+        } catch (error) {
+          console.error('Не удалось подключиться к каналу аудита', error)
         }
 
-        return
-      } catch (error) {
-        console.error('Не удалось подключиться к каналу аудита', error)
+        if (disposed) return
+        if (!(await waitBeforeRetry())) return
       }
-
-      await waitBeforeRetry()
+    } finally {
+      loopActive = false
     }
   }
 
-  function waitBeforeRetry(): Promise<void> {
-    return new Promise((resolve) => {
-      retryResolve = resolve
-      retryTimer = window.setTimeout(() => {
-        retryResolve = undefined
-        resolve()
-      }, AUDIT_LIVE_RECONNECT_DELAY_MS)
+  connection.onclose(() => {
+    if (disposed || loopActive || reconnectPending) return
+
+    void waitBeforeRetry().then((stillActive) => {
+      if (stillActive) void start()
     })
-  }
+  })
 
   return {
     start,
     dispose: () => {
       disposed = true
-      window.clearTimeout(retryTimer)
-      retryResolve?.()
-      retryResolve = undefined
+      settleRetry()
       void connection.stop()
     },
   }
