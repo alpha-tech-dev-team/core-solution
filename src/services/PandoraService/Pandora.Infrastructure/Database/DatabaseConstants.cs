@@ -49,4 +49,33 @@ public static class DatabaseConstants
         public const int TargetItemIdMaxLength = 36;
         public const int RequestSourceMaxLength = 20;
     }
+
+    public static class CredentialAccessMessages
+    {
+        public const string Table = "credential_access_messages";
+        public const string Id = "id";
+        public const string ChatId = "chat_id";
+        public const string MessageId = "message_id";
+        public const string ItemId = "item_id";
+        public const string ItemName = "item_name";
+        public const string RequestedAt = "requested_at";
+        public const string ExpiresAt = "expires_at";
+        public const string NextAttemptAt = "next_attempt_at";
+        public const string DeletedAt = "deleted_at";
+        public const string NotifiedAt = "notified_at";
+        public const string Attempts = "attempts";
+        public const string LastError = "last_error";
+        public const int ItemIdMaxLength = 36;
+        public const int ItemNameMaxLength = 100;
+        public const int LastErrorMaxLength = 500;
+    }
+
+    public static class CredentialAccessSettings
+    {
+        public const string Table = "credential_access_settings";
+        public const string Id = "id";
+        public const string TtlMinutes = "ttl_minutes";
+        public const string UpdatedAt = "updated_at";
+        public const string UpdatedBy = "updated_by";
+    }
 }
