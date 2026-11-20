@@ -13,6 +13,7 @@ public static class RouteConfigurationExtensions
 
         app.MapSecretsEndpoints();
         app.MapEmployeeSecretsEndpoints();
+        app.MapCredentialAccessSettingsEndpoints();
 
         return app;
     }
