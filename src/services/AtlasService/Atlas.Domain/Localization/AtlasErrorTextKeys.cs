@@ -20,9 +20,19 @@ public static class AtlasErrorTextKeys
         [nameof(ErrorCode.InvalidMessageId)] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.InvalidMessageId),
         [nameof(ErrorCode.InvalidPageNumber)] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.InvalidPageNumber),
         [nameof(ErrorCode.InvalidCategoryId)] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.InvalidCategoryId),
+        [nameof(ErrorCode.InvalidHardwareId)] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.InvalidHardwareId),
+        [nameof(ErrorCode.InvalidSoftwareId)] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.InvalidSoftwareId),
         [nameof(ErrorCode.RoomsNotFound)] = (nameof(WorkflowStep.RoomSelection), LocalizationKeysConstants.RoomSelection.RoomsNotFound),
         [nameof(ErrorCode.RoomNotFound)] = (nameof(WorkflowStep.RoomSelection), LocalizationKeysConstants.RoomSelection.RoomNotFound),
+        [nameof(ErrorCode.HardwareNotFound)] = (nameof(WorkflowStep.HardwareSelection), LocalizationKeysConstants.HardwareSelection.NotFound),
+        [nameof(ErrorCode.HardwareNotConfigured)] = (nameof(WorkflowStep.HardwareSelection), LocalizationKeysConstants.HardwareSelection.NotConfigured),
+        [nameof(ErrorCode.SoftwareNotFound)] = (nameof(WorkflowStep.SoftwareSelection), LocalizationKeysConstants.SoftwareSelection.NotFound),
+        [nameof(ErrorCode.SoftwareNotConfigured)] = (nameof(WorkflowStep.SoftwareSelection), LocalizationKeysConstants.SoftwareSelection.NotConfigured),
         [nameof(ErrorCode.InvalidRoomId)] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.InvalidRoomId),
-        [nameof(ErrorCode.InvalidRoomText)] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.InvalidRoomText)
+        [nameof(ErrorCode.InvalidRoomText)] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.InvalidRoomText),
+        [nameof(ErrorCode.InvalidIncidentDescription)] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.InvalidIncidentDescription),
+        [nameof(ErrorCode.IncidentDescriptionNotSet)] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.IncidentDescriptionNotSet),
+        [nameof(ErrorCode.IncidentContextIncomplete)] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.IncidentContextIncomplete),
+        [nameof(ErrorCode.IncidentStepNotSupported)] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.IncidentStepNotSupported)
     }.ToFrozenDictionary();
 }
