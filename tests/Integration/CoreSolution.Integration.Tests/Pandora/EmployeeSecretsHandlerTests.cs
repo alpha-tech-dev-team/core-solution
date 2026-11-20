@@ -1,4 +1,4 @@
-﻿using CoreSolution.Shared.Pagination;
+using CoreSolution.Shared.Pagination;
 using CoreSolution.Shared.Results;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
