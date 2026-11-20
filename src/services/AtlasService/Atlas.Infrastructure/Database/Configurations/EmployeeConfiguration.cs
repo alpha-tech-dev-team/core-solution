@@ -21,6 +21,9 @@ public sealed class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
             .HasSentinel(EmployeeRole.Employee)
             .IsRequired();
 
+        builder.Property(x => x.TelegramUserId)
+            .HasColumnName(DatabaseConstants.Employee.TelegramUserId);
+
         builder.Property(x => x.Name)
             .HasColumnName(DatabaseConstants.Employee.Name)
             .HasMaxLength(DatabaseConstants.Employee.NameMaxLength)
@@ -42,5 +45,8 @@ public sealed class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
         builder.Property(x => x.UpdatedAt)
             .HasColumnName(DatabaseConstants.Employee.UpdatedAt)
             .HasDefaultValueSql(DatabaseConstants.Defaults.NowSql);
+
+        builder.HasIndex(x => x.TelegramUserId)
+            .IsUnique();
     }
 }

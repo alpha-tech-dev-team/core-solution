@@ -51,6 +51,7 @@ public sealed class SelectProblemCategoryHandler
 
     protected override void ApplyState(AtlasUserSession session, SelectProblemCategoryMessage request)
     {
+        session.ResetIncident();
         session.IncidentCategoryId = request.CategoryId;
     }
 }

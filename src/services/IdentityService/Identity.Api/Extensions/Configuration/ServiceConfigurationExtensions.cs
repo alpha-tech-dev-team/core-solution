@@ -1,7 +1,7 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
-using Identity.Api.Middleware;
 using Identity.Api.Interfaces;
+using Identity.Api.Middleware;
 using Identity.Api.Services;
 using Identity.Application.Services;
 using Identity.Domain.Interfaces;
@@ -57,6 +57,7 @@ public static class ServiceConfigurationExtensions
 
         services.AddJwtAuthentication(environment);
         services.AddRateLimitingConfiguration(configuration);
+        services.Configure<ClientApiOptions>(configuration.GetSection(ClientApiOptions.SectionName));
 
         return services;
     }

@@ -8,6 +8,8 @@ services:
     env_file:
       - .env
       - ../../../.env
+    environment:
+      ClientApi__AtlasApiKey: ${ClientApi__AtlasApiKey:?ClientApi__AtlasApiKey is required}
     depends_on:
       identity-db:
         condition: service_healthy

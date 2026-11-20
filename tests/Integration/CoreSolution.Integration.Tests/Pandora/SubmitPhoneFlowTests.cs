@@ -41,7 +41,7 @@ public sealed class SubmitPhoneFlowTests(IntegrationFixture fixture)
         var session = await sessionService.GetSession(telegramUserId, CancellationToken.None);
 
         Assert.NotNull(session);
-        Assert.Equal(nameof(Atlas.Domain.Enums.WorkflowStep.ProblemCategorySelection), session.State);
+        Assert.Equal(nameof(Atlas.Domain.Enums.WorkflowStep.Menu), session.State);
         Assert.Equal(Language.Ru, session.Language);
 
         var timeToLive = await scope.ServiceProvider.GetRequiredService<IConnectionMultiplexer>()

@@ -77,6 +77,18 @@ public sealed class ErrorMappingTests(IntegrationFixture fixture)
     }
 
     [Fact]
+    public async Task GetUserText_PandoraTemporaryUnavailable_ReturnsLocalizedText()
+    {
+        await using var pandora = await fixture.CreatePandoraServiceProviderAsync();
+        using var scope = pandora.CreateScope();
+        var mapper = scope.ServiceProvider.GetRequiredService<IUserErrorMapper>();
+
+        var text = Result<WorkflowResponse>.Failure(ErrorCodes.SessionTemporarilyUnavailable).GetUserText(mapper);
+
+        Assert.Equal("Сервис временно перегружен. Попробуйте ещё раз позже.", text);
+    }
+
+    [Fact]
     public async Task GetUserText_SuccessResult_ReturnsResponseText()
     {
         await using var atlas = fixture.CreateAtlasServiceProvider();

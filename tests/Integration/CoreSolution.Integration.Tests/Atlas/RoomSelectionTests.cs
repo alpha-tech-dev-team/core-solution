@@ -59,9 +59,11 @@ public sealed class RoomSelectionTests(IntegrationFixture fixture)
         using var scope = atlas.CreateScope();
 
         var sessionService = scope.ServiceProvider.GetRequiredService<ISessionService>();
+        var initialSession = AtlasUserSession.Create(telegramUserId, nameof(WorkflowStep.RoomSelection));
+        initialSession.IncidentCategoryId = IncidentCategoryConstants.Other.Id;
 
         await sessionService.SaveSession(
-            AtlasUserSession.Create(telegramUserId, nameof(WorkflowStep.RoomSelection)),
+            initialSession,
             CancellationToken.None);
 
         var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
@@ -77,7 +79,7 @@ public sealed class RoomSelectionTests(IntegrationFixture fixture)
 
         var atlasSession = Assert.IsType<AtlasUserSession>(session);
         Assert.Equal(roomId, atlasSession.RoomId);
-        Assert.Equal(nameof(WorkflowStep.RoomSelected), atlasSession.State);
+        Assert.Equal(nameof(WorkflowStep.IncidentDescription), atlasSession.State);
     }
 
     [Fact]
@@ -198,9 +200,11 @@ public sealed class RoomSelectionTests(IntegrationFixture fixture)
         using var scope = atlas.CreateScope();
 
         var sessionService = scope.ServiceProvider.GetRequiredService<ISessionService>();
+        var initialSession = AtlasUserSession.Create(telegramUserId, nameof(WorkflowStep.RoomSelection));
+        initialSession.IncidentCategoryId = IncidentCategoryConstants.Other.Id;
 
         await sessionService.SaveSession(
-            AtlasUserSession.Create(telegramUserId, nameof(WorkflowStep.RoomSelection)),
+            initialSession,
             CancellationToken.None);
 
         var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
@@ -214,7 +218,7 @@ public sealed class RoomSelectionTests(IntegrationFixture fixture)
 
         var atlasSession = Assert.IsType<AtlasUserSession>(session);
         Assert.Equal(RoomConstants.Office204.Id, atlasSession.RoomId);
-        Assert.Equal(nameof(WorkflowStep.RoomSelected), atlasSession.State);
+        Assert.Equal(nameof(WorkflowStep.IncidentDescription), atlasSession.State);
     }
 
     [Fact]

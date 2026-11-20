@@ -3,8 +3,13 @@ namespace Atlas.Domain.Enums;
 public enum WorkflowStep
 {
     Idle,
+    Menu,
     ProblemCategorySelection,
     CategorySelected,
     RoomSelection,
-    RoomSelected
+    HardwareSelection,
+    SoftwareSelection,
+    IncidentDescription,
+    IncidentConfirmation,
+    IncidentCreated
 }
