@@ -51,6 +51,7 @@ public static class DatabaseConstants
         public const string Table = "employees";
         public const string Id = "id";
         public const string Role = "role";
+        public const string TelegramUserId = "telegram_user_id";
         public const string Name = "name";
         public const string Surname = "surname";
         public const string Patronymic = "patronymic";
@@ -76,6 +77,7 @@ public static class DatabaseConstants
         public const string Id = "id";
         public const string Name = "name";
         public const string Description = "description";
+        public const string Type = "type";
         public const int NameMaxLength = 100;
     }
 

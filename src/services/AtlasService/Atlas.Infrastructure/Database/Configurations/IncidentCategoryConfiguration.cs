@@ -23,6 +23,10 @@ public sealed class IncidentCategoryConfiguration : IEntityTypeConfiguration<Inc
         builder.Property(x => x.Description)
             .HasColumnName(DatabaseConstants.IncidentCategory.Description);
 
+        builder.Property(x => x.Type)
+            .HasColumnName(DatabaseConstants.IncidentCategory.Type)
+            .IsRequired();
+
         builder.HasIndex(x => x.Name)
             .IsUnique();
     }
