@@ -67,6 +67,10 @@ namespace Atlas.Infrastructure.Database.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("surname");
 
+                    b.Property<long?>("TelegramUserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("telegram_user_id");
+
                     b.Property<DateTime>("UpdatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
@@ -74,6 +78,10 @@ namespace Atlas.Infrastructure.Database.Migrations
                         .HasDefaultValueSql("now()");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TelegramUserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_employees_telegram_user_id");
 
                     b.ToTable("employees", (string)null);
                 });

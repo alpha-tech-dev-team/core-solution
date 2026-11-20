@@ -51,6 +51,8 @@ public static class DatabaseConstants
         public const string Table = "employees";
         public const string Id = "id";
         public const string Role = "role";
+        public const string TelegramUserId = "telegram_user_id";
+        public const string TelegramUserIdIndex = "IX_employees_telegram_user_id";
         public const string Name = "name";
         public const string Surname = "surname";
         public const string Patronymic = "patronymic";
