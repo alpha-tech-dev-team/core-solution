@@ -135,7 +135,8 @@ public sealed class IdentityApiTests(IntegrationFixture fixture)
         using var client = fixture.CreateIdentityHttpClient();
         _ = await client.PostAsJsonAsync(ActivateRoute, new ActivateUserRequest(telegramUserId, phone));
 
-        var response = await client.GetAsync(ClientApiRoutes.EmployeeByTelegramUser(telegramUserId));
+        using var atlasClient = fixture.CreateAtlasIdentityHttpClient();
+        var response = await atlasClient.GetAsync(ClientApiRoutes.EmployeeByTelegramUser(telegramUserId));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -146,9 +147,24 @@ public sealed class IdentityApiTests(IntegrationFixture fixture)
     }
 
     [Fact]
+    public async Task GetEmployee_WithoutServiceApiKey_ReturnsUnauthorized()
+    {
+        const string phone = "+79995550010";
+        const long telegramUserId = 9010;
+
+        await fixture.SeedPendingUserAsync(phone);
+        using var client = fixture.CreateIdentityHttpClient();
+        _ = await client.PostAsJsonAsync(ActivateRoute, new ActivateUserRequest(telegramUserId, phone));
+
+        var response = await client.GetAsync(ClientApiRoutes.EmployeeByTelegramUser(telegramUserId));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
     public async Task GetEmployee_UnknownUser_ReturnsNotFound()
     {
-        using var client = fixture.CreateIdentityHttpClient();
+        using var client = fixture.CreateAtlasIdentityHttpClient();
 
         var response = await client.GetAsync(ClientApiRoutes.EmployeeByTelegramUser(9009));
 

@@ -58,6 +58,7 @@ public static class InfrastructureExtensions
             client.BaseAddress = new Uri(identityOptions.BaseUrl);
             client.Timeout = IdentityRequestTimeout;
         });
+        services.Configure<IdentityOptions>(configuration.GetSection(IdentityOptions.SectionName));
         services.Replace(ServiceDescriptor.Scoped<ISessionFactory, AtlasSessionFactory>());
         services.AddSessionInfrastructure(configuration, redisOptions.ConnectionString);
         services.AddLocalization(typeof(Atlas.Infrastructure.AssemblyMarker).Assembly);

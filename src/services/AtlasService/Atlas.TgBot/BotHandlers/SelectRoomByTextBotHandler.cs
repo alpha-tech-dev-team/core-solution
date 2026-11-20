@@ -2,6 +2,7 @@ using Atlas.Application.Common;
 using Atlas.Application.Features.Rooms;
 using Atlas.Domain.Enums;
 using Atlas.Domain.Models;
+using Atlas.TgBot.Constants;
 using CoreSolution.Shared.Abstractions;
 using CoreSolution.Shared.TgBot.Abstractions;
 using CoreSolution.Shared.TgBot.Extensions;
@@ -35,7 +36,8 @@ public sealed class SelectRoomByTextBotHandler : IBotHandler
 
     public bool CanHandle(Update update)
     {
-        return update.Message?.Text is not null
+        return update.Message?.Text is { } text
+            && !text.StartsWith(TelegramCommandConstants.Prefix, StringComparison.Ordinal)
             && _requestContext.Session is AtlasUserSession { State: nameof(WorkflowStep.RoomSelection) };
     }
 

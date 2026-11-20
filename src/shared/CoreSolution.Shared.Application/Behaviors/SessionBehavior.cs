@@ -55,6 +55,13 @@ public sealed class SessionBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
                     return ResultFactory.Failure<TResponse>(ErrorCodes.UserBlocked);
                 }
 
+                if (accessError == ErrorCodes.ServiceTemporarilyUnavailable)
+                {
+                    _logger.LogWarning("Identity временно недоступен, пользователь {TgUserId}, сообщение {MessageId}", botRequest.TelegramUserId, botRequest.MessageId);
+
+                    return ResultFactory.Failure<TResponse>(ErrorCodes.SessionTemporarilyUnavailable);
+                }
+
                 if (accessError is not null)
                 {
                     _logger.LogWarning("Identity не подтвердил доступ, запрошен номер телефона, пользователь {TgUserId}, сообщение {MessageId}", botRequest.TelegramUserId, botRequest.MessageId);
@@ -62,6 +69,11 @@ public sealed class SessionBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
                     var activation = await _mediator.Send(
                         new SubmitPhoneMessage(botRequest.TelegramUserId, botRequest.MessageId),
                         cancellationToken);
+
+                    if (!activation.IsSuccess)
+                    {
+                        return ResultFactory.Failure<TResponse>(activation.ErrorCode ?? ErrorCodes.AccessNotConfirmed);
+                    }
 
                     return ResultFactory.Success<TResponse, WorkflowResponse>(activation.Value!);
                 }

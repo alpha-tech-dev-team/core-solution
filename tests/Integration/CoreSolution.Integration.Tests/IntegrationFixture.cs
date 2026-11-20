@@ -6,6 +6,7 @@ using Atlas.Infrastructure.Identity;
 using AppRole = CoreSolution.Shared.Enums.UserRole;
 using Atlas.TgBot.Extensions.DependencyInjection;
 using CoreSolution.Shared.Abstractions;
+using CoreSolution.Shared.Constants;
 using CoreSolution.Shared.Infrastructure.Identity;
 using CoreSolution.Shared.TgBot.DependencyInjection;
 using Identity.Api;
@@ -34,6 +35,7 @@ namespace CoreSolution.Integration.Tests;
 public sealed class IntegrationFixture : IAsyncLifetime
 {
     private const string AtlasTestToken = "123456:integration-test-token";
+    private const string AtlasServiceApiKey = "integration-test-atlas-service-api-key";
 
     private static long _adminPhoneSequence;
 
@@ -44,6 +46,7 @@ public sealed class IntegrationFixture : IAsyncLifetime
     private readonly RedisContainer _pandoraRedis = new RedisBuilder("redis:7-alpine").Build();
 
     private WebApplicationFactory<AssemblyMarker> _identity = default!;
+    private WebApplicationFactory<AssemblyMarker> _identityRateLimited = default!;
     private bool _pandoraMigrated;
     private bool _atlasMigrated;
 
@@ -69,18 +72,43 @@ public sealed class IntegrationFixture : IAsyncLifetime
                     ["Jwt:Secret"] = "integration-test-secret-key-at-least-32-chars",
                     ["Jwt:Issuer"] = "integration-tests",
                     ["Jwt:Audience"] = "integration-tests",
+                    ["ClientApi:AtlasApiKey"] = AtlasServiceApiKey,
                     ["RateLimiting:TokenLimit"] = "1000",
-                    ["RateLimiting:TokensPerPeriod"] = "1000"
+                    ["RateLimiting:TokensPerPeriod"] = "1000",
+                    ["RateLimiting:Bot:TokenLimit"] = "1000",
+                    ["RateLimiting:Bot:TokensPerPeriod"] = "1000",
+                    ["RateLimiting:EmployeeDirectory:TokenLimit"] = "1000",
+                    ["RateLimiting:EmployeeDirectory:TokensPerPeriod"] = "1000"
                 });
             });
         });
 
         _ = _identity.Services;
+
+        _identityRateLimited = new WebApplicationFactory<AssemblyMarker>().WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureAppConfiguration((_, configuration) =>
+            {
+                configuration.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["Database:ConnectionString"] = _postgres.GetConnectionString(),
+                    ["Jwt:Secret"] = "integration-test-secret-key-at-least-32-chars",
+                    ["Jwt:Issuer"] = "integration-tests",
+                    ["Jwt:Audience"] = "integration-tests",
+                    ["ClientApi:AtlasApiKey"] = AtlasServiceApiKey,
+                    ["RateLimiting:EmployeeDirectory:TokenLimit"] = "2",
+                    ["RateLimiting:EmployeeDirectory:TokensPerPeriod"] = "2"
+                });
+            });
+        });
+
+        _ = _identityRateLimited.Services;
     }
 
     public async Task DisposeAsync()
     {
         await _identity.DisposeAsync();
+        await _identityRateLimited.DisposeAsync();
         await _atlasRedis.DisposeAsync();
         await _pandoraRedis.DisposeAsync();
         await _postgres.DisposeAsync();
@@ -211,6 +239,28 @@ public sealed class IntegrationFixture : IAsyncLifetime
         return _identity.CreateClient();
     }
 
+    public HttpClient CreateAtlasIdentityHttpClient()
+    {
+        var client = _identity.CreateClient();
+
+        client.DefaultRequestHeaders.TryAddWithoutValidation(
+            ClientApiRoutes.ServiceApiKeyHeader,
+            AtlasServiceApiKey);
+
+        return client;
+    }
+
+    public HttpClient CreateRateLimitedIdentityHttpClient()
+    {
+        var client = _identityRateLimited.CreateClient();
+
+        client.DefaultRequestHeaders.TryAddWithoutValidation(
+            ClientApiRoutes.ServiceApiKeyHeader,
+            AtlasServiceApiKey);
+
+        return client;
+    }
+
     public HttpClient CreateIdentityHttpClientWithCookies()
     {
         return _identity.CreateClient(new WebApplicationFactoryClientOptions
@@ -228,7 +278,8 @@ public sealed class IntegrationFixture : IAsyncLifetime
                 ["Database:ConnectionString"] = _postgres.GetConnectionString(),
                 ["Redis:ConnectionString"] = _atlasRedis.GetConnectionString(),
                 ["SessionSettings:ExpiryMinutes"] = "30",
-                ["Identity:BaseUrl"] = "http://localhost"
+                ["Identity:BaseUrl"] = "http://localhost",
+                ["Identity:ServiceApiKey"] = AtlasServiceApiKey
             })
             .Build();
 
@@ -269,7 +320,7 @@ public sealed class IntegrationFixture : IAsyncLifetime
         return provider;
     }
 
-    public async Task<ServiceProvider> CreatePandoraServiceProviderAsync()
+    public async Task<ServiceProvider> CreatePandoraServiceProviderAsync(Action<IServiceCollection>? configureServices = null)
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
@@ -278,6 +329,7 @@ public sealed class IntegrationFixture : IAsyncLifetime
                 ["Database:RedisConnection"] = _pandoraRedis.GetConnectionString(),
                 ["SessionSettings:ExpiryMinutes"] = "30",
                 ["Identity:BaseUrl"] = "http://localhost",
+                ["Identity:ServiceApiKey"] = AtlasServiceApiKey,
                 ["Pandora:Secrets:UseMock"] = "true",
                 ["Pandora:Secrets:Items:0:Name"] = "TestService",
                 ["Pandora:Secrets:Items:0:Login"] = "test-login",
@@ -295,6 +347,8 @@ public sealed class IntegrationFixture : IAsyncLifetime
         PandoraApplicationExtensions.AddApplication(services);
         services.AddHttpClient<IIdentityClient, IdentityClient>()
             .ConfigurePrimaryHttpMessageHandler(() => _identity.Server.CreateHandler());
+
+        configureServices?.Invoke(services);
 
         var provider = services.BuildServiceProvider();
 

@@ -3,7 +3,9 @@ using System.Text.Json;
 using Atlas.Domain.Interfaces;
 using Atlas.Domain.Models;
 using CoreSolution.Shared.Constants;
+using CoreSolution.Shared.Options;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Atlas.Infrastructure.Identity;
 
@@ -12,11 +14,16 @@ public sealed class IdentityEmployeeDirectory : IEmployeeDirectory
     private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
 
     private readonly HttpClient _httpClient;
+    private readonly IdentityOptions _identityOptions;
     private readonly ILogger<IdentityEmployeeDirectory> _logger;
 
-    public IdentityEmployeeDirectory(HttpClient httpClient, ILogger<IdentityEmployeeDirectory> logger)
+    public IdentityEmployeeDirectory(
+        HttpClient httpClient,
+        IOptions<IdentityOptions> identityOptions,
+        ILogger<IdentityEmployeeDirectory> logger)
     {
         _httpClient = httpClient;
+        _identityOptions = identityOptions.Value;
         _logger = logger;
     }
 
@@ -24,9 +31,18 @@ public sealed class IdentityEmployeeDirectory : IEmployeeDirectory
     {
         try
         {
-            var response = await _httpClient.GetAsync(
-                ClientApiRoutes.EmployeeByTelegramUser(telegramUserId),
-                cancellationToken);
+            using var request = new HttpRequestMessage(
+                HttpMethod.Get,
+                ClientApiRoutes.EmployeeByTelegramUser(telegramUserId));
+
+            if (!string.IsNullOrWhiteSpace(_identityOptions.ServiceApiKey))
+            {
+                request.Headers.TryAddWithoutValidation(
+                    ClientApiRoutes.ServiceApiKeyHeader,
+                    _identityOptions.ServiceApiKey);
+            }
+
+            var response = await _httpClient.SendAsync(request, cancellationToken);
 
             if (!response.IsSuccessStatusCode)
             {

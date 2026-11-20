@@ -7,7 +7,9 @@ public static partial class LocalizationKeysConstants
         public const string PhoneRequest = "PhoneRequest";
         public const string UserBlocked = "UserBlocked";
         public const string AccessNotConfirmed = "AccessNotConfirmed";
+        public const string ServiceTemporarilyUnavailable = "ServiceTemporarilyUnavailable";
         public const string SessionNotFound = "SessionNotFound";
+        public const string SessionTemporarilyUnavailable = "SessionTemporarilyUnavailable";
         public const string UnexpectedError = "UnexpectedError";
         public const string ValidationFailed = "ValidationFailed";
         public const string InvalidTelegramUserId = "InvalidTelegramUserId";
