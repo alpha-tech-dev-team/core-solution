@@ -270,17 +270,27 @@ public sealed class IntegrationFixture : IAsyncLifetime
         });
     }
 
-    public ServiceProvider CreateAtlasServiceProvider()
+    public ServiceProvider CreateAtlasServiceProvider(Dictionary<string, string?>? extraConfiguration = null)
     {
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
+        var settings = new Dictionary<string, string?>
+        {
+            ["Database:ConnectionString"] = _postgres.GetConnectionString(),
+            ["Redis:ConnectionString"] = _atlasRedis.GetConnectionString(),
+            ["SessionSettings:ExpiryMinutes"] = "30",
+            ["Identity:BaseUrl"] = "http://localhost",
+            ["Identity:ServiceApiKey"] = AtlasServiceApiKey
+        };
+
+        if (extraConfiguration is not null)
+        {
+            foreach (var (key, value) in extraConfiguration)
             {
-                ["Database:ConnectionString"] = _postgres.GetConnectionString(),
-                ["Redis:ConnectionString"] = _atlasRedis.GetConnectionString(),
-                ["SessionSettings:ExpiryMinutes"] = "30",
-                ["Identity:BaseUrl"] = "http://localhost",
-                ["Identity:ServiceApiKey"] = AtlasServiceApiKey
-            })
+                settings[key] = value;
+            }
+        }
+
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(settings)
             .Build();
 
         var services = new ServiceCollection();
