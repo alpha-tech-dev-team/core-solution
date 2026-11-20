@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Pandora.Domain.Constants;
+using CoreSolution.Shared.Constants;
 using Pandora.Domain.Entities;
 using Pandora.Domain.Enums;
 using Pandora.Domain.Interfaces;

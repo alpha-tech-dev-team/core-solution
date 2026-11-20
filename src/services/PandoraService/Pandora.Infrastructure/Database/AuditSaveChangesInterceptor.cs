@@ -1,21 +1,26 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Pandora.Domain.Entities;
 using Pandora.Domain.Interfaces;
+using Pandora.Domain.Models;
+using Pandora.Infrastructure.Audit;
 
 namespace Pandora.Infrastructure.Database;
 
 public sealed class AuditSaveChangesInterceptor : SaveChangesInterceptor
 {
     private readonly IAuditContext _auditContext;
+    private readonly bool _writeOutbox;
 
-    public AuditSaveChangesInterceptor(IAuditContext auditContext)
+    public AuditSaveChangesInterceptor(IAuditContext auditContext, bool writeOutbox)
     {
         _auditContext = auditContext;
+        _writeOutbox = writeOutbox;
     }
 
     public override InterceptionResult<int> SavingChanges(DbContextEventData eventData, InterceptionResult<int> result)
     {
-        AddAuditEntries(eventData.Context);
+        AddPendingAudit(eventData.Context);
 
         return base.SavingChanges(eventData, result);
     }
@@ -25,12 +30,12 @@ public sealed class AuditSaveChangesInterceptor : SaveChangesInterceptor
         InterceptionResult<int> result,
         CancellationToken cancellationToken = default)
     {
-        AddAuditEntries(eventData.Context);
+        AddPendingAudit(eventData.Context);
 
         return base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 
-    private void AddAuditEntries(DbContext? context)
+    private void AddPendingAudit(DbContext? context)
     {
         if (context is null)
         {
@@ -40,6 +45,14 @@ public sealed class AuditSaveChangesInterceptor : SaveChangesInterceptor
         foreach (var entry in _auditContext.TakeAll())
         {
             context.Add(entry);
+
+            if (_writeOutbox)
+            {
+                context.Add(new AuditOutboxEntry(
+                    Guid.NewGuid(),
+                    AuditNotificationSerializer.Serialize(AuditEntryNotification.From(entry)),
+                    DateTime.UtcNow));
+            }
         }
     }
 }

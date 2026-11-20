@@ -9,12 +9,21 @@ function toPath(packageName: string): string {
   return fileURLToPath(new URL(`./node_modules/${packageName}`, import.meta.url))
 }
 
-function toProxyOptions(target: string): ProxyOptions {
-  return target.startsWith('https') ? { target, changeOrigin: true, secure: false } : { target }
+const WEBSOCKET_PROXY_PREFIX = '/hubs'
+
+function toProxyOptions(target: string, websocket: boolean): ProxyOptions {
+  return {
+    target,
+    ...(target.startsWith('https') ? { changeOrigin: true, secure: false } : {}),
+    ...(websocket ? { ws: true } : {}),
+  }
 }
 
 const proxy = Object.fromEntries(
-  Object.entries(config.proxy).map(([prefix, target]) => [prefix, toProxyOptions(target)]),
+  Object.entries(config.proxy).map(([prefix, target]) => [
+    prefix,
+    toProxyOptions(target, prefix.startsWith(WEBSOCKET_PROXY_PREFIX)),
+  ]),
 )
 
 export default defineConfig({

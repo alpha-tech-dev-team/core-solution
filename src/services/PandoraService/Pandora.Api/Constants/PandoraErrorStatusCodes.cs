@@ -11,6 +11,11 @@ internal static class PandoraErrorStatusCodes
         {
             [ErrorCode.InvalidSecretData] = StatusCodes.Status400BadRequest,
             [ErrorCode.MalformedRequest] = StatusCodes.Status400BadRequest,
+            [ErrorCode.InvalidPage] = StatusCodes.Status400BadRequest,
+            [ErrorCode.InvalidPageSize] = StatusCodes.Status400BadRequest,
+            [ErrorCode.InvalidSortField] = StatusCodes.Status400BadRequest,
+            [ErrorCode.InvalidSortDirection] = StatusCodes.Status400BadRequest,
+            [ErrorCode.InvalidSearch] = StatusCodes.Status400BadRequest,
             [ErrorCode.SecretNotFound] = StatusCodes.Status404NotFound,
             [ErrorCode.VaultwardenUnavailable] = StatusCodes.Status503ServiceUnavailable,
             [ErrorCode.DatabaseUnavailable] = StatusCodes.Status503ServiceUnavailable,

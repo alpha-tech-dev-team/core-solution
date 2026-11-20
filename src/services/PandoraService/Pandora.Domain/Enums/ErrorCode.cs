@@ -9,5 +9,10 @@ public enum ErrorCode
     VaultwardenUnavailable,
     DatabaseUnavailable,
     MalformedRequest,
+    InvalidPage,
+    InvalidPageSize,
+    InvalidSortField,
+    InvalidSortDirection,
+    InvalidSearch,
     InternalError
 }

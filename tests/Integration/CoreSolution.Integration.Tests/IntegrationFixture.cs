@@ -42,7 +42,6 @@ public sealed class IntegrationFixture : IAsyncLifetime
     private readonly RedisContainer _pandoraRedis = new RedisBuilder("redis:7-alpine").Build();
 
     private WebApplicationFactory<AssemblyMarker> _identity = default!;
-    private bool _pandoraMigrated;
     private bool _atlasMigrated;
 
     public async Task InitializeAsync()
@@ -56,6 +55,12 @@ public sealed class IntegrationFixture : IAsyncLifetime
             command.CommandText = "CREATE DATABASE pandora_integration";
             await command.ExecuteNonQueryAsync();
         }
+
+        await using var pandoraContext = new PandoraDbContext(
+            new DbContextOptionsBuilder<PandoraDbContext>()
+                .UseNpgsql(PandoraConnectionString)
+                .Options);
+        await pandoraContext.Database.MigrateAsync();
 
         _identity = new WebApplicationFactory<AssemblyMarker>().WithWebHostBuilder(builder =>
         {
@@ -209,6 +214,9 @@ public sealed class IntegrationFixture : IAsyncLifetime
         return _identity.CreateClient();
     }
 
+    public string PandoraConnectionString =>
+        _postgres.GetConnectionString().Replace("Database=postgres", "Database=pandora_integration");
+
     public HttpClient CreateIdentityHttpClientWithCookies()
     {
         return _identity.CreateClient(new WebApplicationFactoryClientOptions
@@ -263,7 +271,7 @@ public sealed class IntegrationFixture : IAsyncLifetime
         return provider;
     }
 
-    public async Task<ServiceProvider> CreatePandoraServiceProviderAsync()
+    public Task<ServiceProvider> CreatePandoraServiceProviderAsync()
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
@@ -290,16 +298,7 @@ public sealed class IntegrationFixture : IAsyncLifetime
         services.AddHttpClient<IIdentityClient, IdentityClient>()
             .ConfigurePrimaryHttpMessageHandler(() => _identity.Server.CreateHandler());
 
-        var provider = services.BuildServiceProvider();
-
-        if (!_pandoraMigrated)
-        {
-            using var scope = provider.CreateScope();
-            await scope.ServiceProvider.GetRequiredService<PandoraDbContext>().Database.MigrateAsync();
-            _pandoraMigrated = true;
-        }
-
-        return provider;
+        return Task.FromResult(services.BuildServiceProvider());
     }
 }
 

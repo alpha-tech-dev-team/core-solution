@@ -11,6 +11,10 @@ export const SECRET_ENDPOINTS = {
   BY_ID: (id: string) => `/secrets/${id}`,
 } as const
 
+export const AUDIT_ENDPOINTS = {
+  COLLECTION: '/audit',
+} as const
+
 export const PAGINATION_QUERY = {
   PAGE: 'page',
   PAGE_SIZE: 'pageSize',

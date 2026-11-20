@@ -42,6 +42,22 @@ export const RESOURCE_KEYS = {
   EMPLOYEE_ERROR_POSITION: 'employee_error_position',
   EMPLOYEE_ERROR_PHONE: 'employee_error_phone',
 
+  NAV_AUDIT: 'nav_audit',
+
+  AUDIT_TITLE: 'audit_title',
+  AUDIT_COLUMN_TIME: 'audit_column_time',
+  AUDIT_COLUMN_USER: 'audit_column_user',
+  AUDIT_COLUMN_ACTION: 'audit_column_action',
+  AUDIT_COLUMN_TARGET: 'audit_column_target',
+  AUDIT_COLUMN_SOURCE: 'audit_column_source',
+  AUDIT_EMPTY: 'audit_empty',
+  AUDIT_SEARCH_PLACEHOLDER: 'audit_search_placeholder',
+  AUDIT_TOO_MANY_MATCHES: 'audit_too_many_matches',
+  AUDIT_FILTER_ALL: 'audit_filter_all',
+  AUDIT_PAGE_PREV: 'audit_page_prev',
+  AUDIT_PAGE_NEXT: 'audit_page_next',
+  AUDIT_PAGE_INFO: 'audit_page_info',
+
   SECRETS_TITLE: 'secrets_title',
   SECRETS_ADD: 'secrets_add',
   SECRETS_SAVE: 'secrets_save',

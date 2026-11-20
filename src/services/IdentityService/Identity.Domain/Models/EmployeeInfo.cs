@@ -9,4 +9,5 @@ public sealed record EmployeeInfo(
     string Phone,
     string Status,
     IReadOnlyList<string> Roles,
-    string? AdminUsername);
+    string? AdminUsername,
+    long? TelegramUserId);
