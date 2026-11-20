@@ -9,8 +9,14 @@ public abstract class SessionStateHandler<TRequest>
     private readonly ISessionService _sessionService;
 
     protected AtlasUserSession Session
-        => (AtlasUserSession)_requestContext.Session;
+    {
+        get => (AtlasUserSession)_requestContext.Session;
+    }
 
+    protected ISessionService SessionService
+    {
+        get => _sessionService;
+    }
     protected abstract string NextWorkflowState { get; }
 
     protected SessionStateHandler(IRequestContext requestContext, ISessionService sessionService)
