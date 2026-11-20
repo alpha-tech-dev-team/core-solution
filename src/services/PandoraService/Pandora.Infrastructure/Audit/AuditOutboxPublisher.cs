@@ -11,7 +11,7 @@ namespace Pandora.Infrastructure.Audit;
 
 public sealed class AuditOutboxPublisher : BackgroundService
 {
-    private const int BatchSize = 100;
+    private const int BatchSize = 20;
     private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(5);
     private static readonly string SelectPendingSql =
         $"select * from {DatabaseConstants.AuditOutbox.Table} " +
