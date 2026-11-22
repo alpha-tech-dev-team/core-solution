@@ -1,3 +1,5 @@
+using Atlas.Api.Endpoints;
+
 namespace Atlas.Api.Extensions.Middleware;
 
 public static class RouteConfigurationExtensions
@@ -8,6 +10,8 @@ public static class RouteConfigurationExtensions
         {
             app.MapOpenApi();
         }
+
+        app.MapIncidentsEndpoints();
 
         return app;
     }
