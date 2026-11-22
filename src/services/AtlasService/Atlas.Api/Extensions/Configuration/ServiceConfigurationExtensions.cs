@@ -1,7 +1,12 @@
 using Atlas.Api.Middleware;
+using Atlas.Application.Features.Incidents;
+using Atlas.Application.Validators;
+using Atlas.Domain.Models;
+using Atlas.Application.Behaviors;
+using CoreSolution.Shared.Results;
 using FluentValidation;
+using MediatR;
 using Serilog;
-using ApplicationAssemblyMarker = Atlas.Application.AssemblyMarker;
 
 namespace Atlas.Api.Extensions.Configuration;
 
@@ -17,8 +22,9 @@ public static class ServiceConfigurationExtensions
             .ReadFrom.Services(serviceProvider));
         services.AddOptionsConfiguration(configuration);
         services.AddDatabaseConfiguration();
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<ApplicationAssemblyMarker>());
-        services.AddValidatorsFromAssemblyContaining<ApplicationAssemblyMarker>();
+        services.AddTransient<IRequestHandler<GetIncidentsMessage, Result<IncidentListPage>>, GetIncidentsHandler>();
+        services.AddValidatorsFromAssemblyContaining<GetIncidentsMessageValidator>();
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         services.AddJwtAuthentication();
 
         return services;
