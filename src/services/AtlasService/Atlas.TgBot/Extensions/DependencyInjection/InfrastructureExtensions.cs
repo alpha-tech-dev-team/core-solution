@@ -11,7 +11,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Options;
 using Pgvector.EntityFrameworkCore;
 
 namespace Atlas.TgBot.Extensions.DependencyInjection;
@@ -26,8 +25,12 @@ public static class InfrastructureExtensions
         var redisOptions = configuration.GetSection(RedisOptions.SectionName).Get<RedisOptions>()
             ?? throw new InvalidOperationException($"Missing configuration section {RedisOptions.SectionName}.");
 
+        var telegramOptions = configuration.GetSection(TelegramOptions.SectionName).Get<TelegramOptions>()
+            ?? throw new InvalidOperationException($"Missing configuration section {TelegramOptions.SectionName}.");
+
         ArgumentException.ThrowIfNullOrWhiteSpace(databaseOptions.ConnectionString);
         ArgumentException.ThrowIfNullOrWhiteSpace(redisOptions.ConnectionString);
+        ArgumentException.ThrowIfNullOrWhiteSpace(telegramOptions.NotificationBotToken);
 
         services.Configure<DatabaseOptions>(configuration.GetSection(DatabaseOptions.SectionName));
 
@@ -47,15 +50,9 @@ public static class InfrastructureExtensions
 
         services.Configure<TelegramOptions>(configuration.GetSection(TelegramOptions.SectionName));
 
-        using (var optionsProvider = services.BuildServiceProvider())
-        {
-            var telegramOptions = optionsProvider.GetRequiredService<IOptions<TelegramOptions>>().Value;
-            ArgumentException.ThrowIfNullOrWhiteSpace(telegramOptions.NotificationBotToken);
-
-            services.AddKeyedTelegramNotificationService(
-                TelegramServiceCollectionExtensions.NotificationServiceKey,
-                telegramOptions.NotificationBotToken);
-        }
+        services.AddKeyedTelegramNotificationService(
+            TelegramServiceCollectionExtensions.NotificationServiceKey,
+            telegramOptions.NotificationBotToken);
 
         return services;
     }

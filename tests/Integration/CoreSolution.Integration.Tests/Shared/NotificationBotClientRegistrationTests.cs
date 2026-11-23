@@ -53,13 +53,9 @@ public sealed class NotificationBotClientRegistrationTests
             ["Database:ConnectionString"] = "Host=localhost;Database=atlas;Username=atlas;Password=atlas",
             ["Redis:ConnectionString"] = "localhost:6379",
             ["SessionSettings:ExpiryMinutes"] = "30",
-            ["Identity:BaseUrl"] = "http://localhost"
+            ["Identity:BaseUrl"] = "http://localhost",
+            ["Telegram:NotificationBotToken"] = notificationBotToken ?? string.Empty
         };
-
-        if (notificationBotToken is not null)
-        {
-            values["Telegram:NotificationBotToken"] = notificationBotToken;
-        }
 
         return new ConfigurationBuilder().AddInMemoryCollection(values).Build();
     }
