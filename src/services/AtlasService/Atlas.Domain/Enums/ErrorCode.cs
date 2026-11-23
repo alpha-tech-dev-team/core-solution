@@ -25,5 +25,9 @@ public enum ErrorCode
     InvalidIncidentDescription,
     IncidentDescriptionNotSet,
     IncidentContextIncomplete,
-    IncidentStepNotSupported
+    IncidentStepNotSupported,
+    DatabaseUnavailable,
+    Conflict,
+    MalformedRequest,
+    InternalError
 }
