@@ -8,6 +8,7 @@ public interface ICredentialAccessMessageRepository
     Task<IReadOnlyList<CredentialAccessMessage>> GetDue(
         DateTime now,
         int limit,
+        Func<IQueryable<CredentialAccessMessage>, IOrderedQueryable<CredentialAccessMessage>> orderBy,
         CancellationToken cancellationToken);
     Task<int> DeleteCompleted(DateTime before, CancellationToken cancellationToken);
     Task MarkDeleted(Guid id, DateTime deletedAt, DateTime? notifiedAt, CancellationToken cancellationToken);

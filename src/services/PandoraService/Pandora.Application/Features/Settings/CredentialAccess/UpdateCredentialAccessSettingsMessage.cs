@@ -11,7 +11,6 @@ public sealed class UpdateCredentialAccessSettingsMessage
 {
     [JsonIgnore]
     public Guid AdminUserId { get; private set; }
-
     public int TtlMinutes { get; set; }
 
     Guid IAdminUserRequest.AdminUserId

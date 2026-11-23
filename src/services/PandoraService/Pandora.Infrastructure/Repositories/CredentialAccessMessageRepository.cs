@@ -24,13 +24,13 @@ public sealed class CredentialAccessMessageRepository : ICredentialAccessMessage
     public async Task<IReadOnlyList<CredentialAccessMessage>> GetDue(
         DateTime now,
         int limit,
+        Func<IQueryable<CredentialAccessMessage>, IOrderedQueryable<CredentialAccessMessage>> orderBy,
         CancellationToken cancellationToken)
     {
-        return await _context.CredentialAccessMessage
-            .AsNoTracking()
-            .Where(message => message.NextAttemptAt <= now
-                && (message.DeletedAt == null || message.NotifiedAt == null))
-            .OrderBy(message => message.NextAttemptAt)
+        return await orderBy(_context.CredentialAccessMessage
+                .AsNoTracking()
+                .Where(message => message.NextAttemptAt <= now
+                    && (message.DeletedAt == null || message.NotifiedAt == null)))
             .Take(limit)
             .ToListAsync(cancellationToken);
     }

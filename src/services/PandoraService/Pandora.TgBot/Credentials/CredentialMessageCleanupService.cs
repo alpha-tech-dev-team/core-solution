@@ -41,7 +41,11 @@ public sealed class CredentialMessageCleanupService
 
         await RemoveCompletedAsync(now, options, cancellationToken);
 
-        var dueMessages = await _messageRepository.GetDue(now, options.BatchSize, cancellationToken);
+        var dueMessages = await _messageRepository.GetDue(
+            now,
+            options.BatchSize,
+            query => query.OrderBy(message => message.NextAttemptAt).ThenBy(message => message.Id),
+            cancellationToken);
 
         foreach (var message in dueMessages)
         {

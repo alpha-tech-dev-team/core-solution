@@ -372,6 +372,7 @@ public sealed class CredentialMessageCleanupTests(IntegrationFixture fixture)
         public Task<IReadOnlyList<CredentialAccessMessage>> GetDue(
             DateTime now,
             int limit,
+            Func<IQueryable<CredentialAccessMessage>, IOrderedQueryable<CredentialAccessMessage>> orderBy,
             CancellationToken cancellationToken)
         {
             return Task.FromResult<IReadOnlyList<CredentialAccessMessage>>(Array.Empty<CredentialAccessMessage>());
