@@ -31,8 +31,8 @@ namespace CoreSolution.Integration.Tests;
 
 public sealed class IntegrationFixture : IAsyncLifetime
 {
-    private const string AtlasTestToken = "123456:integration-test-token";
-    private const string AtlasNotificationTestToken = "654321:notification-test-token";
+    internal const string AtlasTestToken = "123456:integration-test-token";
+    internal const string AtlasNotificationTestToken = "654321:notification-test-token";
 
     private static long _adminPhoneSequence;
 

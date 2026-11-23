@@ -17,11 +17,14 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Telegram.Bot;
 
 namespace Atlas.TgBot.Extensions.DependencyInjection;
 
 public static class ApplicationExtensions
 {
+    private const string NotificationBotClientServiceKey = "notification";
+
     public static IServiceCollection AddApplication(
         this IServiceCollection services,
         IConfiguration configuration,
@@ -35,8 +38,12 @@ public static class ApplicationExtensions
         services.AddScoped<IUserErrorMapper, AtlasUserErrorMapper>();
         var notificationBotToken = configuration["Telegram:NotificationBotToken"];
         ArgumentException.ThrowIfNullOrWhiteSpace(notificationBotToken);
+        services.AddKeyedSingleton<ITelegramBotClient>(
+            NotificationBotClientServiceKey,
+            (_, _) => new TelegramBotClient(notificationBotToken));
         services.AddSingleton<IIncidentAlertSender>(
-            _ => new TelegramIncidentAlertSender(new Telegram.Bot.TelegramBotClient(notificationBotToken)));
+            provider => new TelegramIncidentAlertSender(
+                provider.GetRequiredKeyedService<ITelegramBotClient>(NotificationBotClientServiceKey)));
         services.AddScoped<IIncidentNotificationService, IncidentNotificationService>();
 
         services.Configure<PhoneConfirmationOptions>(configuration.GetSection(PhoneConfirmationOptions.SectionName));
