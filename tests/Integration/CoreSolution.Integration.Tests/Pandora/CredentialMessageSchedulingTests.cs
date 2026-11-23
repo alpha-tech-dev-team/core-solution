@@ -13,6 +13,7 @@ using Pandora.TgBot.Application.Common;
 using Pandora.TgBot.BotHandlers;
 using Pandora.TgBot.Credentials;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using Xunit;
 
@@ -24,6 +25,7 @@ public sealed class CredentialMessageSchedulingTests(IntegrationFixture fixture)
     private const long ChatId = 9201;
     private const int SentMessageId = 8123;
     private const string ItemId = "TestService";
+    private const string TestPassword = "test-password";
 
     [Fact]
     public async Task HandleAsync_WhenCredentialsSent_SchedulesCleanupWithConfiguredTtl()
@@ -51,6 +53,12 @@ public sealed class CredentialMessageSchedulingTests(IntegrationFixture fixture)
 
         Assert.NotNull(sendOptions);
         Assert.True(sendOptions.ProtectContent);
+
+        var spoiler = Assert.Single(sendOptions.Entities!);
+
+        Assert.Equal(MessageEntityType.Spoiler, spoiler.Type);
+        Assert.Equal(notifications.SentMessages[0].Length - TestPassword.Length, spoiler.Offset);
+        Assert.Equal(TestPassword.Length, spoiler.Length);
 
         using var verifyScope = provider.CreateScope();
         var context = verifyScope.ServiceProvider.GetRequiredService<PandoraDbContext>();
@@ -97,10 +105,13 @@ public sealed class CredentialMessageSchedulingTests(IntegrationFixture fixture)
 
     private static Result<WorkflowResponse> CreateCredentialsResponse()
     {
+        var text = $"Логин: test-login\nПароль: {TestPassword}";
+
         return Result<WorkflowResponse>.Success(new WorkflowResponse
         {
-            Text = "Логин: test-login\nПароль: test-password",
-            ContainsSensitiveData = true
+            Text = text,
+            ContainsSensitiveData = true,
+            TextMasks = [new TextMask(text.Length - TestPassword.Length, TestPassword.Length)]
         });
     }
 

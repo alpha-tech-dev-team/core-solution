@@ -86,7 +86,7 @@ internal sealed class TelegramNotificationService : ITelegramNotificationService
         CancellationToken cancellationToken,
         TelegramSendOptions? sendOptions)
     {
-        var chunks = TelegramTextSplitter.Split(text);
+        var chunks = TelegramTextSplitter.Split(text, sendOptions?.Entities);
         Message? first = null;
 
         for (var index = 0; index < chunks.Count; index++)
@@ -94,7 +94,8 @@ internal sealed class TelegramNotificationService : ITelegramNotificationService
             var isLast = index == chunks.Count - 1;
             var message = await _client.SendMessage(
                 chatId: chatId,
-                text: chunks[index],
+                text: chunks[index].Text,
+                entities: chunks[index].Entities,
                 replyMarkup: isLast ? replyMarkup : null,
                 disableNotification: silent,
                 protectContent: sendOptions?.ProtectContent ?? false,

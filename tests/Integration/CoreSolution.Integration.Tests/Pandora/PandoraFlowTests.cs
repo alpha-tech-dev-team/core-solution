@@ -67,6 +67,26 @@ public sealed class PandoraFlowTests(IntegrationFixture fixture)
     }
 
     [Fact]
+    public async Task GetCredentials_ReturnsTextMaskCoveringPassword()
+    {
+        const long telegramUserId = 8004;
+        const string phone = "+79995550104";
+
+        await fixture.SeedPendingUserAsync(phone, "Pandora");
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+        await fixture.SeedPandoraPermissionAsync(telegramUserId, "TestService");
+        _ = await SendSubmitPhoneAsync(provider, telegramUserId, "+7 (999) 555-01-04");
+
+        var result = await SendGetCredentialsAsync(provider, telegramUserId, "TestService");
+
+        Assert.True(result.IsSuccess);
+
+        var mask = Assert.Single(result.Value!.TextMasks!);
+
+        Assert.Equal("test-password", result.Value.Text.Substring(mask.Offset, mask.Length));
+    }
+
+    [Fact]
     public async Task GetCredentials_UserWithoutPandoraRole_RequestsPhoneAndSavesNoSession()
     {
         const long telegramUserId = 8003;

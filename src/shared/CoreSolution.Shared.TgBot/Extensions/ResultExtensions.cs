@@ -1,6 +1,8 @@
 using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
 using CoreSolution.Shared.TgBot.Abstractions;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace CoreSolution.Shared.TgBot.Extensions;
@@ -43,6 +45,15 @@ public static class ResultExtensions
             return null;
         }
 
-        return new TelegramSendOptions(ProtectContent: true);
+        return new TelegramSendOptions(
+            ProtectContent: true,
+            Entities: content.TextMasks?
+                .Select(mask => new MessageEntity
+                {
+                    Type = MessageEntityType.Spoiler,
+                    Offset = mask.Offset,
+                    Length = mask.Length
+                })
+                .ToArray());
     }
 }

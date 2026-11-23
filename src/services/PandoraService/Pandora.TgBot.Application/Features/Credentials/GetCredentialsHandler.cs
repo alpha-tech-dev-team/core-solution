@@ -54,7 +54,8 @@ public sealed class GetCredentialsHandler : IRequestHandler<GetCredentialsMessag
         return Result<WorkflowResponse>.Success(new WorkflowResponse
         {
             Text = text,
-            ContainsSensitiveData = true
+            ContainsSensitiveData = true,
+            TextMasks = [new TextMask(text.Length - secret.Password.Length, secret.Password.Length)]
         });
     }
 }

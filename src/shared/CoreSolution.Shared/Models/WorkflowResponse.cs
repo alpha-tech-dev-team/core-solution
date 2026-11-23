@@ -7,4 +7,5 @@ public sealed class WorkflowResponse
     public bool RequestContact { get; set; }
     public string? ContactButtonText { get; set; }
     public bool ContainsSensitiveData { get; set; }
+    public IReadOnlyList<TextMask>? TextMasks { get; set; }
 }
