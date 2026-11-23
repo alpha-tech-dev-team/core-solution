@@ -1,3 +1,4 @@
+using Atlas.Application.Abstractions;
 using Atlas.TgBot.Notifications;
 using CoreSolution.Shared.TgBot.DependencyInjection;
 using Microsoft.Extensions.Configuration;
@@ -18,6 +19,7 @@ public sealed class NotificationBotClientRegistrationTests
     public static void AddApplication_Atlas_RegistersNotificationClientWithDedicatedToken()
     {
         var services = new ServiceCollection();
+        services.AddLogging();
         services.AddTelegramBot(IntegrationFixture.AtlasTestToken);
 
         AtlasApplicationExtensions.AddApplication(
@@ -39,9 +41,9 @@ public sealed class NotificationBotClientRegistrationTests
             typeof(ITelegramBotClient),
             notificationClientKey)!;
         var interactiveClient = provider.GetRequiredService<ITelegramBotClient>();
-        var alertSender = provider.GetRequiredService<IIncidentAlertSender>();
+        var messageSender = provider.GetRequiredService<ITelegramMessageSender>();
 
-        Assert.IsType<TelegramIncidentAlertSender>(alertSender);
+        Assert.IsType<TelegramMessageSender>(messageSender);
         Assert.Equal(NotificationBotId, notificationClient.BotId);
         Assert.Equal(InteractiveBotId, interactiveClient.BotId);
     }

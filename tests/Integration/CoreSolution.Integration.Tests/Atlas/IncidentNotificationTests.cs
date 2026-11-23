@@ -1,11 +1,15 @@
+using System.Net;
+using System.Text.Json;
 using Atlas.Application.Abstractions;
+using Atlas.Application.Features.Notifications;
 using Atlas.Domain.Entities;
 using Atlas.TgBot.Notifications;
-using CoreSolution.Shared.Abstractions;
+using CoreSolution.Shared.Results;
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging.Abstractions;
-using Telegram.Bot.Types;
-using Telegram.Bot.Types.ReplyMarkups;
+using Telegram.Bot;
 using Xunit;
 
 namespace CoreSolution.Integration.Tests.AtlasTests;
@@ -18,133 +22,124 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
     private const long TicketNumber = 1042;
 
     [Fact]
-    public void DependencyInjection_AtlasScope_ResolvesIncidentNotificationService()
+    public void DependencyInjection_AtlasScope_ResolvesTelegramMessageSender()
     {
         using var atlas = fixture.CreateAtlasServiceProvider();
         using var scope = atlas.CreateScope();
 
-        var service = scope.ServiceProvider.GetRequiredService<IIncidentNotificationService>();
+        var sender = scope.ServiceProvider.GetRequiredService<ITelegramMessageSender>();
 
-        Assert.IsType<IncidentNotificationService>(service);
+        Assert.IsType<TelegramMessageSender>(sender);
     }
 
     [Fact]
-    public async Task NotifyAcceptedAsync_AuthorAndEngineer_NotifiesBothInOrder()
+    public async Task NotifyIncidentAccepted_AuthorAndEngineer_NotifiesBothInOrder()
     {
-        await using var atlas = fixture.CreateAtlasServiceProvider();
-        using var scope = atlas.CreateScope();
-        var notifications = new RecordingAlertSender();
-        var service = CreateService(scope, notifications);
+        var notifications = new RecordingMessageSender();
 
-        await service.NotifyAcceptedAsync(CreateIncident(AuthorChatId, EngineerChatId));
-
-        Assert.Equal(
-            new[] { AuthorChatId, EngineerChatId },
-            notifications.Messages.Select(message => message.ChatId));
-        Assert.All(
-            notifications.Messages,
-            message => Assert.Contains(TicketNumber.ToString(), message.Text));
-        Assert.All(notifications.Messages, message => Assert.True(message.IsAlert));
-    }
-
-    [Fact]
-    public async Task NotifyAcceptedAsync_RecipientWithoutTelegramUserId_IsSkipped()
-    {
-        await using var atlas = fixture.CreateAtlasServiceProvider();
-        using var scope = atlas.CreateScope();
-        var notifications = new RecordingAlertSender();
-        var service = CreateService(scope, notifications);
-
-        await service.NotifyAcceptedAsync(CreateIncident(null, EngineerChatId));
+        await SendAsync(new NotifyIncidentAcceptedMessage(CreateIncident(AuthorChatId, EngineerChatId)), notifications);
 
         var message = Assert.Single(notifications.Messages);
-        Assert.Equal(EngineerChatId, message.ChatId);
+        Assert.Equal(new[] { AuthorChatId, EngineerChatId }, message.ChatIds);
+        Assert.Contains(TicketNumber.ToString(), message.Text);
     }
 
     [Fact]
-    public async Task NotifyAcceptedAsync_NoTelegramUserIds_SendsNothing()
+    public async Task NotifyIncidentAccepted_RecipientWithoutTelegramUserId_IsSkipped()
     {
-        await using var atlas = fixture.CreateAtlasServiceProvider();
-        using var scope = atlas.CreateScope();
-        var notifications = new RecordingAlertSender();
-        var service = CreateService(scope, notifications);
+        var notifications = new RecordingMessageSender();
 
-        await service.NotifyAcceptedAsync(CreateIncident(null, null));
+        await SendAsync(new NotifyIncidentAcceptedMessage(CreateIncident(null, EngineerChatId)), notifications);
+
+        var message = Assert.Single(notifications.Messages);
+        Assert.Equal(new[] { EngineerChatId }, message.ChatIds);
+    }
+
+    [Fact]
+    public async Task NotifyIncidentAccepted_NoTelegramUserIds_SendsNothing()
+    {
+        var notifications = new RecordingMessageSender();
+
+        await SendAsync(new NotifyIncidentAcceptedMessage(CreateIncident(null, null)), notifications);
 
         Assert.Empty(notifications.Messages);
     }
 
     [Fact]
-    public async Task NotifyAcceptedAsync_AuthorIsEngineer_SendsSingleMessage()
+    public async Task NotifyIncidentAccepted_AuthorIsEngineer_SendsSingleRecipient()
     {
-        await using var atlas = fixture.CreateAtlasServiceProvider();
-        using var scope = atlas.CreateScope();
-        var notifications = new RecordingAlertSender();
-        var service = CreateService(scope, notifications);
+        var notifications = new RecordingMessageSender();
 
-        await service.NotifyAcceptedAsync(CreateIncident(AuthorChatId, AuthorChatId));
+        await SendAsync(new NotifyIncidentAcceptedMessage(CreateIncident(AuthorChatId, AuthorChatId)), notifications);
 
         var message = Assert.Single(notifications.Messages);
-        Assert.Equal(AuthorChatId, message.ChatId);
+        Assert.Equal(new[] { AuthorChatId }, message.ChatIds);
     }
 
     [Fact]
-    public async Task NotifyResolvedAsync_IncludesTicketNumberAndResolution()
+    public async Task NotifyIncidentResolved_IncludesTicketNumberAndResolution()
     {
         const string resolution = "Заменена клавиатура.";
-        await using var atlas = fixture.CreateAtlasServiceProvider();
-        using var scope = atlas.CreateScope();
-        var notifications = new RecordingAlertSender();
-        var service = CreateService(scope, notifications);
+        var notifications = new RecordingMessageSender();
 
-        await service.NotifyResolvedAsync(CreateIncident(AuthorChatId, null, resolution));
+        await SendAsync(
+            new NotifyIncidentResolvedMessage(CreateIncident(AuthorChatId, null, resolution)),
+            notifications);
 
         var message = Assert.Single(notifications.Messages);
         Assert.Contains(TicketNumber.ToString(), message.Text);
         Assert.Contains(resolution, message.Text);
-        Assert.True(message.IsAlert);
     }
 
     [Fact]
-    public async Task NotifyAcceptedAsync_OneRecipientFails_OtherStillNotified()
+    public async Task NotifyIncidentResolved_NoResolution_SendsEmptyResolution()
     {
-        await using var atlas = fixture.CreateAtlasServiceProvider();
-        using var scope = atlas.CreateScope();
-        var notifications = new RecordingAlertSender(AuthorChatId);
-        var service = CreateService(scope, notifications);
+        var notifications = new RecordingMessageSender();
 
-        await service.NotifyAcceptedAsync(CreateIncident(AuthorChatId, EngineerChatId));
+        await SendAsync(new NotifyIncidentResolvedMessage(CreateIncident(AuthorChatId, null)), notifications);
 
         var message = Assert.Single(notifications.Messages);
-        Assert.Equal(EngineerChatId, message.ChatId);
+        Assert.Contains(TicketNumber.ToString(), message.Text);
     }
 
     [Fact]
-    public async Task NotifyAcceptedAsync_CancellationRequested_PropagatesCancellation()
+    public async Task NotifyIncidentAccepted_CancellationRequested_PropagatesCancellation()
     {
-        await using var atlas = fixture.CreateAtlasServiceProvider();
-        using var scope = atlas.CreateScope();
+        var notifications = new RecordingMessageSender();
         using var cancellationSource = new CancellationTokenSource();
         await cancellationSource.CancelAsync();
-        var notifications = new RecordingAlertSender();
-        var service = CreateService(scope, notifications);
 
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(
-            () => service.NotifyAcceptedAsync(
-                CreateIncident(AuthorChatId, EngineerChatId),
-                cancellationSource.Token));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => SendAsync(
+            new NotifyIncidentAcceptedMessage(CreateIncident(AuthorChatId, EngineerChatId)),
+            notifications,
+            cancellationSource.Token));
 
         Assert.Empty(notifications.Messages);
     }
 
-    private static IncidentNotificationService CreateService(
-        IServiceScope scope,
-        RecordingAlertSender notifications)
+    [Fact]
+    public async Task SendAsync_OneRecipientFails_OtherStillAttempted()
     {
-        return new IncidentNotificationService(
-            notifications,
-            scope.ServiceProvider.GetRequiredService<ILocalizer>(),
-            NullLogger<IncidentNotificationService>.Instance);
+        var telegram = new StubTelegramHandler(AuthorChatId);
+        var sender = new TelegramMessageSender(
+            new TelegramBotClient(IntegrationFixture.AtlasNotificationTestToken, new HttpClient(telegram)),
+            NullLogger<TelegramMessageSender>.Instance);
+
+        await sender.SendAsync(new[] { AuthorChatId, EngineerChatId }, "text");
+
+        Assert.Equal(new[] { AuthorChatId, EngineerChatId }, telegram.ChatIds);
+    }
+
+    private async Task SendAsync(
+        IRequest<Result> message,
+        RecordingMessageSender notifications,
+        CancellationToken cancellationToken = default)
+    {
+        await using var atlas = fixture.CreateAtlasServiceProvider(services =>
+            services.Replace(ServiceDescriptor.Singleton<ITelegramMessageSender>(notifications)));
+        using var scope = atlas.CreateScope();
+
+        await scope.ServiceProvider.GetRequiredService<IMediator>().Send(message, cancellationToken);
     }
 
     private static Incident CreateIncident(
@@ -162,20 +157,42 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
         };
     }
 
-    private sealed class RecordingAlertSender(long? failingChatId = null) : IIncidentAlertSender
+    private sealed class RecordingMessageSender : ITelegramMessageSender
     {
-        public List<(long ChatId, string Text, bool IsAlert)> Messages { get; } = [];
+        public List<(IReadOnlyCollection<long> ChatIds, string Text)> Messages { get; } = [];
 
-        public Task SendAlertAsync(long chatId, string text, CancellationToken cancellationToken = default)
+        public Task SendAsync(
+            IReadOnlyCollection<long> chatIds,
+            string text,
+            CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            if (chatId == failingChatId)
-            {
-                throw new InvalidOperationException("Telegram send failed.");
-            }
-
-            Messages.Add((chatId, text, true));
+            Messages.Add((chatIds, text));
             return Task.CompletedTask;
+        }
+    }
+
+    private sealed class StubTelegramHandler(long failingChatId) : HttpMessageHandler
+    {
+        public List<long> ChatIds { get; } = [];
+
+        protected override async Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            var body = await request.Content!.ReadAsStringAsync(cancellationToken);
+            using var json = JsonDocument.Parse(body);
+            var chatId = json.RootElement.GetProperty("chat_id").GetInt64();
+            ChatIds.Add(chatId);
+
+            var span = chatId == failingChatId
+                ? """{"ok":false,"error_code":400,"description":"Bad Request: chat not found"}"""
+                : """{"ok":true,"result":{"message_id":1,"date":1700000000,"chat":{"id":1,"type":"private"}}}""";
+
+            return new HttpResponseMessage(chatId == failingChatId ? HttpStatusCode.BadRequest : HttpStatusCode.OK)
+            {
+                Content = new StringContent(span)
+            };
         }
     }
 }

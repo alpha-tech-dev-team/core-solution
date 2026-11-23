@@ -17,6 +17,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 
 namespace Atlas.TgBot.Extensions.DependencyInjection;
@@ -24,6 +25,7 @@ namespace Atlas.TgBot.Extensions.DependencyInjection;
 public static class ApplicationExtensions
 {
     private const string NotificationBotClientServiceKey = "notification";
+    private const string NotificationBotTokenKey = "Telegram:NotificationBotToken";
 
     public static IServiceCollection AddApplication(
         this IServiceCollection services,
@@ -36,15 +38,14 @@ public static class ApplicationExtensions
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(SessionBehavior<,>));
         services.AddScoped<IUserErrorMapper, AtlasUserErrorMapper>();
-        var notificationBotToken = configuration["Telegram:NotificationBotToken"];
+        var notificationBotToken = configuration[NotificationBotTokenKey];
         ArgumentException.ThrowIfNullOrWhiteSpace(notificationBotToken);
         services.AddKeyedSingleton<ITelegramBotClient>(
             NotificationBotClientServiceKey,
             (_, _) => new TelegramBotClient(notificationBotToken));
-        services.AddSingleton<IIncidentAlertSender>(
-            provider => new TelegramIncidentAlertSender(
-                provider.GetRequiredKeyedService<ITelegramBotClient>(NotificationBotClientServiceKey)));
-        services.AddScoped<IIncidentNotificationService, IncidentNotificationService>();
+        services.AddSingleton<ITelegramMessageSender>(provider => new TelegramMessageSender(
+            provider.GetRequiredKeyedService<ITelegramBotClient>(NotificationBotClientServiceKey),
+            provider.GetRequiredService<ILogger<TelegramMessageSender>>()));
 
         services.Configure<PhoneConfirmationOptions>(configuration.GetSection(PhoneConfirmationOptions.SectionName));
 

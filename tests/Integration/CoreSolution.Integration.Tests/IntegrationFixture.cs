@@ -219,7 +219,7 @@ public sealed class IntegrationFixture : IAsyncLifetime
         });
     }
 
-    public ServiceProvider CreateAtlasServiceProvider()
+    public ServiceProvider CreateAtlasServiceProvider(Action<IServiceCollection>? configureServices = null)
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
@@ -241,6 +241,8 @@ public sealed class IntegrationFixture : IAsyncLifetime
         services.AddApplication(configuration, new TestHostEnvironment(Environments.Development));
         services.AddHttpClient<IIdentityClient, IdentityClient>()
             .ConfigurePrimaryHttpMessageHandler(() => _identity.Server.CreateHandler());
+
+        configureServices?.Invoke(services);
 
         return services.BuildServiceProvider();
     }
