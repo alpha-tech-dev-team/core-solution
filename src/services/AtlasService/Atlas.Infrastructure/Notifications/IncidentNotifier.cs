@@ -1,7 +1,7 @@
-using Atlas.Application.Features.Notifications;
+using Atlas.Domain.Interfaces;
 using CoreSolution.Shared.TgBot.Abstractions;
 
-namespace Atlas.TgBot.Notifications;
+namespace Atlas.Infrastructure.Notifications;
 
 public sealed class IncidentNotifier : IIncidentNotifier
 {

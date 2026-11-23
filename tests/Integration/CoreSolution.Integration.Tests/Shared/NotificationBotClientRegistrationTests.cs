@@ -1,4 +1,4 @@
-using Atlas.Application.Features.Notifications;
+using Atlas.Domain.Interfaces;
 using CoreSolution.Shared.TgBot.Abstractions;
 using CoreSolution.Shared.TgBot.DependencyInjection;
 using Microsoft.Extensions.Configuration;
@@ -28,10 +28,10 @@ public sealed class NotificationBotClientRegistrationTests
         using var provider = services.BuildServiceProvider();
         var notificationClient = (ITelegramBotClient)provider.GetRequiredKeyedService(
             typeof(ITelegramBotClient),
-            TelegramServiceCollectionExtensions.NotificationServiceKey)!;
+            AtlasInfrastructureExtensions.NotificationServiceKey)!;
         var interactiveClient = provider.GetRequiredService<ITelegramBotClient>();
         var notificationService = provider.GetRequiredKeyedService<ITelegramNotificationService>(
-            TelegramServiceCollectionExtensions.NotificationServiceKey);
+            AtlasInfrastructureExtensions.NotificationServiceKey);
 
         Assert.NotNull(notificationService);
         Assert.Equal(NotificationBotId, notificationClient.BotId);
@@ -44,7 +44,7 @@ public sealed class NotificationBotClientRegistrationTests
         var services = CreateServices();
         var botClient = new RecordingTelegramBotClient();
         services.AddKeyedSingleton<ITelegramBotClient>(
-            TelegramServiceCollectionExtensions.NotificationServiceKey,
+            AtlasInfrastructureExtensions.NotificationServiceKey,
             botClient);
 
         using var provider = services.BuildServiceProvider();
