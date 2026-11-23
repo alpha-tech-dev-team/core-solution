@@ -2,7 +2,9 @@ using Atlas.Api.Middleware;
 using Atlas.Application.Behaviors;
 using Atlas.Application.Features.Incidents;
 using Atlas.Application.Validators;
+using Atlas.Infrastructure.Mapping;
 using FluentValidation;
+using Mapster;
 using MediatR;
 using Serilog;
 
@@ -12,6 +14,8 @@ public static class ServiceConfigurationExtensions
 {
     public static IServiceCollection AddServiceConfiguration(this IServiceCollection services, IConfiguration configuration)
     {
+        TypeAdapterConfig.GlobalSettings.Apply(new IncidentMappingConfig());
+
         services.AddOpenApi();
         services.AddProblemDetails();
         services.AddExceptionHandler<GlobalExceptionHandler>();
