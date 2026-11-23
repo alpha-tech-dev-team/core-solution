@@ -34,7 +34,7 @@ public sealed class UserActivityAuditLogger
         try
         {
             _auditContext.Enqueue(entry);
-            await _auditSaver.SaveAsync(cancellationToken);
+            await _auditSaver.SaveChanges(cancellationToken);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {

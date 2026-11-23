@@ -8,9 +8,9 @@ export interface Employee {
   position: string
   phone: string
   status: EmployeeStatus
+  telegramUserId: number | null
   roles: string[]
   adminUsername: string | null
-  telegramUserId: number | null
 }
 
 export function formatEmployeeFullName(employee: Employee): string {

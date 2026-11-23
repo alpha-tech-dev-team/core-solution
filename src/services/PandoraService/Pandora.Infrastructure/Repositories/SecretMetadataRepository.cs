@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using CoreSolution.Shared.Constants;
 using Pandora.Domain.Entities;
 using Pandora.Domain.Enums;
 using Pandora.Domain.Interfaces;
@@ -17,22 +16,21 @@ public sealed class SecretMetadataRepository : ISecretMetadataRepository
         _context = context;
     }
 
-    public async Task<SecretListPage> GetPage(SecretPageQuery query, CancellationToken cancellationToken)
+    public async Task<SecretListPage> GetPage(SecretPageMessage message, CancellationToken cancellationToken)
     {
         var source = _context.SecretMetadata
             .AsNoTracking()
             .Where(metadata => metadata.SyncOperation != SecretSyncOperation.Delete);
 
         var total = await source.CountAsync(cancellationToken);
-        var skip = (long)(query.Page - PaginationLimits.FirstPage) * query.PageSize;
 
-        var items = await query.OrderBy(source)
-            .Skip((int)Math.Min(skip, int.MaxValue))
-            .Take(query.PageSize)
-            .Select(metadata => new SecretListItem(metadata.VaultItemId, metadata.ResourceName, metadata.Username))
+        var items = await message.OrderBy(source)
+            .Skip(message.Paging.Skip)
+            .Take(message.Paging.EffectivePageSize)
+            .Select(metadata => new SecretPageItem(metadata.VaultItemId, metadata.ResourceName, metadata.Username, null))
             .ToListAsync(cancellationToken);
 
-        return new SecretListPage(items, query.Page, query.PageSize, total);
+        return new SecretListPage(items, message.Paging.EffectivePage, message.Paging.EffectivePageSize, total);
     }
 
     public async Task<SecretMetadata?> GetById(string vaultItemId, CancellationToken cancellationToken)

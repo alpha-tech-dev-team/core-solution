@@ -15,6 +15,7 @@ public static class RouteConfigurationExtensions
         app.MapSecretsEndpoints();
         app.MapAuditEndpoints();
         app.MapHub<AuditHub>(AuditHub.Path);
+        app.MapEmployeeSecretsEndpoints();
 
         return app;
     }

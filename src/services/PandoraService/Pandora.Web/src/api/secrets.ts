@@ -5,10 +5,15 @@ import type { SecretItem } from '@/models/secret-item'
 import type { Page } from '@shared/models/page'
 import type { UpdateSecretPayload } from '@/models/update-secret-payload'
 
-export async function fetchSecrets(page: number, pageSize: number): Promise<Page<SecretItem>> {
+export async function fetchSecrets(
+  page: number,
+  pageSize: number,
+  includePasswords: boolean,
+): Promise<Page<SecretItem>> {
   return await api.get<Page<SecretItem>>(SECRET_ENDPOINTS.COLLECTION, {
     [PAGINATION_QUERY.PAGE]: page,
     [PAGINATION_QUERY.PAGE_SIZE]: pageSize,
+    [PAGINATION_QUERY.INCLUDE_PASSWORDS]: includePasswords,
   })
 }
 

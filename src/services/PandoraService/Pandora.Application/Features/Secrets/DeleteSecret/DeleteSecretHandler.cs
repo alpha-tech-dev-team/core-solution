@@ -9,18 +9,18 @@ using Pandora.Domain.Models;
 
 namespace Pandora.Application.Features.Secrets.DeleteSecret;
 
-public sealed class DeleteSecretMessageHandler : IRequestHandler<DeleteSecretMessage, Result>
+public sealed class DeleteSecretHandler : IRequestHandler<DeleteSecretMessage, Result>
 {
     private readonly ISecretWriter _secretWriter;
     private readonly ISecretMetadataRepository _metadataRepository;
     private readonly SecretAuditLogger _auditLogger;
-    private readonly ILogger<DeleteSecretMessageHandler> _logger;
+    private readonly ILogger<DeleteSecretHandler> _logger;
 
-    public DeleteSecretMessageHandler(
+    public DeleteSecretHandler(
         ISecretWriter secretWriter,
         ISecretMetadataRepository metadataRepository,
         SecretAuditLogger auditLogger,
-        ILogger<DeleteSecretMessageHandler> logger)
+        ILogger<DeleteSecretHandler> logger)
     {
         _secretWriter = secretWriter;
         _metadataRepository = metadataRepository;

@@ -8,6 +8,7 @@ namespace Pandora.Infrastructure.Migrations
     /// <inheritdoc />
     public partial class AddAuditOutbox : Migration
     {
+        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -29,6 +30,7 @@ namespace Pandora.Infrastructure.Migrations
                 column: "created_at");
         }
 
+        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(

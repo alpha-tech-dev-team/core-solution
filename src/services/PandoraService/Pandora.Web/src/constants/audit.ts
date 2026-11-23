@@ -25,6 +25,10 @@ export const AUDIT_ACTION_KEYS = {
   secret_created: `${AUDIT_ACTION_KEY_PREFIX}_secret_created`,
   secret_updated: `${AUDIT_ACTION_KEY_PREFIX}_secret_updated`,
   secret_deleted: `${AUDIT_ACTION_KEY_PREFIX}_secret_deleted`,
+  secret_access_granted: `${AUDIT_ACTION_KEY_PREFIX}_secret_access_granted`,
+  secret_access_revoked: `${AUDIT_ACTION_KEY_PREFIX}_secret_access_revoked`,
+  secret_list_viewed: `${AUDIT_ACTION_KEY_PREFIX}_secret_list_viewed`,
+  secret_passwords_viewed: `${AUDIT_ACTION_KEY_PREFIX}_secret_passwords_viewed`,
 } as const
 
 export const AUDIT_SOURCE_KEYS = {

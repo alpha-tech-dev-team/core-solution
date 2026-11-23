@@ -9,18 +9,18 @@ using Pandora.Domain.Models;
 
 namespace Pandora.Application.Features.Secrets.UpdateSecret;
 
-public sealed class UpdateSecretMessageHandler : IRequestHandler<UpdateSecretMessage, Result<SecretListItem>>
+public sealed class UpdateSecretHandler : IRequestHandler<UpdateSecretMessage, Result<SecretListItem>>
 {
     private readonly ISecretWriter _secretWriter;
     private readonly ISecretMetadataRepository _metadataRepository;
     private readonly SecretAuditLogger _auditLogger;
-    private readonly ILogger<UpdateSecretMessageHandler> _logger;
+    private readonly ILogger<UpdateSecretHandler> _logger;
 
-    public UpdateSecretMessageHandler(
+    public UpdateSecretHandler(
         ISecretWriter secretWriter,
         ISecretMetadataRepository metadataRepository,
         SecretAuditLogger auditLogger,
-        ILogger<UpdateSecretMessageHandler> logger)
+        ILogger<UpdateSecretHandler> logger)
     {
         _secretWriter = secretWriter;
         _metadataRepository = metadataRepository;

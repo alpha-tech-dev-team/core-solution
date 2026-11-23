@@ -10,18 +10,18 @@ using Pandora.Domain.Models;
 
 namespace Pandora.Application.Features.Secrets.CreateSecret;
 
-public sealed class CreateSecretMessageHandler : IRequestHandler<CreateSecretMessage, Result<SecretListItem>>
+public sealed class CreateSecretHandler : IRequestHandler<CreateSecretMessage, Result<SecretListItem>>
 {
     private readonly ISecretWriter _secretWriter;
     private readonly ISecretMetadataRepository _metadataRepository;
     private readonly SecretAuditLogger _auditLogger;
-    private readonly ILogger<CreateSecretMessageHandler> _logger;
+    private readonly ILogger<CreateSecretHandler> _logger;
 
-    public CreateSecretMessageHandler(
+    public CreateSecretHandler(
         ISecretWriter secretWriter,
         ISecretMetadataRepository metadataRepository,
         SecretAuditLogger auditLogger,
-        ILogger<CreateSecretMessageHandler> logger)
+        ILogger<CreateSecretHandler> logger)
     {
         _secretWriter = secretWriter;
         _metadataRepository = metadataRepository;

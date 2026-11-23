@@ -46,6 +46,10 @@ namespace Pandora.Infrastructure.Migrations
                         .HasColumnType("character varying(36)")
                         .HasColumnName("target_item_id");
 
+                    b.Property<long?>("TargetTelegramUserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("target_telegram_user_id");
+
                     b.Property<long?>("TelegramUserId")
                         .HasColumnType("bigint")
                         .HasColumnName("telegram_user_id");
@@ -108,6 +112,14 @@ namespace Pandora.Infrastructure.Migrations
                         .HasMaxLength(36)
                         .HasColumnType("character varying(36)")
                         .HasColumnName("vault_item_id");
+
+                    b.Property<DateTime?>("GrantedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("granted_at");
+
+                    b.Property<Guid?>("GrantedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("granted_by");
 
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()

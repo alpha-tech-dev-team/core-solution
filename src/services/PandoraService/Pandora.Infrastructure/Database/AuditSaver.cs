@@ -11,7 +11,7 @@ public sealed class AuditSaver : IAuditSaver
         _context = context;
     }
 
-    public Task SaveAsync(CancellationToken cancellationToken)
+    public Task SaveChanges(CancellationToken cancellationToken)
     {
         return _context.SaveChangesAsync(cancellationToken);
     }

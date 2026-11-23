@@ -1,3 +1,24 @@
+using CoreSolution.Shared.Constants;
+
 namespace CoreSolution.Shared.Models;
 
-public abstract record PagedMessage(int? Page = null, int? PageSize = null);
+public record PagedMessage(int? Page = null, int? PageSize = null)
+{
+    public int EffectivePage => Page is null || Page < PaginationLimits.FirstPage
+        ? PaginationLimits.FirstPage
+        : Page.Value;
+
+    public int EffectivePageSize => PageSize is null
+        ? PaginationLimits.DefaultPageSize
+        : Math.Clamp(PageSize.Value, PaginationLimits.MinPageSize, PaginationLimits.MaxPageSize);
+
+    public int Skip
+    {
+        get
+        {
+            var skip = ((long)EffectivePage - PaginationLimits.FirstPage) * EffectivePageSize;
+
+            return skip > int.MaxValue ? int.MaxValue : (int)skip;
+        }
+    }
+}
