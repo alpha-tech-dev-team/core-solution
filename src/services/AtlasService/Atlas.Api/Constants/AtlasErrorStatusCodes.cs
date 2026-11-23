@@ -11,6 +11,7 @@ internal static class AtlasErrorStatusCodes
         {
             [ErrorCode.ValidationFailed] = StatusCodes.Status400BadRequest,
             [ErrorCode.MalformedRequest] = StatusCodes.Status400BadRequest,
+            [ErrorCode.RoomNotFound] = StatusCodes.Status404NotFound,
             [ErrorCode.AccessDenied] = StatusCodes.Status403Forbidden,
             [ErrorCode.Conflict] = StatusCodes.Status409Conflict,
             [ErrorCode.DatabaseUnavailable] = StatusCodes.Status503ServiceUnavailable,
@@ -55,6 +56,7 @@ internal static class AtlasErrorStatusCodes
         return exception.SqlState switch
         {
             PostgresErrorCodes.UniqueViolation => Fail(ErrorCode.Conflict),
+            PostgresErrorCodes.ForeignKeyViolation => Fail(ErrorCode.Conflict),
             _ => Fail(exception.IsTransient ? ErrorCode.DatabaseUnavailable : ErrorCode.InternalError)
         };
     }

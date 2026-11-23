@@ -12,6 +12,7 @@ public static class RouteConfigurationExtensions
         }
 
         app.MapIncidentsEndpoints();
+        app.MapRoomsEndpoints();
 
         return app;
     }

@@ -8,6 +8,7 @@ public static class RepositoryConfigurationExtensions
     public static IServiceCollection AddRepositoriesConfiguration(this IServiceCollection services)
     {
         services.AddScoped<IIncidentRepository, IncidentRepository>();
+        services.AddScoped<IRoomRepository, RoomRepository>();
 
         return services;
     }
