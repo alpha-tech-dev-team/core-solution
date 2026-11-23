@@ -15,6 +15,9 @@ const { tr } = useTranslations()
         <RouterLink class="btn btn--ghost btn--sm" :to="{ name: ROUTE_NAMES.INCIDENTS }">
           {{ tr(RESOURCE_KEYS.NAV_INCIDENTS) }}
         </RouterLink>
+        <RouterLink class="btn btn--ghost btn--sm" :to="{ name: ROUTE_NAMES.ROOMS }">
+          {{ tr(RESOURCE_KEYS.NAV_ROOMS) }}
+        </RouterLink>
         <LogoutButton />
       </nav>
     </header>
