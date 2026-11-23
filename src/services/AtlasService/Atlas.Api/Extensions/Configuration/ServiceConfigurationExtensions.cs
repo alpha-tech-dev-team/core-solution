@@ -1,9 +1,7 @@
 using Atlas.Api.Middleware;
+using Atlas.Application.Behaviors;
 using Atlas.Application.Features.Incidents;
 using Atlas.Application.Validators;
-using Atlas.Domain.Models;
-using Atlas.Application.Behaviors;
-using CoreSolution.Shared.Results;
 using FluentValidation;
 using MediatR;
 using Serilog;
@@ -22,7 +20,11 @@ public static class ServiceConfigurationExtensions
             .ReadFrom.Services(serviceProvider));
         services.AddOptionsConfiguration(configuration);
         services.AddDatabaseConfiguration();
-        services.AddTransient<IRequestHandler<GetIncidentsMessage, Result<IncidentListPage>>, GetIncidentsHandler>();
+        services.AddMediatR(cfg =>
+        {
+            cfg.RegisterServicesFromAssemblyContaining<GetIncidentsHandler>();
+            cfg.TypeEvaluator = type => type == typeof(GetIncidentsHandler);
+        });
         services.AddValidatorsFromAssemblyContaining<GetIncidentsMessageValidator>();
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         services.AddJwtAuthentication();

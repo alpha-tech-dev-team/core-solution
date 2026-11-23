@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using Atlas.Domain.Options;
 using CoreSolution.Shared.Options;
 
@@ -10,6 +11,8 @@ public static class OptionsConfigurationExtensions
     {
         services.RegisterOptions(configuration);
         services.ValidateOptions();
+        services.ConfigureHttpJsonOptions(options =>
+            options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
         return services;
     }
