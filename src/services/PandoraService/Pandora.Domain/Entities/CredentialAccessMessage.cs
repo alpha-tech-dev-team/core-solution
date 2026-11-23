@@ -14,4 +14,26 @@ public sealed class CredentialAccessMessage
     public DateTime? NotifiedAt { get; set; }
     public int Attempts { get; set; }
     public string? LastError { get; set; }
+
+    private CredentialAccessMessage()
+    {
+    }
+
+    public CredentialAccessMessage(
+        long chatId,
+        int messageId,
+        string itemId,
+        string itemName,
+        DateTime requestedAt,
+        DateTime expiresAt)
+    {
+        Id = Guid.NewGuid();
+        ChatId = chatId;
+        MessageId = messageId;
+        ItemId = itemId;
+        ItemName = itemName;
+        RequestedAt = requestedAt;
+        ExpiresAt = expiresAt;
+        NextAttemptAt = expiresAt;
+    }
 }

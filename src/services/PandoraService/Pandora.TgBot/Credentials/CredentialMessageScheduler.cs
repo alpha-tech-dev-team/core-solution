@@ -46,17 +46,13 @@ public sealed class CredentialMessageScheduler
             var itemName = await ResolveItemNameAsync(itemId, cancellationToken);
             var expiresAt = requestedAt.AddMinutes(ttlMinutes);
 
-            var message = new CredentialAccessMessage
-            {
-                Id = Guid.NewGuid(),
-                ChatId = chatId,
-                MessageId = messageId,
-                ItemId = Truncate(itemId, DatabaseConstants.CredentialAccessMessages.ItemIdMaxLength),
-                ItemName = Truncate(itemName, DatabaseConstants.CredentialAccessMessages.ItemNameMaxLength),
-                RequestedAt = requestedAt,
-                ExpiresAt = expiresAt,
-                NextAttemptAt = expiresAt
-            };
+            var message = new CredentialAccessMessage(
+                chatId,
+                messageId,
+                Truncate(itemId, DatabaseConstants.CredentialAccessMessages.ItemIdMaxLength),
+                Truncate(itemName, DatabaseConstants.CredentialAccessMessages.ItemNameMaxLength),
+                requestedAt,
+                expiresAt);
 
             await _messageRepository.Add(message, cancellationToken);
 

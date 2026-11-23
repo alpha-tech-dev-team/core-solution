@@ -283,24 +283,22 @@ public sealed class CredentialMessageCleanupTests(IntegrationFixture fixture)
     {
         var id = Guid.NewGuid();
         var now = DateTime.UtcNow;
+        var message = new CredentialAccessMessage(
+            ChatId,
+            messageId,
+            "TestService",
+            "TestService",
+            now.AddMinutes(-5),
+            now.AddMinutes(-1))
+        {
+            Id = id,
+            Attempts = attempts
+        };
 
         using var scope = provider.CreateScope();
         var repository = scope.ServiceProvider.GetRequiredService<ICredentialAccessMessageRepository>();
 
-        await repository.Add(
-            new CredentialAccessMessage
-            {
-                Id = id,
-                ChatId = ChatId,
-                MessageId = messageId,
-                ItemId = "TestService",
-                ItemName = "TestService",
-                RequestedAt = now.AddMinutes(-5),
-                ExpiresAt = now.AddMinutes(-1),
-                NextAttemptAt = now.AddMinutes(-1),
-                Attempts = attempts
-            },
-            CancellationToken.None);
+        await repository.Add(message, CancellationToken.None);
 
         return id;
     }
@@ -311,25 +309,24 @@ public sealed class CredentialMessageCleanupTests(IntegrationFixture fixture)
         DateTime completedAt)
     {
         var id = Guid.NewGuid();
+        var message = new CredentialAccessMessage(
+            ChatId,
+            messageId,
+            "TestService",
+            "TestService",
+            completedAt.AddMinutes(-5),
+            completedAt.AddMinutes(-1))
+        {
+            Id = id,
+            NextAttemptAt = completedAt,
+            DeletedAt = completedAt,
+            NotifiedAt = completedAt
+        };
 
         using var scope = provider.CreateScope();
         var repository = scope.ServiceProvider.GetRequiredService<ICredentialAccessMessageRepository>();
 
-        await repository.Add(
-            new CredentialAccessMessage
-            {
-                Id = id,
-                ChatId = ChatId,
-                MessageId = messageId,
-                ItemId = "TestService",
-                ItemName = "TestService",
-                RequestedAt = completedAt.AddMinutes(-5),
-                ExpiresAt = completedAt.AddMinutes(-1),
-                NextAttemptAt = completedAt,
-                DeletedAt = completedAt,
-                NotifiedAt = completedAt
-            },
-            CancellationToken.None);
+        await repository.Add(message, CancellationToken.None);
 
         return id;
     }
