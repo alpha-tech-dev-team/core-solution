@@ -57,6 +57,14 @@ public sealed class IdentityClient : IIdentityClient
 
             var error = await TryReadErrorCodeAsync(response, cancellationToken);
 
+            if (error == ErrorCodes.InvalidCredentials)
+            {
+                _logger.LogError(
+                    "Identity отклонил внутренний API-ключ (401 InvalidCredentials) — " +
+                    "проверьте Identity:ServiceApiKey на боте и ClientApi:AtlasApiKey в Identity");
+                return ErrorCodes.IdentityConfigurationMismatch;
+            }
+
             return error ?? (response.StatusCode == HttpStatusCode.TooManyRequests
                 ? ErrorCodes.ServiceTemporarilyUnavailable
                 : ErrorCodes.AccessNotConfirmed);
@@ -83,6 +91,14 @@ public sealed class IdentityClient : IIdentityClient
             }
 
             var error = await TryReadErrorCodeAsync(response, cancellationToken);
+
+            if (error == ErrorCodes.InvalidCredentials)
+            {
+                _logger.LogError(
+                    "Identity отклонил внутренний API-ключ (401 InvalidCredentials) — " +
+                    "проверьте Identity:ServiceApiKey на боте и ClientApi:AtlasApiKey в Identity");
+                return ErrorCodes.IdentityConfigurationMismatch;
+            }
 
             return error ?? (response.StatusCode == HttpStatusCode.TooManyRequests
                 ? ErrorCodes.ServiceTemporarilyUnavailable

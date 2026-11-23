@@ -72,7 +72,12 @@ public sealed class SessionBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
 
                     if (!activation.IsSuccess)
                     {
-                        return ResultFactory.Failure<TResponse>(activation.ErrorCode ?? ErrorCodes.AccessNotConfirmed);
+                        var errorCode = activation.ErrorCode;
+                        if (errorCode == ErrorCodes.IdentityConfigurationMismatch)
+                        {
+                            errorCode = ErrorCodes.ServiceTemporarilyUnavailable;
+                        }
+                        return ResultFactory.Failure<TResponse>(errorCode ?? ErrorCodes.AccessNotConfirmed);
                     }
 
                     return ResultFactory.Success<TResponse, WorkflowResponse>(activation.Value!);

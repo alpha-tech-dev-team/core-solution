@@ -52,6 +52,7 @@ public abstract class SubmitPhoneHandlerBase : IRequestHandler<SubmitPhoneMessag
             {
                 ErrorCodes.UserBlocked => ErrorCodes.UserBlocked,
                 ErrorCodes.ServiceTemporarilyUnavailable => ErrorCodes.ServiceTemporarilyUnavailable,
+                ErrorCodes.IdentityConfigurationMismatch => ErrorCodes.ServiceTemporarilyUnavailable,
                 _ => ErrorCodes.AccessNotConfirmed
             });
         }
