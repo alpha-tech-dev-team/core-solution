@@ -2,26 +2,23 @@ using Atlas.Domain.Constants.Localization;
 using Atlas.Domain.Enums;
 using CoreSolution.Shared.Abstractions;
 using CoreSolution.Shared.Results;
-using CoreSolution.Shared.TgBot.Abstractions;
-using CoreSolution.Shared.TgBot.DependencyInjection;
 using MediatR;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Atlas.Application.Features.Notifications;
 
 public sealed class NotifyIncidentHandler : IRequestHandler<NotifyIncidentMessage, Result>
 {
-    private readonly ITelegramNotificationService _notifications;
+    private readonly IIncidentNotifier _notifier;
     private readonly ILocalizer _localizer;
     private readonly ILogger<NotifyIncidentHandler> _logger;
 
     public NotifyIncidentHandler(
-        [FromKeyedServices(TelegramServiceCollectionExtensions.NotificationServiceKey)] ITelegramNotificationService notifications,
+        IIncidentNotifier notifier,
         ILocalizer localizer,
         ILogger<NotifyIncidentHandler> logger)
     {
-        _notifications = notifications;
+        _notifier = notifier;
         _localizer = localizer;
         _logger = logger;
     }
@@ -46,7 +43,7 @@ public sealed class NotifyIncidentHandler : IRequestHandler<NotifyIncidentMessag
         {
             try
             {
-                await _notifications.SendAlertAsync(chatId, text, cancellationToken: cancellationToken);
+                await _notifier.SendAsync(chatId, text, cancellationToken);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {

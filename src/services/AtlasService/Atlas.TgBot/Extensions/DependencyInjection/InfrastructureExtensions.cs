@@ -1,11 +1,14 @@
-﻿using Atlas.Domain.Interfaces.Repositories;
+﻿using Atlas.Application.Features.Notifications;
+using Atlas.Domain.Interfaces.Repositories;
 using Atlas.Domain.Options;
 using Atlas.Infrastructure.Database.Context;
 using Atlas.Infrastructure.Database.Extensions;
 using Atlas.Infrastructure.Repositories;
 using Atlas.Infrastructure.Sessions;
+using Atlas.TgBot.Notifications;
 using Atlas.TgBot.Options;
 using CoreSolution.Shared.Abstractions;
+using CoreSolution.Shared.TgBot.Abstractions;
 using CoreSolution.Shared.TgBot.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -53,6 +56,10 @@ public static class InfrastructureExtensions
         services.AddKeyedTelegramNotificationService(
             TelegramServiceCollectionExtensions.NotificationServiceKey,
             telegramOptions.NotificationBotToken);
+
+        services.AddSingleton<IIncidentNotifier>(provider => new IncidentNotifier(
+            provider.GetRequiredKeyedService<ITelegramNotificationService>(
+                TelegramServiceCollectionExtensions.NotificationServiceKey)));
 
         return services;
     }

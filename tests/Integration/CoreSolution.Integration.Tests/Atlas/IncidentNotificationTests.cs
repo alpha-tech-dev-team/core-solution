@@ -1,13 +1,8 @@
 using Atlas.Application.Features.Notifications;
 using Atlas.Domain.Entities;
 using Atlas.Domain.Enums;
-using CoreSolution.Shared.TgBot.Abstractions;
-using CoreSolution.Shared.TgBot.DependencyInjection;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Telegram.Bot.Types;
-using Telegram.Bot.Types.ReplyMarkups;
 using Xunit;
 
 namespace CoreSolution.Integration.Tests.AtlasTests;
@@ -22,7 +17,7 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
     [Fact]
     public async Task NotifyIncidentAccepted_AuthorAndEngineer_NotifiesBothInOrder()
     {
-        var notifications = new RecordingNotificationService();
+        var notifications = new RecordingIncidentNotifier();
 
         await SendAsync(Accepted(CreateIncident(AuthorChatId, EngineerChatId)), notifications);
 
@@ -35,7 +30,7 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
     public async Task NotifyIncidentResolved_IncludesTicketNumberAndResolution()
     {
         const string resolution = "Заменена клавиатура.";
-        var notifications = new RecordingNotificationService();
+        var notifications = new RecordingIncidentNotifier();
 
         await SendAsync(Resolved(CreateIncident(AuthorChatId, null, resolution)), notifications);
 
@@ -47,7 +42,7 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
     [Fact]
     public async Task NotifyIncidentAccepted_RecipientWithoutTelegramUserId_IsSkipped()
     {
-        var notifications = new RecordingNotificationService();
+        var notifications = new RecordingIncidentNotifier();
 
         await SendAsync(Accepted(CreateIncident(null, EngineerChatId)), notifications);
 
@@ -58,7 +53,7 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
     [Fact]
     public async Task NotifyIncidentAccepted_AuthorIsEngineer_SendsSingleRecipient()
     {
-        var notifications = new RecordingNotificationService();
+        var notifications = new RecordingIncidentNotifier();
 
         await SendAsync(Accepted(CreateIncident(AuthorChatId, AuthorChatId)), notifications);
 
@@ -69,7 +64,7 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
     [Fact]
     public async Task NotifyIncidentAccepted_NoTelegramUserIds_SendsNothing()
     {
-        var notifications = new RecordingNotificationService();
+        var notifications = new RecordingIncidentNotifier();
 
         await SendAsync(Accepted(CreateIncident(null, null)), notifications);
 
@@ -79,7 +74,7 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
     [Fact]
     public async Task NotifyIncidentAccepted_CancellationRequested_PropagatesCancellation()
     {
-        var notifications = new RecordingNotificationService();
+        var notifications = new RecordingIncidentNotifier();
         using var cancellationSource = new CancellationTokenSource();
         await cancellationSource.CancelAsync();
 
@@ -94,7 +89,7 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
     [Fact]
     public async Task NotifyIncidentAccepted_OneRecipientFails_OtherStillNotified()
     {
-        var notifications = new RecordingNotificationService(failingChatId: AuthorChatId);
+        var notifications = new RecordingIncidentNotifier(failingChatId: AuthorChatId);
 
         await SendAsync(Accepted(CreateIncident(AuthorChatId, EngineerChatId)), notifications);
 
@@ -104,13 +99,11 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
 
     private async Task SendAsync(
         NotifyIncidentMessage message,
-        RecordingNotificationService notifications,
+        RecordingIncidentNotifier notifications,
         CancellationToken cancellationToken = default)
     {
         await using var atlas = fixture.CreateAtlasServiceProvider(services =>
-            services.Replace(ServiceDescriptor.KeyedSingleton<ITelegramNotificationService>(
-                TelegramServiceCollectionExtensions.NotificationServiceKey,
-                notifications)));
+            services.AddSingleton<IIncidentNotifier>(notifications));
         using var scope = atlas.CreateScope();
 
         await scope.ServiceProvider.GetRequiredService<IMediator>().Send(message, cancellationToken);
@@ -143,15 +136,11 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
         };
     }
 
-    private sealed class RecordingNotificationService(long? failingChatId = null) : ITelegramNotificationService
+    private sealed class RecordingIncidentNotifier(long? failingChatId = null) : IIncidentNotifier
     {
         public List<(long ChatId, string Text)> Alerts { get; } = [];
 
-        public Task<Message> SendAlertAsync(
-            long chatId,
-            string text,
-            ReplyMarkup? replyMarkup = null,
-            CancellationToken cancellationToken = default)
+        public Task SendAsync(long chatId, string text, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -161,31 +150,7 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
             }
 
             Alerts.Add((chatId, text));
-            return Task.FromResult(new Message());
-        }
-
-        public Task<Message> SendMessageAsync(
-            long chatId,
-            string text,
-            ReplyMarkup? replyMarkup = null,
-            CancellationToken cancellationToken = default)
-        {
-            throw new NotSupportedException();
-        }
-
-        public Task<Message> EditMessageAsync(
-            long chatId,
-            int messageId,
-            string text,
-            InlineKeyboardMarkup? replyMarkup = null,
-            CancellationToken cancellationToken = default)
-        {
-            throw new NotSupportedException();
-        }
-
-        public Task DeleteMessageAsync(long chatId, int messageId, CancellationToken cancellationToken = default)
-        {
-            throw new NotSupportedException();
+            return Task.CompletedTask;
         }
     }
 }
