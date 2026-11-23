@@ -14,6 +14,8 @@ public static class LocalizationKeysConstants
         public const string InvalidMessageId = "InvalidMessageId";
         public const string InvalidPageNumber = "InvalidPageNumber";
         public const string InvalidCategoryId = "InvalidCategoryId";
+        public const string InvalidRoomId = "InvalidRoomId";
+        public const string InvalidRoomText = "InvalidRoomText";
     }
 
     public static class ProblemCategorySelection
@@ -38,5 +40,19 @@ public static class LocalizationKeysConstants
     public static class IncidentResolved
     {
         public const string Text = "Text";
+    }
+
+    public static class RoomSelection
+    {
+        public const string Text = "Text";
+        public const string RoomsNotFound = "RoomsNotFound";
+        public const string RoomNotFound = "RoomNotFound";
+        public const string NextPage = "NextPage";
+    }
+
+    public static class RoomSelected
+    {
+        public const string Text = "Text";
+        public const string Button = "Button";
     }
 }

@@ -1,10 +1,15 @@
 <script setup lang="ts">
 import { reactive, ref, watch } from 'vue'
-import { tr } from '@/i18n'
+import { useTranslations } from '@shared/i18n/create-i18n'
+import { RESOURCE_KEYS } from '@/constants/resource-keys'
 import { INPUT_LIMITS } from '@/constants/validation'
-import type { EmployeeInput } from '@/stores/models/employee-input'
-import { validateEmployeeForm, type EmployeeFormField, type EmployeeFormErrors } from '@/validation/employee'
-import ModalDialog from '@/components/ModalDialog.vue'
+import {
+  validateEmployeeForm,
+  type EmployeeFormErrors,
+  type EmployeeFormField,
+} from '@/validation/employee'
+import type { EmployeeInput } from '@/models/employee-input'
+import ModalDialog from '@shared/components/ModalDialog.vue'
 
 const props = defineProps<{
   open: boolean
@@ -18,7 +23,15 @@ const emit = defineEmits<{
   close: []
 }>()
 
-const draft = reactive<Record<EmployeeFormField, string>>({ name: '', surname: '', patronymic: '', position: '', phone: '' })
+const { tr } = useTranslations()
+
+const draft = reactive<Record<EmployeeFormField, string>>({
+  name: '',
+  surname: '',
+  patronymic: '',
+  position: '',
+  phone: '',
+})
 const fieldErrors = ref<EmployeeFormErrors>({})
 
 watch(
@@ -32,16 +45,16 @@ watch(
     draft.position = props.initial?.position ?? ''
     draft.phone = props.initial?.phone ?? ''
     fieldErrors.value = {}
-  }
+  },
 )
 
-function submit() {
+function submit(): void {
   const normalized: EmployeeInput = {
     name: draft.name.trim(),
     surname: draft.surname.trim(),
     patronymic: draft.patronymic.trim(),
     position: draft.position.trim(),
-    phone: draft.phone.trim()
+    phone: draft.phone.trim(),
   }
 
   fieldErrors.value = validateEmployeeForm(normalized)
@@ -54,91 +67,57 @@ function submit() {
 <template>
   <ModalDialog
     :open="open"
-    :title="initial ? tr('employee_edit_title') : tr('employee_add')"
+    :title="initial ? tr(RESOURCE_KEYS.EMPLOYEE_EDIT_TITLE) : tr(RESOURCE_KEYS.EMPLOYEE_ADD)"
     @close="emit('close')"
   >
-    <form class="dialog" @submit.prevent="submit">
-      <label class="dialog__field">
-        {{ tr('employee_field_surname') }}
-        <input v-model="draft.surname" type="text" />
-        <span v-if="fieldErrors.surname" class="dialog__field-error">{{ fieldErrors.surname }}</span>
+    <form class="form" @submit.prevent="submit">
+      <label class="field">
+        <span class="field__label">{{ tr(RESOURCE_KEYS.EMPLOYEE_FIELD_SURNAME) }}</span>
+        <input v-model="draft.surname" class="input" type="text" />
+        <span v-if="fieldErrors.surname" class="field__error">
+          {{ tr(fieldErrors.surname) }}
+        </span>
       </label>
-      <label class="dialog__field">
-        {{ tr('employee_field_name') }}
-        <input v-model="draft.name" type="text" />
-        <span v-if="fieldErrors.name" class="dialog__field-error">{{ fieldErrors.name }}</span>
+      <label class="field">
+        <span class="field__label">{{ tr(RESOURCE_KEYS.EMPLOYEE_FIELD_NAME) }}</span>
+        <input v-model="draft.name" class="input" type="text" />
+        <span v-if="fieldErrors.name" class="field__error">{{ tr(fieldErrors.name) }}</span>
       </label>
-      <label class="dialog__field">
-        {{ tr('employee_field_patronymic') }}
-        <input v-model="draft.patronymic" type="text" />
-        <span v-if="fieldErrors.patronymic" class="dialog__field-error">{{ fieldErrors.patronymic }}</span>
+      <label class="field">
+        <span class="field__label">{{ tr(RESOURCE_KEYS.EMPLOYEE_FIELD_PATRONYMIC) }}</span>
+        <input v-model="draft.patronymic" class="input" type="text" />
+        <span v-if="fieldErrors.patronymic" class="field__error">
+          {{ tr(fieldErrors.patronymic) }}
+        </span>
       </label>
-      <label class="dialog__field">
-        {{ tr('employee_position') }}
-        <input v-model="draft.position" type="text" />
-        <span v-if="fieldErrors.position" class="dialog__field-error">{{ fieldErrors.position }}</span>
+      <label class="field">
+        <span class="field__label">{{ tr(RESOURCE_KEYS.EMPLOYEE_POSITION) }}</span>
+        <input v-model="draft.position" class="input" type="text" />
+        <span v-if="fieldErrors.position" class="field__error">
+          {{ tr(fieldErrors.position) }}
+        </span>
       </label>
-      <label class="dialog__field">
-        {{ tr('employee_phone') }}
-        <input v-model="draft.phone" type="text" :maxlength="INPUT_LIMITS.PHONE_MAX_LENGTH" />
-        <span v-if="fieldErrors.phone" class="dialog__field-error">{{ fieldErrors.phone }}</span>
+      <label class="field">
+        <span class="field__label">{{ tr(RESOURCE_KEYS.EMPLOYEE_PHONE) }}</span>
+        <input
+          v-model="draft.phone"
+          class="input"
+          type="text"
+          :maxlength="INPUT_LIMITS.PHONE_MAX_LENGTH"
+        />
+        <span v-if="fieldErrors.phone" class="field__error">{{ tr(fieldErrors.phone) }}</span>
       </label>
 
-      <p v-if="error" class="dialog__error">{{ error }}</p>
+      <p v-if="error" class="alert alert--error">{{ error }}</p>
 
-      <div class="dialog__actions">
-        <button type="submit" class="dialog__button" :disabled="saving">{{ tr('employee_save') }}</button>
-        <button type="button" class="dialog__button" @click="emit('close')">{{ tr('employee_cancel') }}</button>
+      <div class="form__actions">
+        <button type="submit" class="btn btn--primary" :disabled="saving">
+          {{ tr(RESOURCE_KEYS.EMPLOYEE_SAVE) }}
+        </button>
+        <button type="button" class="btn btn--ghost" @click="emit('close')">
+          {{ tr(RESOURCE_KEYS.EMPLOYEE_CANCEL) }}
+        </button>
       </div>
     </form>
   </ModalDialog>
 </template>
-
-<style scoped>
-.dialog {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.dialog__field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  font-size: var(--font-size-small);
-}
-
-.dialog__field input {
-  padding: var(--space-2);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-base);
-}
-
-.dialog__field-error {
-  color: var(--color-error);
-}
-
-.dialog__error {
-  color: var(--color-error);
-  font-size: var(--font-size-small);
-}
-
-.dialog__actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-2);
-}
-
-.dialog__button {
-  padding: var(--space-2) var(--space-3);
-  background: transparent;
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-base);
-}
-
-.dialog__button:hover {
-  background: var(--color-bg);
-}
-</style>

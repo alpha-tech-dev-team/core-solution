@@ -1,0 +1,15 @@
+{
+  "app_title": "Atlas",
+  "auth_login_title": "Вход в админ-панель",
+  "error_network": "Сервер не отвечает. Проверьте подключение и повторите попытку.",
+  "admin_section_title": "Админ-панель",
+  "admin_page_title": "Обзор",
+  "admin_page_subtitle": "Сводка по сервису Identity.",
+  "admin_stats_label": "Показатели",
+  "admin_users_label": "Пользователи",
+  "admin_sessions_label": "Активные сессии",
+  "admin_requests_label": "Запросы за сутки",
+  "admin_empty_value": "—",
+  "admin_recent_title": "Последние входы",
+  "admin_empty_state": "Данные появятся, когда Identity API начнёт отдавать список входов."
+}

@@ -1,6 +1,8 @@
+using Atlas.Domain.Interfaces;
+
 namespace Atlas.Domain.Entities;
 
-public sealed class Room
+public sealed class Room : IEntity
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;

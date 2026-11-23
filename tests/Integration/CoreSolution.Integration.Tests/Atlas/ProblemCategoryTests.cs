@@ -37,7 +37,7 @@ public sealed class ProblemCategoryTests(IntegrationFixture fixture)
     }
 
     [Fact]
-    public async Task SelectProblemCategory_StoresChoiceAndReportsSelectedCategory()
+    public async Task SelectProblemCategory_StoresChoiceAndShowsRoomMenu()
     {
         const long telegramUserId = 8302;
 
@@ -56,14 +56,24 @@ public sealed class ProblemCategoryTests(IntegrationFixture fixture)
         var result = await mediator.Send(new SelectProblemCategoryMessage(telegramUserId, 2, categoryId));
 
         Assert.True(result.IsSuccess);
-        Assert.Contains(IncidentCategoryConstants.Hardware.Name, result.Value!.Text);
-        Assert.NotEmpty(result.Value.ButtonRows!);
+        Assert.NotEmpty(result.Value!.ButtonRows!);
+
+        var buttons = result.Value.ButtonRows!
+            .SelectMany(row => row.Buttons)
+            .ToList();
+
+        var roomButtons = buttons
+            .Where(button => button.CallbackData.StartsWith(CallbackConstants.RoomPrefix, StringComparison.Ordinal))
+            .ToList();
+
+        Assert.NotEmpty(roomButtons);
+        Assert.All(roomButtons, button => Assert.StartsWith(CallbackConstants.RoomPrefix, button.CallbackData));
 
         var session = await sessionService.GetSession(telegramUserId, CancellationToken.None);
 
         var atlasSession = Assert.IsType<AtlasUserSession>(session);
         Assert.Equal(categoryId, atlasSession.IncidentCategoryId);
-        Assert.Equal(nameof(WorkflowStep.CategorySelected), atlasSession.State);
+        Assert.Equal(nameof(WorkflowStep.RoomSelection), atlasSession.State);
     }
 
     [Fact]

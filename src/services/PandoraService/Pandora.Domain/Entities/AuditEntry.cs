@@ -8,8 +8,16 @@ public sealed class AuditEntry
     public string Action { get; }
     public string? TargetItemId { get; }
     public string RequestSource { get; }
+    public long? TargetTelegramUserId { get; }
 
-    public AuditEntry(Guid id, DateTime timestamp, Guid userId, string action, string? targetItemId, string requestSource)
+    public AuditEntry(
+        Guid id,
+        DateTime timestamp,
+        Guid userId,
+        string action,
+        string? targetItemId,
+        string requestSource,
+        long? targetTelegramUserId = null)
     {
         Id = id;
         Timestamp = timestamp;
@@ -17,5 +25,6 @@ public sealed class AuditEntry
         Action = action;
         TargetItemId = targetItemId;
         RequestSource = requestSource;
+        TargetTelegramUserId = targetTelegramUserId;
     }
 }

@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { tr } from '@/i18n'
-import type { Employee } from '@/stores/models/employee'
+import { useTranslations } from '@shared/i18n/create-i18n'
+import { RESOURCE_KEYS } from '@/constants/resource-keys'
 import { isAdminRole, PANDORA_ADMIN_ROLE } from '@/constants/roles'
-import ModalDialog from '@/components/ModalDialog.vue'
+import type { Employee } from '@/models/employee'
+import type { EmployeeRolesPayload } from '@/models/employee-roles-payload'
+import ModalDialog from '@shared/components/ModalDialog.vue'
 
 const props = defineProps<{
   open: boolean
@@ -14,9 +16,11 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  save: [payload: { roles: string[]; adminLogin: string | null; adminPassword: string | null }]
+  save: [payload: EmployeeRolesPayload]
   close: []
 }>()
+
+const { tr } = useTranslations()
 
 const selectedRoles = ref<string[]>([])
 const adminLogin = ref('')
@@ -30,15 +34,19 @@ watch(
     selectedRoles.value = [...(props.employee?.roles ?? [])]
     adminLogin.value = props.employee?.adminUsername ?? ''
     adminPassword.value = ''
-  }
+  },
 )
 
 const needsCredentials = computed(() => selectedRoles.value.some(isAdminRole))
 
-const losesOwnAccess = computed(() => props.isSelf && !selectedRoles.value.includes(PANDORA_ADMIN_ROLE))
+const losesOwnAccess = computed(
+  () => props.isSelf && !selectedRoles.value.includes(PANDORA_ADMIN_ROLE),
+)
 
 const canSave = computed(
-  () => !losesOwnAccess.value && (!needsCredentials.value || (adminLogin.value.trim() !== '' && adminPassword.value !== ''))
+  () =>
+    !losesOwnAccess.value &&
+    (!needsCredentials.value || (adminLogin.value.trim() !== '' && adminPassword.value !== '')),
 )
 
 function toggle(role: string, checked: boolean): void {
@@ -51,17 +59,19 @@ function save(): void {
   emit('save', {
     roles: selectedRoles.value,
     adminLogin: adminLogin.value.trim() || null,
-    adminPassword: adminPassword.value || null
+    adminPassword: adminPassword.value || null,
   })
 }
 </script>
 
 <template>
-  <ModalDialog :open="open" :title="tr('employee_roles_title')" @close="emit('close')">
-    <p class="dialog__subtitle">{{ employee ? [employee.surname, employee.name].filter(Boolean).join(' ') : '' }}</p>
+  <ModalDialog :open="open" :title="tr(RESOURCE_KEYS.EMPLOYEE_ROLES_TITLE)" @close="emit('close')">
+    <p v-if="employee" class="text-muted">
+      {{ [employee.surname, employee.name].filter(Boolean).join(' ') }}
+    </p>
 
-    <div v-if="employee" class="dialog__roles">
-      <label v-for="role in roles" :key="role" class="dialog__role">
+    <div v-if="employee" class="form">
+      <label v-for="role in roles" :key="role" class="checkbox">
         <input
           type="checkbox"
           :checked="selectedRoles.includes(role)"
@@ -71,85 +81,28 @@ function save(): void {
       </label>
     </div>
 
-    <label v-if="needsCredentials" class="dialog__field">
-      {{ tr('employee_admin_login') }}
-      <input v-model="adminLogin" type="text" />
+    <label v-if="needsCredentials" class="field">
+      <span class="field__label">{{ tr(RESOURCE_KEYS.EMPLOYEE_ADMIN_LOGIN) }}</span>
+      <input v-model="adminLogin" class="input" type="text" />
     </label>
-    <label v-if="needsCredentials" class="dialog__field">
-      {{ tr('employee_admin_password') }}
-      <input v-model="adminPassword" type="password" />
+    <label v-if="needsCredentials" class="field">
+      <span class="field__label">{{ tr(RESOURCE_KEYS.EMPLOYEE_ADMIN_PASSWORD) }}</span>
+      <input v-model="adminPassword" class="input" type="password" />
     </label>
 
-    <p v-if="losesOwnAccess" class="dialog__warning">{{ tr('employee_roles_self_warning') }}</p>
+    <p v-if="losesOwnAccess" class="alert alert--error">
+      {{ tr(RESOURCE_KEYS.EMPLOYEE_ROLES_SELF_WARNING) }}
+    </p>
 
-    <p v-if="error" class="dialog__error">{{ error }}</p>
+    <p v-if="error" class="field__error">{{ error }}</p>
 
-    <div class="dialog__actions">
-      <button type="button" class="dialog__button" :disabled="!canSave" @click="save">{{ tr('employee_save') }}</button>
-      <button type="button" class="dialog__button" @click="emit('close')">{{ tr('employee_close') }}</button>
+    <div class="form__actions">
+      <button type="button" class="btn btn--primary" :disabled="!canSave" @click="save">
+        {{ tr(RESOURCE_KEYS.EMPLOYEE_SAVE) }}
+      </button>
+      <button type="button" class="btn btn--ghost" @click="emit('close')">
+        {{ tr(RESOURCE_KEYS.EMPLOYEE_CLOSE) }}
+      </button>
     </div>
   </ModalDialog>
 </template>
-
-<style scoped>
-.dialog__subtitle {
-  font-size: var(--font-size-base);
-  color: var(--color-text-secondary);
-}
-
-.dialog__roles {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.dialog__role {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--font-size-base);
-}
-
-.dialog__field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  font-size: var(--font-size-small);
-}
-
-.dialog__field input {
-  padding: var(--space-2);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-base);
-}
-
-.dialog__warning {
-  color: var(--color-error);
-  font-size: var(--font-size-small);
-  font-weight: 600;
-}
-
-.dialog__error {
-  color: var(--color-error);
-  font-size: var(--font-size-small);
-}
-
-.dialog__actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-2);
-}
-
-.dialog__button {
-  padding: var(--space-2) var(--space-3);
-  background: transparent;
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-base);
-}
-
-.dialog__button:hover {
-  background: var(--color-bg);
-}
-</style>

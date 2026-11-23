@@ -1,3 +1,4 @@
+using CoreSolution.Shared.Abstractions;
 using CoreSolution.Shared.TgBot.Abstractions;
 using CoreSolution.Shared.TgBot.Internal.UpdatePipeline;
 using Microsoft.Extensions.DependencyInjection;
@@ -69,10 +70,13 @@ public sealed class BotWorker : BackgroundService
     private async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
     {
         await using var scope = _scopeFactory.CreateAsyncScope();
-        var handler = scope.ServiceProvider.GetRequiredService<IBotUpdateHandler>();
 
         try
         {
+            await SeedSessionAsync(scope.ServiceProvider, update, cancellationToken);
+
+            var handler = scope.ServiceProvider.GetRequiredService<IBotUpdateHandler>();
+
             await handler.HandleUpdateAsync(update, cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -84,6 +88,29 @@ public sealed class BotWorker : BackgroundService
             var (tgUserId, messageId) = UpdateContext.Extract(update);
 
             _logger.LogError(ex, "Ошибка обработки апдейта {UpdateId}, пользователь {TgUserId}, сообщение {MessageId}", update.Id, tgUserId, messageId);
+        }
+    }
+
+    private static async Task SeedSessionAsync(IServiceProvider services, Update update, CancellationToken cancellationToken)
+    {
+        if (services.GetService<ISessionService>() is not { } sessionService
+            || services.GetService<IRequestContext>() is not { } requestContext)
+        {
+            return;
+        }
+
+        var (tgUserId, _) = UpdateContext.Extract(update);
+
+        if (tgUserId is not long userId)
+        {
+            return;
+        }
+
+        var session = await sessionService.GetSession(userId, cancellationToken);
+
+        if (session is not null)
+        {
+            requestContext.Session = session;
         }
     }
 
