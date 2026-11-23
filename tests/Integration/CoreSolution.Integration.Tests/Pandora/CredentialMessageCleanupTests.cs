@@ -443,7 +443,8 @@ public sealed class CredentialMessageCleanupTests(IntegrationFixture fixture)
             long chatId,
             string text,
             ReplyMarkup? replyMarkup = null,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            TelegramSendOptions? sendOptions = null)
         {
             SentMessages.Add(text);
 

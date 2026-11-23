@@ -42,7 +42,8 @@ public sealed class ServiceCallbackBotHandler : IBotHandler
                 tgUserId,
                 result.GetUserText(_userErrorMapper),
                 result.ToTelegramMarkup(),
-                cancellationToken);
+                cancellationToken,
+                result.ToTelegramSendOptions());
 
             if (result.IsSuccess && result.Value is { ContainsSensitiveData: true })
             {

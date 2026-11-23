@@ -207,7 +207,12 @@ public sealed class ContactSharingTests(IntegrationFixture fixture)
 
         public string? LastMessageText { get; private set; }
 
-        public Task<Message> SendMessageAsync(long chatId, string text, ReplyMarkup? replyMarkup = null, CancellationToken cancellationToken = default)
+        public Task<Message> SendMessageAsync(
+            long chatId,
+            string text,
+            ReplyMarkup? replyMarkup = null,
+            CancellationToken cancellationToken = default,
+            TelegramSendOptions? sendOptions = null)
         {
             LastMessageText = text;
             LastMessageRequestedContact = replyMarkup is ReplyKeyboardMarkup keyboard

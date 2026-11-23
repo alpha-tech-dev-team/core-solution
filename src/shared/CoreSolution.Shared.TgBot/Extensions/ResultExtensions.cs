@@ -35,4 +35,14 @@ public static class ResultExtensions
 
         return content.ButtonRows.ToInlineKeyboardMarkup();
     }
+
+    public static TelegramSendOptions? ToTelegramSendOptions(this Result<WorkflowResponse> result)
+    {
+        if (!result.IsSuccess || result.Value is not { ContainsSensitiveData: true } content)
+        {
+            return null;
+        }
+
+        return new TelegramSendOptions(ProtectContent: true);
+    }
 }

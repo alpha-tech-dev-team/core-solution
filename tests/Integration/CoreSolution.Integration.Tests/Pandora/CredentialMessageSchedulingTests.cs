@@ -47,6 +47,11 @@ public sealed class CredentialMessageSchedulingTests(IntegrationFixture fixture)
 
         Assert.Single(notifications.SentMessages);
 
+        var sendOptions = notifications.SendOptions[0];
+
+        Assert.NotNull(sendOptions);
+        Assert.True(sendOptions.ProtectContent);
+
         using var verifyScope = provider.CreateScope();
         var context = verifyScope.ServiceProvider.GetRequiredService<PandoraDbContext>();
 
@@ -82,6 +87,7 @@ public sealed class CredentialMessageSchedulingTests(IntegrationFixture fixture)
         await handler.HandleAsync(CreateCallbackUpdate(ChatId), CancellationToken.None);
 
         Assert.Single(notifications.SentMessages);
+        Assert.Null(notifications.SendOptions[0]);
 
         using var verifyScope = provider.CreateScope();
         var context = verifyScope.ServiceProvider.GetRequiredService<PandoraDbContext>();
@@ -209,14 +215,17 @@ public sealed class CredentialMessageSchedulingTests(IntegrationFixture fixture)
         }
 
         public List<string> SentMessages { get; } = new();
+        public List<TelegramSendOptions?> SendOptions { get; } = new();
 
         public Task<Message> SendMessageAsync(
             long chatId,
             string text,
             ReplyMarkup? replyMarkup = null,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            TelegramSendOptions? sendOptions = null)
         {
             SentMessages.Add(text);
+            SendOptions.Add(sendOptions);
 
             return Task.FromResult(new Message { Id = _messageId, Chat = new Chat { Id = chatId } });
         }

@@ -22,9 +22,10 @@ internal sealed class TelegramNotificationService : ITelegramNotificationService
         long chatId,
         string text,
         ReplyMarkup? replyMarkup = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        TelegramSendOptions? sendOptions = null)
     {
-        return SendAsync(chatId, text, true, replyMarkup, cancellationToken);
+        return SendAsync(chatId, text, true, replyMarkup, cancellationToken, sendOptions);
     }
 
     public Task<Message> SendAlertAsync(
@@ -33,7 +34,7 @@ internal sealed class TelegramNotificationService : ITelegramNotificationService
         ReplyMarkup? replyMarkup = null,
         CancellationToken cancellationToken = default)
     {
-        return SendAsync(chatId, text, false, replyMarkup, cancellationToken);
+        return SendAsync(chatId, text, false, replyMarkup, cancellationToken, null);
     }
 
     public async Task<Message> EditMessageAsync(
@@ -82,7 +83,8 @@ internal sealed class TelegramNotificationService : ITelegramNotificationService
         string text,
         bool silent,
         ReplyMarkup? replyMarkup,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        TelegramSendOptions? sendOptions)
     {
         var chunks = TelegramTextSplitter.Split(text);
         Message? first = null;
@@ -95,6 +97,7 @@ internal sealed class TelegramNotificationService : ITelegramNotificationService
                 text: chunks[index],
                 replyMarkup: isLast ? replyMarkup : null,
                 disableNotification: silent,
+                protectContent: sendOptions?.ProtectContent ?? false,
                 cancellationToken: cancellationToken);
 
             if (first is null)
