@@ -11,6 +11,7 @@ namespace Pandora.TgBot.Credentials;
 public sealed class CredentialMessageCleanupService
 {
     private const int MaxBackoffExponent = 10;
+    private const int BackoffBase = 2;
 
     private readonly ICredentialAccessMessageRepository _messageRepository;
     private readonly ICredentialMessageGateway _gateway;
@@ -118,9 +119,9 @@ public sealed class CredentialMessageCleanupService
         CredentialCleanupOptions options,
         CancellationToken cancellationToken)
     {
-        var attempts = message.Attempts + 1;
+        var attemptNumber = message.Attempts + 1;
 
-        if (attempts >= options.DeleteAttemptsBeforeFallback)
+        if (attemptNumber >= options.DeleteAttemptsBeforeFallback)
         {
             var fallback = await _gateway.ReplaceText(
                 message.ChatId,
@@ -147,7 +148,6 @@ public sealed class CredentialMessageCleanupService
         await MarkFailedAsync(
             message,
             $"Не удалось удалить сообщение {message.MessageId}",
-            attempts,
             options,
             cancellationToken);
     }
@@ -174,7 +174,6 @@ public sealed class CredentialMessageCleanupService
             await MarkFailedAsync(
                 message,
                 exception.Message,
-                message.Attempts + 1,
                 options,
                 cancellationToken);
         }
@@ -183,13 +182,12 @@ public sealed class CredentialMessageCleanupService
     private async Task MarkFailedAsync(
         CredentialAccessMessage message,
         string error,
-        int attempts,
         CredentialCleanupOptions options,
         CancellationToken cancellationToken)
     {
-        var exponent = Math.Min(attempts - 1, MaxBackoffExponent);
+        var exponent = Math.Min(message.Attempts, MaxBackoffExponent);
         var delaySeconds = Math.Min(
-            options.RetryBaseDelaySeconds * Math.Pow(2, exponent),
+            options.RetryBaseDelaySeconds * Math.Pow(BackoffBase, exponent),
             options.MaxRetryDelaySeconds);
         var nextAttemptAt = DateTime.UtcNow.AddSeconds(delaySeconds);
 
