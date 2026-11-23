@@ -45,6 +45,7 @@ public sealed class CredentialMessageCleanupService
         var dueMessages = await _messageRepository.GetDue(
             now,
             options.BatchSize,
+            options.MaxAttempts,
             query => query.OrderBy(message => message.NextAttemptAt).ThenBy(message => message.Id),
             cancellationToken);
 
@@ -66,6 +67,7 @@ public sealed class CredentialMessageCleanupService
             var retentionBefore = now.AddHours(-options.CompletedRetentionHours);
 
             await _messageRepository.DeleteCompleted(retentionBefore, cancellationToken);
+            await _messageRepository.DeleteExhausted(options.MaxAttempts, retentionBefore, cancellationToken);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -192,5 +194,14 @@ public sealed class CredentialMessageCleanupService
         var nextAttemptAt = DateTime.UtcNow.AddSeconds(delaySeconds);
 
         await _messageRepository.MarkFailed(message.Id, error, nextAttemptAt, cancellationToken);
+
+        if (message.AttemptNumber >= options.MaxAttempts)
+        {
+            _logger.LogError(
+                "Исчерпаны попытки очистки сообщения {MessageId} в чате {ChatId}: {Error}",
+                message.MessageId,
+                message.ChatId,
+                error);
+        }
     }
 }

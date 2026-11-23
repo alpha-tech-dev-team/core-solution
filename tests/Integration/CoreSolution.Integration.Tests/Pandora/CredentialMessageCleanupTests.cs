@@ -227,6 +227,51 @@ public sealed class CredentialMessageCleanupTests(IntegrationFixture fixture)
     }
 
     [Fact]
+    public async Task ProcessDue_WhenAttemptsExhausted_SkipsMessage()
+    {
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+
+        await ResetMessagesAsync(provider);
+
+        var maxAttempts = new CredentialCleanupOptions().MaxAttempts;
+        var messageIdStored = await AddMessageAsync(provider, 505, attempts: maxAttempts);
+        var gateway = new FakeCredentialMessageGateway { DeleteOutcome = CredentialMessageOutcome.Failed };
+        var notifications = new FakeNotificationService();
+
+        await ProcessDueAsync(provider, gateway, notifications);
+
+        Assert.Empty(gateway.DeleteCalls);
+        Assert.Empty(notifications.SentMessages);
+
+        var stored = await GetMessageAsync(provider, messageIdStored);
+
+        Assert.NotNull(stored);
+        Assert.Equal(maxAttempts, stored.Attempts);
+    }
+
+    [Fact]
+    public async Task ProcessDue_RemovesExhaustedRowsOlderThanRetention()
+    {
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+
+        await ResetMessagesAsync(provider);
+
+        var options = new CredentialCleanupOptions();
+        var oldAttemptAt = DateTime.UtcNow.AddHours(-(options.CompletedRetentionHours + 1));
+        var oldId = await AddMessageAsync(
+            provider,
+            506,
+            attempts: options.MaxAttempts,
+            nextAttemptAt: oldAttemptAt);
+        var gateway = new FakeCredentialMessageGateway();
+        var notifications = new FakeNotificationService();
+
+        await ProcessDueAsync(provider, gateway, notifications);
+
+        Assert.Null(await GetMessageAsync(provider, oldId));
+    }
+
+    [Fact]
     public async Task ProcessDue_RemovesCompletedRowsOlderThanRetention()
     {
         await using var provider = await fixture.CreatePandoraServiceProviderAsync();
@@ -279,7 +324,8 @@ public sealed class CredentialMessageCleanupTests(IntegrationFixture fixture)
     private static async Task<Guid> AddMessageAsync(
         IServiceProvider provider,
         int messageId,
-        int attempts = 0)
+        int attempts = 0,
+        DateTime? nextAttemptAt = null)
     {
         var id = Guid.NewGuid();
         var now = DateTime.UtcNow;
@@ -292,7 +338,8 @@ public sealed class CredentialMessageCleanupTests(IntegrationFixture fixture)
             now.AddMinutes(-1))
         {
             Id = id,
-            Attempts = attempts
+            Attempts = attempts,
+            NextAttemptAt = nextAttemptAt ?? now.AddMinutes(-1)
         };
 
         using var scope = provider.CreateScope();
@@ -369,6 +416,7 @@ public sealed class CredentialMessageCleanupTests(IntegrationFixture fixture)
         public Task<IReadOnlyList<CredentialAccessMessage>> GetDue(
             DateTime now,
             int limit,
+            int maxAttempts,
             Func<IQueryable<CredentialAccessMessage>, IOrderedQueryable<CredentialAccessMessage>> orderBy,
             CancellationToken cancellationToken)
         {
@@ -376,6 +424,11 @@ public sealed class CredentialMessageCleanupTests(IntegrationFixture fixture)
         }
 
         public Task<int> DeleteCompleted(DateTime before, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(0);
+        }
+
+        public Task<int> DeleteExhausted(int maxAttempts, DateTime before, CancellationToken cancellationToken)
         {
             return Task.FromResult(0);
         }

@@ -9,6 +9,7 @@ public sealed class CredentialCleanupOptions
     public int BatchSize { get; set; } = 50;
     public int CompletedRetentionHours { get; set; } = 24;
     public int DeleteAttemptsBeforeFallback { get; set; } = 3;
+    public int MaxAttempts { get; set; } = 10;
     public int RetryBaseDelaySeconds { get; set; } = 30;
     public int MaxRetryDelaySeconds { get; set; } = 300;
 }

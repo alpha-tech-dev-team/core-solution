@@ -24,12 +24,14 @@ public sealed class CredentialAccessMessageRepository : ICredentialAccessMessage
     public async Task<IReadOnlyList<CredentialAccessMessage>> GetDue(
         DateTime now,
         int limit,
+        int maxAttempts,
         Func<IQueryable<CredentialAccessMessage>, IOrderedQueryable<CredentialAccessMessage>> orderBy,
         CancellationToken cancellationToken)
     {
         return await orderBy(_context.CredentialAccessMessage
                 .AsNoTracking()
-                .Where(message => message.NextAttemptAt <= now
+                .Where(message => message.Attempts < maxAttempts
+                    && message.NextAttemptAt <= now
                     && (message.DeletedAt == null || message.NotifiedAt == null)))
             .Take(limit)
             .ToListAsync(cancellationToken);
@@ -41,6 +43,14 @@ public sealed class CredentialAccessMessageRepository : ICredentialAccessMessage
             .Where(message => message.DeletedAt != null
                 && message.NotifiedAt != null
                 && message.DeletedAt < before)
+            .ExecuteDeleteAsync(cancellationToken);
+    }
+
+    public async Task<int> DeleteExhausted(int maxAttempts, DateTime before, CancellationToken cancellationToken)
+    {
+        return await _context.CredentialAccessMessage
+            .Where(message => message.Attempts >= maxAttempts
+                && message.NextAttemptAt < before)
             .ExecuteDeleteAsync(cancellationToken);
     }
 
