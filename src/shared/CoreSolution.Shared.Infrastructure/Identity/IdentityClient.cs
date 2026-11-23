@@ -59,9 +59,7 @@ public sealed class IdentityClient : IIdentityClient
 
             if (error == ErrorCodes.InvalidCredentials)
             {
-                _logger.LogError(
-                    "Identity отклонил внутренний API-ключ (401 InvalidCredentials) — " +
-                    "проверьте Identity:ServiceApiKey на боте и ClientApi:AtlasApiKey в Identity");
+                _logger.LogError("Identity отклонил внутренний API-ключ (401 InvalidCredentials) — проверьте Identity:ServiceApiKey на боте и ClientApi:AtlasApiKey в Identity");
                 return ErrorCodes.IdentityConfigurationMismatch;
             }
 
@@ -94,9 +92,7 @@ public sealed class IdentityClient : IIdentityClient
 
             if (error == ErrorCodes.InvalidCredentials)
             {
-                _logger.LogError(
-                    "Identity отклонил внутренний API-ключ (401 InvalidCredentials) — " +
-                    "проверьте Identity:ServiceApiKey на боте и ClientApi:AtlasApiKey в Identity");
+                _logger.LogError("Identity отклонил внутренний API-ключ (401 InvalidCredentials) — проверьте Identity:ServiceApiKey на боте и ClientApi:AtlasApiKey в Identity");
                 return ErrorCodes.IdentityConfigurationMismatch;
             }
 
@@ -127,19 +123,13 @@ public sealed class IdentityClient : IIdentityClient
         }
         catch (JsonException exception)
         {
-            _logger.LogWarning(
-                exception,
-                "Identity вернул ответ {StatusCode} без корректного JSON",
-                (int)response.StatusCode);
+            _logger.LogWarning(exception, "Identity вернул ответ {StatusCode} без корректного JSON", (int)response.StatusCode);
 
             return null;
         }
         catch (NotSupportedException exception)
         {
-            _logger.LogWarning(
-                exception,
-                "Identity вернул ответ {StatusCode} с неподдерживаемым типом содержимого",
-                (int)response.StatusCode);
+            _logger.LogWarning(exception, "Identity вернул ответ {StatusCode} с неподдерживаемым типом содержимого", (int)response.StatusCode);
 
             return null;
         }
