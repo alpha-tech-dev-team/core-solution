@@ -1,5 +1,4 @@
 using CoreSolution.Shared.TgBot.Abstractions;
-using CoreSolution.Shared.TgBot.Extensions;
 using MediatR;
 using Pandora.TgBot.Application.Common;
 using Pandora.TgBot.Application.Features.Credentials;
@@ -38,21 +37,14 @@ public sealed class ServiceCallbackBotHandler : IBotHandler
         {
             var itemId = data[CallbackConstants.ServicePrefix.Length..];
             var result = await _mediator.Send(new GetCredentialsMessage(tgUserId, messageId, itemId), cancellationToken);
-            var sentMessage = await _telegramNotificationService.SendMessageAsync(
-                tgUserId,
-                result.GetUserText(_userErrorMapper),
-                result.ToTelegramMarkup(),
-                cancellationToken,
-                result.ToTelegramSendOptions());
 
-            if (result.IsSuccess && result.Value is { ContainsSensitiveData: true })
-            {
-                await _credentialMessageScheduler.ScheduleAsync(
-                    tgUserId,
-                    sentMessage.MessageId,
-                    itemId,
-                    cancellationToken);
-            }
+            await _telegramNotificationService.SendCredentialsAsync(
+                _credentialMessageScheduler,
+                tgUserId,
+                result,
+                itemId,
+                _userErrorMapper,
+                cancellationToken);
         }
     }
 }

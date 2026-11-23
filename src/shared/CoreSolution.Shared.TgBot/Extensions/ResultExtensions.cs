@@ -38,16 +38,21 @@ public static class ResultExtensions
         return content.ButtonRows.ToInlineKeyboardMarkup();
     }
 
+    public static bool HasSensitiveData(this Result<WorkflowResponse> result)
+    {
+        return result.IsSuccess && result.Value is { ContainsSensitiveData: true };
+    }
+
     public static TelegramSendOptions? ToTelegramSendOptions(this Result<WorkflowResponse> result)
     {
-        if (!result.IsSuccess || result.Value is not { ContainsSensitiveData: true } content)
+        if (!result.HasSensitiveData())
         {
             return null;
         }
 
         return new TelegramSendOptions(
             ProtectContent: true,
-            Entities: content.TextMasks?
+            Entities: result.Value!.TextMasks?
                 .Select(mask => new MessageEntity
                 {
                     Type = MessageEntityType.Spoiler,
