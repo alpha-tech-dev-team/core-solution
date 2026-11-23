@@ -37,8 +37,8 @@
   "status_resolvedautomatically": "Решён автоматически",
   "status_closed": "Закрыт",
   "status_cancelled": "Отменён",
-  "priority_low": "Низкий",
-  "priority_medium": "Средний",
-  "priority_high": "Высокий",
-  "priority_critical": "Критический"
+  "status_low": "Низкий",
+  "status_medium": "Средний",
+  "status_high": "Высокий",
+  "status_critical": "Критический"
 }

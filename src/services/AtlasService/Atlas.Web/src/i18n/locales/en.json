@@ -37,8 +37,8 @@
   "status_resolvedautomatically": "Resolved automatically",
   "status_closed": "Closed",
   "status_cancelled": "Cancelled",
-  "priority_low": "Low",
-  "priority_medium": "Medium",
-  "priority_high": "High",
-  "priority_critical": "Critical"
+  "status_low": "Low",
+  "status_medium": "Medium",
+  "status_high": "High",
+  "status_critical": "Critical"
 }
