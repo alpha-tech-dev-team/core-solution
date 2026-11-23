@@ -20,6 +20,7 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
     private const long AuthorChatId = 8401;
     private const long EngineerChatId = 8402;
     private const long TicketNumber = 1042;
+    private const int TelegramMaxMessageLength = 4096;
 
     [Fact]
     public void DependencyInjection_AtlasScope_ResolvesTelegramMessageSender()
@@ -63,6 +64,19 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
         await SendAsync(new NotifyIncidentAcceptedMessage(CreateIncident(null, null)), notifications);
 
         Assert.Empty(notifications.Messages);
+    }
+
+    [Fact]
+    public async Task NotifyIncidentAccepted_DetachedEmployee_IsSkipped()
+    {
+        var notifications = new RecordingMessageSender();
+        var incident = CreateIncident(null, EngineerChatId);
+        incident.Employee = default!;
+
+        await SendAsync(new NotifyIncidentAcceptedMessage(incident), notifications);
+
+        Assert.Single(notifications.Messages);
+        Assert.Equal(new[] { EngineerChatId }, notifications.Messages[0].ChatIds);
     }
 
     [Fact]
@@ -130,6 +144,22 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
         Assert.Equal(new[] { AuthorChatId, EngineerChatId }, telegram.ChatIds);
     }
 
+    [Fact]
+    public async Task SendAsync_LongText_SplitsIntoMultipleMessages()
+    {
+        var telegram = new StubTelegramHandler(failingChatId: null);
+        var sender = new TelegramMessageSender(
+            new TelegramBotClient(IntegrationFixture.AtlasNotificationTestToken, new HttpClient(telegram)),
+            NullLogger<TelegramMessageSender>.Instance);
+        var text = new string('a', TelegramMaxMessageLength + 1000);
+
+        await sender.SendAsync(new[] { AuthorChatId }, text);
+
+        Assert.True(telegram.Texts.Count > 1);
+        Assert.Equal(text, string.Concat(telegram.Texts));
+        Assert.All(telegram.Texts, chunk => Assert.True(chunk.Length <= TelegramMaxMessageLength));
+    }
+
     private async Task SendAsync(
         IRequest<Result> message,
         RecordingMessageSender notifications,
@@ -172,9 +202,11 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
         }
     }
 
-    private sealed class StubTelegramHandler(long failingChatId) : HttpMessageHandler
+    private sealed class StubTelegramHandler(long? failingChatId) : HttpMessageHandler
     {
         public List<long> ChatIds { get; } = [];
+
+        public List<string> Texts { get; } = [];
 
         protected override async Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
@@ -184,6 +216,7 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
             using var json = JsonDocument.Parse(body);
             var chatId = json.RootElement.GetProperty("chat_id").GetInt64();
             ChatIds.Add(chatId);
+            Texts.Add(json.RootElement.GetProperty("text").GetString()!);
 
             var span = chatId == failingChatId
                 ? """{"ok":false,"error_code":400,"description":"Bad Request: chat not found"}"""

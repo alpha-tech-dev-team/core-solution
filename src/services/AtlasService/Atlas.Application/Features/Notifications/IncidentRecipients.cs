@@ -8,7 +8,7 @@ internal static class IncidentRecipients
     {
         return new[]
             {
-                incident.Employee.TelegramUserId,
+                incident.Employee?.TelegramUserId,
                 incident.AssignedEngineer?.TelegramUserId
             }
             .Where(chatId => chatId.HasValue)

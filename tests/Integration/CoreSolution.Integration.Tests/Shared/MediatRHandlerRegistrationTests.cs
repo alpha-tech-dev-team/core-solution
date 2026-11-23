@@ -32,12 +32,7 @@ public sealed class MediatRHandlerRegistrationTests
 
         AtlasApplicationExtensions.AddApplication(
             services,
-            new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["Telegram:NotificationBotToken"] = IntegrationFixture.AtlasNotificationTestToken
-                })
-                .Build(),
+            new ConfigurationBuilder().Build(),
             new TestHostEnvironment(Environments.Production));
 
         Assert.Equal(typeof(AtlasHandler), ResolveSubmitPhoneHandlerImplementation(services));

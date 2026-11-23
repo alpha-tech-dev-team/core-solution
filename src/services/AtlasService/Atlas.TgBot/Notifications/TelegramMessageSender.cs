@@ -1,4 +1,5 @@
 using Atlas.Application.Abstractions;
+using CoreSolution.Shared.TgBot.Extensions;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 
@@ -20,15 +21,13 @@ public sealed class TelegramMessageSender : ITelegramMessageSender
         string text,
         CancellationToken cancellationToken = default)
     {
+        var chunks = TelegramTextSplitter.Split(text);
+
         foreach (var chatId in chatIds)
         {
             try
             {
-                await _client.SendMessage(
-                    chatId,
-                    text,
-                    disableNotification: false,
-                    cancellationToken: cancellationToken);
+                await SendChunksAsync(chatId, chunks, cancellationToken);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
@@ -38,6 +37,18 @@ public sealed class TelegramMessageSender : ITelegramMessageSender
             {
                 _logger.LogWarning(exception, "Не удалось отправить сообщение в чат {ChatId}", chatId);
             }
+        }
+    }
+
+    private async Task SendChunksAsync(long chatId, IReadOnlyList<string> chunks, CancellationToken cancellationToken)
+    {
+        foreach (var chunk in chunks)
+        {
+            await _client.SendMessage(
+                chatId,
+                chunk,
+                disableNotification: false,
+                cancellationToken: cancellationToken);
         }
     }
 }
