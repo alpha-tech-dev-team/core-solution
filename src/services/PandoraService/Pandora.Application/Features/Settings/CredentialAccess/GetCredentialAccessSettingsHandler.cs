@@ -5,12 +5,12 @@ using Pandora.Domain.Models;
 
 namespace Pandora.Application.Features.Settings.CredentialAccess;
 
-public sealed class GetCredentialAccessSettingsMessageHandler
+public sealed class GetCredentialAccessSettingsHandler
     : IRequestHandler<GetCredentialAccessSettingsMessage, Result<CredentialAccessSettings>>
 {
     private readonly ICredentialAccessSettingsRepository _settingsRepository;
 
-    public GetCredentialAccessSettingsMessageHandler(ICredentialAccessSettingsRepository settingsRepository)
+    public GetCredentialAccessSettingsHandler(ICredentialAccessSettingsRepository settingsRepository)
     {
         _settingsRepository = settingsRepository;
     }

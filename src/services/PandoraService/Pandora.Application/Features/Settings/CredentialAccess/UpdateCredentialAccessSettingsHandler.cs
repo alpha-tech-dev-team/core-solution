@@ -7,12 +7,12 @@ using Pandora.Domain.Models;
 
 namespace Pandora.Application.Features.Settings.CredentialAccess;
 
-public sealed class UpdateCredentialAccessSettingsMessageHandler
+public sealed class UpdateCredentialAccessSettingsHandler
     : IRequestHandler<UpdateCredentialAccessSettingsMessage, Result<CredentialAccessSettings>>
 {
     private readonly ICredentialAccessSettingsRepository _settingsRepository;
 
-    public UpdateCredentialAccessSettingsMessageHandler(ICredentialAccessSettingsRepository settingsRepository)
+    public UpdateCredentialAccessSettingsHandler(ICredentialAccessSettingsRepository settingsRepository)
     {
         _settingsRepository = settingsRepository;
     }
