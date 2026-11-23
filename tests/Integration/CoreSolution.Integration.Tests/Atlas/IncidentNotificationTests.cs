@@ -2,7 +2,6 @@ using Atlas.Application.Abstractions;
 using Atlas.Domain.Entities;
 using Atlas.TgBot.Notifications;
 using CoreSolution.Shared.Abstractions;
-using CoreSolution.Shared.TgBot.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Telegram.Bot.Types;
@@ -34,7 +33,7 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
     {
         await using var atlas = fixture.CreateAtlasServiceProvider();
         using var scope = atlas.CreateScope();
-        var notifications = new RecordingNotificationService();
+        var notifications = new RecordingAlertSender();
         var service = CreateService(scope, notifications);
 
         await service.NotifyAcceptedAsync(CreateIncident(AuthorChatId, EngineerChatId));
@@ -53,7 +52,7 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
     {
         await using var atlas = fixture.CreateAtlasServiceProvider();
         using var scope = atlas.CreateScope();
-        var notifications = new RecordingNotificationService();
+        var notifications = new RecordingAlertSender();
         var service = CreateService(scope, notifications);
 
         await service.NotifyAcceptedAsync(CreateIncident(null, EngineerChatId));
@@ -67,7 +66,7 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
     {
         await using var atlas = fixture.CreateAtlasServiceProvider();
         using var scope = atlas.CreateScope();
-        var notifications = new RecordingNotificationService();
+        var notifications = new RecordingAlertSender();
         var service = CreateService(scope, notifications);
 
         await service.NotifyAcceptedAsync(CreateIncident(null, null));
@@ -80,7 +79,7 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
     {
         await using var atlas = fixture.CreateAtlasServiceProvider();
         using var scope = atlas.CreateScope();
-        var notifications = new RecordingNotificationService();
+        var notifications = new RecordingAlertSender();
         var service = CreateService(scope, notifications);
 
         await service.NotifyAcceptedAsync(CreateIncident(AuthorChatId, AuthorChatId));
@@ -95,7 +94,7 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
         const string resolution = "Заменена клавиатура.";
         await using var atlas = fixture.CreateAtlasServiceProvider();
         using var scope = atlas.CreateScope();
-        var notifications = new RecordingNotificationService();
+        var notifications = new RecordingAlertSender();
         var service = CreateService(scope, notifications);
 
         await service.NotifyResolvedAsync(CreateIncident(AuthorChatId, null, resolution));
@@ -111,7 +110,7 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
     {
         await using var atlas = fixture.CreateAtlasServiceProvider();
         using var scope = atlas.CreateScope();
-        var notifications = new RecordingNotificationService(AuthorChatId);
+        var notifications = new RecordingAlertSender(AuthorChatId);
         var service = CreateService(scope, notifications);
 
         await service.NotifyAcceptedAsync(CreateIncident(AuthorChatId, EngineerChatId));
@@ -127,7 +126,7 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
         using var scope = atlas.CreateScope();
         using var cancellationSource = new CancellationTokenSource();
         await cancellationSource.CancelAsync();
-        var notifications = new RecordingNotificationService();
+        var notifications = new RecordingAlertSender();
         var service = CreateService(scope, notifications);
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
@@ -140,7 +139,7 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
 
     private static IncidentNotificationService CreateService(
         IServiceScope scope,
-        RecordingNotificationService notifications)
+        RecordingAlertSender notifications)
     {
         return new IncidentNotificationService(
             notifications,
@@ -163,62 +162,19 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
         };
     }
 
-    private sealed class RecordingNotificationService(long? failingChatId = null) : ITelegramNotificationService
+    private sealed class RecordingAlertSender(long? failingChatId = null) : IIncidentAlertSender
     {
         public List<(long ChatId, string Text, bool IsAlert)> Messages { get; } = [];
 
-        public Task<Message> SendMessageAsync(
-            long chatId,
-            string text,
-            ReplyMarkup? replyMarkup = null,
-            CancellationToken cancellationToken = default)
-        {
-            return RecordMessageAsync(chatId, text, replyMarkup, isAlert: false, cancellationToken);
-        }
-
-        public Task<Message> SendAlertAsync(
-            long chatId,
-            string text,
-            ReplyMarkup? replyMarkup = null,
-            CancellationToken cancellationToken = default)
-        {
-            return RecordMessageAsync(chatId, text, replyMarkup, isAlert: true, cancellationToken);
-        }
-
-        private Task<Message> RecordMessageAsync(
-            long chatId,
-            string text,
-            ReplyMarkup? replyMarkup,
-            bool isAlert,
-            CancellationToken cancellationToken)
+        public Task SendAlertAsync(long chatId, string text, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-
             if (chatId == failingChatId)
             {
                 throw new InvalidOperationException("Telegram send failed.");
             }
 
-            Messages.Add((chatId, text, isAlert));
-
-            return Task.FromResult(new Message());
-        }
-
-        public Task<Message> EditMessageAsync(
-            long chatId,
-            int messageId,
-            string text,
-            InlineKeyboardMarkup? replyMarkup = null,
-            CancellationToken cancellationToken = default)
-        {
-            return Task.FromResult(new Message());
-        }
-
-        public Task DeleteMessageAsync(
-            long chatId,
-            int messageId,
-            CancellationToken cancellationToken = default)
-        {
+            Messages.Add((chatId, text, true));
             return Task.CompletedTask;
         }
     }

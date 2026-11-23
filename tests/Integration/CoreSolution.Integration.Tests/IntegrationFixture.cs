@@ -32,6 +32,7 @@ namespace CoreSolution.Integration.Tests;
 public sealed class IntegrationFixture : IAsyncLifetime
 {
     private const string AtlasTestToken = "123456:integration-test-token";
+    private const string AtlasNotificationTestToken = "654321:notification-test-token";
 
     private static long _adminPhoneSequence;
 
@@ -226,7 +227,8 @@ public sealed class IntegrationFixture : IAsyncLifetime
                 ["Database:ConnectionString"] = _postgres.GetConnectionString(),
                 ["Redis:ConnectionString"] = _atlasRedis.GetConnectionString(),
                 ["SessionSettings:ExpiryMinutes"] = "30",
-                ["Identity:BaseUrl"] = "http://localhost"
+                ["Identity:BaseUrl"] = "http://localhost",
+                ["Telegram:NotificationBotToken"] = AtlasNotificationTestToken
             })
             .Build();
 

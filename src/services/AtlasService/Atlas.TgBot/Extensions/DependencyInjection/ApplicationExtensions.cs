@@ -33,6 +33,10 @@ public static class ApplicationExtensions
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(SessionBehavior<,>));
         services.AddScoped<IUserErrorMapper, AtlasUserErrorMapper>();
+        var notificationBotToken = configuration["Telegram:NotificationBotToken"];
+        ArgumentException.ThrowIfNullOrWhiteSpace(notificationBotToken);
+        services.AddSingleton<IIncidentAlertSender>(
+            _ => new TelegramIncidentAlertSender(new Telegram.Bot.TelegramBotClient(notificationBotToken)));
         services.AddScoped<IIncidentNotificationService, IncidentNotificationService>();
 
         services.Configure<PhoneConfirmationOptions>(configuration.GetSection(PhoneConfirmationOptions.SectionName));

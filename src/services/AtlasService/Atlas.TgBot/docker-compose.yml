@@ -49,6 +49,7 @@ services:
     environment:
       DOTNET_ENVIRONMENT: Production
       Telegram__BotToken: ${TELEGRAM_BOT_TOKEN:?TELEGRAM_BOT_TOKEN is required}
+      Telegram__NotificationBotToken: ${TELEGRAM_NOTIFICATION_BOT_TOKEN:?TELEGRAM_NOTIFICATION_BOT_TOKEN is required}
       Database__ConnectionString: "${Database__ConnectionString:?Database__ConnectionString is required}"
       Database__SeedOnStartup: ${Database__SeedOnStartup:-false}
       Redis__ConnectionString: redis:6379

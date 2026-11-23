@@ -2,23 +2,22 @@ using Atlas.Application.Abstractions;
 using Atlas.Domain.Constants.Localization;
 using Atlas.Domain.Entities;
 using CoreSolution.Shared.Abstractions;
-using CoreSolution.Shared.TgBot.Abstractions;
 using Microsoft.Extensions.Logging;
 
 namespace Atlas.TgBot.Notifications;
 
 public sealed class IncidentNotificationService : IIncidentNotificationService
 {
-    private readonly ITelegramNotificationService _telegramNotificationService;
+    private readonly IIncidentAlertSender _incidentAlertSender;
     private readonly ILocalizer _localizer;
     private readonly ILogger<IncidentNotificationService> _logger;
 
     public IncidentNotificationService(
-        ITelegramNotificationService telegramNotificationService,
+        IIncidentAlertSender incidentAlertSender,
         ILocalizer localizer,
         ILogger<IncidentNotificationService> logger)
     {
-        _telegramNotificationService = telegramNotificationService;
+        _incidentAlertSender = incidentAlertSender;
         _localizer = localizer;
         _logger = logger;
     }
@@ -61,7 +60,7 @@ public sealed class IncidentNotificationService : IIncidentNotificationService
         if (chatIds.Length == 0)
         {
             _logger.LogDebug(
-                "Для заявки {IncidentId} (№{TicketNumber}) нет получателей Telegram",
+                "Для заявки {IncidentId} (ticket {TicketNumber}) нет получателей Telegram",
                 incident.Id,
                 incident.TicketNumber);
 
@@ -72,7 +71,7 @@ public sealed class IncidentNotificationService : IIncidentNotificationService
         {
             try
             {
-                await _telegramNotificationService.SendAlertAsync(
+                await _incidentAlertSender.SendAlertAsync(
                     chatId,
                     text,
                     cancellationToken: cancellationToken);
@@ -85,7 +84,7 @@ public sealed class IncidentNotificationService : IIncidentNotificationService
             {
                 _logger.LogError(
                     exception,
-                    "Не удалось отправить уведомление по заявке {IncidentId} (№{TicketNumber}) в чат {ChatId}",
+                    "Не удалось отправить уведомление по заявке {IncidentId} (ticket {TicketNumber}) в чат {ChatId}",
                     incident.Id,
                     incident.TicketNumber,
                     chatId);
