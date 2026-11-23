@@ -1,8 +1,6 @@
-using CoreSolution.Shared.TgBot.Internal;
+namespace CoreSolution.Shared.TgBot.Internal.Notifications;
 
-namespace CoreSolution.Shared.TgBot.Extensions;
-
-public static class TelegramTextSplitter
+internal static class TelegramTextSplitter
 {
     public static IReadOnlyList<string> Split(string text)
     {

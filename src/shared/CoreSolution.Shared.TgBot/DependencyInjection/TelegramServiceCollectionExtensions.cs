@@ -5,12 +5,15 @@ using CoreSolution.Shared.TgBot.Internal.Notifications;
 using CoreSolution.Shared.TgBot.Internal.UpdatePipeline;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 
 namespace CoreSolution.Shared.TgBot.DependencyInjection;
 
 public static class TelegramServiceCollectionExtensions
 {
+    public const string NotificationServiceKey = "notification";
+
     private const string BotTokenKey = "Telegram:BotToken";
 
     public static IServiceCollection AddTelegramBot(this IServiceCollection services, IConfiguration configuration)
@@ -29,6 +32,23 @@ public static class TelegramServiceCollectionExtensions
         services.AddScoped<IBotUpdateHandler, BotUpdateHandler>();
         services.AddScoped<IBotHandler, ContactBotHandler>();
         services.AddHostedService<BotWorker>();
+
+        return services;
+    }
+
+    public static IServiceCollection AddKeyedTelegramNotificationService(
+        this IServiceCollection services,
+        object serviceKey,
+        string token)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(token);
+
+        services.AddKeyedSingleton<ITelegramBotClient>(serviceKey, (_, _) => new TelegramBotClient(token));
+        services.AddKeyedSingleton<ITelegramNotificationService>(
+            serviceKey,
+            (provider, _) => new TelegramNotificationService(
+                provider.GetRequiredKeyedService<ITelegramBotClient>(serviceKey),
+                provider.GetRequiredService<ILogger<TelegramNotificationService>>()));
 
         return services;
     }

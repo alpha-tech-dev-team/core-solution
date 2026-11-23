@@ -1,5 +1,4 @@
-using Atlas.Application.Abstractions;
-using Atlas.TgBot.Notifications;
+using CoreSolution.Shared.TgBot.Abstractions;
 using CoreSolution.Shared.TgBot.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,7 +14,7 @@ public sealed class NotificationBotClientRegistrationTests
     private const long NotificationBotId = 654321;
 
     [Fact]
-    public static void AddBotInfrastructure_Atlas_RegistersNotificationClientWithDedicatedToken()
+    public static void AddBotInfrastructure_Atlas_RegistersNotificationServiceWithDedicatedToken()
     {
         var services = new ServiceCollection();
         services.AddLogging();
@@ -26,17 +25,14 @@ public sealed class NotificationBotClientRegistrationTests
             CreateConfiguration(IntegrationFixture.AtlasNotificationTestToken));
 
         using var provider = services.BuildServiceProvider();
-        var notificationClientKey = services
-            .Single(descriptor => descriptor.ServiceType == typeof(ITelegramBotClient) && descriptor.IsKeyedService)
-            .ServiceKey!;
-
         var notificationClient = (ITelegramBotClient)provider.GetRequiredKeyedService(
             typeof(ITelegramBotClient),
-            notificationClientKey)!;
+            TelegramServiceCollectionExtensions.NotificationServiceKey)!;
         var interactiveClient = provider.GetRequiredService<ITelegramBotClient>();
-        var messageSender = provider.GetRequiredService<ITelegramMessageSender>();
+        var notificationService = provider.GetRequiredKeyedService<ITelegramNotificationService>(
+            TelegramServiceCollectionExtensions.NotificationServiceKey);
 
-        Assert.IsType<TelegramMessageSender>(messageSender);
+        Assert.NotNull(notificationService);
         Assert.Equal(NotificationBotId, notificationClient.BotId);
         Assert.Equal(InteractiveBotId, interactiveClient.BotId);
     }

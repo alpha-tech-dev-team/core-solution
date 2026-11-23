@@ -15,6 +15,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Atlas.Domain\Atlas.Domain.csproj" />
     <ProjectReference Include="..\..\..\shared\CoreSolution.Shared.Application\CoreSolution.Shared.Application.csproj" />
+    <ProjectReference Include="..\..\..\shared\CoreSolution.Shared.TgBot\CoreSolution.Shared.TgBot.csproj" />
     <ProjectReference Include="..\..\..\shared\CoreSolution.Shared\CoreSolution.Shared.csproj" />
   </ItemGroup>
 
