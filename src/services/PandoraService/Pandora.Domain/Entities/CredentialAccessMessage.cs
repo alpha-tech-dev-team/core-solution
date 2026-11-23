@@ -15,6 +15,8 @@ public sealed class CredentialAccessMessage
     public int Attempts { get; set; }
     public string? LastError { get; set; }
 
+    public int AttemptNumber => Attempts + 1;
+
     private CredentialAccessMessage()
     {
     }

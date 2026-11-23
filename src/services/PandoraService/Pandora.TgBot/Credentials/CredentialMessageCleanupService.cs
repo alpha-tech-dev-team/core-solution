@@ -119,7 +119,7 @@ public sealed class CredentialMessageCleanupService
         CredentialCleanupOptions options,
         CancellationToken cancellationToken)
     {
-        var attemptNumber = message.Attempts + 1;
+        var attemptNumber = message.AttemptNumber;
 
         if (attemptNumber >= options.DeleteAttemptsBeforeFallback)
         {
