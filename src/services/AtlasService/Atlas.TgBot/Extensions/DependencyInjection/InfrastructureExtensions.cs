@@ -1,4 +1,4 @@
-using Atlas.Domain.Interfaces;
+using Atlas.Domain.Interfaces.Services;
 using Atlas.Domain.Interfaces.Repositories;
 using Atlas.Domain.Options;
 using Atlas.Infrastructure.Database.Context;

@@ -1,4 +1,4 @@
-using Atlas.Domain.Interfaces;
+using Atlas.Domain.Interfaces.Services;
 using CoreSolution.Shared.TgBot.Abstractions;
 
 namespace Atlas.Infrastructure.Notifications;

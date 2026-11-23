@@ -1,6 +1,6 @@
 using Atlas.Domain.Constants.Localization;
 using Atlas.Domain.Enums;
-using Atlas.Domain.Interfaces;
+using Atlas.Domain.Interfaces.Services;
 using CoreSolution.Shared.Abstractions;
 using CoreSolution.Shared.Results;
 using MediatR;

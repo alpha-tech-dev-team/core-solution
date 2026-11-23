@@ -1,7 +1,7 @@
 using Atlas.Application.Features.Notifications;
 using Atlas.Domain.Entities;
 using Atlas.Domain.Enums;
-using Atlas.Domain.Interfaces;
+using Atlas.Domain.Interfaces.Services;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;

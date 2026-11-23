@@ -1,4 +1,4 @@
-namespace Atlas.Domain.Interfaces;
+namespace Atlas.Domain.Interfaces.Services;
 
 public interface IIncidentNotifier
 {
