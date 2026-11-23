@@ -14,13 +14,13 @@ public static class IncidentsEndpoints
     {
         var group = endpoints.MapGroup(ApiRoutes.AdminGroup).RequireAuthorization(nameof(UserRole.AtlasAdmin));
 
-        group.MapGet(ApiRoutes.Incidents, List)
+        group.MapGet(ApiRoutes.Incidents, GetIncidentsList)
             .AddEndpointFilter<ValidationFilter<GetIncidentsMessage>>();
 
         return endpoints;
     }
 
-    private static async Task<IResult> List(
+    private static async Task<IResult> GetIncidentsList(
         [FromServices] IMediator mediator,
         [AsParameters] GetIncidentsMessage message,
         CancellationToken cancellationToken = default)
