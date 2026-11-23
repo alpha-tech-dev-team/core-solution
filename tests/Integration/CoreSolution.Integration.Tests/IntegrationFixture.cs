@@ -263,20 +263,29 @@ public sealed class IntegrationFixture : IAsyncLifetime
         return provider;
     }
 
-    public async Task<ServiceProvider> CreatePandoraServiceProviderAsync()
+    public async Task<ServiceProvider> CreatePandoraServiceProviderAsync(
+        IReadOnlyDictionary<string, string?>? overrides = null)
     {
+        var settings = new Dictionary<string, string?>
+        {
+            ["Database:ConnectionString"] = _postgres.GetConnectionString()
+                .Replace("Database=postgres", "Database=pandora_integration"),
+            ["Database:RedisConnection"] = _pandoraRedis.GetConnectionString(),
+            ["SessionSettings:ExpiryMinutes"] = "30",
+            ["Identity:BaseUrl"] = "http://localhost",
+            ["Pandora:Secrets:UseMock"] = "true",
+            ["Pandora:Secrets:Items:0:Name"] = "TestService",
+            ["Pandora:Secrets:Items:0:Login"] = "test-login",
+            ["Pandora:Secrets:Items:0:Password"] = "test-password"
+        };
+
+        foreach (var setting in overrides ?? new Dictionary<string, string?>())
+        {
+            settings[setting.Key] = setting.Value;
+        }
+
         var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["Database:ConnectionString"] = _postgres.GetConnectionString().Replace("Database=postgres", "Database=pandora_integration"),
-                ["Database:RedisConnection"] = _pandoraRedis.GetConnectionString(),
-                ["SessionSettings:ExpiryMinutes"] = "30",
-                ["Identity:BaseUrl"] = "http://localhost",
-                ["Pandora:Secrets:UseMock"] = "true",
-                ["Pandora:Secrets:Items:0:Name"] = "TestService",
-                ["Pandora:Secrets:Items:0:Login"] = "test-login",
-                ["Pandora:Secrets:Items:0:Password"] = "test-password"
-            })
+            .AddInMemoryCollection(settings)
             .Build();
 
         var services = new ServiceCollection();

@@ -55,7 +55,17 @@ public sealed class GetCredentialsHandler : IRequestHandler<GetCredentialsMessag
         {
             Text = text,
             ContainsSensitiveData = true,
-            TextMasks = [new TextMask(text.Length - secret.Password.Length, secret.Password.Length)]
+            TextMasks = CreateTextMasks(text, secret.Password)
         });
+    }
+
+    private static IReadOnlyList<TextMask>? CreateTextMasks(string text, string? password)
+    {
+        if (string.IsNullOrEmpty(password))
+        {
+            return null;
+        }
+
+        return [new TextMask(text.Length - password.Length, password.Length)];
     }
 }
