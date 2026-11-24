@@ -1,12 +1,12 @@
 using Atlas.Api.Middleware;
 using Atlas.Application.Behaviors;
-using Atlas.Application.Features.Incidents;
 using Atlas.Application.Validators;
 using Atlas.Infrastructure.Mapping;
 using FluentValidation;
 using Mapster;
 using MediatR;
 using Serilog;
+using ApplicationAssemblyMarker = Atlas.Application.Admin.AssemblyMarker;
 
 namespace Atlas.Api.Extensions.Configuration;
 
@@ -24,11 +24,7 @@ public static class ServiceConfigurationExtensions
             .ReadFrom.Services(serviceProvider));
         services.AddOptionsConfiguration(configuration);
         services.AddDatabaseConfiguration();
-        services.AddMediatR(cfg =>
-        {
-            cfg.RegisterServicesFromAssemblyContaining<GetIncidentsHandler>();
-            cfg.TypeEvaluator = type => type == typeof(GetIncidentsHandler);
-        });
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<ApplicationAssemblyMarker>());
         services.AddValidatorsFromAssemblyContaining<GetIncidentsMessageValidator>();
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         services.AddJwtAuthentication();
