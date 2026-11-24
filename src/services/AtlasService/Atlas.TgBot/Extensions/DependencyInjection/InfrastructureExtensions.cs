@@ -19,7 +19,9 @@ namespace Atlas.TgBot.Extensions.DependencyInjection;
 
 public static class InfrastructureExtensions
 {
-    private static readonly TimeSpan IdentityRequestTimeout = TimeSpan.FromSeconds(10);
+    private const int IdentityRequestTimeoutSeconds = 10;
+
+    private static readonly TimeSpan IdentityRequestTimeout = TimeSpan.FromSeconds(IdentityRequestTimeoutSeconds);
 
     public static IServiceCollection AddBotInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {

@@ -1,4 +1,5 @@
 using System.Threading.RateLimiting;
+using CoreSolution.Shared.Constants;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 
@@ -19,7 +20,9 @@ public sealed class EmployeeDirectoryRateLimitingPolicy : IRateLimiterPolicy<str
 
     public RateLimitPartition<string> GetPartition(HttpContext httpContext)
     {
-        var partitionKey = httpContext.Request.RouteValues.TryGetValue("telegramUserId", out var routeValue)
+        var partitionKey = httpContext.Request.RouteValues.TryGetValue(
+                ClientApiRoutes.TelegramUserIdRouteValue,
+                out var routeValue)
             && routeValue is not null
                 ? routeValue.ToString() ?? UnknownTelegramUserId
                 : UnknownTelegramUserId;

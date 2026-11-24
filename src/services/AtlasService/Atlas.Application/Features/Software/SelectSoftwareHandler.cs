@@ -1,4 +1,5 @@
 using Atlas.Application.Common;
+using Atlas.Domain.Constants;
 using Atlas.Domain.Constants.Localization;
 using Atlas.Domain.Enums;
 using Atlas.Domain.Interfaces.Repositories;
@@ -68,7 +69,9 @@ public sealed class SelectSoftwareHandler
                     nameof(WorkflowStep.IncidentDescription),
                     LocalizationKeysConstants.IncidentDescription.Text),
                 room?.Name ?? string.Empty,
-                software.Version is null ? software.Name : $"{software.Name} ({software.Version})")
+                software.Version is null
+                    ? software.Name
+                    : string.Format(SoftwareConstants.DisplayNameFormat, software.Name, software.Version))
         });
     }
 

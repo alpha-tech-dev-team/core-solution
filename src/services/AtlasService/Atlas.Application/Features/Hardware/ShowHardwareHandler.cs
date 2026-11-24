@@ -59,13 +59,7 @@ public sealed class ShowHardwareHandler : IRequestHandler<ShowHardwareMessage, R
 
         if (page.Items.Count == 0)
         {
-            return Result<WorkflowResponse>.Success(new WorkflowResponse
-            {
-                Text = _localizer.GetPhrase(
-                    nameof(WorkflowStep.HardwareSelection),
-                    LocalizationKeysConstants.HardwareSelection.NotConfigured),
-                ButtonRows = BuildFallbackRows()
-            });
+            return Result<WorkflowResponse>.Failure(nameof(ErrorCode.HardwareNotConfigured));
         }
 
         var rows = page.Items
@@ -92,23 +86,6 @@ public sealed class ShowHardwareHandler : IRequestHandler<ShowHardwareMessage, R
                 LocalizationKeysConstants.HardwareSelection.Text),
             ButtonRows = rows
         });
-    }
-
-    private List<WorkflowButtonRow> BuildFallbackRows()
-    {
-        return
-        [
-            new(new WorkflowButton(
-                _localizer.GetPhrase(
-                    nameof(WorkflowStep.HardwareSelection),
-                    LocalizationKeysConstants.HardwareSelection.ChooseAnotherRoom),
-                CallbackConstants.RoomPagePrefix + PaginationLimits.FirstPage)),
-            new(new WorkflowButton(
-                _localizer.GetPhrase(
-                    nameof(WorkflowStep.HardwareSelection),
-                    LocalizationKeysConstants.HardwareSelection.ChooseAnotherCategory),
-                CallbackConstants.CategoryPagePrefix + PaginationLimits.FirstPage))
-        ];
     }
 
     private List<WorkflowButtonRow> BuildNavigationRows()

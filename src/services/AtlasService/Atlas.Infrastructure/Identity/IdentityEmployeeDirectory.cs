@@ -46,10 +46,7 @@ public sealed class IdentityEmployeeDirectory : IEmployeeDirectory
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogWarning(
-                    "Сотрудник {TelegramUserId} не найден в Identity: {StatusCode}",
-                    telegramUserId,
-                    response.StatusCode);
+                _logger.LogWarning("Сотрудник {TelegramUserId} не найден в Identity: {StatusCode}", telegramUserId, response.StatusCode);
 
                 return null;
             }

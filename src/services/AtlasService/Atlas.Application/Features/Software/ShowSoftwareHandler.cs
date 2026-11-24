@@ -58,13 +58,7 @@ public sealed class ShowSoftwareHandler : IRequestHandler<ShowSoftwareMessage, R
 
         if (page.Items.Count == 0)
         {
-            return Result<WorkflowResponse>.Success(new WorkflowResponse
-            {
-                Text = _localizer.GetPhrase(
-                    nameof(WorkflowStep.SoftwareSelection),
-                    LocalizationKeysConstants.SoftwareSelection.NotConfigured),
-                ButtonRows = BuildFallbackRows()
-            });
+            return Result<WorkflowResponse>.Failure(nameof(ErrorCode.SoftwareNotConfigured));
         }
 
         var rows = page.Items
@@ -93,23 +87,6 @@ public sealed class ShowSoftwareHandler : IRequestHandler<ShowSoftwareMessage, R
                 LocalizationKeysConstants.SoftwareSelection.Text),
             ButtonRows = rows
         });
-    }
-
-    private List<WorkflowButtonRow> BuildFallbackRows()
-    {
-        return
-        [
-            new(new WorkflowButton(
-                _localizer.GetPhrase(
-                    nameof(WorkflowStep.SoftwareSelection),
-                    LocalizationKeysConstants.SoftwareSelection.ChooseAnotherRoom),
-                CallbackConstants.RoomPagePrefix + PaginationLimits.FirstPage)),
-            new(new WorkflowButton(
-                _localizer.GetPhrase(
-                    nameof(WorkflowStep.SoftwareSelection),
-                    LocalizationKeysConstants.SoftwareSelection.ChooseAnotherCategory),
-                CallbackConstants.CategoryPagePrefix + PaginationLimits.FirstPage))
-        ];
     }
 
     private List<WorkflowButtonRow> BuildNavigationRows()
