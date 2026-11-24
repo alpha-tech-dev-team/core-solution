@@ -13,19 +13,22 @@ public static class IncidentCategorySeed
         {
             Id = IncidentCategoryConstants.Hardware.Id,
             Name = IncidentCategoryConstants.Hardware.Name,
-            Description = IncidentCategoryConstants.Hardware.Description
+            Description = IncidentCategoryConstants.Hardware.Description,
+            Type = IncidentCategoryConstants.Hardware.Type
         },
         new IncidentCategory
         {
             Id = IncidentCategoryConstants.Software.Id,
             Name = IncidentCategoryConstants.Software.Name,
-            Description = IncidentCategoryConstants.Software.Description
+            Description = IncidentCategoryConstants.Software.Description,
+            Type = IncidentCategoryConstants.Software.Type
         },
         new IncidentCategory
         {
             Id = IncidentCategoryConstants.Other.Id,
             Name = IncidentCategoryConstants.Other.Name,
-            Description = IncidentCategoryConstants.Other.Description
+            Description = IncidentCategoryConstants.Other.Description,
+            Type = IncidentCategoryConstants.Other.Type
         }
     ];
 
@@ -38,7 +41,8 @@ public static class IncidentCategorySeed
         var changed = Categories
             .Where(category => !existing.TryGetValue(category.Id, out var current)
                 || current.Name != category.Name
-                || current.Description != category.Description)
+                || current.Description != category.Description
+                || current.Type != category.Type)
             .ToList();
 
         if (changed.Count == 0)

@@ -16,7 +16,8 @@ public static class IdentityServiceCollectionExtensions
         var identityOptions = section.Get<IdentityOptions>()
             ?? throw new InvalidOperationException($"Missing configuration section {IdentityOptions.SectionName}.");
 
-        ArgumentException.ThrowIfNullOrWhiteSpace(identityOptions.BaseUrl, $"{IdentityOptions.SectionName}:{nameof(IdentityOptions.BaseUrl)}");
+        ArgumentException.ThrowIfNullOrWhiteSpace(identityOptions.BaseUrl, $"{IdentityOptions.SectionName}:{nameof(identityOptions.BaseUrl)}");
+        ArgumentException.ThrowIfNullOrWhiteSpace(identityOptions.ServiceApiKey, $"{IdentityOptions.SectionName}:{nameof(identityOptions.ServiceApiKey)}");
 
         services.Configure<IdentityOptions>(section);
         services.AddHttpClient<IIdentityClient, IdentityClient>(client =>

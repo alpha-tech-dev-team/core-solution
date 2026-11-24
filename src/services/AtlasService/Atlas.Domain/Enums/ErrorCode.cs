@@ -12,8 +12,18 @@ public enum ErrorCode
     InvalidMessageId,
     InvalidPageNumber,
     InvalidCategoryId,
+    InvalidHardwareId,
+    InvalidSoftwareId,
     RoomsNotFound,
     RoomNotFound,
     InvalidRoomId,
-    InvalidRoomText
+    InvalidRoomText,
+    HardwareNotFound,
+    HardwareNotConfigured,
+    SoftwareNotFound,
+    SoftwareNotConfigured,
+    InvalidIncidentDescription,
+    IncidentDescriptionNotSet,
+    IncidentContextIncomplete,
+    IncidentStepNotSupported
 }

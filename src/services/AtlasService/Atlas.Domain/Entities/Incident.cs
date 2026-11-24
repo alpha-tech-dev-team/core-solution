@@ -3,7 +3,7 @@ using Atlas.Domain.Interfaces;
 
 namespace Atlas.Domain.Entities;
 
-public sealed class Incident : IHasUpdatedAt
+public sealed class Incident : IEntity, IHasUpdatedAt
 {
     public Guid Id { get; set; }
     public long TicketNumber { get; set; }

@@ -48,8 +48,13 @@ public abstract class SubmitPhoneHandlerBase : IRequestHandler<SubmitPhoneMessag
 
         if (confirmationError is not null)
         {
-            return Result<WorkflowResponse>.Failure(
-                confirmationError == ErrorCodes.UserBlocked ? ErrorCodes.UserBlocked : ErrorCodes.AccessNotConfirmed);
+            return Result<WorkflowResponse>.Failure(confirmationError switch
+            {
+                ErrorCodes.UserBlocked => ErrorCodes.UserBlocked,
+                ErrorCodes.ServiceTemporarilyUnavailable => ErrorCodes.ServiceTemporarilyUnavailable,
+                ErrorCodes.IdentityConfigurationMismatch => ErrorCodes.ServiceTemporarilyUnavailable,
+                _ => ErrorCodes.AccessNotConfirmed
+            });
         }
 
         return await _mediator.Send(CreateNextMessage(request), cancellationToken);

@@ -1,3 +1,5 @@
+using Atlas.Domain.Enums;
+
 namespace Atlas.Domain.Constants;
 
 public static class IncidentCategoryConstants
@@ -8,6 +10,7 @@ public static class IncidentCategoryConstants
 
         public const string Name = "Оборудование";
         public const string Description = "Сбои оборудования и оргтехники";
+        public const IncidentCategoryType Type = IncidentCategoryType.Hardware;
     }
 
     public static class Software
@@ -16,6 +19,7 @@ public static class IncidentCategoryConstants
 
         public const string Name = "Программное обеспечение";
         public const string Description = "Сбои программного обеспечения";
+        public const IncidentCategoryType Type = IncidentCategoryType.Software;
     }
 
     public static class Other
@@ -24,5 +28,6 @@ public static class IncidentCategoryConstants
 
         public const string Name = "Другое";
         public const string Description = "Обращения, не относящиеся к оборудованию и программному обеспечению";
+        public const IncidentCategoryType Type = IncidentCategoryType.Other;
     }
 }

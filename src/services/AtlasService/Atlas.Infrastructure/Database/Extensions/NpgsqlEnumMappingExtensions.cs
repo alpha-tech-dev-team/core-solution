@@ -12,6 +12,7 @@ public static class NpgsqlEnumMappingExtensions
         npgsql.MapEnum<IncidentStatus>(DatabaseConstants.EnumNames.IncidentStatus);
         npgsql.MapEnum<IncidentPriority>(DatabaseConstants.EnumNames.IncidentPriority);
         npgsql.MapEnum<KnowledgeArticleStatus>(DatabaseConstants.EnumNames.KnowledgeArticleStatus);
+        npgsql.MapEnum<IncidentCategoryType>(DatabaseConstants.EnumNames.IncidentCategoryType);
 
         return npgsql;
     }

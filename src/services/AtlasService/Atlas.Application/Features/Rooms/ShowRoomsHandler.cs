@@ -59,6 +59,13 @@ public sealed class ShowRoomsHandler
                     CallbackConstants.RoomPagePrefix + page.NextPage)));
         }
 
+        buttonRows.Add(new WorkflowButtonRow(
+            new WorkflowButton(
+                _localizer.GetPhrase(
+                    nameof(WorkflowStep.RoomSelection),
+                    LocalizationKeysConstants.RoomSelection.ChooseAnotherCategory),
+                CallbackConstants.CategoryPagePrefix + PaginationLimits.FirstPage)));
+
         return Result<WorkflowResponse>.Success(new WorkflowResponse
         {
             Text = _localizer.GetPhrase(
