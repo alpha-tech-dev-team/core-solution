@@ -81,9 +81,13 @@ public sealed class PandoraFlowTests(IntegrationFixture fixture)
 
         Assert.True(result.IsSuccess);
 
-        var mask = Assert.Single(result.Value!.TextMasks!);
+        var text = result.Value!.Text;
+        var mask = Assert.Single(result.Value.TextMasks!);
+        var passwordPosition = text.IndexOf("test-password", StringComparison.Ordinal);
 
-        Assert.Equal("test-password", result.Value.Text.Substring(mask.Offset, mask.Length));
+        Assert.True(passwordPosition >= 0);
+        Assert.Equal(passwordPosition, mask.Offset);
+        Assert.Equal("test-password", text.Substring(mask.Offset, mask.Length));
     }
 
     [Theory]

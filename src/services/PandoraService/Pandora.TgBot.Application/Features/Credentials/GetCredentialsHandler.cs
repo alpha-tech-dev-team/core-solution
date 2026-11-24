@@ -43,29 +43,38 @@ public sealed class GetCredentialsHandler : IRequestHandler<GetCredentialsMessag
             return Result<WorkflowResponse>.Failure(secretResult.ErrorCode ?? string.Empty);
         }
 
-        var text = string.Format(
+        var passwordMarker = $"__PASSWORD_{Guid.NewGuid():N}__";
+        var textWithMarker = string.Format(
             _localizer.GetPhrase(nameof(WorkflowStep.ServiceSelection), LocalizationKeysConstants.ServiceSelection.CredentialsTemplate),
             secret.ItemName,
             _localizer.GetPhrase(nameof(WorkflowStep.ServiceSelection), LocalizationKeysConstants.ServiceSelection.LoginLabel),
             secret.Login,
             _localizer.GetPhrase(nameof(WorkflowStep.ServiceSelection), LocalizationKeysConstants.ServiceSelection.PasswordLabel),
-            secret.Password);
+            passwordMarker);
+        var passwordOffset = textWithMarker.IndexOf(passwordMarker, StringComparison.Ordinal);
+
+        if (passwordOffset < 0)
+        {
+            throw new FormatException("Credentials template did not preserve the password marker");
+        }
+
+        var text = textWithMarker.Replace(passwordMarker, secret.Password, StringComparison.Ordinal);
 
         return Result<WorkflowResponse>.Success(new WorkflowResponse
         {
             Text = text,
             ContainsSensitiveData = true,
-            TextMasks = CreateTextMasks(text, secret.Password)
+            TextMasks = CreateTextMasks(passwordOffset, secret.Password)
         });
     }
 
-    private static IReadOnlyList<TextMask>? CreateTextMasks(string text, string? password)
+    private static IReadOnlyList<TextMask>? CreateTextMasks(int passwordOffset, string? password)
     {
         if (string.IsNullOrEmpty(password))
         {
             return null;
         }
 
-        return [new TextMask(text.Length - password.Length, password.Length)];
+        return [new TextMask(passwordOffset, password.Length)];
     }
 }
