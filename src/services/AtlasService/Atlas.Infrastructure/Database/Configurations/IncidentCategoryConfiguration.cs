@@ -8,7 +8,8 @@ namespace Atlas.Infrastructure.Database.Configurations;
 
 public sealed class IncidentCategoryConfiguration : IEntityTypeConfiguration<IncidentCategory>
 {
-    private const IncidentCategoryType UnsetTypeSentinel = (IncidentCategoryType)(-1);
+    private const int UnsetTypeValue = -1;
+    private const IncidentCategoryType UnsetTypeSentinel = (IncidentCategoryType)UnsetTypeValue;
 
     public void Configure(EntityTypeBuilder<IncidentCategory> builder)
     {
