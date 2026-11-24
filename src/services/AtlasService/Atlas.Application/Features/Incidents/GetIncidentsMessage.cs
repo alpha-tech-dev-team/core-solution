@@ -1,5 +1,5 @@
 using Atlas.Domain.Models;
-using CoreSolution.Shared.Pagination;
+using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
 using MediatR;
 
