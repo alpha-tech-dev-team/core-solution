@@ -1,6 +1,5 @@
 using Atlas.Api.Constants;
 using Atlas.Api.Extensions.Http;
-using Atlas.Api.Filters;
 using Atlas.Application.Features.Incidents;
 using CoreSolution.Shared.Enums;
 using MediatR;
@@ -14,8 +13,7 @@ public static class IncidentsEndpoints
     {
         var group = endpoints.MapGroup(ApiRoutes.AdminGroup).RequireAuthorization(nameof(UserRole.AtlasAdmin));
 
-        group.MapGet(ApiRoutes.Incidents, GetIncidentsList)
-            .AddEndpointFilter<ValidationFilter<GetIncidentsMessage>>();
+        group.MapGet(ApiRoutes.Incidents, GetIncidentsList);
 
         return endpoints;
     }
