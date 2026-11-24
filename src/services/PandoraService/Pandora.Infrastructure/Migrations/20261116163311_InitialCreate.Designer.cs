@@ -12,8 +12,8 @@ using Pandora.Infrastructure.Database;
 namespace Pandora.Infrastructure.Migrations
 {
     [DbContext(typeof(PandoraDbContext))]
-    [Migration("20261112214431_AddSecretSyncRetryState")]
-    partial class AddSecretSyncRetryState
+    [Migration("20261116163311_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -49,15 +49,27 @@ namespace Pandora.Infrastructure.Migrations
                         .HasColumnType("character varying(36)")
                         .HasColumnName("target_item_id");
 
+                    b.Property<long?>("TelegramUserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("telegram_user_id");
+
                     b.Property<DateTime>("Timestamp")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("timestamp");
 
-                    b.Property<Guid>("UserId")
+                    b.Property<Guid?>("UserId")
                         .HasColumnType("uuid")
                         .HasColumnName("user_id");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Action");
+
+                    b.HasIndex("RequestSource");
+
+                    b.HasIndex("TelegramUserId");
+
+                    b.HasIndex("Timestamp");
 
                     b.HasIndex("UserId");
 
@@ -67,7 +79,9 @@ namespace Pandora.Infrastructure.Migrations
             modelBuilder.Entity("Pandora.Domain.Entities.Permission", b =>
                 {
                     b.Property<long>("TelegramUserId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
+                        .HasDefaultValue(0L)
                         .HasColumnName("telegram_user_id");
 
                     b.Property<string>("VaultItemId")
@@ -96,7 +110,9 @@ namespace Pandora.Infrastructure.Migrations
                         .HasColumnName("vault_item_id");
 
                     b.Property<int>("AttemptCount")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
+                        .HasDefaultValue(0)
                         .HasColumnName("attempt_count");
 
                     b.Property<string>("LastError")
@@ -116,8 +132,10 @@ namespace Pandora.Infrastructure.Migrations
 
                     b.Property<string>("SyncOperation")
                         .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
+                        .HasDefaultValue("None")
                         .HasColumnName("sync_operation");
 
                     b.Property<string>("Username")

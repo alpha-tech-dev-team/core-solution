@@ -3,6 +3,7 @@ import { ROUTES, ROUTE_NAMES } from '@/constants/routes'
 import HomeView from '@/views/home/HomeView.vue'
 import EmployeesView from '@/views/employees/EmployeesView.vue'
 import SecretsView from '@/views/secrets/SecretsView.vue'
+import AuditView from '@/views/audit/AuditView.vue'
 
 export const routes = [
   defineAuthRoute({
@@ -19,5 +20,10 @@ export const routes = [
     path: ROUTES.SECRETS,
     name: ROUTE_NAMES.SECRETS,
     component: SecretsView,
+  }),
+  defineAuthRoute({
+    path: ROUTES.AUDIT,
+    name: ROUTE_NAMES.AUDIT,
+    component: AuditView,
   }),
 ]

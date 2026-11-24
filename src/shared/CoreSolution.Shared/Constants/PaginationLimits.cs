@@ -1,4 +1,4 @@
-namespace CoreSolution.Shared.Pagination;
+namespace CoreSolution.Shared.Constants;
 
 public static class PaginationLimits
 {

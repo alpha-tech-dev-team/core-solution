@@ -1,4 +1,5 @@
-using CoreSolution.Shared.Pagination;
+using CoreSolution.Shared.Constants;
+using CoreSolution.Shared.Models;
 using FluentValidation;
 
 namespace CoreSolution.Shared.Application.Validation;

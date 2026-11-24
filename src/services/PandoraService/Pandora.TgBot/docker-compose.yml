@@ -121,6 +121,8 @@ services:
         condition: service_completed_successfully
       pandora-postgres:
         condition: service_healthy
+      pandora-redis:
+        condition: service_healthy
       bw-gateway:
         condition: service_started
     expose:
@@ -129,6 +131,7 @@ services:
       - "5008:8080"
     environment:
       - Database__ConnectionString=Host=pandora-postgres;Port=5432;Database=${POSTGRES_DB:-alphadev_pandora};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
+      - Database__RedisConnection=pandora-redis:6379
       - Jwt__Secret=${JWT__SECRET:?JWT__SECRET is required}
       - Pandora__Vaultwarden__BaseUrl=http://bw-gateway:8087
     restart: unless-stopped

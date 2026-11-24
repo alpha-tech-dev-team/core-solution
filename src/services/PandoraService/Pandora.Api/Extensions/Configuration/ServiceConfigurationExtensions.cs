@@ -20,7 +20,7 @@ public static class ServiceConfigurationExtensions
             .ReadFrom.Configuration(configuration)
             .ReadFrom.Services(serviceProvider));
         services.AddOptionsConfiguration(configuration);
-        services.AddDatabaseConfiguration();
+        services.AddDatabaseConfiguration(configuration);
         services.AddSecretsConfiguration();
         services.AddScoped<SecretAuditLogger>();
         services.AddScoped<IAuditSaver, AuditSaver>();

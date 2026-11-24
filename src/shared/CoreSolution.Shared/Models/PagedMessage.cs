@@ -1,10 +1,9 @@
-namespace CoreSolution.Shared.Pagination;
+using CoreSolution.Shared.Constants;
 
-public record PagedMessage
+namespace CoreSolution.Shared.Models;
+
+public record PagedMessage(int? Page = null, int? PageSize = null)
 {
-    public int? Page { get; init; }
-    public int? PageSize { get; init; }
-
     public int EffectivePage => Page is null || Page < PaginationLimits.FirstPage
         ? PaginationLimits.FirstPage
         : Page.Value;

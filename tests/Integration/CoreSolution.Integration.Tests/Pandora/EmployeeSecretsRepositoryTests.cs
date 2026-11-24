@@ -1,4 +1,5 @@
-using CoreSolution.Shared.Pagination;
+using CoreSolution.Shared.Constants;
+using CoreSolution.Shared.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Pandora.Domain.Entities;
 using Pandora.Domain.Enums;
