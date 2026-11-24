@@ -19,33 +19,24 @@ public sealed class UpdateRoomHandler : IRequestHandler<UpdateRoomMessage, Resul
         UpdateRoomMessage request,
         CancellationToken cancellationToken)
     {
-        var room = await _roomRepository.GetByIdAsync(request.RoomId, cancellationToken);
+        var room = await _roomRepository.GetByIdAsync(request.ItemId, cancellationToken);
 
         if (room is null)
         {
             return Result<RoomPageItem>.Failure(nameof(ErrorCode.RoomNotFound));
         }
 
-        var name = request.Name.Trim();
-        var description = NormalizeDescription(request.Description);
+        room.UpdateDetails(request.Name, request.Description);
 
-        if (await _roomRepository.ExistsByNameAsync(name, room.Id, cancellationToken))
+        if (await _roomRepository.ExistsByNameAsync(room.Name, room.Id, cancellationToken))
         {
             return Result<RoomPageItem>.Failure(nameof(ErrorCode.Conflict));
         }
-
-        room.Name = name;
-        room.Description = description;
 
         _roomRepository.Update(room);
         await _roomRepository.SaveChangesAsync(cancellationToken);
 
         return Result<RoomPageItem>.Success(
             new RoomPageItem(room.Id, room.Name, room.Description, room.CreatedAt));
-    }
-
-    private static string? NormalizeDescription(string? description)
-    {
-        return string.IsNullOrWhiteSpace(description) ? null : description.Trim();
     }
 }

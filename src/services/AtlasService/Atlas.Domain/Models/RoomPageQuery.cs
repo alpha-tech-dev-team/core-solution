@@ -1,5 +1,5 @@
 using Atlas.Domain.Entities;
-using CoreSolution.Shared.Pagination;
+using CoreSolution.Shared.Models;
 
 namespace Atlas.Domain.Models;
 

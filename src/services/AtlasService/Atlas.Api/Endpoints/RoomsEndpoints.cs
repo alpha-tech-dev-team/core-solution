@@ -14,12 +14,10 @@ public static class RoomsEndpoints
     {
         var group = endpoints.MapGroup(ApiRoutes.AdminGroup).RequireAuthorization(nameof(UserRole.AtlasAdmin));
 
-        group.MapGet(ApiRoutes.Rooms, GetRoomsList)
-            .AddEndpointFilter<ValidationFilter<GetRoomsMessage>>();
-        group.MapPost(ApiRoutes.Rooms, CreateRoom)
-            .AddEndpointFilter<ValidationFilter<CreateRoomMessage>>();
+        group.MapGet(ApiRoutes.Rooms, GetRoomsList);
+        group.MapPost(ApiRoutes.Rooms, CreateRoom);
         group.MapPatch(ApiRoutes.RoomById, UpdateRoom)
-            .AddEndpointFilter<ValidationFilter<UpdateRoomMessage>>();
+            .AddEndpointFilter<RoomRequestContextFilter>();
         group.MapDelete(ApiRoutes.RoomById, DeleteRoom);
 
         return endpoints;
@@ -47,11 +45,9 @@ public static class RoomsEndpoints
 
     private static async Task<IResult> UpdateRoom(
         [FromServices] IMediator mediator,
-        [FromRoute] Guid roomId,
         UpdateRoomMessage message,
         CancellationToken cancellationToken = default)
     {
-        message.RoomId = roomId;
         var result = await mediator.Send(message, cancellationToken);
 
         return result.ToHttpResult();

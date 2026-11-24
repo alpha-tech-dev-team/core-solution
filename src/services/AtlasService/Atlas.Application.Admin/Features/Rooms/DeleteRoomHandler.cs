@@ -18,14 +18,14 @@ public sealed class DeleteRoomHandler : IRequestHandler<DeleteRoomMessage, Resul
         DeleteRoomMessage request,
         CancellationToken cancellationToken)
     {
-        var room = await _roomRepository.GetByIdAsync(request.RoomId, cancellationToken);
+        var room = await _roomRepository.GetByIdAsync(request.ItemId, cancellationToken);
 
         if (room is null)
         {
             return Result.Failure(nameof(ErrorCode.RoomNotFound));
         }
 
-        if (await _roomRepository.HasDependenciesAsync(request.RoomId, cancellationToken))
+        if (await _roomRepository.HasDependenciesAsync(request.ItemId, cancellationToken))
         {
             return Result.Failure(nameof(ErrorCode.Conflict));
         }
