@@ -21,7 +21,7 @@ internal static class AtlasErrorStatusCodes
     {
         return Enum.TryParse<ErrorCode>(errorCode, out var code)
             ? Get(code)
-            : StatusCodes.Status500InternalServerError;
+            : StatusCodes.Status404NotFound;
     }
 
     public static (int StatusCode, string Code) Map(Exception exception)
@@ -37,7 +37,7 @@ internal static class AtlasErrorStatusCodes
     {
         return StatusCodesByError.TryGetValue(code, out var statusCode)
             ? statusCode
-            : StatusCodes.Status500InternalServerError;
+            : StatusCodes.Status404NotFound;
     }
 
     private static (int StatusCode, string Code) MapException(Exception exception)
