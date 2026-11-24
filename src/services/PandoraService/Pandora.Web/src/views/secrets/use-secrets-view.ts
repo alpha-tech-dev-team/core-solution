@@ -17,8 +17,9 @@ export function useSecretsView() {
 
   const pageSize = ref(SECRETS_PAGE_SIZE)
   const total = ref(0)
+  const showPasswords = ref(false)
 
-  const list = useSecretsList(pageSize, total, run)
+  const list = useSecretsList(pageSize, total, showPasswords, run)
   const form = useSecretForm()
 
   function confirmDelete(): boolean {
@@ -62,8 +63,10 @@ export function useSecretsView() {
     formPassword: form.password,
     selectedItem: list.selectedItem,
     selectedId: list.selectedId,
+    showPasswords,
     errorMessage,
     changePage: list.changePage,
+    togglePasswords: list.togglePasswords,
     openCreateForm: form.openCreate,
     closeForm: form.close,
     selectRow: list.select,

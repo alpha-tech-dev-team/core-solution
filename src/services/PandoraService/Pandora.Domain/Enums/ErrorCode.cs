@@ -8,6 +8,12 @@ public enum ErrorCode
     InvalidSecretData,
     VaultwardenUnavailable,
     DatabaseUnavailable,
+    Conflict,
     MalformedRequest,
+    InvalidPage,
+    InvalidPageSize,
+    InvalidSortField,
+    InvalidSortDirection,
+    InvalidSearch,
     InternalError
 }

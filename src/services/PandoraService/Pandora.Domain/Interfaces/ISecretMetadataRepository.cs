@@ -5,7 +5,7 @@ namespace Pandora.Domain.Interfaces;
 
 public interface ISecretMetadataRepository
 {
-    Task<SecretListPage> GetPage(SecretPageQuery query, CancellationToken cancellationToken);
+    Task<SecretListPage> GetPage(SecretPageMessage message, CancellationToken cancellationToken);
     Task<SecretMetadata?> GetById(string vaultItemId, CancellationToken cancellationToken);
     Task<IReadOnlyList<SecretMetadata>> GetPendingSync(SecretSyncBatchQuery query, CancellationToken cancellationToken);
     Task<bool> ClearSyncStateIfUnchanged(string vaultItemId, string resourceName, string username, CancellationToken cancellationToken);

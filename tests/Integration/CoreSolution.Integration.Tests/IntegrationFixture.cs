@@ -62,6 +62,12 @@ public sealed class IntegrationFixture : IAsyncLifetime
             await command.ExecuteNonQueryAsync();
         }
 
+        await using var pandoraContext = new PandoraDbContext(
+            new DbContextOptionsBuilder<PandoraDbContext>()
+                .UseNpgsql(PandoraConnectionString)
+                .Options);
+        await pandoraContext.Database.MigrateAsync();
+
         _identity = new WebApplicationFactory<AssemblyMarker>().WithWebHostBuilder(builder =>
         {
             builder.ConfigureAppConfiguration((_, configuration) =>
@@ -260,6 +266,9 @@ public sealed class IntegrationFixture : IAsyncLifetime
 
         return client;
     }
+
+    public string PandoraConnectionString =>
+        _postgres.GetConnectionString().Replace("Database=postgres", "Database=pandora_integration");
 
     public HttpClient CreateIdentityHttpClientWithCookies()
     {

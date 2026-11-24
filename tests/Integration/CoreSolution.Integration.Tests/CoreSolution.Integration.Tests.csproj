@@ -11,6 +11,8 @@
     <ProjectReference Include="..\..\..\src\services\IdentityService\Identity.Api\Identity.Api.csproj" />
     <ProjectReference Include="..\..\..\src\services\AtlasService\Atlas.TgBot\Atlas.TgBot.csproj" />
     <ProjectReference Include="..\..\..\src\services\PandoraService\Pandora.TgBot\Pandora.TgBot.csproj" />
+    <ProjectReference Include="..\..\..\src\services\PandoraService\Pandora.Api\Pandora.Api.csproj" />
+    <ProjectReference Include="..\..\..\src\services\PandoraService\Pandora.Application\Pandora.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>

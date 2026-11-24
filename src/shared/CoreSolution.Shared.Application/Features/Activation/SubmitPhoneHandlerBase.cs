@@ -28,7 +28,7 @@ public abstract class SubmitPhoneHandlerBase : IRequestHandler<SubmitPhoneMessag
 
     protected abstract IRequest<Result<WorkflowResponse>> CreateNextMessage(SubmitPhoneMessage request);
 
-    public async Task<Result<WorkflowResponse>> Handle(SubmitPhoneMessage request, CancellationToken cancellationToken)
+    public virtual async Task<Result<WorkflowResponse>> Handle(SubmitPhoneMessage request, CancellationToken cancellationToken)
     {
         if (request.Phone is null)
         {

@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Pandora.Domain.Entities;
+using Pandora.Domain.Enums;
 using Pandora.Domain.Interfaces;
+using Pandora.Domain.Models;
 using Pandora.Infrastructure.Database;
 
 namespace Pandora.Infrastructure.Repositories;
@@ -29,5 +32,109 @@ public sealed class PermissionRepository : IPermissionRepository
                     && permission.VaultItemId == itemId
                     && permission.IsActive,
                 cancellationToken);
+    }
+
+    public async Task<EmployeeSecretPage> GetPage(
+        long telegramUserId,
+        SecretPageMessage message,
+        CancellationToken cancellationToken)
+    {
+        var source = LiveSecrets();
+        var total = await source.CountAsync(cancellationToken);
+
+        var items = await message.OrderBy(source)
+            .Skip(message.Paging.Skip)
+            .Take(message.Paging.EffectivePageSize)
+            .Select(metadata => new EmployeeSecretItem(
+                metadata.VaultItemId,
+                metadata.ResourceName,
+                metadata.Username,
+                _context.Permission.Any(permission => permission.TelegramUserId == telegramUserId
+                    && permission.VaultItemId == metadata.VaultItemId
+                    && permission.IsActive)))
+            .ToListAsync(cancellationToken);
+
+        return new EmployeeSecretPage(items, message.Paging.EffectivePage, message.Paging.EffectivePageSize, total);
+    }
+
+    public async Task<SecretAccessGrantResult> Grant(
+        long telegramUserId,
+        string itemId,
+        Guid adminUserId,
+        CancellationToken cancellationToken)
+    {
+        if (!await LiveSecrets().AnyAsync(metadata => metadata.VaultItemId == itemId, cancellationToken))
+        {
+            return SecretAccessGrantResult.SecretNotFound;
+        }
+
+        var permission = await _context.Permission
+            .FirstOrDefaultAsync(
+                item => item.TelegramUserId == telegramUserId && item.VaultItemId == itemId,
+                cancellationToken);
+
+        if (permission is not null && permission.IsActive)
+        {
+            return SecretAccessGrantResult.AlreadyGranted;
+        }
+
+        var grantedAt = DateTime.UtcNow;
+
+        if (permission is null)
+        {
+            _context.Permission.Add(new Permission
+            {
+                TelegramUserId = telegramUserId,
+                VaultItemId = itemId,
+                IsActive = DatabaseConstants.Permissions.IsActiveGranted,
+                GrantedAt = grantedAt,
+                GrantedBy = adminUserId
+            });
+
+            return SecretAccessGrantResult.Granted;
+        }
+
+        permission.IsActive = DatabaseConstants.Permissions.IsActiveGranted;
+        permission.GrantedAt = grantedAt;
+        permission.GrantedBy = adminUserId;
+
+        return SecretAccessGrantResult.Granted;
+    }
+
+    public async Task<SecretAccessRevokeResult> Revoke(
+        long telegramUserId,
+        string itemId,
+        CancellationToken cancellationToken)
+    {
+        if (!await LiveSecrets().AnyAsync(metadata => metadata.VaultItemId == itemId, cancellationToken))
+        {
+            return SecretAccessRevokeResult.SecretNotFound;
+        }
+
+        var permission = await _context.Permission
+            .FirstOrDefaultAsync(
+                item => item.TelegramUserId == telegramUserId && item.VaultItemId == itemId,
+                cancellationToken);
+
+        if (permission is null || !permission.IsActive)
+        {
+            return SecretAccessRevokeResult.AlreadyRevoked;
+        }
+
+        permission.IsActive = DatabaseConstants.Permissions.IsActiveRevoked;
+
+        return SecretAccessRevokeResult.Revoked;
+    }
+
+    public Task SaveChanges(CancellationToken cancellationToken)
+    {
+        return _context.SaveChangesAsync(cancellationToken);
+    }
+
+    private IQueryable<SecretMetadata> LiveSecrets()
+    {
+        return _context.SecretMetadata
+            .AsNoTracking()
+            .Where(metadata => metadata.SyncOperation != SecretSyncOperation.Delete);
     }
 }

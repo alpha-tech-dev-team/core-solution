@@ -13,7 +13,21 @@ public sealed class SecretAuditLogger
         _auditContext = auditContext;
     }
 
-    public Task LogActionAsync(Guid adminUserId, string action, string targetItemId, CancellationToken cancellationToken)
+    public Task LogActionAsync(
+        Guid adminUserId,
+        string action,
+        string targetItemId,
+        CancellationToken cancellationToken)
+    {
+        return LogActionAsync(adminUserId, action, targetItemId, null, cancellationToken);
+    }
+
+    public Task LogActionAsync(
+        Guid adminUserId,
+        string action,
+        string targetItemId,
+        long? targetTelegramUserId,
+        CancellationToken cancellationToken)
     {
         _auditContext.Enqueue(
             new AuditEntry(
@@ -22,7 +36,8 @@ public sealed class SecretAuditLogger
                 adminUserId,
                 action,
                 targetItemId,
-                AuditConstants.SourceWeb));
+                AuditConstants.SourceWeb,
+                targetTelegramUserId));
 
         return Task.CompletedTask;
     }

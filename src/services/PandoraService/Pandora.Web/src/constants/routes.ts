@@ -4,10 +4,12 @@ export const ROUTES = {
   ...SHARED_ROUTES,
   EMPLOYEES: '/employees',
   SECRETS: '/secrets',
+  AUDIT: '/audit',
 } as const
 
 export const ROUTE_NAMES = {
   ...SHARED_ROUTE_NAMES,
   EMPLOYEES: 'employees',
   SECRETS: 'secrets',
+  AUDIT: 'audit',
 } as const
