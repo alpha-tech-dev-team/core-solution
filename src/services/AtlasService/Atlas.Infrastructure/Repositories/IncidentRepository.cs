@@ -28,7 +28,7 @@ public sealed class IncidentRepository : BaseRepository<Incident>, IIncidentRepo
         await Context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<IncidentListPage> GetListPageAsync(
+    public async Task<IncidentListPage> GetListPage(
         IncidentPageQuery query,
         CancellationToken cancellationToken = default)
     {

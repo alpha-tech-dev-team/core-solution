@@ -18,7 +18,7 @@ public sealed class GetIncidentsHandler : IRequestHandler<GetIncidentsMessage, R
         GetIncidentsMessage request,
         CancellationToken cancellationToken)
     {
-        var page = await _incidentRepository.GetListPageAsync(
+        var page = await _incidentRepository.GetListPage(
             new IncidentPageQuery(request, IncidentSorting.ByNewest),
             cancellationToken);
 
