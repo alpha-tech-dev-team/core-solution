@@ -11,8 +11,10 @@ public static class ClientApiRoutes
     public const string Employee = "employee";
     public const string EmployeeById = $"{Employee}/{{{TelegramUserIdRouteValue}:long}}";
 
+    private const string EmployeeRouteFormat = "{0}/{1}/{2}";
+
     public static string EmployeeByTelegramUser(long telegramUserId)
     {
-        return $"{Group}/{Employee}/{telegramUserId}";
+        return string.Format(EmployeeRouteFormat, Group, Employee, telegramUserId);
     }
 }
