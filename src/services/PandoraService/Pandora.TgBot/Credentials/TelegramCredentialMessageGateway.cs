@@ -1,3 +1,4 @@
+using System.Net;
 using Microsoft.Extensions.Logging;
 using Pandora.Domain.Enums;
 using Telegram.Bot;
@@ -7,8 +8,9 @@ namespace Pandora.TgBot.Credentials;
 
 public sealed class TelegramCredentialMessageGateway : ICredentialMessageGateway
 {
-    private const string NotFoundMarker = "not found";
-    private const string NotModifiedMarker = "not modified";
+    private const string NotModifiedDescription = "message is not modified";
+    private const string DeleteMessageNotFoundDescription = "message to delete not found";
+    private const string EditMessageNotFoundDescription = "message to edit not found";
 
     private readonly ITelegramBotClient _client;
     private readonly ILogger<TelegramCredentialMessageGateway> _logger;
@@ -43,7 +45,7 @@ public sealed class TelegramCredentialMessageGateway : ICredentialMessageGateway
                 "Telegram отклонил удаление сообщения {MessageId}",
                 messageId);
 
-            return Classify(exception.Message);
+            return ClassifyDeleteError(exception);
         }
         catch (Exception exception)
         {
@@ -83,12 +85,12 @@ public sealed class TelegramCredentialMessageGateway : ICredentialMessageGateway
                 "Telegram отклонил замену текста сообщения {MessageId}",
                 messageId);
 
-            if (exception.Message.Contains(NotModifiedMarker, StringComparison.OrdinalIgnoreCase))
+            if (IsNotModified(exception))
             {
                 return CredentialMessageOutcome.Succeeded;
             }
 
-            return Classify(exception.Message);
+            return ClassifyEditError(exception);
         }
         catch (Exception exception)
         {
@@ -101,10 +103,32 @@ public sealed class TelegramCredentialMessageGateway : ICredentialMessageGateway
         }
     }
 
-    private static CredentialMessageOutcome Classify(string message)
+    private static CredentialMessageOutcome ClassifyDeleteError(ApiRequestException exception)
     {
-        return message.Contains(NotFoundMarker, StringComparison.OrdinalIgnoreCase)
+        return IsExactBadRequest(exception, DeleteMessageNotFoundDescription)
             ? CredentialMessageOutcome.NotFound
             : CredentialMessageOutcome.Failed;
+    }
+
+    private static CredentialMessageOutcome ClassifyEditError(ApiRequestException exception)
+    {
+        return IsExactBadRequest(exception, EditMessageNotFoundDescription)
+            ? CredentialMessageOutcome.NotFound
+            : CredentialMessageOutcome.Failed;
+    }
+
+    private static bool IsNotModified(ApiRequestException exception)
+    {
+        return IsExactBadRequest(exception, NotModifiedDescription);
+    }
+
+    private static bool IsExactBadRequest(ApiRequestException exception, string description)
+    {
+        var normalizedDescription = exception.Message.StartsWith("Bad Request: ", StringComparison.OrdinalIgnoreCase)
+            ? exception.Message["Bad Request: ".Length..]
+            : exception.Message;
+
+        return exception.ErrorCode == (int)HttpStatusCode.BadRequest
+            && string.Equals(normalizedDescription, description, StringComparison.OrdinalIgnoreCase);
     }
 }
