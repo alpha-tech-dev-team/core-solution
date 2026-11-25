@@ -4,6 +4,7 @@ using Pandora.Domain.Constants;
 using Pandora.Domain.Entities;
 using Pandora.Domain.Enums;
 using Pandora.Domain.Interfaces;
+using Pandora.Domain.Models;
 using Pandora.Domain.Options;
 
 namespace Pandora.TgBot.Application.Features.Credentials;
@@ -41,10 +42,7 @@ public sealed class CredentialMessageCleanupService
         await RemoveCompletedAsync(now, options, cancellationToken);
 
         var dueMessages = await _messageRepository.ClaimDue(
-            now,
-            claimUntil,
-            options.BatchSize,
-            options.MaxAttempts,
+            new CredentialMessageClaim(now, claimUntil, options.BatchSize, options.MaxAttempts),
             cancellationToken);
 
         foreach (var message in dueMessages)
@@ -174,9 +172,7 @@ public sealed class CredentialMessageCleanupService
 
         var updated = await _messageRepository.MarkFailed(
             message.Id,
-            message.Attempts,
-            error,
-            nextAttemptAt,
+            new CredentialMessageFailure(message.Attempts, error, nextAttemptAt),
             cancellationToken);
 
         if (!updated)

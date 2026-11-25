@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Pandora.Application.Features.Secrets.Common;
 using Pandora.Application.Features.Settings.CredentialAccess;
 using Pandora.Application.Validators;
@@ -8,6 +10,7 @@ using Pandora.Domain.Entities;
 using Pandora.Domain.Interfaces;
 using Pandora.Domain.Options;
 using Pandora.Infrastructure.Database;
+using Pandora.TgBot.Extension.DependencyInjection;
 using Xunit;
 
 namespace CoreSolution.Integration.Tests.PandoraTests;
@@ -141,37 +144,56 @@ public sealed class CredentialAccessSettingsTests(IntegrationFixture fixture)
     }
 
     [Theory]
-    [InlineData(nameof(CredentialCleanupOptions.PollIntervalSeconds))]
-    [InlineData(nameof(CredentialCleanupOptions.BatchSize))]
-    [InlineData(nameof(CredentialCleanupOptions.CompletedRetentionHours))]
-    [InlineData(nameof(CredentialCleanupOptions.DeleteAttemptsBeforeFallback))]
-    [InlineData(nameof(CredentialCleanupOptions.MaxAttempts))]
-    [InlineData(nameof(CredentialCleanupOptions.RetryBaseDelaySeconds))]
-    [InlineData(nameof(CredentialCleanupOptions.MaxRetryDelaySeconds))]
-    public void CredentialCleanupOptions_WhenValueIsNotPositive_Throws(string propertyName)
+    [InlineData("PollIntervalSeconds")]
+    [InlineData("BatchSize")]
+    [InlineData("CompletedRetentionHours")]
+    [InlineData("DeleteAttemptsBeforeFallback")]
+    [InlineData("MaxAttempts")]
+    [InlineData("RetryBaseDelaySeconds")]
+    [InlineData("MaxRetryDelaySeconds")]
+    public void CredentialCleanupOptions_WhenValueIsNotPositive_FailsValidation(string propertyName)
     {
-        var options = new CredentialCleanupOptions();
-        typeof(CredentialCleanupOptions).GetProperty(propertyName)!.SetValue(options, 0);
+        var settings = new Dictionary<string, string?>
+        {
+            [$"{CredentialCleanupOptions.SectionName}:{propertyName}"] = "0"
+        };
 
-        Assert.Throws<ArgumentOutOfRangeException>(options.Validate);
+        Assert.Throws<ArgumentOutOfRangeException>(() => ResolveCleanupOptions(settings));
     }
 
     [Fact]
-    public void CredentialCleanupOptions_WhenMaxRetryDelayBelowBaseDelay_Throws()
+    public void CredentialCleanupOptions_WhenMaxRetryDelayBelowBaseDelay_FailsValidation()
     {
-        var options = new CredentialCleanupOptions
+        var settings = new Dictionary<string, string?>
         {
-            RetryBaseDelaySeconds = 30,
-            MaxRetryDelaySeconds = 10
+            [$"{CredentialCleanupOptions.SectionName}:RetryBaseDelaySeconds"] = "30",
+            [$"{CredentialCleanupOptions.SectionName}:MaxRetryDelaySeconds"] = "10"
         };
 
-        Assert.Throws<ArgumentException>(options.Validate);
+        Assert.Throws<ArgumentException>(() => ResolveCleanupOptions(settings));
     }
 
     [Fact]
     public void CredentialCleanupOptions_WhenDefaults_AreValid()
     {
-        new CredentialCleanupOptions().Validate();
+        var options = ResolveCleanupOptions(new Dictionary<string, string?>());
+
+        Assert.Equal(15, options.PollIntervalSeconds);
+        Assert.Equal(50, options.BatchSize);
+    }
+
+    private static CredentialCleanupOptions ResolveCleanupOptions(Dictionary<string, string?> settings)
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(settings)
+            .Build();
+        var services = new ServiceCollection();
+
+        services.AddPandoraOptions(configuration);
+
+        using var provider = services.BuildServiceProvider();
+
+        return provider.GetRequiredService<IOptions<CredentialCleanupOptions>>().Value;
     }
 
     private static UpdateCredentialAccessSettingsMessage WithAdmin(

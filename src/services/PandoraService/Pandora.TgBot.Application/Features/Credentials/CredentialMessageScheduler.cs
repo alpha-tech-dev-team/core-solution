@@ -57,6 +57,17 @@ public sealed class CredentialMessageScheduler
 
             return true;
         }
+        catch (OperationCanceledException)
+        {
+            _logger.LogWarning(
+                "Не удалось удалить сообщение {MessageId} при отмене: чат {ChatId}, сервис {ItemId}, {RequestedAt}",
+                messageId,
+                chatId,
+                itemId,
+                requestedAt);
+
+            return false;
+        }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             _logger.LogError(exception, "Не удалось запланировать удаление сообщения {MessageId}", messageId);

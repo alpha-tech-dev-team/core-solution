@@ -11,8 +11,7 @@ namespace Pandora.TgBot.Application.Features.Credentials;
 
 public sealed class GetCredentialsHandler : IRequestHandler<GetCredentialsMessage, Result<WorkflowResponse>>
 {
-    private const string PasswordMarkerPrefix = "__password_";
-    private const string PasswordMarkerSuffix = "__";
+    private const string PasswordMarkerTemplate = "__password_{0:N}__";
 
     private readonly ISecretStore _secretStore;
     private readonly IPermissionRepository _permissionRepository;
@@ -73,7 +72,7 @@ public sealed class GetCredentialsHandler : IRequestHandler<GetCredentialsMessag
 
     private static string CreatePasswordMarker()
     {
-        return $"{PasswordMarkerPrefix}{Guid.NewGuid():N}{PasswordMarkerSuffix}";
+        return string.Format(PasswordMarkerTemplate, Guid.NewGuid());
     }
 
     private static IReadOnlyList<TextMask>? CreateTextMasks(int passwordOffset, string? password)

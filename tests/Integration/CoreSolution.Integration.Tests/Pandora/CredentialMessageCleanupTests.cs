@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 using Pandora.Domain.Entities;
 using Pandora.Domain.Enums;
 using Pandora.Domain.Interfaces;
+using Pandora.Domain.Models;
 using Pandora.Domain.Options;
 using Pandora.Infrastructure.Database;
 using Pandora.TgBot.Application.Features.Credentials;
@@ -346,10 +347,7 @@ public sealed class CredentialMessageCleanupTests(IntegrationFixture fixture)
         Task<IReadOnlyList<CredentialAccessMessage>> ClaimAsync(ICredentialAccessMessageRepository repository)
         {
             return repository.ClaimDue(
-                now,
-                claimUntil,
-                10,
-                10,
+                new CredentialMessageClaim(now, claimUntil, 10, 10),
                 CancellationToken.None);
         }
     }
@@ -368,8 +366,14 @@ public sealed class CredentialMessageCleanupTests(IntegrationFixture fixture)
         {
             var repository = scope.ServiceProvider.GetRequiredService<ICredentialAccessMessageRepository>();
 
-            Assert.True(await repository.MarkFailed(messageIdStored, 0, "first failure", nextAttemptAt, CancellationToken.None));
-            Assert.False(await repository.MarkFailed(messageIdStored, 0, "stale failure", nextAttemptAt, CancellationToken.None));
+            Assert.True(await repository.MarkFailed(
+                messageIdStored,
+                new CredentialMessageFailure(0, "first failure", nextAttemptAt),
+                CancellationToken.None));
+            Assert.False(await repository.MarkFailed(
+                messageIdStored,
+                new CredentialMessageFailure(0, "stale failure", nextAttemptAt),
+                CancellationToken.None));
         }
 
         var stored = await GetMessageAsync(provider, messageIdStored);
@@ -544,10 +548,7 @@ public sealed class CredentialMessageCleanupTests(IntegrationFixture fixture)
         }
 
         public Task<IReadOnlyList<CredentialAccessMessage>> ClaimDue(
-            DateTime now,
-            DateTime claimUntil,
-            int limit,
-            int maxAttempts,
+            CredentialMessageClaim claim,
             CancellationToken cancellationToken)
         {
             return Task.FromResult<IReadOnlyList<CredentialAccessMessage>>(Array.Empty<CredentialAccessMessage>());
@@ -579,9 +580,7 @@ public sealed class CredentialMessageCleanupTests(IntegrationFixture fixture)
 
         public Task<bool> MarkFailed(
             Guid id,
-            int expectedAttempts,
-            string error,
-            DateTime nextAttemptAt,
+            CredentialMessageFailure failure,
             CancellationToken cancellationToken)
         {
             return Task.FromResult(true);

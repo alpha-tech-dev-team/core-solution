@@ -103,6 +103,29 @@ public sealed class CredentialMessageSchedulingTests(IntegrationFixture fixture)
         Assert.Empty(await context.CredentialAccessMessage.AsNoTracking().ToListAsync());
     }
 
+    [Fact]
+    public async Task ScheduleAsync_WhenOperationCancelled_ReturnsFalseWithoutThrowing()
+    {
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+
+        await ResetMessagesAsync(provider);
+
+        using var scope = provider.CreateScope();
+        using var cancellation = new CancellationTokenSource();
+        var scheduler = CreateScheduler(scope);
+
+        cancellation.Cancel();
+
+        var scheduled = await scheduler.ScheduleAsync(ChatId, SentMessageId, ItemId, cancellation.Token);
+
+        Assert.False(scheduled);
+
+        using var verifyScope = provider.CreateScope();
+        var context = verifyScope.ServiceProvider.GetRequiredService<PandoraDbContext>();
+
+        Assert.Empty(await context.CredentialAccessMessage.AsNoTracking().ToListAsync());
+    }
+
     private static Result<WorkflowResponse> CreateCredentialsResponse()
     {
         var text = $"Логин: test-login\nПароль: {TestPassword}";
