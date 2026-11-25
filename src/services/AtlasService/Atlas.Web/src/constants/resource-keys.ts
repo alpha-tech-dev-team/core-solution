@@ -42,5 +42,4 @@ export const RESOURCE_KEYS = {
   ROOM_DELETE_CONFIRM: 'room_delete_confirm',
   ROOM_SAVE: 'room_save',
   ROOM_CANCEL: 'room_cancel',
-
 } as const
