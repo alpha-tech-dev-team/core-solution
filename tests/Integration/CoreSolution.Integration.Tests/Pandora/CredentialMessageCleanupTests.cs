@@ -347,7 +347,7 @@ public sealed class CredentialMessageCleanupTests(IntegrationFixture fixture)
         Task<IReadOnlyList<CredentialAccessMessage>> ClaimAsync(ICredentialAccessMessageRepository repository)
         {
             return repository.ClaimDue(
-                new CredentialMessageClaim(now, claimUntil, 10, 10),
+                new CredentialClaim(now, claimUntil, 10, 10),
                 CancellationToken.None);
         }
     }
@@ -368,11 +368,11 @@ public sealed class CredentialMessageCleanupTests(IntegrationFixture fixture)
 
             Assert.True(await repository.MarkFailed(
                 messageIdStored,
-                new CredentialMessageFailure(0, "first failure", nextAttemptAt),
+                new CredentialFailure(0, "first failure", nextAttemptAt),
                 CancellationToken.None));
             Assert.False(await repository.MarkFailed(
                 messageIdStored,
-                new CredentialMessageFailure(0, "stale failure", nextAttemptAt),
+                new CredentialFailure(0, "stale failure", nextAttemptAt),
                 CancellationToken.None));
         }
 
@@ -548,7 +548,7 @@ public sealed class CredentialMessageCleanupTests(IntegrationFixture fixture)
         }
 
         public Task<IReadOnlyList<CredentialAccessMessage>> ClaimDue(
-            CredentialMessageClaim claim,
+            CredentialClaim claim,
             CancellationToken cancellationToken)
         {
             return Task.FromResult<IReadOnlyList<CredentialAccessMessage>>(Array.Empty<CredentialAccessMessage>());
@@ -580,7 +580,7 @@ public sealed class CredentialMessageCleanupTests(IntegrationFixture fixture)
 
         public Task<bool> MarkFailed(
             Guid id,
-            CredentialMessageFailure failure,
+            CredentialFailure failure,
             CancellationToken cancellationToken)
         {
             return Task.FromResult(true);

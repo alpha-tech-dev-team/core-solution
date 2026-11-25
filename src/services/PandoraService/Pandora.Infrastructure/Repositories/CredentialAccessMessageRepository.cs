@@ -24,8 +24,8 @@ public sealed class CredentialAccessMessageRepository : ICredentialAccessMessage
     }
 
     public async Task<IReadOnlyList<CredentialAccessMessage>> ClaimDue(
-        CredentialMessageClaim claim,
-        CancellationToken ct)
+        CredentialClaim claim,
+        CancellationToken cancellationToken)
     {
         var candidates = await _context.CredentialAccessMessage
                 .AsNoTracking()
@@ -37,7 +37,7 @@ public sealed class CredentialAccessMessageRepository : ICredentialAccessMessage
             .ThenBy(message => message.Id)
             .Select(message => message.Id)
             .Take(claim.Limit)
-            .ToListAsync(ct);
+            .ToListAsync(cancellationToken);
 
         var claimedIds = new List<Guid>(candidates.Count);
 
@@ -51,7 +51,7 @@ public sealed class CredentialAccessMessageRepository : ICredentialAccessMessage
                     && (message.DeletedAt == null || message.NotifiedAt == null))
                 .ExecuteUpdateAsync(update => update
                     .SetProperty(message => message.ClaimedUntil, claim.ClaimUntil),
-                    ct);
+                    cancellationToken);
 
             if (claimed > 0)
             {
@@ -62,7 +62,7 @@ public sealed class CredentialAccessMessageRepository : ICredentialAccessMessage
         return await _context.CredentialAccessMessage
             .AsNoTracking()
             .Where(message => claimedIds.Contains(message.Id))
-            .ToListAsync(ct);
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<int> DeleteCompleted(DateTime before, CancellationToken cancellationToken)
@@ -124,8 +124,8 @@ public sealed class CredentialAccessMessageRepository : ICredentialAccessMessage
 
     public async Task<bool> MarkFailed(
         Guid id,
-        CredentialMessageFailure failure,
-        CancellationToken ct)
+        CredentialFailure failure,
+        CancellationToken cancellationToken)
     {
         var updated = await _context.CredentialAccessMessage
             .Where(message => message.Id == id && message.Attempts == failure.ExpectedAttempts)
@@ -134,7 +134,7 @@ public sealed class CredentialAccessMessageRepository : ICredentialAccessMessage
                 .SetProperty(message => message.LastError, TruncateError(failure.Error))
                 .SetProperty(message => message.NextAttemptAt, failure.NextAttemptAt)
                 .SetProperty(message => message.ClaimedUntil, (DateTime?)null),
-                ct);
+                cancellationToken);
 
         return updated > 0;
     }

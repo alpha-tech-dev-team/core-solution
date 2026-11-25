@@ -42,7 +42,7 @@ public sealed class CredentialMessageCleanupService
         await RemoveCompletedAsync(now, options, cancellationToken);
 
         var dueMessages = await _messageRepository.ClaimDue(
-            new CredentialMessageClaim(now, claimUntil, options.BatchSize, options.MaxAttempts),
+            new CredentialClaim(now, claimUntil, options.BatchSize, options.MaxAttempts),
             cancellationToken);
 
         foreach (var message in dueMessages)
@@ -172,7 +172,7 @@ public sealed class CredentialMessageCleanupService
 
         var updated = await _messageRepository.MarkFailed(
             message.Id,
-            new CredentialMessageFailure(message.Attempts, error, nextAttemptAt),
+            new CredentialFailure(message.Attempts, error, nextAttemptAt),
             cancellationToken);
 
         if (!updated)

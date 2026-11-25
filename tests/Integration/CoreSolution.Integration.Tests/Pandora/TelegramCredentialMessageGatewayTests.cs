@@ -88,7 +88,4 @@ public sealed class TelegramCredentialMessageGatewayTests
             });
         }
     }
-
-
-
 }

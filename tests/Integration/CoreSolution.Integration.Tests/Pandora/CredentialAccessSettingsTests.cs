@@ -125,22 +125,20 @@ public sealed class CredentialAccessSettingsTests(IntegrationFixture fixture)
 
         var auditEntries = auditContext.TakeAll();
 
-        using (var verifyScope = provider.CreateScope())
-        {
-            var context = verifyScope.ServiceProvider.GetRequiredService<PandoraDbContext>();
+        using var verifyScope = provider.CreateScope();
+        var context = verifyScope.ServiceProvider.GetRequiredService<PandoraDbContext>();
 
-            context.AddRange(auditEntries);
-            await context.SaveChangesAsync();
+        context.AddRange(auditEntries);
+        await context.SaveChangesAsync();
 
-            var entry = await context.AuditEntry
-                .AsNoTracking()
-                .OrderByDescending(item => item.Timestamp)
-                .FirstOrDefaultAsync(item => item.Action == AuditConstants.ActionCredentialAccessSettingsUpdated);
+        var entry = await context.AuditEntry
+            .AsNoTracking()
+            .OrderByDescending(item => item.Timestamp)
+            .FirstOrDefaultAsync(item => item.Action == AuditConstants.ActionCredentialAccessSettingsUpdated);
 
-            Assert.NotNull(entry);
-            Assert.Equal(adminUserId, entry.UserId);
-            Assert.Equal(AuditConstants.SourceWeb, entry.RequestSource);
-        }
+        Assert.NotNull(entry);
+        Assert.Equal(adminUserId, entry.UserId);
+        Assert.Equal(AuditConstants.SourceWeb, entry.RequestSource);
     }
 
     [Theory]
