@@ -8,6 +8,7 @@ using Atlas.Infrastructure.Identity;
 using Atlas.Infrastructure.Notifications;
 using Atlas.Infrastructure.Repositories;
 using Atlas.Infrastructure.Sessions;
+using Atlas.TgBot.Constants;
 using Atlas.TgBot.Options;
 using CoreSolution.Shared.Abstractions;
 using CoreSolution.Shared.Options;
@@ -26,8 +27,6 @@ namespace Atlas.TgBot.Extensions.DependencyInjection;
 
 public static class InfrastructureExtensions
 {
-    public const string NotificationServiceKey = "notification";
-
     private const int IdentityRequestTimeoutSeconds = 10;
 
     private static readonly TimeSpan IdentityRequestTimeout = TimeSpan.FromSeconds(IdentityRequestTimeoutSeconds);
@@ -81,16 +80,16 @@ public static class InfrastructureExtensions
         services.Configure<TelegramOptions>(configuration.GetSection(TelegramOptions.SectionName));
 
         services.AddKeyedSingleton<ITelegramBotClient>(
-            NotificationServiceKey,
+            TelegramNotificationConstants.NotificationServiceKey,
             (_, _) => new TelegramBotClient(telegramOptions.NotificationBotToken));
         services.AddKeyedSingleton<ITelegramNotificationService>(
-            NotificationServiceKey,
+            TelegramNotificationConstants.NotificationServiceKey,
             (provider, _) => new TelegramNotificationService(
-                provider.GetRequiredKeyedService<ITelegramBotClient>(NotificationServiceKey),
+                provider.GetRequiredKeyedService<ITelegramBotClient>(TelegramNotificationConstants.NotificationServiceKey),
                 provider.GetRequiredService<ILogger<TelegramNotificationService>>()));
 
         services.AddSingleton<IIncidentNotifier>(provider => new IncidentNotifier(
-            provider.GetRequiredKeyedService<ITelegramNotificationService>(NotificationServiceKey)));
+            provider.GetRequiredKeyedService<ITelegramNotificationService>(TelegramNotificationConstants.NotificationServiceKey)));
 
         return services;
     }

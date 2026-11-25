@@ -323,9 +323,9 @@ public sealed class IntegrationFixture : IAsyncLifetime
         return services.BuildServiceProvider();
     }
 
-    public async Task<ServiceProvider> CreateAtlasServiceProviderAsync()
+    public async Task<ServiceProvider> CreateAtlasServiceProviderAsync(Action<IServiceCollection>? configureServices = null)
     {
-        var provider = CreateAtlasServiceProvider();
+        var provider = CreateAtlasServiceProvider(configureServices: configureServices);
 
         if (!_atlasMigrated)
         {

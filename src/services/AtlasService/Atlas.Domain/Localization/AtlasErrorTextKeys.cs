@@ -35,6 +35,7 @@ public static class AtlasErrorTextKeys
         [nameof(ErrorCode.InvalidIncidentDescription)] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.InvalidIncidentDescription),
         [nameof(ErrorCode.IncidentDescriptionNotSet)] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.IncidentDescriptionNotSet),
         [nameof(ErrorCode.IncidentContextIncomplete)] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.IncidentContextIncomplete),
-        [nameof(ErrorCode.IncidentStepNotSupported)] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.IncidentStepNotSupported)
+        [nameof(ErrorCode.IncidentStepNotSupported)] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.IncidentStepNotSupported),
+        [nameof(ErrorCode.NotificationDeliveryFailed)] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.NotificationDeliveryFailed)
     }.ToFrozenDictionary();
 }

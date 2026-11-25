@@ -11,4 +11,9 @@ public static partial class LocalizationKeysConstants
     {
         public const string Text = "Text";
     }
+
+    public static class IncidentCreatedNotification
+    {
+        public const string Text = "Text";
+    }
 }

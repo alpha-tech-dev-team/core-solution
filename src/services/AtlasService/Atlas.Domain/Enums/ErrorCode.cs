@@ -25,5 +25,6 @@ public enum ErrorCode
     InvalidIncidentDescription,
     IncidentDescriptionNotSet,
     IncidentContextIncomplete,
-    IncidentStepNotSupported
+    IncidentStepNotSupported,
+    NotificationDeliveryFailed
 }

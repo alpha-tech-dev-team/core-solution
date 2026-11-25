@@ -2,6 +2,7 @@ using Atlas.Application.Features.Notifications;
 using Atlas.Domain.Entities;
 using Atlas.Domain.Enums;
 using Atlas.Domain.Interfaces.Services;
+using CoreSolution.Shared.Results;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -88,17 +89,37 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
     }
 
     [Fact]
+    public async Task NotifyIncidentCreated_NotifiesAuthorWithCreatedText()
+    {
+        var notifications = new RecordingIncidentNotifier();
+
+        var result = await SendAsync(
+            new NotifyIncidentMessage(CreateIncident(AuthorChatId, null), IncidentNotificationType.Created),
+            notifications);
+
+        Assert.True(result.IsSuccess);
+
+        var alert = Assert.Single(notifications.Alerts);
+        Assert.Equal(AuthorChatId, alert.ChatId);
+        Assert.Contains(TicketNumber.ToString(), alert.Text);
+        Assert.Contains("создана", alert.Text);
+    }
+
+    [Fact]
     public async Task NotifyIncidentAccepted_OneRecipientFails_OtherStillNotified()
     {
         var notifications = new RecordingIncidentNotifier(failingChatId: AuthorChatId);
 
-        await SendAsync(Accepted(CreateIncident(AuthorChatId, EngineerChatId)), notifications);
+        var result = await SendAsync(Accepted(CreateIncident(AuthorChatId, EngineerChatId)), notifications);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(nameof(ErrorCode.NotificationDeliveryFailed), result.ErrorCode);
 
         var alert = Assert.Single(notifications.Alerts);
         Assert.Equal(EngineerChatId, alert.ChatId);
     }
 
-    private async Task SendAsync(
+    private async Task<Result> SendAsync(
         NotifyIncidentMessage message,
         RecordingIncidentNotifier notifications,
         CancellationToken cancellationToken = default)
@@ -107,7 +128,7 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
             configureServices: services => services.AddSingleton<IIncidentNotifier>(notifications));
         using var scope = atlas.CreateScope();
 
-        await scope.ServiceProvider.GetRequiredService<IMediator>().Send(message, cancellationToken);
+        return await scope.ServiceProvider.GetRequiredService<IMediator>().Send(message, cancellationToken);
     }
 
     private static NotifyIncidentMessage Accepted(Incident incident)
@@ -135,23 +156,5 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
                 : new Employee { TelegramUserId = engineerTelegramUserId },
             Resolution = resolution
         };
-    }
-
-    private sealed class RecordingIncidentNotifier(long? failingChatId = null) : IIncidentNotifier
-    {
-        public List<(long ChatId, string Text)> Alerts { get; } = [];
-
-        public Task SendAsync(long chatId, string text, CancellationToken cancellationToken = default)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            if (chatId == failingChatId)
-            {
-                throw new InvalidOperationException($"Chat {chatId} is unavailable.");
-            }
-
-            Alerts.Add((chatId, text));
-            return Task.CompletedTask;
-        }
     }
 }

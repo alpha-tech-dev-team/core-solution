@@ -7,6 +7,7 @@ using Atlas.Domain.Constants;
 using Atlas.Domain.Entities;
 using Atlas.Domain.Enums;
 using Atlas.Domain.Interfaces.Repositories;
+using Atlas.Domain.Interfaces.Services;
 using Atlas.Domain.Models;
 using CoreSolution.Shared.Abstractions;
 using Identity.Domain.Enums;
@@ -158,6 +159,65 @@ public sealed class IncidentCreationTests(IntegrationFixture fixture)
 
         Assert.Equal("Integration", employee.Name);
         Assert.Equal("Test", employee.Surname);
+    }
+
+    [Fact]
+    public async Task CreateIncident_Confirm_NotifiesAuthor()
+    {
+        const long telegramUserId = 8507;
+
+        var notifications = new RecordingIncidentNotifier();
+
+        await using var atlas = await fixture.CreateAtlasServiceProviderAsync(
+            configureServices: services => services.AddSingleton<IIncidentNotifier>(notifications));
+        using var scope = atlas.CreateScope();
+
+        var sessionService = scope.ServiceProvider.GetRequiredService<ISessionService>();
+        var session = AtlasUserSession.Create(telegramUserId, nameof(WorkflowStep.RoomSelection));
+        session.IncidentCategoryId = IncidentCategoryConstants.Hardware.Id;
+
+        await sessionService.SaveSession(session, CancellationToken.None);
+
+        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+        await mediator.Send(new SelectRoomMessage(telegramUserId, 1, RoomConstants.Office204.Id));
+        await mediator.Send(new SelectHardwareMessage(telegramUserId, 2, HardwareConstants.Office204Computer.Id));
+        await mediator.Send(new IncidentWorkflowMessage(telegramUserId, 3, null, "Не включается компьютер"));
+        var confirmed = await mediator.Send(new IncidentWorkflowMessage(telegramUserId, 4, IncidentStepAction.Confirm));
+
+        Assert.True(confirmed.IsSuccess);
+
+        var alert = Assert.Single(notifications.Alerts, item => item.ChatId == telegramUserId);
+        Assert.Contains("создана", alert.Text);
+    }
+
+    [Fact]
+    public async Task CreateIncident_NotifyFails_StillCreatesIncident()
+    {
+        const long telegramUserId = 8508;
+
+        var notifications = new RecordingIncidentNotifier(failingChatId: telegramUserId);
+
+        await using var atlas = await fixture.CreateAtlasServiceProviderAsync(
+            configureServices: services => services.AddSingleton<IIncidentNotifier>(notifications));
+        using var scope = atlas.CreateScope();
+
+        var sessionService = scope.ServiceProvider.GetRequiredService<ISessionService>();
+        var session = AtlasUserSession.Create(telegramUserId, nameof(WorkflowStep.RoomSelection));
+        session.IncidentCategoryId = IncidentCategoryConstants.Hardware.Id;
+
+        await sessionService.SaveSession(session, CancellationToken.None);
+
+        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+        await mediator.Send(new SelectRoomMessage(telegramUserId, 1, RoomConstants.Office204.Id));
+        await mediator.Send(new SelectHardwareMessage(telegramUserId, 2, HardwareConstants.Office204Computer.Id));
+        await mediator.Send(new IncidentWorkflowMessage(telegramUserId, 3, null, "Не включается компьютер"));
+        var confirmed = await mediator.Send(new IncidentWorkflowMessage(telegramUserId, 4, IncidentStepAction.Confirm));
+
+        Assert.True(confirmed.IsSuccess);
+        Assert.Contains(telegramUserId, notifications.AttemptedChatIds);
+        Assert.Empty(notifications.Alerts);
     }
 
     [Fact]

@@ -39,6 +39,7 @@ public sealed class NotifyIncidentHandler : IRequestHandler<NotifyIncidentMessag
         }
 
         var text = FormatText(request);
+        var deliveryFailed = false;
 
         foreach (var chatId in recipients)
         {
@@ -52,11 +53,14 @@ public sealed class NotifyIncidentHandler : IRequestHandler<NotifyIncidentMessag
             }
             catch (Exception exception)
             {
+                deliveryFailed = true;
                 _logger.LogWarning(exception, "Не удалось отправить уведомление по заявке {TicketNumber} в чат {ChatId}", incident.TicketNumber, chatId);
             }
         }
 
-        return Result.Success();
+        return deliveryFailed
+            ? Result.Failure(nameof(ErrorCode.NotificationDeliveryFailed))
+            : Result.Success();
     }
 
     private string FormatText(NotifyIncidentMessage request)
@@ -65,6 +69,9 @@ public sealed class NotifyIncidentHandler : IRequestHandler<NotifyIncidentMessag
 
         return request.Type switch
         {
+            IncidentNotificationType.Created => string.Format(
+                _localizer.GetPhrase(nameof(LocalizationKeysConstants.IncidentCreatedNotification), LocalizationKeysConstants.IncidentCreatedNotification.Text),
+                incident.TicketNumber),
             IncidentNotificationType.Accepted => string.Format(
                 _localizer.GetPhrase(nameof(LocalizationKeysConstants.IncidentAccepted), LocalizationKeysConstants.IncidentAccepted.Text),
                 incident.TicketNumber),

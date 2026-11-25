@@ -24,5 +24,6 @@ public static partial class LocalizationKeysConstants
         public const string IncidentDescriptionNotSet = "IncidentDescriptionNotSet";
         public const string IncidentContextIncomplete = "IncidentContextIncomplete";
         public const string IncidentStepNotSupported = "IncidentStepNotSupported";
+        public const string NotificationDeliveryFailed = "NotificationDeliveryFailed";
     }
 }
