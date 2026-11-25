@@ -80,6 +80,10 @@ namespace Pandora.Infrastructure.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("chat_id");
 
+                    b.Property<DateTime?>("ClaimedUntil")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("claimed_until");
+
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");

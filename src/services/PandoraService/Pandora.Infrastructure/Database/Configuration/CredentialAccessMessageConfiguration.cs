@@ -24,6 +24,7 @@ public sealed class CredentialAccessMessageConfiguration : IEntityTypeConfigurat
         builder.Property(e => e.NextAttemptAt).HasColumnName(DatabaseConstants.CredentialAccessMessages.NextAttemptAt);
         builder.Property(e => e.DeletedAt).HasColumnName(DatabaseConstants.CredentialAccessMessages.DeletedAt);
         builder.Property(e => e.NotifiedAt).HasColumnName(DatabaseConstants.CredentialAccessMessages.NotifiedAt);
+        builder.Property(e => e.ClaimedUntil).HasColumnName(DatabaseConstants.CredentialAccessMessages.ClaimedUntil);
         builder.Property(e => e.Attempts).HasColumnName(DatabaseConstants.CredentialAccessMessages.Attempts);
         builder.Property(e => e.LastError)
             .HasColumnName(DatabaseConstants.CredentialAccessMessages.LastError)

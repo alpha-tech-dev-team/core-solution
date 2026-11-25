@@ -9,7 +9,7 @@ using Pandora.Domain.Enums;
 using Pandora.Domain.Interfaces;
 using Pandora.Domain.Options;
 using Pandora.Infrastructure.Database;
-using Pandora.TgBot.Credentials;
+using Pandora.TgBot.Application.Features.Credentials;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using Xunit;
@@ -31,7 +31,7 @@ public sealed class CredentialMessageCleanupTests(IntegrationFixture fixture)
         var messageId = 501;
         var messageIdStored = await AddMessageAsync(provider, messageId);
         var gateway = new FakeCredentialMessageGateway { DeleteOutcome = CredentialMessageOutcome.Succeeded };
-        var notifications = new FakeNotificationService();
+        var notifications = new FakeNotifier();
 
         await ProcessDueAsync(provider, gateway, notifications);
 
@@ -57,7 +57,7 @@ public sealed class CredentialMessageCleanupTests(IntegrationFixture fixture)
 
         var messageIdStored = await AddMessageAsync(provider, 502);
         var gateway = new FakeCredentialMessageGateway { DeleteOutcome = CredentialMessageOutcome.Failed };
-        var notifications = new FakeNotificationService();
+        var notifications = new FakeNotifier();
 
         await ProcessDueAsync(provider, gateway, notifications);
 
@@ -83,7 +83,7 @@ public sealed class CredentialMessageCleanupTests(IntegrationFixture fixture)
 
         var messageIdStored = await AddMessageAsync(provider, 503);
         var gateway = new FakeCredentialMessageGateway { DeleteOutcome = CredentialMessageOutcome.NotFound };
-        var notifications = new FakeNotificationService();
+        var notifications = new FakeNotifier();
 
         await ProcessDueAsync(provider, gateway, notifications);
 
@@ -110,7 +110,7 @@ public sealed class CredentialMessageCleanupTests(IntegrationFixture fixture)
             DeleteOutcome = CredentialMessageOutcome.Failed,
             ReplaceOutcome = CredentialMessageOutcome.Succeeded
         };
-        var notifications = new FakeNotificationService();
+        var notifications = new FakeNotifier();
 
         await ProcessDueAsync(provider, gateway, notifications);
 
@@ -236,7 +236,7 @@ public sealed class CredentialMessageCleanupTests(IntegrationFixture fixture)
         var maxAttempts = new CredentialCleanupOptions().MaxAttempts;
         var messageIdStored = await AddMessageAsync(provider, 505, attempts: maxAttempts);
         var gateway = new FakeCredentialMessageGateway { DeleteOutcome = CredentialMessageOutcome.Failed };
-        var notifications = new FakeNotificationService();
+        var notifications = new FakeNotifier();
 
         await ProcessDueAsync(provider, gateway, notifications);
 
@@ -264,7 +264,7 @@ public sealed class CredentialMessageCleanupTests(IntegrationFixture fixture)
             attempts: options.MaxAttempts,
             nextAttemptAt: oldAttemptAt);
         var gateway = new FakeCredentialMessageGateway();
-        var notifications = new FakeNotificationService();
+        var notifications = new FakeNotifier();
 
         await ProcessDueAsync(provider, gateway, notifications);
 
@@ -286,7 +286,7 @@ public sealed class CredentialMessageCleanupTests(IntegrationFixture fixture)
             var service = new CredentialMessageCleanupService(
                 scope.ServiceProvider.GetRequiredService<ICredentialAccessMessageRepository>(),
                 new FakeCredentialMessageGateway(),
-                new FakeNotificationService(),
+                new FakeNotifier(),
                 CreateNoticeBuilder(scope.ServiceProvider),
                 Options.Create(new CredentialCleanupOptions { CompletedRetentionHours = 1 }),
                 NullLogger<CredentialMessageCleanupService>.Instance);
@@ -298,6 +298,134 @@ public sealed class CredentialMessageCleanupTests(IntegrationFixture fixture)
         Assert.NotNull(await GetMessageAsync(provider, freshId));
     }
 
+    [Fact]
+    public async Task ProcessDue_WhenRowAlreadyClaimedByAnotherWorker_SkipsIt()
+    {
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+
+        await ResetMessagesAsync(provider);
+
+        var messageIdStored = await AddMessageAsync(provider, 507, claimedUntil: DateTime.UtcNow.AddMinutes(1));
+        var gateway = new FakeCredentialMessageGateway();
+        var notifications = new FakeNotifier();
+
+        await ProcessDueAsync(provider, gateway, notifications);
+
+        Assert.Empty(gateway.DeleteCalls);
+        Assert.Empty(notifications.SentMessages);
+
+        var stored = await GetMessageAsync(provider, messageIdStored);
+
+        Assert.NotNull(stored);
+        Assert.Null(stored.DeletedAt);
+    }
+
+    [Fact]
+    public async Task ClaimDue_WhenTwoWorkersRace_OnlyOneClaimsRow()
+    {
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+
+        await ResetMessagesAsync(provider);
+
+        await AddMessageAsync(provider, 508);
+
+        var now = DateTime.UtcNow;
+        var claimUntil = now.AddMinutes(2);
+
+        using var firstScope = provider.CreateScope();
+        using var secondScope = provider.CreateScope();
+        var firstRepository = firstScope.ServiceProvider.GetRequiredService<ICredentialAccessMessageRepository>();
+        var secondRepository = secondScope.ServiceProvider.GetRequiredService<ICredentialAccessMessageRepository>();
+
+        var claims = await Task.WhenAll(
+            ClaimAsync(firstRepository),
+            ClaimAsync(secondRepository));
+
+        Assert.Equal(1, claims.Sum(batch => batch.Count));
+
+        Task<IReadOnlyList<CredentialAccessMessage>> ClaimAsync(ICredentialAccessMessageRepository repository)
+        {
+            return repository.ClaimDue(
+                now,
+                claimUntil,
+                10,
+                10,
+                CancellationToken.None);
+        }
+    }
+
+    [Fact]
+    public async Task MarkFailed_WhenAttemptsChangedConcurrently_DoesNotOverwriteNewerState()
+    {
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+
+        await ResetMessagesAsync(provider);
+
+        var messageIdStored = await AddMessageAsync(provider, 509);
+        var nextAttemptAt = DateTime.UtcNow.AddMinutes(1);
+
+        using (var scope = provider.CreateScope())
+        {
+            var repository = scope.ServiceProvider.GetRequiredService<ICredentialAccessMessageRepository>();
+
+            Assert.True(await repository.MarkFailed(messageIdStored, 0, "first failure", nextAttemptAt, CancellationToken.None));
+            Assert.False(await repository.MarkFailed(messageIdStored, 0, "stale failure", nextAttemptAt, CancellationToken.None));
+        }
+
+        var stored = await GetMessageAsync(provider, messageIdStored);
+
+        Assert.NotNull(stored);
+        Assert.Equal(1, stored.Attempts);
+        Assert.Equal("first failure", stored.LastError);
+    }
+
+    [Fact]
+    public async Task ProcessDue_WhenCancellationRequested_PropagatesCancellation()
+    {
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+
+        await ResetMessagesAsync(provider);
+
+        await AddMessageAsync(provider, 510);
+
+        using var scope = provider.CreateScope();
+        using var cancellation = new CancellationTokenSource();
+        var gateway = new FakeCredentialMessageGateway();
+        var notifier = new CancellingNotifier(cancellation);
+
+        var service = new CredentialMessageCleanupService(
+            scope.ServiceProvider.GetRequiredService<ICredentialAccessMessageRepository>(),
+            gateway,
+            notifier,
+            CreateNoticeBuilder(scope.ServiceProvider),
+            Options.Create(new CredentialCleanupOptions()),
+            NullLogger<CredentialMessageCleanupService>.Instance);
+
+        await Assert.ThrowsAsync<OperationCanceledException>(
+            () => service.ProcessDueAsync(DateTime.UtcNow, cancellation.Token));
+    }
+
+    [Fact]
+    public async Task ClaimDue_WhenClaimExpires_TakesRowAgain()
+    {
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+
+        await ResetMessagesAsync(provider);
+
+        var messageIdStored = await AddMessageAsync(provider, 511, claimedUntil: DateTime.UtcNow.AddMinutes(-1));
+        var gateway = new FakeCredentialMessageGateway { DeleteOutcome = CredentialMessageOutcome.Succeeded };
+        var notifications = new FakeNotifier();
+
+        await ProcessDueAsync(provider, gateway, notifications);
+
+        Assert.Single(gateway.DeleteCalls);
+
+        var stored = await GetMessageAsync(provider, messageIdStored);
+
+        Assert.NotNull(stored);
+        Assert.NotNull(stored.DeletedAt);
+    }
+
     private static CredentialAccessNoticeBuilder CreateNoticeBuilder(IServiceProvider services)
     {
         return new CredentialAccessNoticeBuilder(services.GetRequiredService<ILocalizer>());
@@ -306,7 +434,7 @@ public sealed class CredentialMessageCleanupTests(IntegrationFixture fixture)
     private static async Task ProcessDueAsync(
         IServiceProvider provider,
         FakeCredentialMessageGateway gateway,
-        FakeNotificationService notifications)
+        FakeNotifier notifications)
     {
         using var scope = provider.CreateScope();
 
@@ -325,7 +453,8 @@ public sealed class CredentialMessageCleanupTests(IntegrationFixture fixture)
         IServiceProvider provider,
         int messageId,
         int attempts = 0,
-        DateTime? nextAttemptAt = null)
+        DateTime? nextAttemptAt = null,
+        DateTime? claimedUntil = null)
     {
         var id = Guid.NewGuid();
         var now = DateTime.UtcNow;
@@ -339,7 +468,8 @@ public sealed class CredentialMessageCleanupTests(IntegrationFixture fixture)
         {
             Id = id,
             Attempts = attempts,
-            NextAttemptAt = nextAttemptAt ?? now.AddMinutes(-1)
+            NextAttemptAt = nextAttemptAt ?? now.AddMinutes(-1),
+            ClaimedUntil = claimedUntil
         };
 
         using var scope = provider.CreateScope();
@@ -413,11 +543,11 @@ public sealed class CredentialMessageCleanupTests(IntegrationFixture fixture)
             throw new InvalidOperationException("Хранилище недоступно");
         }
 
-        public Task<IReadOnlyList<CredentialAccessMessage>> GetDue(
+        public Task<IReadOnlyList<CredentialAccessMessage>> ClaimDue(
             DateTime now,
+            DateTime claimUntil,
             int limit,
             int maxAttempts,
-            Func<IQueryable<CredentialAccessMessage>, IOrderedQueryable<CredentialAccessMessage>> orderBy,
             CancellationToken cancellationToken)
         {
             return Task.FromResult<IReadOnlyList<CredentialAccessMessage>>(Array.Empty<CredentialAccessMessage>());
@@ -447,13 +577,14 @@ public sealed class CredentialMessageCleanupTests(IntegrationFixture fixture)
             return Task.CompletedTask;
         }
 
-        public Task MarkFailed(
+        public Task<bool> MarkFailed(
             Guid id,
+            int expectedAttempts,
             string error,
             DateTime nextAttemptAt,
             CancellationToken cancellationToken)
         {
-            return Task.CompletedTask;
+            return Task.FromResult(true);
         }
     }
 
@@ -486,44 +617,25 @@ public sealed class CredentialMessageCleanupTests(IntegrationFixture fixture)
         }
     }
 
-    private sealed class FakeNotificationService : ITelegramNotificationService
+    private sealed class FakeNotifier : ICredentialMessageNotifier
     {
         public List<string> SentMessages { get; } = new();
 
-        public Task<Message> SendMessageAsync(
-            long chatId,
-            string text,
-            ReplyMarkup? replyMarkup = null,
-            CancellationToken cancellationToken = default,
-            TelegramSendOptions? sendOptions = null)
+        public Task SendNotice(long chatId, string text, CancellationToken cancellationToken)
         {
             SentMessages.Add(text);
 
-            return Task.FromResult(new Message());
-        }
-
-        public Task<Message> SendAlertAsync(
-            long chatId,
-            string text,
-            ReplyMarkup? replyMarkup = null,
-            CancellationToken cancellationToken = default)
-        {
-            return Task.FromResult(new Message());
-        }
-
-        public Task<Message> EditMessageAsync(
-            long chatId,
-            int messageId,
-            string text,
-            InlineKeyboardMarkup? replyMarkup = null,
-            CancellationToken cancellationToken = default)
-        {
-            return Task.FromResult(new Message());
-        }
-
-        public Task DeleteMessageAsync(long chatId, int messageId, CancellationToken cancellationToken = default)
-        {
             return Task.CompletedTask;
+        }
+    }
+
+    private sealed class CancellingNotifier(CancellationTokenSource cancellation) : ICredentialMessageNotifier
+    {
+        public Task SendNotice(long chatId, string text, CancellationToken cancellationToken)
+        {
+            cancellation.Cancel();
+
+            throw new OperationCanceledException(cancellationToken);
         }
     }
 }

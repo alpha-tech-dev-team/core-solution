@@ -3,6 +3,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Pandora.Domain.Options;
+using Pandora.TgBot.Application.Features.Credentials;
 
 namespace Pandora.TgBot.Credentials;
 

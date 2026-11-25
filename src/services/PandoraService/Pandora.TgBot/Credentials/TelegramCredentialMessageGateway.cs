@@ -1,6 +1,7 @@
 using System.Net;
 using Microsoft.Extensions.Logging;
 using Pandora.Domain.Enums;
+using Pandora.Domain.Interfaces;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 
@@ -8,6 +9,7 @@ namespace Pandora.TgBot.Credentials;
 
 public sealed class TelegramCredentialMessageGateway : ICredentialMessageGateway
 {
+    private const string ErrorDescriptionPrefix = "Bad Request: ";
     private const string NotModifiedDescription = "message is not modified";
     private const string DeleteMessageNotFoundDescription = "message to delete not found";
     private const string EditMessageNotFoundDescription = "message to edit not found";
@@ -40,50 +42,33 @@ public sealed class TelegramCredentialMessageGateway : ICredentialMessageGateway
         }
         catch (ApiRequestException exception)
         {
-            _logger.LogWarning(
-                exception,
-                "Telegram отклонил удаление сообщения {MessageId}",
-                messageId);
+            _logger.LogWarning(exception, "Telegram отклонил удаление сообщения {MessageId}", messageId);
 
             return ClassifyDeleteError(exception);
         }
         catch (Exception exception)
         {
-            _logger.LogWarning(
-                exception,
-                "Не удалось удалить сообщение {MessageId}",
-                messageId);
+            _logger.LogWarning(exception, "Не удалось удалить сообщение {MessageId}", messageId);
 
             return CredentialMessageOutcome.Failed;
         }
     }
 
-    public async Task<CredentialMessageOutcome> ReplaceText(
-        long chatId,
-        int messageId,
-        string text,
-        CancellationToken cancellationToken)
+    public async Task<CredentialMessageOutcome> ReplaceText(long chatId, int messageId, string text, CancellationToken token)
     {
         try
         {
-            await _client.EditMessageText(
-                chatId: chatId,
-                messageId: messageId,
-                text: text,
-                cancellationToken: cancellationToken);
+            await _client.EditMessageText(chatId: chatId, messageId: messageId, text: text, cancellationToken: token);
 
             return CredentialMessageOutcome.Succeeded;
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
             throw;
         }
         catch (ApiRequestException exception)
         {
-            _logger.LogWarning(
-                exception,
-                "Telegram отклонил замену текста сообщения {MessageId}",
-                messageId);
+            _logger.LogWarning(exception, "Telegram отклонил замену текста сообщения {MessageId}", messageId);
 
             if (IsNotModified(exception))
             {
@@ -94,10 +79,7 @@ public sealed class TelegramCredentialMessageGateway : ICredentialMessageGateway
         }
         catch (Exception exception)
         {
-            _logger.LogWarning(
-                exception,
-                "Не удалось заменить текст сообщения {MessageId}",
-                messageId);
+            _logger.LogWarning(exception, "Не удалось заменить текст сообщения {MessageId}", messageId);
 
             return CredentialMessageOutcome.Failed;
         }
@@ -124,8 +106,8 @@ public sealed class TelegramCredentialMessageGateway : ICredentialMessageGateway
 
     private static bool IsExactBadRequest(ApiRequestException exception, string description)
     {
-        var normalizedDescription = exception.Message.StartsWith("Bad Request: ", StringComparison.OrdinalIgnoreCase)
-            ? exception.Message["Bad Request: ".Length..]
+        var normalizedDescription = exception.Message.StartsWith(ErrorDescriptionPrefix, StringComparison.OrdinalIgnoreCase)
+            ? exception.Message[ErrorDescriptionPrefix.Length..]
             : exception.Message;
 
         return exception.ErrorCode == (int)HttpStatusCode.BadRequest

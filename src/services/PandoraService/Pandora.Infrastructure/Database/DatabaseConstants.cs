@@ -63,11 +63,12 @@ public static class DatabaseConstants
         public const string NextAttemptAt = "next_attempt_at";
         public const string DeletedAt = "deleted_at";
         public const string NotifiedAt = "notified_at";
+        public const string ClaimedUntil = "claimed_until";
         public const string Attempts = "attempts";
         public const string LastError = "last_error";
-        public const int ItemIdMaxLength = 36;
-        public const int ItemNameMaxLength = 100;
-        public const int LastErrorMaxLength = 500;
+        public const int ItemIdMaxLength = CredentialAccessLimits.ItemIdMaxLength;
+        public const int ItemNameMaxLength = CredentialAccessLimits.ItemNameMaxLength;
+        public const int LastErrorMaxLength = CredentialAccessLimits.LastErrorMaxLength;
     }
 
     public static class CredentialAccessSettings

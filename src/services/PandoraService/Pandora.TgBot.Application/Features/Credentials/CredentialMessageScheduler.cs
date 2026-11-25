@@ -3,9 +3,8 @@ using Pandora.Domain.Constants;
 using Pandora.Domain.Entities;
 using Pandora.Domain.Enums;
 using Pandora.Domain.Interfaces;
-using Pandora.Infrastructure.Database;
 
-namespace Pandora.TgBot.Credentials;
+namespace Pandora.TgBot.Application.Features.Credentials;
 
 public sealed class CredentialMessageScheduler
 {
@@ -49,8 +48,8 @@ public sealed class CredentialMessageScheduler
             var message = new CredentialAccessMessage(
                 chatId,
                 messageId,
-                Truncate(itemId, DatabaseConstants.CredentialAccessMessages.ItemIdMaxLength),
-                Truncate(itemName, DatabaseConstants.CredentialAccessMessages.ItemNameMaxLength),
+                Truncate(itemId, CredentialAccessLimits.ItemIdMaxLength),
+                Truncate(itemName, CredentialAccessLimits.ItemNameMaxLength),
                 requestedAt,
                 expiresAt);
 
@@ -58,12 +57,9 @@ public sealed class CredentialMessageScheduler
 
             return true;
         }
-        catch (Exception exception)
+        catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _logger.LogError(
-                exception,
-                "Не удалось запланировать удаление сообщения {MessageId}",
-                messageId);
+            _logger.LogError(exception, "Не удалось запланировать удаление сообщения {MessageId}", messageId);
 
             await RemoveImmediatelyAsync(chatId, messageId, itemId, requestedAt, cancellationToken);
 
@@ -90,10 +86,7 @@ public sealed class CredentialMessageScheduler
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _logger.LogWarning(
-                exception,
-                "Не удалось получить название сервиса {ItemId}, используется идентификатор",
-                itemId);
+            _logger.LogWarning(exception, "Не удалось получить название сервиса {ItemId}, используется идентификатор", itemId);
 
             return itemId;
         }
@@ -125,19 +118,13 @@ public sealed class CredentialMessageScheduler
                 return true;
             }
 
-            _logger.LogWarning(
-                "Немедленное удаление сообщения {MessageId} не удалось: {Outcome}",
-                messageId,
-                outcome);
+            _logger.LogWarning("Немедленное удаление сообщения {MessageId} не удалось: {Outcome}", messageId, outcome);
 
             return false;
         }
-        catch (Exception exception)
+        catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _logger.LogError(
-                exception,
-                "Немедленное удаление сообщения {MessageId} завершилось ошибкой",
-                messageId);
+            _logger.LogError(exception, "Немедленное удаление сообщения {MessageId} завершилось ошибкой", messageId);
 
             return false;
         }
@@ -157,17 +144,12 @@ public sealed class CredentialMessageScheduler
 
             if (outcome == CredentialMessageOutcome.Failed)
             {
-                _logger.LogError(
-                    "Не удалось заменить учётные данные в сообщении {MessageId}",
-                    messageId);
+                _logger.LogError("Не удалось заменить учётные данные в сообщении {MessageId}", messageId);
             }
         }
-        catch (Exception exception)
+        catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _logger.LogError(
-                exception,
-                "Замена учётных данных в сообщении {MessageId} завершилась ошибкой",
-                messageId);
+            _logger.LogError(exception, "Замена учётных данных в сообщении {MessageId} завершилась ошибкой", messageId);
         }
     }
 

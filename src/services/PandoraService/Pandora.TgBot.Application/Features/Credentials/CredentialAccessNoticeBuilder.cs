@@ -3,7 +3,7 @@ using CoreSolution.Shared.Abstractions;
 using Pandora.Domain.Constants.Localization;
 using Pandora.Domain.Enums;
 
-namespace Pandora.TgBot.Credentials;
+namespace Pandora.TgBot.Application.Features.Credentials;
 
 public sealed class CredentialAccessNoticeBuilder
 {

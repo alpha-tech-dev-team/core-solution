@@ -12,6 +12,7 @@ public sealed class CredentialAccessMessage
     public DateTime NextAttemptAt { get; set; }
     public DateTime? DeletedAt { get; set; }
     public DateTime? NotifiedAt { get; set; }
+    public DateTime? ClaimedUntil { get; set; }
     public int Attempts { get; set; }
     public string? LastError { get; set; }
 

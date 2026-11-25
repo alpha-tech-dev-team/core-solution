@@ -1,21 +1,18 @@
-using CoreSolution.Shared.TgBot.Abstractions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Pandora.Domain.Constants;
 using Pandora.Domain.Entities;
 using Pandora.Domain.Enums;
 using Pandora.Domain.Interfaces;
 using Pandora.Domain.Options;
 
-namespace Pandora.TgBot.Credentials;
+namespace Pandora.TgBot.Application.Features.Credentials;
 
 public sealed class CredentialMessageCleanupService
 {
-    private const int MaxBackoffExponent = 10;
-    private const int BackoffBase = 2;
-
     private readonly ICredentialAccessMessageRepository _messageRepository;
     private readonly ICredentialMessageGateway _gateway;
-    private readonly ITelegramNotificationService _notificationService;
+    private readonly ICredentialMessageNotifier _notifier;
     private readonly CredentialAccessNoticeBuilder _noticeBuilder;
     private readonly IOptions<CredentialCleanupOptions> _options;
     private readonly ILogger<CredentialMessageCleanupService> _logger;
@@ -23,14 +20,14 @@ public sealed class CredentialMessageCleanupService
     public CredentialMessageCleanupService(
         ICredentialAccessMessageRepository messageRepository,
         ICredentialMessageGateway gateway,
-        ITelegramNotificationService notificationService,
+        ICredentialMessageNotifier notifier,
         CredentialAccessNoticeBuilder noticeBuilder,
         IOptions<CredentialCleanupOptions> options,
         ILogger<CredentialMessageCleanupService> logger)
     {
         _messageRepository = messageRepository;
         _gateway = gateway;
-        _notificationService = notificationService;
+        _notifier = notifier;
         _noticeBuilder = noticeBuilder;
         _options = options;
         _logger = logger;
@@ -39,14 +36,15 @@ public sealed class CredentialMessageCleanupService
     public async Task<int> ProcessDueAsync(DateTime now, CancellationToken cancellationToken)
     {
         var options = _options.Value;
+        var claimUntil = now.AddSeconds(CredentialAccessConstants.QueueClaimDurationSeconds);
 
         await RemoveCompletedAsync(now, options, cancellationToken);
 
-        var dueMessages = await _messageRepository.GetDue(
+        var dueMessages = await _messageRepository.ClaimDue(
             now,
+            claimUntil,
             options.BatchSize,
             options.MaxAttempts,
-            query => query.OrderBy(message => message.NextAttemptAt).ThenBy(message => message.Id),
             cancellationToken);
 
         foreach (var message in dueMessages)
@@ -95,11 +93,7 @@ public sealed class CredentialMessageCleanupService
 
             if (outcome == CredentialMessageOutcome.NotFound)
             {
-                await _messageRepository.MarkDeleted(
-                    message.Id,
-                    DateTime.UtcNow,
-                    DateTime.UtcNow,
-                    cancellationToken);
+                await _messageRepository.MarkDeleted(message.Id, DateTime.UtcNow, DateTime.UtcNow, cancellationToken);
 
                 return;
             }
@@ -121,9 +115,7 @@ public sealed class CredentialMessageCleanupService
         CredentialCleanupOptions options,
         CancellationToken cancellationToken)
     {
-        var attemptNumber = message.AttemptNumber;
-
-        if (attemptNumber >= options.DeleteAttemptsBeforeFallback)
+        if (message.AttemptNumber >= options.DeleteAttemptsBeforeFallback)
         {
             var fallback = await _gateway.ReplaceText(
                 message.ChatId,
@@ -133,25 +125,15 @@ public sealed class CredentialMessageCleanupService
 
             if (fallback != CredentialMessageOutcome.Failed)
             {
-                _logger.LogWarning(
-                    "Сообщение {MessageId} не удалось удалить, учётные данные заменены уведомлением",
-                    message.MessageId);
+                _logger.LogWarning("Сообщение не удалось удалить, учётные данные заменены уведомлением {MessageId}", message.MessageId);
 
-                await _messageRepository.MarkDeleted(
-                    message.Id,
-                    DateTime.UtcNow,
-                    DateTime.UtcNow,
-                    cancellationToken);
+                await _messageRepository.MarkDeleted(message.Id, DateTime.UtcNow, DateTime.UtcNow, cancellationToken);
 
                 return;
             }
         }
 
-        await MarkFailedAsync(
-            message,
-            $"Не удалось удалить сообщение {message.MessageId}",
-            options,
-            cancellationToken);
+        await MarkFailedAsync(message, CredentialCleanupErrors.MessageDeleteFailed, options, cancellationToken);
     }
 
     private async Task SendNoticeAsync(
@@ -162,22 +144,19 @@ public sealed class CredentialMessageCleanupService
     {
         try
         {
-            await _notificationService.SendMessageAsync(message.ChatId, notice, null, cancellationToken);
+            await _notifier.SendNotice(message.ChatId, notice, cancellationToken);
 
             await _messageRepository.MarkNotified(message.Id, DateTime.UtcNow, cancellationToken);
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
         catch (Exception exception)
         {
-            _logger.LogWarning(
-                exception,
-                "Не удалось отправить уведомление об истечении доступа для сообщения {MessageId}",
-                message.MessageId);
+            _logger.LogWarning(exception, "Не удалось отправить уведомление об истечении доступа для сообщения {MessageId}", message.MessageId);
 
-            await MarkFailedAsync(
-                message,
-                exception.Message,
-                options,
-                cancellationToken);
+            await MarkFailedAsync(message, CredentialCleanupErrors.NoticeSendFailed, options, cancellationToken);
         }
     }
 
@@ -187,21 +166,29 @@ public sealed class CredentialMessageCleanupService
         CredentialCleanupOptions options,
         CancellationToken cancellationToken)
     {
-        var exponent = Math.Min(message.Attempts, MaxBackoffExponent);
+        var exponent = Math.Min(message.Attempts, CredentialAccessConstants.MaxBackoffExponent);
         var delaySeconds = Math.Min(
-            options.RetryBaseDelaySeconds * Math.Pow(BackoffBase, exponent),
+            options.RetryBaseDelaySeconds * Math.Pow(CredentialAccessConstants.BackoffBase, exponent),
             options.MaxRetryDelaySeconds);
         var nextAttemptAt = DateTime.UtcNow.AddSeconds(delaySeconds);
 
-        await _messageRepository.MarkFailed(message.Id, error, nextAttemptAt, cancellationToken);
+        var updated = await _messageRepository.MarkFailed(
+            message.Id,
+            message.Attempts,
+            error,
+            nextAttemptAt,
+            cancellationToken);
+
+        if (!updated)
+        {
+            _logger.LogWarning("Запись очереди очистки изменилась параллельно, повтор не запланирован {MessageId}", message.MessageId);
+
+            return;
+        }
 
         if (message.AttemptNumber >= options.MaxAttempts)
         {
-            _logger.LogError(
-                "Исчерпаны попытки очистки сообщения {MessageId} в чате {ChatId}: {Error}",
-                message.MessageId,
-                message.ChatId,
-                error);
+            _logger.LogError("Исчерпаны попытки очистки сообщения {MessageId} в чате {ChatId}: {Error}", message.MessageId, message.ChatId, error);
         }
     }
 }

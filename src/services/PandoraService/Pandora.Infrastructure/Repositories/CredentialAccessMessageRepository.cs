@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Pandora.Domain.Constants;
 using Pandora.Domain.Entities;
 using Pandora.Domain.Interfaces;
 using Pandora.Infrastructure.Database;
@@ -21,19 +22,48 @@ public sealed class CredentialAccessMessageRepository : ICredentialAccessMessage
         await _context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<CredentialAccessMessage>> GetDue(
+    public async Task<IReadOnlyList<CredentialAccessMessage>> ClaimDue(
         DateTime now,
+        DateTime claimUntil,
         int limit,
         int maxAttempts,
-        Func<IQueryable<CredentialAccessMessage>, IOrderedQueryable<CredentialAccessMessage>> orderBy,
         CancellationToken cancellationToken)
     {
-        return await orderBy(_context.CredentialAccessMessage
+        var candidates = await _context.CredentialAccessMessage
                 .AsNoTracking()
                 .Where(message => message.Attempts < maxAttempts
                     && message.NextAttemptAt <= now
-                    && (message.DeletedAt == null || message.NotifiedAt == null)))
+                    && (message.ClaimedUntil == null || message.ClaimedUntil <= now)
+                    && (message.DeletedAt == null || message.NotifiedAt == null))
+            .OrderBy(message => message.NextAttemptAt)
+            .ThenBy(message => message.Id)
+            .Select(message => message.Id)
             .Take(limit)
+            .ToListAsync(cancellationToken);
+
+        var claimedIds = new List<Guid>(candidates.Count);
+
+        foreach (var id in candidates)
+        {
+            var claimed = await _context.CredentialAccessMessage
+                .Where(message => message.Id == id
+                    && message.Attempts < maxAttempts
+                    && message.NextAttemptAt <= now
+                    && (message.ClaimedUntil == null || message.ClaimedUntil <= now)
+                    && (message.DeletedAt == null || message.NotifiedAt == null))
+                .ExecuteUpdateAsync(update => update
+                    .SetProperty(message => message.ClaimedUntil, claimUntil),
+                    cancellationToken);
+
+            if (claimed > 0)
+            {
+                claimedIds.Add(id);
+            }
+        }
+
+        return await _context.CredentialAccessMessage
+            .AsNoTracking()
+            .Where(message => claimedIds.Contains(message.Id))
             .ToListAsync(cancellationToken);
     }
 
@@ -50,7 +80,8 @@ public sealed class CredentialAccessMessageRepository : ICredentialAccessMessage
     {
         return await _context.CredentialAccessMessage
             .Where(message => message.Attempts >= maxAttempts
-                && message.NextAttemptAt < before)
+                && message.NextAttemptAt < before
+                && (message.ClaimedUntil == null || message.ClaimedUntil < before))
             .ExecuteDeleteAsync(cancellationToken);
     }
 
@@ -60,64 +91,56 @@ public sealed class CredentialAccessMessageRepository : ICredentialAccessMessage
         DateTime? notifiedAt,
         CancellationToken cancellationToken)
     {
-        var message = await FindAsync(id, cancellationToken);
-
-        if (message is null)
+        if (notifiedAt.HasValue)
         {
+            await _context.CredentialAccessMessage
+                .Where(message => message.Id == id)
+                .ExecuteUpdateAsync(update => update
+                    .SetProperty(message => message.DeletedAt, deletedAt)
+                    .SetProperty(message => message.NotifiedAt, notifiedAt)
+                    .SetProperty(message => message.LastError, (string?)null)
+                    .SetProperty(message => message.ClaimedUntil, (DateTime?)null),
+                    cancellationToken);
+
             return;
         }
 
-        message.DeletedAt = deletedAt;
-
-        if (notifiedAt.HasValue)
-        {
-            message.NotifiedAt = notifiedAt;
-        }
-
-        message.LastError = null;
-
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.CredentialAccessMessage
+            .Where(message => message.Id == id)
+            .ExecuteUpdateAsync(update => update
+                .SetProperty(message => message.DeletedAt, deletedAt)
+                .SetProperty(message => message.LastError, (string?)null),
+                cancellationToken);
     }
 
     public async Task MarkNotified(Guid id, DateTime notifiedAt, CancellationToken cancellationToken)
     {
-        var message = await FindAsync(id, cancellationToken);
-
-        if (message is null)
-        {
-            return;
-        }
-
-        message.NotifiedAt = notifiedAt;
-        message.LastError = null;
-
-        await _context.SaveChangesAsync(cancellationToken);
+        await _context.CredentialAccessMessage
+            .Where(message => message.Id == id)
+            .ExecuteUpdateAsync(update => update
+                .SetProperty(message => message.NotifiedAt, notifiedAt)
+                .SetProperty(message => message.LastError, (string?)null)
+                .SetProperty(message => message.ClaimedUntil, (DateTime?)null),
+                cancellationToken);
     }
 
-    public async Task MarkFailed(
+    public async Task<bool> MarkFailed(
         Guid id,
+        int expectedAttempts,
         string error,
         DateTime nextAttemptAt,
         CancellationToken cancellationToken)
     {
-        var message = await FindAsync(id, cancellationToken);
+        var updated = await _context.CredentialAccessMessage
+            .Where(message => message.Id == id && message.Attempts == expectedAttempts)
+            .ExecuteUpdateAsync(update => update
+                .SetProperty(message => message.Attempts, message => message.Attempts + 1)
+                .SetProperty(message => message.LastError, TruncateError(error))
+                .SetProperty(message => message.NextAttemptAt, nextAttemptAt)
+                .SetProperty(message => message.ClaimedUntil, (DateTime?)null),
+                cancellationToken);
 
-        if (message is null)
-        {
-            return;
-        }
-
-        message.Attempts += 1;
-        message.LastError = TruncateError(error);
-        message.NextAttemptAt = nextAttemptAt;
-
-        await _context.SaveChangesAsync(cancellationToken);
-    }
-
-    private async Task<CredentialAccessMessage?> FindAsync(Guid id, CancellationToken cancellationToken)
-    {
-        return await _context.CredentialAccessMessage
-            .FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
+        return updated > 0;
     }
 
     private static string TruncateError(string error)

@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Pandora.Domain.Options;
+using Pandora.Domain.Interfaces;
+using Pandora.TgBot.Application.Features.Credentials;
 using Pandora.TgBot.Credentials;
 
 namespace Pandora.TgBot.Extension.DependencyInjection;
@@ -11,9 +12,9 @@ public static class CredentialExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.Configure<CredentialCleanupOptions>(configuration.GetSection(CredentialCleanupOptions.SectionName));
         services.AddScoped<CredentialAccessNoticeBuilder>();
         services.AddScoped<ICredentialMessageGateway, TelegramCredentialMessageGateway>();
+        services.AddScoped<ICredentialMessageNotifier, TelegramCredentialMessageNotifier>();
         services.AddScoped<CredentialMessageScheduler>();
         services.AddScoped<CredentialMessageCleanupService>();
         services.AddHostedService<CredentialMessageCleanupWorker>();
