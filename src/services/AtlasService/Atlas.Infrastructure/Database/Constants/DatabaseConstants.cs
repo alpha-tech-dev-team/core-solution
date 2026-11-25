@@ -8,6 +8,7 @@ public static class DatabaseConstants
         public const string IncidentStatus = "incident_status";
         public const string IncidentPriority = "incident_priority";
         public const string KnowledgeArticleStatus = "knowledge_article_status";
+        public const string IncidentCategoryType = "incident_category_type";
     }
 
     public static class Room
@@ -77,6 +78,7 @@ public static class DatabaseConstants
         public const string Id = "id";
         public const string Name = "name";
         public const string Description = "description";
+        public const string Type = "type";
         public const int NameMaxLength = 100;
     }
 

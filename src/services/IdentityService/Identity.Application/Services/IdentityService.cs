@@ -3,6 +3,7 @@ using Identity.Application.Errors;
 using Identity.Domain.Enums;
 using Identity.Domain.Interfaces.Repositories;
 using Identity.Domain.Interfaces.Services;
+using Identity.Domain.Models;
 using Microsoft.Extensions.Logging;
 
 namespace Identity.Application.Services;
@@ -78,5 +79,19 @@ public class IdentityService : IIdentityService
         }
 
         return Result.Success();
+    }
+
+    public async Task<Result<EmployeeProfile>> GetEmployee(long telegramUserId, CancellationToken cancellationToken = default)
+    {
+        var user = await _users.GetByTelegramUserId(telegramUserId, cancellationToken);
+
+        if (user is null)
+        {
+            _logger.LogWarning("Не удалось получить сотрудника: пользователь с telegram id {TelegramUserId} не найден", telegramUserId);
+            return Result<EmployeeProfile>.Failure(nameof(IdentityErrorCode.UserNotFound));
+        }
+
+        return Result<EmployeeProfile>.Success(
+            new EmployeeProfile(user.Name, user.Surname, user.Patronymic));
     }
 }

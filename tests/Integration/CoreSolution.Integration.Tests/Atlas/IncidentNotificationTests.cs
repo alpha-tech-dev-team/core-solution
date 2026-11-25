@@ -103,8 +103,8 @@ public sealed class IncidentNotificationTests(IntegrationFixture fixture)
         RecordingIncidentNotifier notifications,
         CancellationToken cancellationToken = default)
     {
-        await using var atlas = fixture.CreateAtlasServiceProvider(services =>
-            services.AddSingleton<IIncidentNotifier>(notifications));
+        await using var atlas = fixture.CreateAtlasServiceProvider(
+            configureServices: services => services.AddSingleton<IIncidentNotifier>(notifications));
         using var scope = atlas.CreateScope();
 
         await scope.ServiceProvider.GetRequiredService<IMediator>().Send(message, cancellationToken);

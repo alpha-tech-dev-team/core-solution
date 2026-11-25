@@ -28,7 +28,7 @@ public abstract class SubmitPhoneHandlerBase : IRequestHandler<SubmitPhoneMessag
 
     protected abstract IRequest<Result<WorkflowResponse>> CreateNextMessage(SubmitPhoneMessage request);
 
-    public async Task<Result<WorkflowResponse>> Handle(SubmitPhoneMessage request, CancellationToken cancellationToken)
+    public virtual async Task<Result<WorkflowResponse>> Handle(SubmitPhoneMessage request, CancellationToken cancellationToken)
     {
         if (request.Phone is null)
         {
@@ -48,8 +48,13 @@ public abstract class SubmitPhoneHandlerBase : IRequestHandler<SubmitPhoneMessag
 
         if (confirmationError is not null)
         {
-            return Result<WorkflowResponse>.Failure(
-                confirmationError == ErrorCodes.UserBlocked ? ErrorCodes.UserBlocked : ErrorCodes.AccessNotConfirmed);
+            return Result<WorkflowResponse>.Failure(confirmationError switch
+            {
+                ErrorCodes.UserBlocked => ErrorCodes.UserBlocked,
+                ErrorCodes.ServiceTemporarilyUnavailable => ErrorCodes.ServiceTemporarilyUnavailable,
+                ErrorCodes.IdentityConfigurationMismatch => ErrorCodes.ServiceTemporarilyUnavailable,
+                _ => ErrorCodes.AccessNotConfirmed
+            });
         }
 
         return await _mediator.Send(CreateNextMessage(request), cancellationToken);

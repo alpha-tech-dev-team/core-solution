@@ -23,6 +23,7 @@ namespace Atlas.Infrastructure.Database.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "employee_role", new[] { "employee", "engineer", "admin" });
+            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "incident_category_type", new[] { "hardware", "software", "other" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "incident_priority", new[] { "low", "medium", "high", "critical" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "incident_status", new[] { "created", "in_progress", "resolved", "resolved_automatically", "closed", "cancelled" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "knowledge_article_status", new[] { "draft", "published", "archived" });
@@ -80,8 +81,7 @@ namespace Atlas.Infrastructure.Database.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("TelegramUserId")
-                        .IsUnique()
-                        .HasDatabaseName("IX_employees_telegram_user_id");
+                        .IsUnique();
 
                     b.ToTable("employees", (string)null);
                 });
@@ -288,6 +288,12 @@ namespace Atlas.Infrastructure.Database.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("name");
+
+                    b.Property<IncidentCategoryType>("Type")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("incident_category_type")
+                        .HasDefaultValue(IncidentCategoryType.Other)
+                        .HasColumnName("type");
 
                     b.HasKey("Id");
 

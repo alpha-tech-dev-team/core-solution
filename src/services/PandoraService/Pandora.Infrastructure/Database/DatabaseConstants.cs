@@ -41,6 +41,7 @@ public static class DatabaseConstants
         public const string Id = "id";
         public const string Timestamp = "timestamp";
         public const string UserId = "user_id";
+        public const string TelegramUserId = "telegram_user_id";
         public const string Action = "action";
         public const string TargetItemId = "target_item_id";
         public const string RequestSource = "request_source";
@@ -48,5 +49,13 @@ public static class DatabaseConstants
         public const int ActionMaxLength = 50;
         public const int TargetItemIdMaxLength = 36;
         public const int RequestSourceMaxLength = 20;
+    }
+
+    public static class AuditOutbox
+    {
+        public const string Table = "audit_outbox";
+        public const string Id = "id";
+        public const string Payload = "payload";
+        public const string CreatedAt = "created_at";
     }
 }

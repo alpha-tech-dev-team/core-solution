@@ -1,5 +1,6 @@
 using Atlas.Application.Behaviors;
 using Atlas.Application.Features.Activation;
+using Atlas.Application.Features.Incidents;
 using Atlas.Domain.Constants;
 using Atlas.TgBot.Features.Activation;
 using Atlas.TgBot.Localization;
@@ -31,6 +32,8 @@ public static class ApplicationExtensions
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(SessionBehavior<,>));
         services.AddScoped<IUserErrorMapper, AtlasUserErrorMapper>();
+        services.AddScoped<IncidentCreationService>();
+        services.AddScoped<IncidentConfirmationBuilder>();
 
         services.Configure<PhoneConfirmationOptions>(configuration.GetSection(PhoneConfirmationOptions.SectionName));
 

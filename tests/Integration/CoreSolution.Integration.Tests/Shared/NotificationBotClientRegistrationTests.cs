@@ -84,6 +84,7 @@ public sealed class NotificationBotClientRegistrationTests
             ["Redis:ConnectionString"] = "localhost:6379",
             ["SessionSettings:ExpiryMinutes"] = "30",
             ["Identity:BaseUrl"] = "http://localhost",
+            ["Identity:ServiceApiKey"] = IntegrationFixture.AtlasServiceApiKey,
             ["Telegram:NotificationBotToken"] = notificationBotToken ?? string.Empty
         };
 

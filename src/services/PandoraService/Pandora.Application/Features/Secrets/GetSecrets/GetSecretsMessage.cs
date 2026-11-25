@@ -1,5 +1,5 @@
 using System.Text.Json.Serialization;
-using CoreSolution.Shared.Pagination;
+using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
 using MediatR;
 using Pandora.Application.Contracts;

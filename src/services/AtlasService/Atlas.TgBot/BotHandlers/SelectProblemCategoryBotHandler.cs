@@ -1,8 +1,6 @@
 using Atlas.Application.Common;
 using Atlas.Application.Features.IncidentCategories;
-using Atlas.Domain.Enums;
-using CoreSolution.Shared.Models;
-using CoreSolution.Shared.Results;
+using CoreSolution.Shared.Abstractions;
 using CoreSolution.Shared.TgBot.Abstractions;
 using CoreSolution.Shared.TgBot.Extensions;
 using MediatR;
@@ -16,37 +14,42 @@ public sealed class SelectProblemCategoryBotHandler : IBotHandler
     private readonly IMediator _mediator;
     private readonly ITelegramNotificationService _telegramNotificationService;
     private readonly IUserErrorMapper _userErrorMapper;
+    private readonly IRequestContext _requestContext;
+    private readonly ISessionService _sessionService;
 
     public SelectProblemCategoryBotHandler(
         IMediator mediator,
         ITelegramNotificationService telegramNotificationService,
-        IUserErrorMapper userErrorMapper)
+        IUserErrorMapper userErrorMapper,
+        IRequestContext requestContext,
+        ISessionService sessionService)
     {
         _mediator = mediator;
         _telegramNotificationService = telegramNotificationService;
         _userErrorMapper = userErrorMapper;
+        _requestContext = requestContext;
+        _sessionService = sessionService;
     }
 
     public bool CanHandle(Update update)
     {
-        return update.CallbackQuery?.Data?.StartsWith(CallbackConstants.CategoryPrefix, StringComparison.Ordinal) is true;
+        return update.CallbackQuery?.Data is { } data
+            && data.StartsWith(CallbackConstants.CategoryPrefix, StringComparison.Ordinal)
+            && !data.StartsWith(CallbackConstants.CategoryPagePrefix, StringComparison.Ordinal);
     }
 
     public async Task HandleAsync(Update update, CancellationToken cancellationToken)
     {
         if (update.CallbackQuery is { Data: string data, Message: { Chat.Id: long telegramUserId, MessageId: int messageId } })
         {
-            var categoryId = data.ParseCategoryId();
+            var result = await _mediator.Send(
+                new SelectProblemCategoryMessage(telegramUserId, messageId, data.ParseCategoryId()),
+                cancellationToken);
 
-            var result = categoryId == Guid.Empty
-                ? Result<WorkflowResponse>.Failure(nameof(ErrorCode.InvalidCategoryId))
-                : await _mediator.Send(
-                    new SelectProblemCategoryMessage(telegramUserId, messageId, categoryId),
-                    cancellationToken);
-
-            await _telegramNotificationService.SendOrEditAsync(
+            await _telegramNotificationService.SendReplyAsync(
+                _requestContext,
+                _sessionService,
                 telegramUserId,
-                messageId,
                 result.GetUserText(_userErrorMapper),
                 result.ToTelegramMarkup() as InlineKeyboardMarkup,
                 cancellationToken);

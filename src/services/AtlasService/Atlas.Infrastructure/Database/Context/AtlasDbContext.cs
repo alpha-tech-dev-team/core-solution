@@ -48,6 +48,7 @@ public sealed class AtlasDbContext : DbContext
         modelBuilder.HasPostgresEnum<IncidentStatus>(name: DatabaseConstants.EnumNames.IncidentStatus);
         modelBuilder.HasPostgresEnum<IncidentPriority>(name: DatabaseConstants.EnumNames.IncidentPriority);
         modelBuilder.HasPostgresEnum<KnowledgeArticleStatus>(name: DatabaseConstants.EnumNames.KnowledgeArticleStatus);
+        modelBuilder.HasPostgresEnum<IncidentCategoryType>(name: DatabaseConstants.EnumNames.IncidentCategoryType);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AtlasDbContext).Assembly);
     }
 
