@@ -12,7 +12,7 @@ namespace Atlas.Api.Extensions.Configuration;
 
 public static class ServiceConfigurationExtensions
 {
-    public static IServiceCollection AddServiceConfiguration(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddServiceConfiguration(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
         TypeAdapterConfig.GlobalSettings.Apply(new IncidentMappingConfig(), new RoomMappingConfig());
 
@@ -27,7 +27,7 @@ public static class ServiceConfigurationExtensions
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<ApplicationAssemblyMarker>());
         services.AddValidatorsFromAssemblyContaining<GetIncidentsMessageValidator>();
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
-        services.AddJwtAuthentication();
+        services.AddJwtAuthentication(environment);
 
         return services;
     }
