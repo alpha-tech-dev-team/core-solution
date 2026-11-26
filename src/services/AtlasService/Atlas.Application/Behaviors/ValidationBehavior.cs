@@ -1,4 +1,5 @@
 using Atlas.Domain.Enums;
+using Atlas.Domain.Localization;
 using CoreSolution.Shared.Results;
 using FluentValidation;
 using MediatR;
@@ -35,7 +36,7 @@ public sealed class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<
         {
             var errorCode = errors
                 .Select(error => error.ErrorCode)
-                .FirstOrDefault(code => !string.IsNullOrWhiteSpace(code))
+                .FirstOrDefault(AtlasErrorTextKeys.ByErrorCode.ContainsKey)
                 ?? nameof(ErrorCode.ValidationFailed);
 
             return ResultFactory.Failure<TResponse>(errorCode);

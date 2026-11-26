@@ -73,11 +73,39 @@ public sealed class EmployeeQueryTests
         Assert.Equal(2, users.Count);
     }
 
-    private static User User(string name, string surname, UserStatus status = UserStatus.Active)
+    [Fact]
+    public void Apply_WithTiedSortKeysAscending_OrdersById()
+    {
+        var first = User("Иван", "Петров", id: Guid.Parse("00000000-0000-0000-0000-000000000001"));
+        var second = User("Иван", "Петров", id: Guid.Parse("00000000-0000-0000-0000-000000000002"));
+        var filter = new EmployeeFilter(null, EmployeeSortFields.Surname, SortDirection.Ascending, IncludeArchived: false);
+
+        var firstRun = EmployeeQuery.Apply(new[] { second, first }.AsQueryable(), filter).Select(user => user.Id).ToList();
+        var secondRun = EmployeeQuery.Apply(new[] { second, first }.AsQueryable(), filter).Select(user => user.Id).ToList();
+
+        Assert.Equal([first.Id, second.Id], firstRun);
+        Assert.Equal(firstRun, secondRun);
+    }
+
+    [Fact]
+    public void Apply_WithTiedSortKeysDescending_OrdersById()
+    {
+        var first = User("Иван", "Петров", id: Guid.Parse("00000000-0000-0000-0000-000000000001"));
+        var second = User("Иван", "Петров", id: Guid.Parse("00000000-0000-0000-0000-000000000002"));
+        var filter = new EmployeeFilter(null, EmployeeSortFields.Surname, SortDirection.Descending, IncludeArchived: false);
+
+        var firstRun = EmployeeQuery.Apply(new[] { second, first }.AsQueryable(), filter).Select(user => user.Id).ToList();
+        var secondRun = EmployeeQuery.Apply(new[] { second, first }.AsQueryable(), filter).Select(user => user.Id).ToList();
+
+        Assert.Equal([first.Id, second.Id], firstRun);
+        Assert.Equal(firstRun, secondRun);
+    }
+
+    private static User User(string name, string surname, UserStatus status = UserStatus.Active, Guid? id = null)
     {
         return new User
         {
-            Id = Guid.NewGuid(),
+            Id = id ?? Guid.NewGuid(),
             Name = name,
             Surname = surname,
             Status = status

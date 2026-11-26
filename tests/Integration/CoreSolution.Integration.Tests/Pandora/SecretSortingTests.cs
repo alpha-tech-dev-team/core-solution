@@ -66,8 +66,34 @@ public sealed class SecretSortingTests
         Assert.Contains(nameof(SecretMetadata.Username), SecretSorting.SupportedFields);
     }
 
-    private static SecretMetadata Secret(string resourceName, string username = "login")
+    [Fact]
+    public void For_ByResourceNameAscending_WithTiedNames_OrdersByVaultItemId()
     {
-        return new SecretMetadata(Guid.NewGuid().ToString("D"), resourceName, username);
+        var secrets = new[] { Secret("same", vaultItemId: "b"), Secret("same", vaultItemId: "a") };
+
+        var ordered = SecretSorting
+            .For(nameof(SecretMetadata.ResourceName), SortDirection.Ascending)(secrets.AsQueryable())
+            .Select(secret => secret.VaultItemId)
+            .ToList();
+
+        Assert.Equal(["a", "b"], ordered);
+    }
+
+    [Fact]
+    public void For_ByResourceNameDescending_WithTiedNames_OrdersByVaultItemId()
+    {
+        var secrets = new[] { Secret("same", vaultItemId: "b"), Secret("same", vaultItemId: "a") };
+
+        var ordered = SecretSorting
+            .For(nameof(SecretMetadata.ResourceName), SortDirection.Descending)(secrets.AsQueryable())
+            .Select(secret => secret.VaultItemId)
+            .ToList();
+
+        Assert.Equal(["a", "b"], ordered);
+    }
+
+    private static SecretMetadata Secret(string resourceName, string username = "login", string? vaultItemId = null)
+    {
+        return new SecretMetadata(vaultItemId ?? Guid.NewGuid().ToString("D"), resourceName, username);
     }
 }

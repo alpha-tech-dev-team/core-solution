@@ -724,7 +724,7 @@ public sealed class AdminEndpointsTests
         var login = await client.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
         Assert.Equal(HttpStatusCode.OK, login.StatusCode);
 
-        var response = await client.GetAsync($"{UsersRoute}?search={username}");
+        var response = await client.GetAsync($"{UsersRoute}?search={username.ToUpperInvariant()}");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var body = (await response.Content.ReadFromJsonAsync<EmployeesPageDto>())!;
