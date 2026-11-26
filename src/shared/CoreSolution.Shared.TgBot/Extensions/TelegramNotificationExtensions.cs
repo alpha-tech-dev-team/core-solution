@@ -1,4 +1,5 @@
 using CoreSolution.Shared.TgBot.Abstractions;
+using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -6,6 +7,8 @@ namespace CoreSolution.Shared.TgBot.Extensions;
 
 public static class TelegramNotificationExtensions
 {
+    private const string MessageNotModifiedFragment = "message is not modified";
+
     public static async Task<Message> SendOrEditAsync(
         this ITelegramNotificationService telegram,
         long chatId,
@@ -28,6 +31,16 @@ public static class TelegramNotificationExtensions
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
                 throw;
+            }
+            catch (ApiRequestException exception) when (IsMessageNotModified(exception))
+            {
+                return new Message
+                {
+                    Id = existingMessageId,
+                    Chat = new Chat { Id = chatId },
+                    Text = text,
+                    ReplyMarkup = replyMarkup
+                };
             }
             catch (Exception)
             {
@@ -52,5 +65,10 @@ public static class TelegramNotificationExtensions
         }
 
         return await telegram.SendMessageAsync(chatId, text, replyMarkup, cancellationToken);
+    }
+
+    private static bool IsMessageNotModified(ApiRequestException exception)
+    {
+        return exception.Message.Contains(MessageNotModifiedFragment, StringComparison.OrdinalIgnoreCase);
     }
 }

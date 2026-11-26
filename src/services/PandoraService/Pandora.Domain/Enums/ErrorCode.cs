@@ -10,5 +10,10 @@ public enum ErrorCode
     DatabaseUnavailable,
     Conflict,
     MalformedRequest,
+    InvalidPage,
+    InvalidPageSize,
+    InvalidSortField,
+    InvalidSortDirection,
+    InvalidSearch,
     InternalError
 }

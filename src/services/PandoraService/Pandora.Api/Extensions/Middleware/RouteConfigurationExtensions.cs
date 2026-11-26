@@ -1,4 +1,5 @@
 using Pandora.Api.Endpoints;
+using Pandora.Api.Hubs;
 
 namespace Pandora.Api.Extensions.Middleware;
 
@@ -12,6 +13,8 @@ public static class RouteConfigurationExtensions
         }
 
         app.MapSecretsEndpoints();
+        app.MapAuditEndpoints();
+        app.MapHub<AuditHub>(AuditHub.Path);
         app.MapEmployeeSecretsEndpoints();
         app.MapCredentialAccessSettingsEndpoints();
 

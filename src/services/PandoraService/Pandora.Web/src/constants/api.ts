@@ -11,6 +11,10 @@ export const SECRET_ENDPOINTS = {
   BY_ID: (id: string) => `/secrets/${id}`,
 } as const
 
+export const AUDIT_ENDPOINTS = {
+  COLLECTION: '/audit',
+} as const
+
 export const EMPLOYEE_SECRET_ENDPOINTS = {
   LIST: (telegramUserId: number) => `/employees/${telegramUserId}/secrets`,
   BY_ID: (telegramUserId: number, itemId: string) =>

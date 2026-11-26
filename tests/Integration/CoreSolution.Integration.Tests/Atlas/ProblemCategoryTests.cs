@@ -1,6 +1,7 @@
 ﻿using Atlas.Application.Common;
 using Atlas.Application.Features.IncidentCategories;
 using Atlas.Application.Features.Menu;
+using Atlas.Application.Features.Rooms;
 using Atlas.Domain.Constants;
 using Atlas.Domain.Enums;
 using Atlas.Domain.Models;
@@ -108,6 +109,67 @@ public sealed class ProblemCategoryTests(IntegrationFixture fixture)
 
         Assert.False(result.IsSuccess);
         Assert.Equal(nameof(ErrorCode.InvalidTelegramUserId), result.ErrorCode);
+    }
+
+    [Fact]
+    public async Task ShowMenu_ReturnsFromRoomsToCategoriesAndClearsRoom()
+    {
+        const long telegramUserId = 8305;
+
+        await using var atlas = await fixture.CreateAtlasServiceProviderAsync();
+        using var scope = atlas.CreateScope();
+
+        var sessionService = scope.ServiceProvider.GetRequiredService<ISessionService>();
+        var session = AtlasUserSession.Create(telegramUserId, nameof(WorkflowStep.RoomSelection));
+        session.IncidentCategoryId = IncidentCategoryConstants.Hardware.Id;
+        session.RoomId = RoomConstants.Office204.Id;
+
+        await sessionService.SaveSession(session, CancellationToken.None);
+
+        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+        var result = await mediator.Send(new ShowMenuMessage(telegramUserId, 1, PaginationLimits.FirstPage));
+
+        Assert.True(result.IsSuccess);
+
+        var callbacks = result.Value!.ButtonRows!
+            .SelectMany(row => row.Buttons)
+            .Select(button => button.CallbackData)
+            .ToList();
+
+        Assert.Contains(callbacks, callback => callback.StartsWith(CallbackConstants.CategoryPrefix, StringComparison.Ordinal));
+
+        var stored = await sessionService.GetSession(telegramUserId, CancellationToken.None);
+
+        Assert.Equal(nameof(WorkflowStep.ProblemCategorySelection), stored!.State);
+        Assert.Null(((AtlasUserSession)stored).RoomId);
+    }
+
+    [Fact]
+    public async Task ShowRooms_HasButtonToChooseAnotherCategory()
+    {
+        const long telegramUserId = 8306;
+
+        await using var atlas = await fixture.CreateAtlasServiceProviderAsync();
+        using var scope = atlas.CreateScope();
+
+        await scope.ServiceProvider.GetRequiredService<ISessionService>()
+            .SaveSession(AtlasUserSession.Create(telegramUserId, nameof(WorkflowStep.RoomSelection)), CancellationToken.None);
+
+        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+        var result = await mediator.Send(new ShowRoomsMessage(telegramUserId, 1, PaginationLimits.FirstPage));
+
+        Assert.True(result.IsSuccess);
+
+        var callbacks = result.Value!.ButtonRows!
+            .SelectMany(row => row.Buttons)
+            .Select(button => button.CallbackData)
+            .ToList();
+
+        Assert.Contains(
+            callbacks,
+            callback => callback.StartsWith(CallbackConstants.CategoryPagePrefix, StringComparison.Ordinal));
     }
 }
 

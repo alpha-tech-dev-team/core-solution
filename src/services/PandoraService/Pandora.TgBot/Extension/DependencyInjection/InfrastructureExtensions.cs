@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Pandora.Domain.Interfaces;
 using Pandora.Domain.Options;
+using Pandora.Infrastructure.Audit;
 using Pandora.Infrastructure.Database;
 using Pandora.Infrastructure.Repositories;
 using Pandora.Infrastructure.Secrets;
@@ -21,11 +22,26 @@ public static class InfrastructureExtensions
 
         services.AddIdentityClient(configuration);
         services.AddLocalization(typeof(ConfigSecretStore).Assembly);
-        services.AddDbContext<PandoraDbContext>(options => options.UseNpgsql(databaseOptions.ConnectionString));
+        services.AddDbContext<PandoraDbContext>((serviceProvider, options) => options
+            .UseNpgsql(databaseOptions.ConnectionString)
+            .AddInterceptors(serviceProvider.GetRequiredService<AuditSaveChangesInterceptor>()));
+        services.AddScoped<IAuditContext, AuditContext>();
+        services.AddScoped<IAuditSaver, AuditSaver>();
+        services.AddScoped<AuditSaveChangesInterceptor>(serviceProvider =>
+            new AuditSaveChangesInterceptor(
+                serviceProvider.GetRequiredService<IAuditContext>(),
+                !string.IsNullOrWhiteSpace(databaseOptions.RedisConnection)));
+        services.AddScoped<IAuditRepository, AuditRepository>();
         services.AddScoped<ISecretMetadataRepository, SecretMetadataRepository>();
         services.AddScoped<ICredentialAccessMessageRepository, CredentialAccessMessageRepository>();
         services.AddScoped<ICredentialAccessSettingsRepository, CredentialAccessSettingsRepository>();
         services.AddSessionInfrastructure(configuration, databaseOptions.RedisConnection);
+
+        if (!string.IsNullOrWhiteSpace(databaseOptions.RedisConnection))
+        {
+            services.AddSingleton<IAuditNotifier, RedisAuditNotifier>();
+            services.AddHostedService<AuditOutboxPublisher>();
+        }
 
         return services;
     }

@@ -1,4 +1,4 @@
-using CoreSolution.Shared.Pagination;
+using CoreSolution.Shared.Models;
 using Pandora.Domain.Entities;
 
 namespace Pandora.Domain.Models;

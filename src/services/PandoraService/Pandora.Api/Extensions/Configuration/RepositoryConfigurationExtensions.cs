@@ -10,6 +10,7 @@ public static class RepositoryConfigurationExtensions
         services.AddScoped<ISecretMetadataRepository, SecretMetadataRepository>();
         services.AddScoped<IPermissionRepository, PermissionRepository>();
         services.AddScoped<ICredentialAccessSettingsRepository, CredentialAccessSettingsRepository>();
+        services.AddScoped<IAuditRepository, AuditRepository>();
 
         return services;
     }

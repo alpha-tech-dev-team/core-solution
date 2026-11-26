@@ -10,7 +10,9 @@ public sealed class PermissionConfiguration : IEntityTypeConfiguration<Permissio
     {
         builder.ToTable(DatabaseConstants.Permissions.Table);
         builder.HasKey(e => new { e.TelegramUserId, e.VaultItemId });
-        builder.Property(e => e.TelegramUserId).HasColumnName(DatabaseConstants.Permissions.TelegramUserId);
+        builder.Property(e => e.TelegramUserId)
+            .HasColumnName(DatabaseConstants.Permissions.TelegramUserId)
+            .HasDefaultValue(0L);
         builder.Property(e => e.VaultItemId).HasColumnName(DatabaseConstants.Permissions.VaultItemId).HasMaxLength(DatabaseConstants.Permissions.VaultItemIdMaxLength);
         builder.Property(e => e.IsActive).HasColumnName(DatabaseConstants.Permissions.IsActive).HasDefaultValue(DatabaseConstants.Permissions.IsActiveDefault);
         builder.Property(e => e.GrantedAt).HasColumnName(DatabaseConstants.Permissions.GrantedAt);

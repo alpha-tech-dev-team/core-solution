@@ -13,7 +13,9 @@ public static class PandoraErrorTextKeys
     {
         [nameof(ErrorCode.AccessDenied)] = (nameof(WorkflowStep.ServiceSelection), LocalizationKeysConstants.ServiceSelection.AccessDenied),
         [ErrorCodes.UserBlocked] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.UserBlocked),
+        [ErrorCodes.SessionTemporarilyUnavailable] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.SessionTemporarilyUnavailable),
         [ErrorCodes.AccessNotConfirmed] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.AccessNotConfirmed),
+        [ErrorCodes.ServiceTemporarilyUnavailable] = (LocalizationConstants.IdleStateName, LocalizationKeysConstants.Idle.ServiceTemporarilyUnavailable),
         [nameof(ErrorCode.SecretNotFound)] = (nameof(WorkflowStep.ServiceSelection), LocalizationKeysConstants.ServiceSelection.SecretNotFound),
         [nameof(ErrorCode.VaultwardenUnavailable)] = (nameof(WorkflowStep.ServiceSelection), LocalizationKeysConstants.ServiceSelection.VaultwardenUnavailable)
     }.ToFrozenDictionary();

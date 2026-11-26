@@ -1,0 +1,301 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using CoreSolution.Shared.Constants;
+using Pandora.Domain.Entities;
+using Pandora.Domain.Models;
+using CoreSolution.Shared.Models;
+using Pandora.Infrastructure.Database;
+using Pandora.Infrastructure.Repositories;
+using Xunit;
+
+namespace CoreSolution.Integration.Tests.PandoraTests;
+
+[Collection(nameof(IntegrationCollection))]
+public sealed class AuditRepositoryTests(IntegrationFixture fixture)
+{
+    private static readonly AuditEntryFilter EmptyFilter = new(null, null, null, null, SortDirection.Descending);
+    [Fact]
+    public async Task GetPage_ReturnsNewestFirstWithTotalCount()
+    {
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+        using var scope = provider.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<PandoraDbContext>();
+        var repository = new AuditRepository(database);
+
+        await database.AuditEntry.ExecuteDeleteAsync();
+
+        var oldest = CreateEntry(new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc), "first");
+        var middle = CreateEntry(new DateTime(2026, 1, 2, 0, 0, 0, DateTimeKind.Utc), "second");
+        var newest = CreateEntry(new DateTime(2026, 1, 3, 0, 0, 0, DateTimeKind.Utc), "third");
+
+        database.AuditEntry.AddRange(oldest, middle, newest);
+        await database.SaveChangesAsync();
+
+        var firstPage = await repository.GetPage(1, 2, EmptyFilter, CancellationToken.None);
+
+        Assert.Equal(3, firstPage.Total);
+        Assert.Equal(1, firstPage.Page);
+        Assert.Equal(2, firstPage.PageSize);
+        Assert.Equal([newest.Id, middle.Id], firstPage.Items.Select(entry => entry.Id));
+
+        var secondPage = await repository.GetPage(2, 2, EmptyFilter, CancellationToken.None);
+
+        Assert.Equal(3, secondPage.Total);
+        Assert.Equal([oldest.Id], secondPage.Items.Select(entry => entry.Id));
+    }
+
+    [Fact]
+    public async Task Add_PersistsWebAdminEntryWithUserIdAndNullTelegramUserId()
+    {
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+        using var scope = provider.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<PandoraDbContext>();
+        var repository = new AuditRepository(database);
+        var adminId = Guid.NewGuid();
+
+        await database.AuditEntry.ExecuteDeleteAsync();
+
+        await repository.Add(
+            new AuditEntry(Guid.NewGuid(), DateTime.UtcNow, adminId, "secret_created", null, "web"),
+            CancellationToken.None);
+
+        var stored = await database.AuditEntry.AsNoTracking().SingleAsync();
+
+        Assert.Equal(adminId, stored.UserId);
+        Assert.Null(stored.TelegramUserId);
+    }
+
+    [Fact]
+    public async Task Add_PersistsTelegramEntryWithTelegramUserIdAndNullUserId()
+    {
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+        using var scope = provider.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<PandoraDbContext>();
+        var repository = new AuditRepository(database);
+
+        await database.AuditEntry.ExecuteDeleteAsync();
+
+        await repository.Add(
+            new AuditEntry(Guid.NewGuid(), DateTime.UtcNow, 8201, "show_services", null, "telegram"),
+            CancellationToken.None);
+
+        var stored = await database.AuditEntry.AsNoTracking().SingleAsync();
+
+        Assert.Equal(8201, stored.TelegramUserId);
+        Assert.Null(stored.UserId);
+    }
+
+    [Fact]
+    public async Task GetPage_PageBeyondLast_ReturnsEmptyItemsWithTotal()
+    {
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+        using var scope = provider.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<PandoraDbContext>();
+        var repository = new AuditRepository(database);
+
+        await database.AuditEntry.ExecuteDeleteAsync();
+        await database.SaveChangesAsync();
+
+        database.AuditEntry.Add(CreateEntry(DateTime.UtcNow, "show_services"));
+        await database.SaveChangesAsync();
+
+        var page = await repository.GetPage(int.MaxValue, PaginationLimits.MaxPageSize, EmptyFilter, CancellationToken.None);
+
+        Assert.Equal(1, page.Total);
+        Assert.Empty(page.Items);
+    }
+
+    [Fact]
+    public async Task GetPage_SameTimestampOrdering_DoesNotRepeatOrSkipRows()
+    {
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+        using var scope = provider.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<PandoraDbContext>();
+        var repository = new AuditRepository(database);
+
+        await database.AuditEntry.ExecuteDeleteAsync();
+        await database.SaveChangesAsync();
+
+        var timestamp = new DateTime(2026, 2, 1, 0, 0, 0, DateTimeKind.Utc);
+        database.AuditEntry.AddRange(
+            CreateEntry(timestamp, "first"),
+            CreateEntry(timestamp, "second"),
+            CreateEntry(timestamp, "third"));
+        await database.SaveChangesAsync();
+
+        var firstPage = await repository.GetPage(1, 2, EmptyFilter, CancellationToken.None);
+        var secondPage = await repository.GetPage(2, 2, EmptyFilter, CancellationToken.None);
+
+        var seen = firstPage.Items.Concat(secondPage.Items).Select(entry => entry.Id).ToList();
+
+        Assert.Equal(3, seen.Count);
+        Assert.Equal(3, seen.Distinct().Count());
+    }
+
+    [Fact]
+    public async Task GetPage_NonPositivePage_ReturnsFirstPageInsteadOfFailing()
+    {
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+        using var scope = provider.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<PandoraDbContext>();
+        var repository = new AuditRepository(database);
+
+        await database.AuditEntry.ExecuteDeleteAsync();
+        await database.SaveChangesAsync();
+
+        database.AuditEntry.Add(CreateEntry(DateTime.UtcNow, "show_services"));
+        await database.SaveChangesAsync();
+
+        var page = await repository.GetPage(-5, 10, EmptyFilter, CancellationToken.None);
+
+        Assert.Equal(PaginationLimits.FirstPage, page.Page);
+        Assert.Single(page.Items);
+    }
+
+    [Fact]
+    public async Task GetPage_NonPositivePageSize_FallsBackToMinimumPageSize()
+    {
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+        using var scope = provider.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<PandoraDbContext>();
+        var repository = new AuditRepository(database);
+
+        await database.AuditEntry.ExecuteDeleteAsync();
+        await database.SaveChangesAsync();
+
+        database.AuditEntry.Add(CreateEntry(DateTime.UtcNow, "show_services"));
+        await database.SaveChangesAsync();
+
+        var page = await repository.GetPage(1, 0, EmptyFilter, CancellationToken.None);
+
+        Assert.Equal(PaginationLimits.MinPageSize, page.PageSize);
+        Assert.Single(page.Items);
+    }
+
+    [Fact]
+    public async Task GetPage_Search_MatchesActionTargetAndSource()
+    {
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+        using var scope = provider.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<PandoraDbContext>();
+        var repository = new AuditRepository(database);
+
+        await database.AuditEntry.ExecuteDeleteAsync();
+        await database.SaveChangesAsync();
+
+        database.AuditEntry.AddRange(
+            new AuditEntry(Guid.NewGuid(), DateTime.UtcNow, telegramUserId: 1, "get_credentials", "vault-item", "telegram"),
+            new AuditEntry(Guid.NewGuid(), DateTime.UtcNow, Guid.NewGuid(), "secret_created", null, "web"),
+            new AuditEntry(Guid.NewGuid(), DateTime.UtcNow, telegramUserId: 2, "show_services", null, "telegram"));
+        await database.SaveChangesAsync();
+
+        var byTarget = await repository.GetPage(1, 10, EmptyFilter with { Search = "vault" }, CancellationToken.None);
+        var byAction = await repository.GetPage(1, 10, EmptyFilter with { Search = "SECRET" }, CancellationToken.None);
+        var bySource = await repository.GetPage(1, 10, EmptyFilter with { Search = "WEB" }, CancellationToken.None);
+
+        Assert.Equal("get_credentials", Assert.Single(byTarget.Items).Action);
+        Assert.Equal("secret_created", Assert.Single(byAction.Items).Action);
+        Assert.Equal("secret_created", Assert.Single(bySource.Items).Action);
+    }
+
+    [Fact]
+    public async Task GetPage_SearchByActorIds_ReturnsEntriesOfMatchedActors()
+    {
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+        using var scope = provider.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<PandoraDbContext>();
+        var repository = new AuditRepository(database);
+
+        await database.AuditEntry.ExecuteDeleteAsync();
+
+        var webUserId = Guid.NewGuid();
+        const long telegramUserId = 42;
+        var webEntry = new AuditEntry(Guid.NewGuid(), DateTime.UtcNow, webUserId, "secret_created", null, "web");
+        var telegramEntry = new AuditEntry(Guid.NewGuid(), DateTime.UtcNow, telegramUserId, "show_services", null, "telegram");
+
+        database.AuditEntry.AddRange(
+            webEntry,
+            telegramEntry,
+            new AuditEntry(Guid.NewGuid(), DateTime.UtcNow, telegramUserId: 43, "get_credentials", null, "telegram"));
+        await database.SaveChangesAsync();
+
+        var byUserId = await repository.GetPage(
+            1, 10, EmptyFilter with { Search = "иван", UserIds = [webUserId] }, CancellationToken.None);
+        var byTelegramUserId = await repository.GetPage(
+            1, 10, EmptyFilter with { Search = "иван", TelegramUserIds = [telegramUserId] }, CancellationToken.None);
+
+        Assert.Equal(webEntry.Id, Assert.Single(byUserId.Items).Id);
+        Assert.Equal(telegramEntry.Id, Assert.Single(byTelegramUserId.Items).Id);
+    }
+
+    [Fact]
+    public async Task GetPage_FiltersByActionAndSourceWithTotalOfFilteredRows()
+    {
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+        using var scope = provider.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<PandoraDbContext>();
+        var repository = new AuditRepository(database);
+
+        await database.AuditEntry.ExecuteDeleteAsync();
+        await database.SaveChangesAsync();
+
+        database.AuditEntry.AddRange(
+            CreateEntry(DateTime.UtcNow, "show_services"),
+            CreateEntry(DateTime.UtcNow, "get_credentials"),
+            CreateEntry(DateTime.UtcNow, "get_credentials"));
+        await database.SaveChangesAsync();
+
+        var page = await repository.GetPage(
+            1, 10, EmptyFilter with { Action = "get_credentials", RequestSource = "telegram" }, CancellationToken.None);
+
+        Assert.Equal(2, page.Total);
+        Assert.All(page.Items, entry => Assert.Equal("get_credentials", entry.Action));
+    }
+
+    [Fact]
+    public async Task GetPage_SortsByActionAscending()
+    {
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+        using var scope = provider.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<PandoraDbContext>();
+        var repository = new AuditRepository(database);
+
+        await database.AuditEntry.ExecuteDeleteAsync();
+        await database.SaveChangesAsync();
+
+        database.AuditEntry.AddRange(
+            CreateEntry(DateTime.UtcNow, "show_services"),
+            CreateEntry(DateTime.UtcNow, "get_credentials"));
+        await database.SaveChangesAsync();
+
+        var page = await repository.GetPage(
+            1, 10, EmptyFilter with { SortBy = AuditEntrySortFields.Action, SortDirection = SortDirection.Ascending }, CancellationToken.None);
+
+        Assert.Equal(["get_credentials", "show_services"], page.Items.Select(entry => entry.Action));
+    }
+
+    [Fact]
+    public async Task GetPage_SortFieldIsCaseInsensitive()
+    {
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+        using var scope = provider.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<PandoraDbContext>();
+        var repository = new AuditRepository(database);
+
+        await database.AuditEntry.ExecuteDeleteAsync();
+        await database.SaveChangesAsync();
+
+        database.AuditEntry.AddRange(
+            CreateEntry(DateTime.UtcNow, "show_services"),
+            CreateEntry(DateTime.UtcNow, "get_credentials"));
+        await database.SaveChangesAsync();
+
+        var page = await repository.GetPage(
+            1, 10, EmptyFilter with { SortBy = "action", SortDirection = SortDirection.Ascending }, CancellationToken.None);
+
+        Assert.Equal(["get_credentials", "show_services"], page.Items.Select(entry => entry.Action));
+    }
+
+    private static AuditEntry CreateEntry(DateTime timestamp, string action) =>
+        new(Guid.NewGuid(), timestamp, telegramUserId: 0, action, targetItemId: null, requestSource: "telegram");
+}

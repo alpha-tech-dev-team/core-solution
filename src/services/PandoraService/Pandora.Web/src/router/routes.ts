@@ -4,6 +4,7 @@ import HomeView from '@/views/home/HomeView.vue'
 import EmployeesView from '@/views/employees/EmployeesView.vue'
 import SecretsView from '@/views/secrets/SecretsView.vue'
 import CredentialAccessSettingsView from '@/views/settings/CredentialAccessSettingsView.vue'
+import AuditView from '@/views/audit/AuditView.vue'
 
 export const routes = [
   defineAuthRoute({
@@ -25,5 +26,10 @@ export const routes = [
     path: ROUTES.SETTINGS,
     name: ROUTE_NAMES.SETTINGS,
     component: CredentialAccessSettingsView,
+  }),
+  defineAuthRoute({
+    path: ROUTES.AUDIT,
+    name: ROUTE_NAMES.AUDIT,
+    component: AuditView,
   }),
 ]

@@ -26,23 +26,21 @@ public static class MigrationExtensions
             return;
         }
 
-        services.GetRequiredService<ILogger<MigrationLog>>()
-            .LogInformation("Применяется сид категорий инцидентов.");
+        var logger = services.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(MigrationExtensions));
 
+        logger.LogInformation("Применяется сид категорий инцидентов.");
         await IncidentCategorySeed.SeedAsync(dbContext);
 
-        services.GetRequiredService<ILogger<MigrationLog>>()
-            .LogInformation("Применяется сид типов оборудования.");
-
+        logger.LogInformation("Применяется сид типов оборудования.");
         await EquipmentTypeSeed.SeedAsync(dbContext);
 
-        services.GetRequiredService<ILogger<MigrationLog>>()
-            .LogInformation("Применяется сид кабинетов.");
-
+        logger.LogInformation("Применяется сид кабинетов.");
         await RoomSeed.SeedAsync(dbContext);
-    }
 
-    private sealed class MigrationLog
-    {
+        logger.LogInformation("Применяется сид оборудования.");
+        await HardwareSeed.SeedAsync(dbContext);
+
+        logger.LogInformation("Применяется сид программного обеспечения.");
+        await SoftwareSeed.SeedAsync(dbContext);
     }
 }

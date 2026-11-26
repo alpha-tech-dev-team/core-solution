@@ -14,11 +14,19 @@ namespace Atlas.Application.Features.Menu;
 public sealed class ShowMenuHandler : IRequestHandler<ShowMenuMessage, Result<WorkflowResponse>>
 {
     private readonly IIncidentCategoryRepository _categoryRepository;
+    private readonly IRequestContext _requestContext;
+    private readonly ISessionService _sessionService;
     private readonly ILocalizer _localizer;
 
-    public ShowMenuHandler(IIncidentCategoryRepository categoryRepository, ILocalizer localizer)
+    public ShowMenuHandler(
+        IIncidentCategoryRepository categoryRepository,
+        IRequestContext requestContext,
+        ISessionService sessionService,
+        ILocalizer localizer)
     {
         _categoryRepository = categoryRepository;
+        _requestContext = requestContext;
+        _sessionService = sessionService;
         _localizer = localizer;
     }
 
@@ -32,6 +40,29 @@ public sealed class ShowMenuHandler : IRequestHandler<ShowMenuMessage, Result<Wo
         if (page.Items.Count == 0)
         {
             return Result<WorkflowResponse>.Failure(nameof(ErrorCode.IncidentCategoriesNotFound));
+        }
+
+        if (_requestContext.Session is AtlasUserSession session)
+        {
+            session.RoomId = null;
+            session.HardwareId = null;
+            session.SoftwareId = null;
+
+            await _sessionService.UpdateState(
+                session,
+                nameof(WorkflowStep.ProblemCategorySelection),
+                cancellationToken);
+        }
+        else if (await _sessionService.GetSession(request.TelegramUserId, cancellationToken) is AtlasUserSession stored)
+        {
+            stored.RoomId = null;
+            stored.HardwareId = null;
+            stored.SoftwareId = null;
+
+            await _sessionService.UpdateState(
+                stored,
+                nameof(WorkflowStep.ProblemCategorySelection),
+                cancellationToken);
         }
 
         var buttonRows = page.Items

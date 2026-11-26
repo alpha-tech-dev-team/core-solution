@@ -1,4 +1,4 @@
-using CoreSolution.Shared.Pagination;
+using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
 using MediatR;
 using Pandora.Domain.Models;

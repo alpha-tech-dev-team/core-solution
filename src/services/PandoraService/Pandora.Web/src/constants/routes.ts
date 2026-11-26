@@ -5,6 +5,7 @@ export const ROUTES = {
   EMPLOYEES: '/employees',
   SECRETS: '/secrets',
   SETTINGS: '/settings',
+  AUDIT: '/audit',
 } as const
 
 export const ROUTE_NAMES = {
@@ -12,4 +13,5 @@ export const ROUTE_NAMES = {
   EMPLOYEES: 'employees',
   SECRETS: 'secrets',
   SETTINGS: 'settings',
+  AUDIT: 'audit',
 } as const
