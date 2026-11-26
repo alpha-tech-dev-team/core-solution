@@ -1,23 +1,21 @@
+using Atlas.Api.Constants;
+using Atlas.Api.Extensions.Configuration;
+using Atlas.Api.Extensions.Middleware;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+if (args.Contains(HostArguments.MigrateOnly))
+{
+    await builder.ApplyMigrations();
 
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+    return;
+}
+
+builder.Services.AddServiceConfiguration(builder.Configuration);
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
-
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
-app.MapControllers();
+app.UseMiddlewareConfiguration();
+app.MapRouteConfiguration();
 
 app.Run();
