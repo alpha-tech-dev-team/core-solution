@@ -8,6 +8,5 @@ namespace Atlas.Application.Features.Menu;
 public record ShowMenuMessage(
     long TelegramUserId,
     int MessageId,
-    int? Page = PaginationLimits.DefaultPage,
-    int? PageSize = PaginationLimits.DefaultPageSize)
-    : PagedMessage(Page, PageSize), IRequest<Result<WorkflowResponse>>;
+    int? Page = PaginationLimits.DefaultPage)
+    : PagedMessage(Page, PaginationLimits.DefaultPageSize), IRequest<Result<WorkflowResponse>>;

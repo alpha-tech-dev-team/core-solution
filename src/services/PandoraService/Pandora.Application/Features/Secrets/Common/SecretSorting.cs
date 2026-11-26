@@ -32,7 +32,7 @@ public static class SecretSorting
 
     public static IOrderedQueryable<SecretMetadata> ByResourceName(IQueryable<SecretMetadata> query)
     {
-        return query.OrderBy(metadata => metadata.ResourceName).ThenBy(metadata => metadata.VaultItemId);
+        return For(null, null)(query);
     }
 
     private static string Resolve(string? sortBy)

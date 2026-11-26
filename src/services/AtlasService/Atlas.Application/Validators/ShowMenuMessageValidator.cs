@@ -18,6 +18,6 @@ public sealed class ShowMenuMessageValidator : AbstractValidator<ShowMenuMessage
             .GreaterThan(ValidationConstants.MessageIdMinExclusive)
             .WithErrorCode(nameof(ErrorCode.InvalidMessageId));
 
-        this.ApplyPaginationRules();
+        this.ApplyPaginationRules(nameof(ErrorCode.InvalidPageNumber));
     }
 }
