@@ -18,9 +18,11 @@ public sealed class SecretMetadataRepository : ISecretMetadataRepository
 
     public async Task<SecretListPage> GetPage(SecretPageMessage message, CancellationToken cancellationToken)
     {
-        var source = _context.SecretMetadata
-            .AsNoTracking()
-            .Where(metadata => metadata.SyncOperation != SecretSyncOperation.Delete);
+        var source = ApplySearch(
+            _context.SecretMetadata
+                .AsNoTracking()
+                .Where(metadata => metadata.SyncOperation != SecretSyncOperation.Delete),
+            message.Search);
 
         var total = await source.CountAsync(cancellationToken);
 
@@ -93,6 +95,20 @@ public sealed class SecretMetadataRepository : ISecretMetadataRepository
                 cancellationToken);
 
         return updated > 0;
+    }
+
+    private static IQueryable<SecretMetadata> ApplySearch(IQueryable<SecretMetadata> source, string? search)
+    {
+        if (string.IsNullOrWhiteSpace(search))
+        {
+            return source;
+        }
+
+        var pattern = PostgresLikePattern.Contains(search.Trim());
+
+        return source.Where(metadata =>
+            EF.Functions.ILike(metadata.ResourceName, pattern, PostgresLikePattern.EscapeCharacter) ||
+            EF.Functions.ILike(metadata.Username, pattern, PostgresLikePattern.EscapeCharacter));
     }
 
     private static string TruncateError(string error)

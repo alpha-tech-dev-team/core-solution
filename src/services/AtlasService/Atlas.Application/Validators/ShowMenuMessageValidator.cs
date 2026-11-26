@@ -1,6 +1,7 @@
 using Atlas.Application.Features.Menu;
 using Atlas.Domain.Constants;
 using Atlas.Domain.Enums;
+using CoreSolution.Shared.Application.Validation;
 using FluentValidation;
 
 namespace Atlas.Application.Validators;
@@ -17,8 +18,6 @@ public sealed class ShowMenuMessageValidator : AbstractValidator<ShowMenuMessage
             .GreaterThan(ValidationConstants.MessageIdMinExclusive)
             .WithErrorCode(nameof(ErrorCode.InvalidMessageId));
 
-        RuleFor(message => message.Page)
-            .GreaterThanOrEqualTo(ValidationConstants.PageMinInclusive)
-            .WithErrorCode(nameof(ErrorCode.InvalidPageNumber));
+        this.ApplyPaginationRules();
     }
 }

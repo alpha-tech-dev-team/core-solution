@@ -1,5 +1,4 @@
 using Atlas.Application.Common;
-using Atlas.Domain.Constants;
 using Atlas.Domain.Constants.Localization;
 using Atlas.Domain.Enums;
 using Atlas.Domain.Interfaces.Repositories;
@@ -33,7 +32,7 @@ public sealed class ShowMenuHandler : IRequestHandler<ShowMenuMessage, Result<Wo
     public async Task<Result<WorkflowResponse>> Handle(ShowMenuMessage request, CancellationToken cancellationToken)
     {
         var page = await _categoryRepository.GetPageAsync(
-            new PageRequest(request.Page, PaginationLimits.DefaultPageSize),
+            new PageRequest(request.EffectivePage, request.EffectivePageSize),
             IncidentCategorySorting.Apply,
             cancellationToken);
 

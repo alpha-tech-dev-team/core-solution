@@ -1,8 +1,10 @@
+using CoreSolution.Shared.Models;
 using FluentValidation;
 using Pandora.Application.Features.Permissions;
 using Pandora.Application.Features.Secrets.GetSecrets;
 using Pandora.Application.Validators;
 using Pandora.Domain.Constants;
+using Pandora.Domain.Entities;
 using Xunit;
 
 namespace CoreSolution.Integration.Tests.PandoraTests;
@@ -104,6 +106,49 @@ public sealed class PandoraValidatorTests
         var message = new GetSecretsMessage { Page = 1, PageSize = 20 };
 
         Assert.True(validator.Validate(message).IsValid);
+    }
+
+    [Fact]
+    public void GetSecretsValidator_AcceptsKnownSortFieldAndDirection()
+    {
+        var validator = new GetSecretsMessageValidator();
+        var message = new GetSecretsMessage
+        {
+            Page = 1,
+            PageSize = 20,
+            SortBy = nameof(SecretMetadata.ResourceName),
+            SortDirection = SortDirection.Descending
+        };
+
+        Assert.True(validator.Validate(message).IsValid);
+    }
+
+    [Fact]
+    public void GetSecretsValidator_RejectsUnknownSortField()
+    {
+        var validator = new GetSecretsMessageValidator();
+        var message = new GetSecretsMessage
+        {
+            Page = 1,
+            PageSize = 20,
+            SortBy = nameof(SecretMetadata.VaultItemId)
+        };
+
+        Assert.False(validator.Validate(message).IsValid);
+    }
+
+    [Fact]
+    public void GetSecretsValidator_RejectsUndefinedSortDirection()
+    {
+        var validator = new GetSecretsMessageValidator();
+        var message = new GetSecretsMessage
+        {
+            Page = 1,
+            PageSize = 20,
+            SortDirection = (SortDirection)int.MaxValue
+        };
+
+        Assert.False(validator.Validate(message).IsValid);
     }
 
     [Fact]

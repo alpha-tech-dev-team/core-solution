@@ -1,10 +1,10 @@
 using System.Net;
 using System.Net.Http.Json;
+using CoreSolution.Shared.Enums;
 using Identity.Api.Models;
 using Identity.Application.Constants;
 using Identity.Application.Contracts.Admin;
 using Identity.Application.Contracts.Client;
-using CoreSolution.Shared.Enums;
 using Identity.Application.Errors;
 using Identity.Domain.Enums;
 using Xunit;
@@ -713,6 +713,39 @@ public sealed class AdminEndpointsTests
         using var loginClient = _fixture.CreateIdentityHttpClientWithCookies();
         var retry = await loginClient.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
         Assert.Equal(HttpStatusCode.OK, retry.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetUsers_WithSearch_ReturnsOnlyMatchingUsers()
+    {
+        var username = $"admin_{Guid.NewGuid():N}";
+        await _fixture.SeedAdminAsync(username, "admin-password-123");
+        using var client = _fixture.CreateIdentityHttpClientWithCookies();
+        var login = await client.PostAsJsonAsync(LoginRoute, new AdminLoginRequest(username, "admin-password-123"));
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+
+        var response = await client.GetAsync($"{UsersRoute}?search={username}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = (await response.Content.ReadFromJsonAsync<EmployeesPageDto>())!;
+        Assert.NotEmpty(body.Items);
+        Assert.Contains(body.Items, user => user.AdminUsername == username);
+        Assert.All(
+            body.Items,
+            user => Assert.Contains(username, $"{user.Surname} {user.Name}", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task GetUsers_WithUnknownSortField_ReturnsBadRequest()
+    {
+        using var client = await CreateLoggedInAdminClient();
+
+        var response = await client.GetAsync(
+            $"{UsersRoute}?sortBy={nameof(Identity.Domain.Entities.User.Position)}");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(nameof(IdentityErrorCode.ValidationFailed), error!.Code);
     }
 
     private async Task<HttpClient> CreateLoggedInAdminClient()

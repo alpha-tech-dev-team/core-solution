@@ -1,4 +1,3 @@
-using System.Globalization;
 using CoreSolution.Shared.Constants;
 using CoreSolution.Shared.Models;
 using Microsoft.EntityFrameworkCore;
@@ -11,14 +10,6 @@ namespace Pandora.Infrastructure.Repositories;
 
 public sealed class AuditRepository : IAuditRepository
 {
-    private const string SearchPatternTemplate = "%{0}%";
-    private const string BackslashCharacter = "\\";
-    private const string EscapedBackslashCharacter = "\\\\";
-    private const string PercentCharacter = "%";
-    private const string EscapedPercentCharacter = "\\%";
-    private const string UnderscoreCharacter = "_";
-    private const string EscapedUnderscoreCharacter = "\\_";
-
     private readonly PandoraDbContext _context;
 
     public AuditRepository(PandoraDbContext context)
@@ -77,30 +68,19 @@ public sealed class AuditRepository : IAuditRepository
 
     private static IQueryable<AuditEntry> ApplySearch(IQueryable<AuditEntry> query, AuditEntryFilter filter)
     {
-        var search = string.Format(
-            CultureInfo.InvariantCulture,
-            SearchPatternTemplate,
-            EscapeLikePattern(filter.Search!.Trim()));
+        var search = PostgresLikePattern.Contains(filter.Search!.Trim());
 
         var userIds = filter.UserIds?.ToArray() ?? [];
         var telegramUserIds = filter.TelegramUserIds?.ToArray() ?? [];
 
         return query.Where(entry =>
-            EF.Functions.ILike(entry.Action, search, BackslashCharacter) ||
-            (entry.TargetItemId != null && EF.Functions.ILike(entry.TargetItemId, search, BackslashCharacter)) ||
-            EF.Functions.ILike(entry.RequestSource, search, BackslashCharacter) ||
-            (entry.UserId != null && EF.Functions.ILike(entry.UserId.Value.ToString(), search, BackslashCharacter)) ||
-            (entry.TelegramUserId != null && EF.Functions.ILike(entry.TelegramUserId.Value.ToString(), search, BackslashCharacter)) ||
+            EF.Functions.ILike(entry.Action, search, PostgresLikePattern.EscapeCharacter) ||
+            (entry.TargetItemId != null && EF.Functions.ILike(entry.TargetItemId, search, PostgresLikePattern.EscapeCharacter)) ||
+            EF.Functions.ILike(entry.RequestSource, search, PostgresLikePattern.EscapeCharacter) ||
+            (entry.UserId != null && EF.Functions.ILike(entry.UserId.Value.ToString(), search, PostgresLikePattern.EscapeCharacter)) ||
+            (entry.TelegramUserId != null && EF.Functions.ILike(entry.TelegramUserId.Value.ToString(), search, PostgresLikePattern.EscapeCharacter)) ||
             (userIds.Length > 0 && entry.UserId != null && userIds.Contains(entry.UserId.Value)) ||
             (telegramUserIds.Length > 0 && entry.TelegramUserId != null && telegramUserIds.Contains(entry.TelegramUserId.Value)));
-    }
-
-    private static string EscapeLikePattern(string value)
-    {
-        return value
-            .Replace(BackslashCharacter, EscapedBackslashCharacter, StringComparison.Ordinal)
-            .Replace(PercentCharacter, EscapedPercentCharacter, StringComparison.Ordinal)
-            .Replace(UnderscoreCharacter, EscapedUnderscoreCharacter, StringComparison.Ordinal);
     }
 
     private static IQueryable<AuditEntry> ApplySorting(IQueryable<AuditEntry> query, AuditEntryFilter filter)

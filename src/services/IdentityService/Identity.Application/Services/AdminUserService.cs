@@ -1,5 +1,7 @@
+using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
 using Identity.Application.Errors;
+using Identity.Application.Features.Admin;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
 using Identity.Domain.Interfaces.Repositories;
@@ -26,9 +28,12 @@ public class AdminUserService : IAdminUserService
         _logger = logger;
     }
 
-    public async Task<Result<EmployeesPage>> GetUsers(int page, int pageSize, bool includeArchived, CancellationToken cancellationToken = default)
+    public async Task<Result<EmployeesPage>> GetUsers(PagedMessage paging, EmployeeFilter filter, CancellationToken cancellationToken = default)
     {
-        var employees = await _users.GetEmployees(page, pageSize, includeArchived, cancellationToken);
+        var employees = await _users.GetEmployees(
+            paging,
+            source => EmployeeQuery.Apply(source, filter),
+            cancellationToken);
 
         return Result<EmployeesPage>.Success(employees);
     }

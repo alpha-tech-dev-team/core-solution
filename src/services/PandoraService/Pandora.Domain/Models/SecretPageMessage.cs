@@ -5,4 +5,5 @@ namespace Pandora.Domain.Models;
 
 public sealed record SecretPageMessage(
     PagedMessage Paging,
-    Func<IQueryable<SecretMetadata>, IOrderedQueryable<SecretMetadata>> OrderBy);
+    Func<IQueryable<SecretMetadata>, IOrderedQueryable<SecretMetadata>> OrderBy,
+    string? Search = null);
