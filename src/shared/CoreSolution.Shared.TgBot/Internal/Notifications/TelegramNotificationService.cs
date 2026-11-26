@@ -22,9 +22,10 @@ internal sealed class TelegramNotificationService : ITelegramNotificationService
         long chatId,
         string text,
         ReplyMarkup? replyMarkup = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        TelegramSendOptions? sendOptions = null)
     {
-        return SendAsync(chatId, text, true, replyMarkup, cancellationToken);
+        return SendAsync(chatId, text, true, replyMarkup, cancellationToken, sendOptions);
     }
 
     public Task<Message> SendAlertAsync(
@@ -33,7 +34,7 @@ internal sealed class TelegramNotificationService : ITelegramNotificationService
         ReplyMarkup? replyMarkup = null,
         CancellationToken cancellationToken = default)
     {
-        return SendAsync(chatId, text, false, replyMarkup, cancellationToken);
+        return SendAsync(chatId, text, false, replyMarkup, cancellationToken, null);
     }
 
     public async Task<Message> EditMessageAsync(
@@ -82,9 +83,10 @@ internal sealed class TelegramNotificationService : ITelegramNotificationService
         string text,
         bool silent,
         ReplyMarkup? replyMarkup,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        TelegramSendOptions? sendOptions)
     {
-        var chunks = TelegramTextSplitter.Split(text);
+        var chunks = TelegramTextSplitter.Split(text, sendOptions?.Entities);
         Message? first = null;
 
         for (var index = 0; index < chunks.Count; index++)
@@ -92,9 +94,11 @@ internal sealed class TelegramNotificationService : ITelegramNotificationService
             var isLast = index == chunks.Count - 1;
             var message = await _client.SendMessage(
                 chatId: chatId,
-                text: chunks[index],
+                text: chunks[index].Text,
+                entities: chunks[index].Entities,
                 replyMarkup: isLast ? replyMarkup : null,
                 disableNotification: silent,
+                protectContent: sendOptions?.ProtectContent ?? false,
                 cancellationToken: cancellationToken);
 
             if (first is null)

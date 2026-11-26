@@ -21,6 +21,10 @@ export const EMPLOYEE_SECRET_ENDPOINTS = {
     `/employees/${telegramUserId}/secrets/${itemId}`,
 } as const
 
+export const CREDENTIAL_ACCESS_SETTINGS_ENDPOINTS = {
+  SETTINGS: '/settings/credential-access',
+} as const
+
 export const PAGINATION_QUERY = {
   PAGE: 'page',
   PAGE_SIZE: 'pageSize',

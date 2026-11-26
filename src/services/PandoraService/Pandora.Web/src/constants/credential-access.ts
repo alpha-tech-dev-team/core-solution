@@ -1,0 +1,3 @@
+export const CREDENTIAL_ACCESS_TTL_OPTIONS = [2, 3, 5] as const
+
+export const CREDENTIAL_ACCESS_DEFAULT_TTL_MINUTES = 3

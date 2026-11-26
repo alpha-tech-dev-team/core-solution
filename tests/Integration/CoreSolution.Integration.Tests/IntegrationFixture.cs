@@ -339,21 +339,41 @@ public sealed class IntegrationFixture : IAsyncLifetime
         return provider;
     }
 
-    public async Task<ServiceProvider> CreatePandoraServiceProviderAsync(Action<IServiceCollection>? configureServices = null)
+    public Task<ServiceProvider> CreatePandoraServiceProviderAsync(Action<IServiceCollection>? configureServices = null)
     {
+        return CreatePandoraServiceProviderCoreAsync(null, configureServices);
+    }
+
+    public Task<ServiceProvider> CreatePandoraServiceProviderAsync(IReadOnlyDictionary<string, string?> overrides)
+    {
+        return CreatePandoraServiceProviderCoreAsync(overrides, null);
+    }
+
+    private async Task<ServiceProvider> CreatePandoraServiceProviderCoreAsync(
+        IReadOnlyDictionary<string, string?>? overrides,
+        Action<IServiceCollection>? configureServices)
+    {
+        var settings = new Dictionary<string, string?>
+        {
+            ["Database:ConnectionString"] = _postgres.GetConnectionString()
+                .Replace("Database=postgres", "Database=pandora_integration"),
+            ["Database:RedisConnection"] = _pandoraRedis.GetConnectionString(),
+            ["SessionSettings:ExpiryMinutes"] = "30",
+            ["Identity:BaseUrl"] = "http://localhost",
+            ["Identity:ServiceApiKey"] = AtlasServiceApiKey,
+            ["Pandora:Secrets:UseMock"] = "true",
+            ["Pandora:Secrets:Items:0:Name"] = "TestService",
+            ["Pandora:Secrets:Items:0:Login"] = "test-login",
+            ["Pandora:Secrets:Items:0:Password"] = "test-password"
+        };
+
+        foreach (var setting in overrides ?? new Dictionary<string, string?>())
+        {
+            settings[setting.Key] = setting.Value;
+        }
+
         var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["Database:ConnectionString"] = _postgres.GetConnectionString().Replace("Database=postgres", "Database=pandora_integration"),
-                ["Database:RedisConnection"] = _pandoraRedis.GetConnectionString(),
-                ["SessionSettings:ExpiryMinutes"] = "30",
-                ["Identity:BaseUrl"] = "http://localhost",
-                ["Identity:ServiceApiKey"] = AtlasServiceApiKey,
-                ["Pandora:Secrets:UseMock"] = "true",
-                ["Pandora:Secrets:Items:0:Name"] = "TestService",
-                ["Pandora:Secrets:Items:0:Login"] = "test-login",
-                ["Pandora:Secrets:Items:0:Password"] = "test-password"
-            })
+            .AddInMemoryCollection(settings)
             .Build();
 
         var services = new ServiceCollection();

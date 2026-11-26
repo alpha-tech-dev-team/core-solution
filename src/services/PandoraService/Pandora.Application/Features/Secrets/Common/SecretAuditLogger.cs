@@ -16,7 +16,7 @@ public sealed class SecretAuditLogger
     public Task LogActionAsync(
         Guid adminUserId,
         string action,
-        string targetItemId,
+        string? targetItemId,
         CancellationToken cancellationToken)
     {
         return LogActionAsync(adminUserId, action, targetItemId, null, cancellationToken);
@@ -25,7 +25,7 @@ public sealed class SecretAuditLogger
     public Task LogActionAsync(
         Guid adminUserId,
         string action,
-        string targetItemId,
+        string? targetItemId,
         long? targetTelegramUserId,
         CancellationToken cancellationToken)
     {

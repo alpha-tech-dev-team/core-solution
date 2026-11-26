@@ -9,6 +9,7 @@ public static class AuditConstants
     public const string ActionSecretAccessRevoked = "secret_access_revoked";
     public const string ActionSecretListViewed = "secret_list_viewed";
     public const string ActionSecretPasswordsViewed = "secret_passwords_viewed";
+    public const string ActionCredentialAccessSettingsUpdated = "credential_access_settings_updated";
     public const string SourceWeb = "web";
 
     public const string AuditChannel = "audit:new";

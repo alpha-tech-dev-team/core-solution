@@ -67,6 +67,53 @@ public sealed class PandoraFlowTests(IntegrationFixture fixture)
     }
 
     [Fact]
+    public async Task GetCredentials_ReturnsTextMaskCoveringPassword()
+    {
+        const long telegramUserId = 8004;
+        const string phone = "+79995550104";
+
+        await fixture.SeedPendingUserAsync(phone, "Pandora");
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync();
+        await fixture.SeedPandoraPermissionAsync(telegramUserId, "TestService");
+        _ = await SendSubmitPhoneAsync(provider, telegramUserId, "+7 (999) 555-01-04");
+
+        var result = await SendGetCredentialsAsync(provider, telegramUserId, "TestService");
+
+        Assert.True(result.IsSuccess);
+
+        var text = result.Value!.Text;
+        var mask = Assert.Single(result.Value.TextMasks!);
+        var passwordPosition = text.IndexOf("test-password", StringComparison.Ordinal);
+
+        Assert.True(passwordPosition >= 0);
+        Assert.Equal(passwordPosition, mask.Offset);
+        Assert.Equal("test-password", text.Substring(mask.Offset, mask.Length));
+    }
+
+    [Theory]
+    [InlineData("", 8005L, "+79995550105")]
+    [InlineData(null, 8006L, "+79995550106")]
+    public async Task GetCredentials_WithoutPassword_ReturnsNoTextMask(
+        string? password,
+        long telegramUserId,
+        string phone)
+    {
+        await fixture.SeedPendingUserAsync(phone, "Pandora");
+        await using var provider = await fixture.CreatePandoraServiceProviderAsync(
+            new Dictionary<string, string?>
+            {
+                ["Pandora:Secrets:Items:0:Password"] = password
+            });
+        await fixture.SeedPandoraPermissionAsync(telegramUserId, "TestService");
+        _ = await SendSubmitPhoneAsync(provider, telegramUserId, "+7 (999) 555-01-05");
+
+        var result = await SendGetCredentialsAsync(provider, telegramUserId, "TestService");
+
+        Assert.True(result.IsSuccess);
+        Assert.Null(result.Value!.TextMasks);
+    }
+
+    [Fact]
     public async Task GetCredentials_UserWithoutPandoraRole_RequestsPhoneAndSavesNoSession()
     {
         const long telegramUserId = 8003;

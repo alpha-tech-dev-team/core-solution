@@ -56,7 +56,12 @@ public sealed class DevelopmentPhoneConfirmationSkipTests(IntegrationFixture fix
 
         public string? LastMessageText { get; private set; }
 
-        public Task<Message> SendMessageAsync(long chatId, string text, ReplyMarkup? replyMarkup = null, CancellationToken cancellationToken = default)
+        public Task<Message> SendMessageAsync(
+            long chatId,
+            string text,
+            ReplyMarkup? replyMarkup = null,
+            CancellationToken cancellationToken = default,
+            TelegramSendOptions? sendOptions = null)
         {
             LastMessageText = text;
             LastMessageRequestedContact = replyMarkup is ReplyKeyboardMarkup keyboard

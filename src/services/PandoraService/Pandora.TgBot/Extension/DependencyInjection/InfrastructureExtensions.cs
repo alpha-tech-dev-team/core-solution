@@ -32,6 +32,9 @@ public static class InfrastructureExtensions
                 serviceProvider.GetRequiredService<IAuditContext>(),
                 !string.IsNullOrWhiteSpace(databaseOptions.RedisConnection)));
         services.AddScoped<IAuditRepository, AuditRepository>();
+        services.AddScoped<ISecretMetadataRepository, SecretMetadataRepository>();
+        services.AddScoped<ICredentialAccessMessageRepository, CredentialAccessMessageRepository>();
+        services.AddScoped<ICredentialAccessSettingsRepository, CredentialAccessSettingsRepository>();
         services.AddSessionInfrastructure(configuration, databaseOptions.RedisConnection);
 
         if (!string.IsNullOrWhiteSpace(databaseOptions.RedisConnection))
