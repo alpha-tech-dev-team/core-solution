@@ -5,6 +5,7 @@
   <Folder Name="/src/services/AtlasService/">
     <Project Path="src/services/AtlasService/Atlas.Api/Atlas.Api.csproj" />
     <Project Path="src/services/AtlasService/Atlas.Application/Atlas.Application.csproj" />
+    <Project Path="src/services/AtlasService/Atlas.Application.Admin/Atlas.Application.Admin.csproj" />
     <Project Path="src/services/AtlasService/Atlas.Domain/Atlas.Domain.csproj" />
     <Project Path="src/services/AtlasService/Atlas.Infrastructure/Atlas.Infrastructure.csproj" />
     <Project Path="src/services/AtlasService/Atlas.TgBot/Atlas.TgBot.csproj" />

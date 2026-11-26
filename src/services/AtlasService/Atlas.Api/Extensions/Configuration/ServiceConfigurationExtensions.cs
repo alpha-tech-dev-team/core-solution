@@ -1,0 +1,34 @@
+using Atlas.Api.Middleware;
+using Atlas.Application.Behaviors;
+using Atlas.Application.Validators;
+using Atlas.Infrastructure.Mapping;
+using FluentValidation;
+using Mapster;
+using MediatR;
+using Serilog;
+using ApplicationAssemblyMarker = Atlas.Application.Admin.AssemblyMarker;
+
+namespace Atlas.Api.Extensions.Configuration;
+
+public static class ServiceConfigurationExtensions
+{
+    public static IServiceCollection AddServiceConfiguration(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
+    {
+        TypeAdapterConfig.GlobalSettings.Apply(new IncidentMappingConfig(), new RoomMappingConfig());
+
+        services.AddOpenApi();
+        services.AddProblemDetails();
+        services.AddExceptionHandler<GlobalExceptionHandler>();
+        services.AddSerilog((serviceProvider, loggerConfiguration) => loggerConfiguration
+            .ReadFrom.Configuration(configuration)
+            .ReadFrom.Services(serviceProvider));
+        services.AddOptionsConfiguration(configuration);
+        services.AddDatabaseConfiguration();
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<ApplicationAssemblyMarker>());
+        services.AddValidatorsFromAssemblyContaining<GetIncidentsMessageValidator>();
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+        services.AddJwtAuthentication(environment);
+
+        return services;
+    }
+}
