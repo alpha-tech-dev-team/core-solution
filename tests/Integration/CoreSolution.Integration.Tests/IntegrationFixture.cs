@@ -34,8 +34,9 @@ namespace CoreSolution.Integration.Tests;
 
 public sealed class IntegrationFixture : IAsyncLifetime
 {
-    private const string AtlasTestToken = "123456:integration-test-token";
-    private const string AtlasServiceApiKey = "integration-test-atlas-service-api-key";
+    internal const string AtlasTestToken = "123456:integration-test-token";
+    internal const string AtlasNotificationTestToken = "654321:notification-test-token";
+    internal const string AtlasServiceApiKey = "integration-test-atlas-service-api-key";
 
     private static long _adminPhoneSequence;
 
@@ -279,7 +280,9 @@ public sealed class IntegrationFixture : IAsyncLifetime
         });
     }
 
-    public ServiceProvider CreateAtlasServiceProvider(Dictionary<string, string?>? extraConfiguration = null)
+    public ServiceProvider CreateAtlasServiceProvider(
+        Dictionary<string, string?>? extraConfiguration = null,
+        Action<IServiceCollection>? configureServices = null)
     {
         var settings = new Dictionary<string, string?>
         {
@@ -287,7 +290,8 @@ public sealed class IntegrationFixture : IAsyncLifetime
             ["Redis:ConnectionString"] = _atlasRedis.GetConnectionString(),
             ["SessionSettings:ExpiryMinutes"] = "30",
             ["Identity:BaseUrl"] = "http://localhost",
-            ["Identity:ServiceApiKey"] = AtlasServiceApiKey
+            ["Identity:ServiceApiKey"] = AtlasServiceApiKey,
+            ["Telegram:NotificationBotToken"] = AtlasNotificationTestToken
         };
 
         if (extraConfiguration is not null)
@@ -314,12 +318,14 @@ public sealed class IntegrationFixture : IAsyncLifetime
         services.AddHttpClient<IEmployeeDirectory, IdentityEmployeeDirectory>()
             .ConfigurePrimaryHttpMessageHandler(() => _identity.Server.CreateHandler());
 
+        configureServices?.Invoke(services);
+
         return services.BuildServiceProvider();
     }
 
-    public async Task<ServiceProvider> CreateAtlasServiceProviderAsync()
+    public async Task<ServiceProvider> CreateAtlasServiceProviderAsync(Action<IServiceCollection>? configureServices = null)
     {
-        var provider = CreateAtlasServiceProvider();
+        var provider = CreateAtlasServiceProvider(configureServices: configureServices);
 
         if (!_atlasMigrated)
         {

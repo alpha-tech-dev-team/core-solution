@@ -1,8 +1,11 @@
+using Atlas.Application.Features.Notifications;
 using Atlas.Domain.Entities;
 using Atlas.Domain.Enums;
 using Atlas.Domain.Interfaces.Repositories;
 using Atlas.Domain.Models;
 using CoreSolution.Shared.Results;
+using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Atlas.Application.Features.Incidents;
 
@@ -13,19 +16,25 @@ public sealed class IncidentCreationService
     private readonly IIncidentCategoryRepository _categoryRepository;
     private readonly IHardwareRepository _hardwareRepository;
     private readonly ISoftwareRepository _softwareRepository;
+    private readonly IMediator _mediator;
+    private readonly ILogger<IncidentCreationService> _logger;
 
     public IncidentCreationService(
         IIncidentRepository incidentRepository,
         IEmployeeRepository employeeRepository,
         IIncidentCategoryRepository categoryRepository,
         IHardwareRepository hardwareRepository,
-        ISoftwareRepository softwareRepository)
+        ISoftwareRepository softwareRepository,
+        IMediator mediator,
+        ILogger<IncidentCreationService> logger)
     {
         _incidentRepository = incidentRepository;
         _employeeRepository = employeeRepository;
         _categoryRepository = categoryRepository;
         _hardwareRepository = hardwareRepository;
         _softwareRepository = softwareRepository;
+        _mediator = mediator;
+        _logger = logger;
     }
 
     public async Task<Result<Incident>> CreateAsync(
@@ -73,6 +82,7 @@ public sealed class IncidentCreationService
         {
             Id = Guid.NewGuid(),
             EmployeeId = employee.Id,
+            Employee = employee,
             CategoryId = categoryId,
             RoomId = roomId,
             HardwareId = session.HardwareId,
@@ -85,6 +95,15 @@ public sealed class IncidentCreationService
         };
 
         await _incidentRepository.AddWithStatusHistoryAsync(incident, cancellationToken);
+
+        var notification = await _mediator.Send(
+            new NotifyIncidentMessage(incident, IncidentNotificationType.Created),
+            cancellationToken);
+
+        if (!notification.IsSuccess)
+        {
+            _logger.LogWarning("Уведомление о создании заявки {TicketNumber} не отправлено: {ErrorCode}", incident.TicketNumber, notification.ErrorCode);
+        }
 
         return Result<Incident>.Success(incident);
     }

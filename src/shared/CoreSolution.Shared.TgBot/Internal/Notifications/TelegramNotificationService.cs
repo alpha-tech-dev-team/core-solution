@@ -7,7 +7,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace CoreSolution.Shared.TgBot.Internal.Notifications;
 
-internal sealed class TelegramNotificationService : ITelegramNotificationService
+public sealed class TelegramNotificationService : ITelegramNotificationService
 {
     private readonly ITelegramBotClient _client;
     private readonly ILogger<TelegramNotificationService> _logger;
