@@ -42,11 +42,24 @@ public sealed class EmployeeQueryTests
     public void Apply_WithSortBySurnameAscending_OrdersAscending()
     {
         var users = new[] { User("А", "Яковлев"), User("Б", "Белов") };
-        var filter = new EmployeeFilter(null, EmployeeSortFields.Surname, SortDirection.Ascending, IncludeArchived: false);
+        var filter = new EmployeeFilter(null, EmployeeSortFields.Surname.ToUpperInvariant(), SortDirection.Ascending, IncludeArchived: false);
 
         var surnames = EmployeeQuery.Apply(users.AsQueryable(), filter).Select(user => user.Surname).ToList();
 
         Assert.Equal(["Белов", "Яковлев"], surnames);
+    }
+
+    [Fact]
+    public void Apply_WithSortByName_OrdersBySurnameThenId()
+    {
+        var first = User("Иван", "Яковлев", id: Guid.Parse("00000000-0000-0000-0000-000000000001"));
+        var second = User("Иван", "Белов", id: Guid.Parse("00000000-0000-0000-0000-000000000002"));
+        var third = User("Иван", "Белов", id: Guid.Parse("00000000-0000-0000-0000-000000000003"));
+        var filter = new EmployeeFilter(null, EmployeeSortFields.Name.ToLowerInvariant(), SortDirection.Ascending, IncludeArchived: false);
+
+        var ordered = EmployeeQuery.Apply(new[] { first, third, second }.AsQueryable(), filter).ToList();
+
+        Assert.Equal([second.Id, third.Id, first.Id], ordered.Select(user => user.Id).ToList());
     }
 
     [Fact]

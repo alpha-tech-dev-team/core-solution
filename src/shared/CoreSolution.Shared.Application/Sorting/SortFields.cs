@@ -13,9 +13,9 @@ public abstract class SortFields<T>
         _fields = fields.ToDictionary(field => field.Name, field => field.Selector, StringComparer.OrdinalIgnoreCase);
     }
 
-    public string DefaultField { get; }
+    private string DefaultField { get; }
 
-    public IReadOnlyCollection<string> SupportedFields => _fields.Keys;
+    public IReadOnlyCollection<string> SupportedFields => _fields.Keys.ToArray();
 
     public bool IsSupported(string? sortBy) => sortBy is not null && _fields.ContainsKey(sortBy);
 
@@ -29,7 +29,7 @@ public abstract class SortFields<T>
         return TieBreak(ordered, field);
     }
 
-    protected virtual IOrderedQueryable<T> TieBreak(IOrderedQueryable<T> ordered, string field) => ordered;
+    protected abstract IOrderedQueryable<T> TieBreak(IOrderedQueryable<T> ordered, string field);
 
     private (string Name, Expression<Func<T, string>> Selector) Resolve(string? sortBy)
     {

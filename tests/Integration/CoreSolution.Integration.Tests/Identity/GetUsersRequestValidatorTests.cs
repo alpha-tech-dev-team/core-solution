@@ -50,6 +50,14 @@ public sealed class GetUsersRequestValidatorTests
     }
 
     [Fact]
+    public void Accepts_SortByKnownFieldIgnoringCase()
+    {
+        var request = new GetUsersRequest { SortBy = EmployeeSortFields.Surname.ToUpperInvariant() };
+
+        Assert.True(_validator.Validate(request).IsValid);
+    }
+
+    [Fact]
     public void Rejects_SortByUnknownField()
     {
         var request = new GetUsersRequest { SortBy = nameof(GetUsersRequestValidator) };
