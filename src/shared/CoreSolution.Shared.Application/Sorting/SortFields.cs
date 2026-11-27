@@ -18,13 +18,16 @@ public abstract class SortFields<T>
 
         DefaultField = defaultField ?? fields[0].Name;
         _fields = fields.ToDictionary(field => field.Name, field => field.Selector, StringComparer.OrdinalIgnoreCase);
+
+        if (!_fields.ContainsKey(DefaultField))
+        {
+            throw new ArgumentException("Default sort field must be one of the declared fields", nameof(defaultField));
+        }
     }
 
     private string DefaultField { get; }
 
     public IReadOnlyCollection<string> SupportedFields => _fields.Keys.ToArray();
-
-    public bool IsSupported(string? sortBy) => sortBy is not null && _fields.ContainsKey(sortBy);
 
     public IOrderedQueryable<T> Apply(IQueryable<T> source, string? sortBy, SortDirection? direction)
     {
