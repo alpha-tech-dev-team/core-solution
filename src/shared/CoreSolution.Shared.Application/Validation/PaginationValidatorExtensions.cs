@@ -8,8 +8,7 @@ public static class PaginationValidatorExtensions
 {
     public static void ApplyPaginationRules<T>(
         this AbstractValidator<T> validator,
-        string? pageErrorCode = null,
-        string? pageSizeErrorCode = null)
+        string? pageErrorCode = null)
         where T : PagedMessage
     {
         var pageRule = validator.RuleFor(message => message.Page)
@@ -22,14 +21,9 @@ public static class PaginationValidatorExtensions
             pageRule.WithErrorCode(pageErrorCode);
         }
 
-        var pageSizeRule = validator.RuleFor(message => message.PageSize)
+        validator.RuleFor(message => message.PageSize)
             .Cascade(CascadeMode.Stop)
             .NotNull()
             .InclusiveBetween(PaginationLimits.MinPageSize, PaginationLimits.MaxPageSize);
-
-        if (pageSizeErrorCode is not null)
-        {
-            pageSizeRule.WithErrorCode(pageSizeErrorCode);
-        }
     }
 }
