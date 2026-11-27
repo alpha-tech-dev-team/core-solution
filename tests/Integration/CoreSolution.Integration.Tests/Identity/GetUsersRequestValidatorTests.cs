@@ -66,6 +66,30 @@ public sealed class GetUsersRequestValidatorTests
     }
 
     [Fact]
+    public void Accepts_MissingSortBy()
+    {
+        var request = new GetUsersRequest { SortBy = null };
+
+        Assert.True(_validator.Validate(request).IsValid);
+    }
+
+    [Fact]
+    public void Rejects_EmptySortBy()
+    {
+        var request = new GetUsersRequest { SortBy = string.Empty };
+
+        Assert.False(_validator.Validate(request).IsValid);
+    }
+
+    [Fact]
+    public void Rejects_WhitespaceSortBy()
+    {
+        var request = new GetUsersRequest { SortBy = "  " };
+
+        Assert.False(_validator.Validate(request).IsValid);
+    }
+
+    [Fact]
     public void Rejects_UndefinedSortDirection()
     {
         var request = new GetUsersRequest { SortDirection = (SortDirection)int.MaxValue };

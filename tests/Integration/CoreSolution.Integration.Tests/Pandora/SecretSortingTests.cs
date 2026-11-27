@@ -13,7 +13,7 @@ public sealed class SecretSortingTests
         var secrets = new[] { Secret("c"), Secret("a"), Secret("b") };
 
         var ordered = SecretSorting
-            .For(nameof(SecretMetadata.ResourceName), SortDirection.Ascending)(secrets.AsQueryable())
+            .For(SecretSorting.ResourceName, SortDirection.Ascending)(secrets.AsQueryable())
             .Select(secret => secret.ResourceName)
             .ToList();
 
@@ -26,7 +26,7 @@ public sealed class SecretSortingTests
         var secrets = new[] { Secret("a"), Secret("c"), Secret("b") };
 
         var ordered = SecretSorting
-            .For(nameof(SecretMetadata.ResourceName), SortDirection.Descending)(secrets.AsQueryable())
+            .For(SecretSorting.ResourceName, SortDirection.Descending)(secrets.AsQueryable())
             .Select(secret => secret.ResourceName)
             .ToList();
 
@@ -39,7 +39,7 @@ public sealed class SecretSortingTests
         var secrets = new[] { Secret("a", "zzz"), Secret("b", "aaa") };
 
         var ordered = SecretSorting
-            .For(nameof(SecretMetadata.Username), SortDirection.Ascending)(secrets.AsQueryable())
+            .For(SecretSorting.Username, SortDirection.Ascending)(secrets.AsQueryable())
             .Select(secret => secret.Username)
             .ToList();
 
@@ -62,8 +62,8 @@ public sealed class SecretSortingTests
     [Fact]
     public void SupportedFields_ContainsResourceNameAndUsername()
     {
-        Assert.Contains(nameof(SecretMetadata.ResourceName), SecretSorting.Instance.SupportedFields);
-        Assert.Contains(nameof(SecretMetadata.Username), SecretSorting.Instance.SupportedFields);
+        Assert.Contains(SecretSorting.ResourceName, SecretSorting.Instance.SupportedFields);
+        Assert.Contains(SecretSorting.Username, SecretSorting.Instance.SupportedFields);
     }
 
     [Fact]
@@ -72,7 +72,7 @@ public sealed class SecretSortingTests
         var secrets = new[] { Secret("same", vaultItemId: "b"), Secret("same", vaultItemId: "a") };
 
         var ordered = SecretSorting
-            .For(nameof(SecretMetadata.ResourceName), SortDirection.Ascending)(secrets.AsQueryable())
+            .For(SecretSorting.ResourceName, SortDirection.Ascending)(secrets.AsQueryable())
             .Select(secret => secret.VaultItemId)
             .ToList();
 
@@ -85,7 +85,7 @@ public sealed class SecretSortingTests
         var secrets = new[] { Secret("same", vaultItemId: "b"), Secret("same", vaultItemId: "a") };
 
         var ordered = SecretSorting
-            .For(nameof(SecretMetadata.ResourceName), SortDirection.Descending)(secrets.AsQueryable())
+            .For(SecretSorting.ResourceName, SortDirection.Descending)(secrets.AsQueryable())
             .Select(secret => secret.VaultItemId)
             .ToList();
 

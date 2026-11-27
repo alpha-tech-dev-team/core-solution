@@ -10,16 +10,7 @@ public class GetUsersRequestValidator : AbstractValidator<GetUsersRequest>
 {
     public GetUsersRequestValidator()
     {
-        this.ApplyPaginationRules();
-
-        RuleFor(x => x.PageSize)
-            .LessThanOrEqualTo(ValidationConstants.PageSizeMax);
-
-        RuleFor(x => x.SortBy)
-            .Must(EmployeeSortFields.Instance.IsSupported)
-            .When(x => !string.IsNullOrWhiteSpace(x.SortBy));
-
-        RuleFor(x => x.SortDirection)
-            .Must(direction => direction is null || Enum.IsDefined(direction.Value));
+        this.ApplyPaginationRules(maxPageSize: ValidationConstants.PageSizeMax);
+        this.ApplySortRules(EmployeeSortFields.Instance.SupportedFields);
     }
 }

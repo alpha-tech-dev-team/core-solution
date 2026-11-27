@@ -6,13 +6,16 @@ namespace Pandora.Application.Features.Secrets.Common;
 
 public sealed class SecretSorting : SortFields<SecretMetadata>
 {
+    public const string ResourceName = nameof(SecretMetadata.ResourceName);
+    public const string Username = nameof(SecretMetadata.Username);
+
     public static readonly SecretSorting Instance = new();
 
     private SecretSorting()
         : base(
-            nameof(SecretMetadata.ResourceName),
-            (nameof(SecretMetadata.ResourceName), metadata => metadata.ResourceName),
-            (nameof(SecretMetadata.Username), metadata => metadata.Username))
+            defaultField: ResourceName,
+            (ResourceName, metadata => metadata.ResourceName),
+            (Username, metadata => metadata.Username))
     {
     }
 

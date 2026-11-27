@@ -1,3 +1,4 @@
+using CoreSolution.Shared.Application.Validation;
 using CoreSolution.Shared.Constants;
 using CoreSolution.Shared.Models;
 using FluentValidation;
@@ -21,27 +22,16 @@ public static class PagedMessageValidatorExtensions
             .When(message => message.PageSize.HasValue);
     }
 
-    public static void AddSortRules<TMessage>(
-        this AbstractValidator<TMessage> validator,
-        IReadOnlyCollection<string> sortFields)
-        where TMessage : PagedMessage, ISortMessage
-    {
-        validator.RuleFor(message => message.SortBy)
-            .Must(field => field is null || sortFields.Contains(field, StringComparer.OrdinalIgnoreCase))
-            .WithErrorCode(nameof(ErrorCode.InvalidSortField));
-
-        validator.RuleFor(message => message.SortDirection)
-            .Must(direction => direction is null || Enum.IsDefined(direction.Value))
-            .WithErrorCode(nameof(ErrorCode.InvalidSortDirection));
-    }
-
     public static void AddPagedSortRules<TMessage>(
         this AbstractValidator<TMessage> validator,
         IReadOnlyCollection<string> sortFields)
         where TMessage : PagedMessage, ISortMessage
     {
         validator.AddPagingRules();
-        validator.AddSortRules(sortFields);
+        validator.ApplySortRules(
+            sortFields,
+            nameof(ErrorCode.InvalidSortField),
+            nameof(ErrorCode.InvalidSortDirection));
     }
 
     public static void AddPagedSearchSortRules<TMessage>(

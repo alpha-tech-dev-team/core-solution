@@ -7,12 +7,11 @@ public sealed class EmployeeSortFields : SortFields<User>
 {
     public const string Surname = nameof(User.Surname);
     public const string Name = nameof(User.Name);
-    public const string Default = Surname;
 
     public static readonly EmployeeSortFields Instance = new();
 
     private EmployeeSortFields()
-        : base(Default, (Surname, user => user.Surname), (Name, user => user.Name))
+        : base(defaultField: Surname, (Surname, user => user.Surname), (Name, user => user.Name))
     {
     }
 

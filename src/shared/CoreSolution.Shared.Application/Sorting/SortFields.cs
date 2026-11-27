@@ -7,9 +7,16 @@ public abstract class SortFields<T>
 {
     private readonly Dictionary<string, Expression<Func<T, string>>> _fields;
 
-    protected SortFields(string defaultField, params (string Name, Expression<Func<T, string>> Selector)[] fields)
+    protected SortFields(
+        string? defaultField = null,
+        params (string Name, Expression<Func<T, string>> Selector)[] fields)
     {
-        DefaultField = defaultField;
+        if (fields.Length == 0)
+        {
+            throw new ArgumentException("At least one sort field is required", nameof(fields));
+        }
+
+        DefaultField = defaultField ?? fields[0].Name;
         _fields = fields.ToDictionary(field => field.Name, field => field.Selector, StringComparer.OrdinalIgnoreCase);
     }
 
