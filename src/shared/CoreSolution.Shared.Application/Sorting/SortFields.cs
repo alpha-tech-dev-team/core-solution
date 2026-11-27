@@ -16,7 +16,7 @@ public abstract class SortFields<T>
             throw new ArgumentException("At least one sort field is required", nameof(fields));
         }
 
-        DefaultField = defaultField ?? fields[0].Name;
+        DefaultField = defaultField ?? fields.First().Name;
         _fields = fields.ToDictionary(field => field.Name, field => field.Selector, StringComparer.OrdinalIgnoreCase);
 
         if (!_fields.ContainsKey(DefaultField))
