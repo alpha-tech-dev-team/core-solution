@@ -1,4 +1,5 @@
 using CoreSolution.Shared.Enums;
+using CoreSolution.Shared.Models;
 using CoreSolution.Shared.Results;
 using Identity.Domain.Enums;
 using Identity.Domain.Models;
@@ -7,7 +8,7 @@ namespace Identity.Domain.Interfaces.Services;
 
 public interface IAdminUserService
 {
-    Task<Result<EmployeesPage>> GetUsers(int page, int pageSize, bool includeArchived, CancellationToken cancellationToken = default);
+    Task<Result<EmployeesPage>> GetUsers(PagedMessage paging, EmployeeFilter filter, CancellationToken cancellationToken = default);
     Task<Result<IReadOnlyList<string>>> GetRoles(CancellationToken cancellationToken = default);
     Task<Result> CreateUser(EmployeeData data, Guid actorId, CancellationToken cancellationToken = default);
     Task<Result> UpdateUser(Guid userId, EmployeeData data, Guid actorId, CancellationToken cancellationToken = default);

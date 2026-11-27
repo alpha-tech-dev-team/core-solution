@@ -1,18 +1,17 @@
 using CoreSolution.Shared.Constants;
-using Identity.Domain.Enums;
+using CoreSolution.Shared.Models;
 using Identity.Domain.Entities;
+using Identity.Domain.Enums;
 using Identity.Domain.Interfaces.Repositories;
 using Identity.Domain.Models;
-using Mapster;
 using Identity.Infrastructure.Database;
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 
 namespace Identity.Infrastructure.Repositories;
 
 public class UserRepository : BaseRepository<User>, IUserRepository
 {
-    private const int FirstPage = 1;
-
     public UserRepository(AppDbContext context) : base(context)
     {
     }
@@ -59,27 +58,22 @@ public class UserRepository : BaseRepository<User>, IUserRepository
             .FirstOrDefaultAsync(x => x.TelegramUserId == telegramUserId, cancellationToken);
     }
 
-    public async Task<EmployeesPage> GetEmployees(int page, int pageSize, bool includeArchived = false, CancellationToken cancellationToken = default)
+    public async Task<EmployeesPage> GetEmployees(
+        PagedMessage paging,
+        Func<IQueryable<User>, IQueryable<User>> query,
+        CancellationToken cancellationToken = default)
     {
-        var query = Context.Users.AsNoTracking();
+        var filtered = query(Context.Users.AsNoTracking());
 
-        if (!includeArchived)
-        {
-            query = query.Where(x => x.Status != UserStatus.Archived);
-        }
-
-        var items = await query
-            .OrderBy(x => x.Surname)
-            .ThenBy(x => x.Name)
-            .ThenBy(x => x.Id)
-            .Skip((page - FirstPage) * pageSize)
-            .Take(pageSize)
+        var items = await filtered
+            .Skip(paging.Skip)
+            .Take(paging.EffectivePageSize)
             .ProjectToType<EmployeeInfo>()
             .ToListAsync(cancellationToken);
 
-        var total = await query.CountAsync(cancellationToken);
+        var total = await filtered.CountAsync(cancellationToken);
 
-        return new EmployeesPage(items, total, page, pageSize);
+        return new EmployeesPage(items, total, paging.EffectivePage, paging.EffectivePageSize);
     }
 
     public Task<List<Roles>> GetAllRoles(CancellationToken cancellationToken = default)

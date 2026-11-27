@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../Identity.Domain/Identity.Domain.csproj" />
+    <ProjectReference Include="../../../shared/CoreSolution.Shared.Application/CoreSolution.Shared.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>

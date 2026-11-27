@@ -1,7 +1,8 @@
+using CoreSolution.Shared.Models;
 using Identity.Api.Constants;
 using Identity.Api.Extensions.Http;
-using Identity.Api.Models;
 using Identity.Api.Interfaces;
+using Identity.Api.Models;
 using Identity.Application.Contracts.Admin;
 using Identity.Application.Errors;
 using Identity.Domain.Interfaces.Services;
@@ -30,7 +31,13 @@ public sealed class AdminUsersController : ControllerBase
     [HttpGet(ApiRoutes.Users)]
     public async Task<IActionResult> GetUsers([FromQuery] GetUsersRequest request, CancellationToken cancellationToken)
     {
-        var result = await _adminUserService.GetUsers(request.Page, request.PageSize, request.IncludeArchived, cancellationToken);
+        var filter = new EmployeeFilter(
+            request.Search,
+            request.SortBy,
+            request.SortDirection ?? SortDirection.Ascending,
+            request.IncludeArchived);
+
+        var result = await _adminUserService.GetUsers(request, filter, cancellationToken);
 
         return result.ToActionResult();
     }
