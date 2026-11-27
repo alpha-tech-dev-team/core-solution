@@ -10,9 +10,6 @@ public interface IUserRepository : IRepository<User>
     Task<User?> GetByPhone(string phone, bool includeArchived = false, CancellationToken cancellationToken = default);
     Task<User?> GetByTelegramUserId(long telegramUserId, CancellationToken cancellationToken = default);
     Task<User?> GetByAdminUsername(string username, CancellationToken cancellationToken = default);
-    Task<EmployeesPage> GetEmployees(
-        PagedMessage paging,
-        Func<IQueryable<User>, IQueryable<User>> query,
-        CancellationToken cancellationToken = default);
+    Task<EmployeesPage> GetEmployees(PagedMessage paging, Func<IQueryable<User>, IQueryable<User>> query, CancellationToken cancellationToken = default);
     Task<List<Roles>> GetAllRoles(CancellationToken cancellationToken = default);
 }

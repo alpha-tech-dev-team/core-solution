@@ -1,34 +1,25 @@
-using System.Linq.Expressions;
+using CoreSolution.Shared.Application.Sorting;
 using Identity.Domain.Entities;
 
 namespace Identity.Application.Features.Admin;
 
-public static class EmployeeSortFields
+public sealed class EmployeeSortFields : SortFields<User>
 {
     public const string Surname = nameof(User.Surname);
     public const string Name = nameof(User.Name);
     public const string Default = Surname;
 
-    public static readonly IReadOnlyDictionary<string, Expression<Func<User, string>>> Fields =
-        new Dictionary<string, Expression<Func<User, string>>>(StringComparer.OrdinalIgnoreCase)
-        {
-            [Surname] = user => user.Surname,
-            [Name] = user => user.Name
-        };
+    public static readonly EmployeeSortFields Instance = new();
 
-    public static bool IsSupported(string? sortBy)
+    private EmployeeSortFields()
+        : base(Default, (Surname, user => user.Surname), (Name, user => user.Name))
     {
-        return sortBy is not null && Fields.ContainsKey(sortBy);
     }
 
-    public static string Resolve(string? sortBy)
+    protected override IOrderedQueryable<User> TieBreak(IOrderedQueryable<User> ordered, string field)
     {
-        if (sortBy is null)
-        {
-            return Default;
-        }
-
-        return Fields.Keys.FirstOrDefault(key => string.Equals(key, sortBy, StringComparison.OrdinalIgnoreCase))
-            ?? Default;
+        return field == Name
+            ? ordered.ThenBy(user => user.Surname).ThenBy(user => user.Id)
+            : ordered.ThenBy(user => user.Name).ThenBy(user => user.Id);
     }
 }

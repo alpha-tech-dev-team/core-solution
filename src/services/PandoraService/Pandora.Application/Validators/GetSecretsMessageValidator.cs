@@ -11,6 +11,6 @@ public sealed class GetSecretsMessageValidator : AbstractValidator<GetSecretsMes
     public GetSecretsMessageValidator()
     {
         this.ApplyPaginationRules();
-        this.AddSortRules(SecretSorting.SupportedFields);
+        this.AddSortRules(SecretSorting.Instance.SupportedFields);
     }
 }

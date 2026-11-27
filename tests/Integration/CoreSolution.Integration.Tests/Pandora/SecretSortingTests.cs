@@ -62,8 +62,8 @@ public sealed class SecretSortingTests
     [Fact]
     public void SupportedFields_ContainsResourceNameAndUsername()
     {
-        Assert.Contains(nameof(SecretMetadata.ResourceName), SecretSorting.SupportedFields);
-        Assert.Contains(nameof(SecretMetadata.Username), SecretSorting.SupportedFields);
+        Assert.Contains(nameof(SecretMetadata.ResourceName), SecretSorting.Instance.SupportedFields);
+        Assert.Contains(nameof(SecretMetadata.Username), SecretSorting.Instance.SupportedFields);
     }
 
     [Fact]

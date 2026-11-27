@@ -1,0 +1,49 @@
+using System.Linq.Expressions;
+using CoreSolution.Shared.Models;
+
+namespace CoreSolution.Shared.Application.Sorting;
+
+public abstract class SortFields<T>
+{
+    private readonly Dictionary<string, Expression<Func<T, string>>> _fields;
+
+    protected SortFields(string defaultField, params (string Name, Expression<Func<T, string>> Selector)[] fields)
+    {
+        DefaultField = defaultField;
+        _fields = fields.ToDictionary(field => field.Name, field => field.Selector, StringComparer.OrdinalIgnoreCase);
+    }
+
+    public string DefaultField { get; }
+
+    public IReadOnlyCollection<string> SupportedFields => _fields.Keys;
+
+    public bool IsSupported(string? sortBy) => sortBy is not null && _fields.ContainsKey(sortBy);
+
+    public IOrderedQueryable<T> Apply(IQueryable<T> source, string? sortBy, SortDirection? direction)
+    {
+        var (field, selector) = Resolve(sortBy);
+        var ordered = direction == SortDirection.Descending
+            ? source.OrderByDescending(selector)
+            : source.OrderBy(selector);
+
+        return TieBreak(ordered, field);
+    }
+
+    protected virtual IOrderedQueryable<T> TieBreak(IOrderedQueryable<T> ordered, string field) => ordered;
+
+    private (string Name, Expression<Func<T, string>> Selector) Resolve(string? sortBy)
+    {
+        if (sortBy is not null)
+        {
+            foreach (var field in _fields)
+            {
+                if (string.Equals(field.Key, sortBy, StringComparison.OrdinalIgnoreCase))
+                {
+                    return (field.Key, field.Value);
+                }
+            }
+        }
+
+        return (DefaultField, _fields[DefaultField]);
+    }
+}

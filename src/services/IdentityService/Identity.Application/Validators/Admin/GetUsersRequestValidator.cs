@@ -12,12 +12,11 @@ public class GetUsersRequestValidator : AbstractValidator<GetUsersRequest>
     {
         this.ApplyPaginationRules();
 
-        // Общий диапазон шире, но API выдачи сотрудников сохраняет собственный предел страницы.
         RuleFor(x => x.PageSize)
             .LessThanOrEqualTo(ValidationConstants.PageSizeMax);
 
         RuleFor(x => x.SortBy)
-            .Must(EmployeeSortFields.IsSupported)
+            .Must(EmployeeSortFields.Instance.IsSupported)
             .When(x => !string.IsNullOrWhiteSpace(x.SortBy));
 
         RuleFor(x => x.SortDirection)
